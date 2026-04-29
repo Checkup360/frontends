@@ -1,5 +1,6 @@
 # Dependencies
 node_modules
+.pnpm-store
 .pnp
 .pnp.js
 
@@ -21,9 +22,20 @@ coverage
 
 # Build Outputs
 dist
+dist-ssr
+build
+.vite
+coverage
+
+# TypeScript / tooling caches
+*.tsbuildinfo
+.eslintcache
 
 # Debug
 npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Misc
 .DS_Store
