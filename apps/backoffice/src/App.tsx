@@ -1,8 +1,10 @@
+import { CurrentUserEmail } from "@workspace/auth/components/current-user-email"
 import { Button } from "@workspace/ui/components/button"
 
 export function App() {
   return (
     <div className="flex min-h-svh p-6">
+      <CurrentUserEmail apiBaseUrl={import.meta.env.VITE_API_URL as string | undefined} />
       <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
         <div>
           <h1 className="font-medium">Project ready!</h1>

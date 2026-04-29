@@ -1,22 +1,23 @@
-import { Button } from "@workspace/ui/components/button"
+import { CurrentUserEmail } from "@workspace/auth/components/current-user-email"
 import Login from "./components/login"
 
 export function App() {
-  return (
+  const pathname = window.location.pathname
+  const isLoginPage = pathname === "/login"
 
-    <div className="flex min-h-svh p-6">
-      <Login />
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
+  return (
+    <div className="min-h-svh p-6">
+      <CurrentUserEmail apiBaseUrl={import.meta.env.VITE_API_URL as string | undefined} />
+      {isLoginPage ? (
+        <Login />
+      ) : (
+        <div className="mx-auto mt-20 max-w-xl text-center">
+          <h1 className="text-2xl font-semibold">Checkup360 Web</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Sesion iniciada. Si necesitas autenticarte, entra a <a className="underline" href="/login">/login</a>.
+          </p>
         </div>
-        <div className="text-muted-foreground font-mono text-xs">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
+      )}
     </div>
   )
 }
