@@ -104,3 +104,78 @@ export async function fetchGoogleAuthorizationUrl(
 
   return payload
 }
+
+export interface RegisterPayload {
+  email: string
+  password: string
+  invite_token: string
+}
+
+export async function registerWithEmailPassword(
+  payload: RegisterPayload,
+  apiBaseUrl?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const data = await response.json()
+      return {
+        success: false,
+        error: data.detail || "Error al registrarse",
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: "Error al conectar con el servidor",
+    }
+  }
+}
+
+export interface InviteCreatePayload {
+  email?: string
+  expires_in_hours?: number
+}
+
+export interface InviteCreateResponse {
+  token: string
+  invite_url: string
+}
+
+export async function createInvite(
+  payload: InviteCreatePayload,
+  apiBaseUrl?: string
+): Promise<InviteCreateResponse | null> {
+  try {
+    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/admin/invites`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        email: payload.email || null,
+        expires_in_hours: payload.expires_in_hours || 24,
+      }),
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    return (await response.json()) as InviteCreateResponse
+  } catch (error) {
+    console.error("Error creating invite:", error)
+    return null
+  }
+}

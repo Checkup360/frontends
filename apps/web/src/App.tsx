@@ -5,6 +5,9 @@ import {
 import { AuthStatus } from "@workspace/auth/components/auth-status"
 import { useEffect, useRef } from "react"
 import Login from "./components/login"
+import Invite from "./components/invite"
+import AuthError from "./components/auth-error"
+import Register from "./components/register"
 
 function LoginComplete() {
   const redirectUrl = useRef(readPostLoginRedirectUrl(`${window.location.origin}/`))
@@ -25,6 +28,9 @@ export function App() {
   const pathname = window.location.pathname
   const isLoginPage = pathname === "/login"
   const isLoginCompletePage = pathname === "/login/complete"
+  const isAuthErrorPage = pathname === "/auth/error"
+  const isRegisterPage = pathname === "/register"
+  const isInvitePage = pathname.startsWith("/invite/")
 
   return (
     <div className="min-h-svh p-6">
@@ -36,6 +42,12 @@ export function App() {
         <LoginComplete />
       ) : isLoginPage ? (
         <Login />
+      ) : isAuthErrorPage ? (
+        <AuthError />
+      ) : isRegisterPage ? (
+        <Register />
+      ) : isInvitePage ? (
+        <Invite />
       ) : (
         <div className="mx-auto mt-20 max-w-xl text-center">
           <h1 className="text-2xl font-semibold">Checkup360 Web</h1>
