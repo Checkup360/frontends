@@ -1,8 +1,11 @@
 import { Button } from "@workspace/ui/components/button"
+import Login from "./components/login"
 
 export function App() {
   return (
+
     <div className="flex min-h-svh p-6">
+      <Login />
       <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
         <div>
           <h1 className="font-medium">Project ready!</h1>
