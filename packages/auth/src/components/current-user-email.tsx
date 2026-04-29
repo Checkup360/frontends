@@ -1,11 +1,11 @@
-import { useCurrentUserEmail } from "@workspace/auth/hooks/use-current-user-email"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 
 type CurrentUserEmailProps = {
   apiBaseUrl?: string
 }
 
 export function CurrentUserEmail({ apiBaseUrl }: CurrentUserEmailProps) {
-  const email = useCurrentUserEmail(apiBaseUrl)
+  const { email } = useCurrentUser(apiBaseUrl)
 
   if (!email) return null
 

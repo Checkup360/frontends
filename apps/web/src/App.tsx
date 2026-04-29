@@ -1,14 +1,40 @@
-import { CurrentUserEmail } from "@workspace/auth/components/current-user-email"
+import {
+  clearPostLoginRedirectUrl,
+  readPostLoginRedirectUrl,
+} from "@workspace/auth/api"
+import { AuthStatus } from "@workspace/auth/components/auth-status"
+import { useEffect, useRef } from "react"
 import Login from "./components/login"
+
+function LoginComplete() {
+  const redirectUrl = useRef(readPostLoginRedirectUrl(`${window.location.origin}/`))
+
+  useEffect(() => {
+    clearPostLoginRedirectUrl()
+    window.location.replace(redirectUrl.current)
+  }, [])
+
+  return (
+    <div className="mx-auto mt-20 max-w-xl text-center text-sm text-muted-foreground">
+      Completando login...
+    </div>
+  )
+}
 
 export function App() {
   const pathname = window.location.pathname
   const isLoginPage = pathname === "/login"
+  const isLoginCompletePage = pathname === "/login/complete"
 
   return (
     <div className="min-h-svh p-6">
-      <CurrentUserEmail apiBaseUrl={import.meta.env.VITE_API_URL as string | undefined} />
-      {isLoginPage ? (
+      <AuthStatus
+        apiBaseUrl={import.meta.env.VITE_API_URL as string | undefined}
+        webBaseUrl={window.location.origin}
+      />
+      {isLoginCompletePage ? (
+        <LoginComplete />
+      ) : isLoginPage ? (
         <Login />
       ) : (
         <div className="mx-auto mt-20 max-w-xl text-center">

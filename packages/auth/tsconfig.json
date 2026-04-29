@@ -7,7 +7,12 @@
     "skipLibCheck": true,
     "strict": true,
     "jsx": "react-jsx",
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@workspace/ui/*": ["../ui/src/*"],
+      "@workspace/auth/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }

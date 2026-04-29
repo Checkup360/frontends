@@ -1,15 +1,14 @@
+import {
+  fetchGoogleAuthorizationUrl,
+  getPostLoginRedirectUrl,
+  savePostLoginRedirectUrl,
+} from "@workspace/auth/api"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { Separator } from "@workspace/ui/components/separator"
-import { parseOAuthAuthorizeResponse } from "@workspace/auth/schemas"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { JSX, SVGProps } from "react"
-import {
-  buildGoogleAuthorizeUrl,
-  resolveApiBaseUrl,
-  resolvePostLoginRedirectUrl,
-} from "@/api/auth"
 
 const GoogleIcon = (
   props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>
@@ -31,29 +30,24 @@ export default function Login({
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [googleError, setGoogleError] = useState<string | null>(null)
 
-  const resolvedApiBaseUrl = apiBaseUrl ?? resolveApiBaseUrl(import.meta.env.VITE_API_URL)
-  const postLoginRedirectUrl = resolvePostLoginRedirectUrl(new URL(window.location.href))
-  const googleLoginUrl =
-    googleAuthorizeUrl ?? buildGoogleAuthorizeUrl(resolvedApiBaseUrl, postLoginRedirectUrl)
+  const postLoginRedirectUrl = getPostLoginRedirectUrl(new URL(window.location.href))
+
+  // Save destination as soon as the login page loads so storage is set
+  // even before the user interacts with the page.
+  useEffect(() => {
+    savePostLoginRedirectUrl(postLoginRedirectUrl)
+  }, [postLoginRedirectUrl])
 
   const handleGoogleSignIn = async () => {
     try {
       setGoogleError(null)
       setIsGoogleLoading(true)
 
-      const response = await fetch(googleLoginUrl, {
-        method: "GET",
-        credentials: "include",
-      })
-
-      if (!response.ok) {
-        throw new Error("No se pudo iniciar el login con Google")
-      }
-
-      const payload = parseOAuthAuthorizeResponse(await response.json())
-      if (!payload) {
-        throw new Error("Respuesta invalida del backend")
-      }
+      savePostLoginRedirectUrl(postLoginRedirectUrl)
+      const payload =
+        googleAuthorizeUrl ?
+          { authorization_url: googleAuthorizeUrl }
+        : await fetchGoogleAuthorizationUrl(apiBaseUrl ?? import.meta.env.VITE_API_URL)
 
       window.location.assign(payload.authorization_url)
     } catch (error) {
