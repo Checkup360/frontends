@@ -1,10 +1,16 @@
+import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { AuthStatus } from "@workspace/auth/components/auth-status"
 import { Button } from "@workspace/ui/components/button"
 
 export function App() {
   return (
-    <div className="flex min-h-svh p-6">
-      <AuthStatus apiBaseUrl={import.meta.env.VITE_API_URL as string | undefined} />
+    <div className="flex min-h-svh flex-col p-6">
+      <header className="mb-4 flex justify-end">
+        <AuthStatus
+          apiBaseUrl={resolveVitePublicApiBaseUrl(import.meta.env)}
+          webBaseUrl={window.location.origin}
+        />
+      </header>
       <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
         <div>
           <h1 className="font-medium">Project ready!</h1>

@@ -1,9 +1,11 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 
 export default function InviteEntry() {
+  const navigate = useNavigate()
   const [inviteToken, setInviteToken] = useState("")
 
   const handleContinue = () => {
@@ -11,8 +13,7 @@ export default function InviteEntry() {
       alert("Por favor, ingresa un token de invitación válido")
       return
     }
-    // Redirigir a /invite/[token]
-    window.location.href = `/invite/${inviteToken}`
+    navigate(`/invite/${encodeURIComponent(inviteToken.trim())}`)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

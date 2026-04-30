@@ -14,7 +14,7 @@ export function AuthStatus({ apiBaseUrl, webBaseUrl }: AuthStatusProps) {
 
   const loginUrl = useMemo(
     () => buildLoginUrl({ webBaseUrl, nextUrl: window.location.href }),
-    [webBaseUrl]
+    [webBaseUrl],
   )
 
   const handleLogout = async () => {
@@ -31,28 +31,24 @@ export function AuthStatus({ apiBaseUrl, webBaseUrl }: AuthStatusProps) {
 
   if (!email) {
     return (
-      <div className="absolute top-4 right-4 z-20">
-        <Button asChild variant="outline" size="sm">
-          <a href={loginUrl}>Sign in</a>
-        </Button>
-      </div>
+      <Button asChild variant="outline" size="sm">
+        <a href={loginUrl}>Sign in</a>
+      </Button>
     )
   }
 
   return (
-    <div className="absolute top-4 right-4 z-20">
-      <div className="flex items-center gap-2 rounded-lg border bg-background px-2 py-1 shadow-sm">
-        <span className="max-w-44 truncate text-xs font-medium">{email}</span>
-        <Button
-          size="sm"
-          variant="outline"
-          type="button"
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-        >
-          {isLoggingOut ? "Signing out..." : "Sign out"}
-        </Button>
-      </div>
+    <div className="flex items-center gap-2 rounded-lg border bg-background px-2 py-1 shadow-sm">
+      <span className="max-w-44 truncate text-xs font-medium">{email}</span>
+      <Button
+        size="sm"
+        variant="outline"
+        type="button"
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+      >
+        {isLoggingOut ? "Signing out..." : "Sign out"}
+      </Button>
     </div>
   )
 }

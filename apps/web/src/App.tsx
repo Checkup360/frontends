@@ -1,13 +1,46 @@
 import {
   clearPostLoginRedirectUrl,
   readPostLoginRedirectUrl,
+  resolveVitePublicApiBaseUrl,
 } from "@workspace/auth/api"
 import { AuthStatus } from "@workspace/auth/components/auth-status"
 import { useEffect, useRef } from "react"
-import Login from "./components/login"
-import Invite from "./components/invite"
+import { Link, Outlet, Route, Routes } from "react-router-dom"
 import AuthError from "./components/auth-error"
-import Register from "./components/register"
+import Invite from "./components/invite"
+import Login from "./components/login"
+import NotFound from "./components/not-found"
+
+function RootLayout() {
+  return (
+    <div className="relative min-h-svh">
+      <header className="sticky top-0 z-30 flex justify-end border-b border-border/60 bg-background/85 px-4 py-3 backdrop-blur-md">
+        <AuthStatus
+          apiBaseUrl={resolveVitePublicApiBaseUrl(import.meta.env)}
+          webBaseUrl={window.location.origin}
+        />
+      </header>
+      <main className="p-6">
+        <Outlet />
+      </main>
+    </div>
+  )
+}
+
+function HomePage() {
+  return (
+    <div className="mx-auto mt-20 max-w-xl text-center">
+      <h1 className="text-2xl font-semibold">Checkup360 Web</h1>
+      <p className="mt-3 text-sm text-muted-foreground">
+        Sesión iniciada. Si necesitás autenticarte, entrá a{" "}
+        <Link to="/login" className="underline">
+          /login
+        </Link>
+        .
+      </p>
+    </div>
+  )
+}
 
 function LoginComplete() {
   const redirectUrl = useRef(readPostLoginRedirectUrl(`${window.location.origin}/`))
@@ -25,37 +58,16 @@ function LoginComplete() {
 }
 
 export function App() {
-  const pathname = window.location.pathname
-  const isLoginPage = pathname === "/login"
-  const isLoginCompletePage = pathname === "/login/complete"
-  const isAuthErrorPage = pathname === "/auth/error"
-  const isRegisterPage = pathname === "/register"
-  const isInvitePage = pathname.startsWith("/invite/")
-
   return (
-    <div className="min-h-svh p-6">
-      <AuthStatus
-        apiBaseUrl={import.meta.env.VITE_API_URL as string | undefined}
-        webBaseUrl={window.location.origin}
-      />
-      {isLoginCompletePage ? (
-        <LoginComplete />
-      ) : isLoginPage ? (
-        <Login />
-      ) : isAuthErrorPage ? (
-        <AuthError />
-      ) : isRegisterPage ? (
-        <Register />
-      ) : isInvitePage ? (
-        <Invite />
-      ) : (
-        <div className="mx-auto mt-20 max-w-xl text-center">
-          <h1 className="text-2xl font-semibold">Checkup360 Web</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Sesion iniciada. Si necesitas autenticarte, entra a <a className="underline" href="/login">/login</a>.
-          </p>
-        </div>
-      )}
-    </div>
+    <Routes>
+      <Route element={<RootLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/login/complete" element={<LoginComplete />} />
+        <Route path="/auth/error" element={<AuthError />} />
+        <Route path="/invite/:token" element={<Invite />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
   )
 }

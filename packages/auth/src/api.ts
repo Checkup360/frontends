@@ -4,14 +4,24 @@ import {
   type AuthMeResponse,
   type OAuthAuthorizeResponse,
 } from "@workspace/auth/schemas"
+import { publicDevDefaults } from "../../../apps.config"
 
-const DEFAULT_API_BASE_URL = "http://localhost:8000"
-const DEFAULT_WEB_BASE_URL = "http://localhost:5173"
+const DEFAULT_API_BASE_URL = publicDevDefaults.apiOrigin
+const DEFAULT_WEB_BASE_URL = publicDevDefaults.webOrigin
 const POST_LOGIN_REDIRECT_STORAGE_KEY = "auth.postLoginRedirectUrl"
 
 export function resolveApiBaseUrl(apiBaseUrl?: string): string {
   const raw = apiBaseUrl?.trim() || DEFAULT_API_BASE_URL
   return raw.replace(/\/$/, "")
+}
+
+/** Reads `VITE_PUBLIC_API_ORIGIN`, then legacy `VITE_API_URL`, then dev default. */
+export function resolveVitePublicApiBaseUrl(env: {
+  VITE_PUBLIC_API_ORIGIN?: string
+  VITE_API_URL?: string
+}): string {
+  const raw = env.VITE_PUBLIC_API_ORIGIN ?? env.VITE_API_URL
+  return resolveApiBaseUrl(raw)
 }
 
 export function resolveWebBaseUrl(webBaseUrl?: string): string {
@@ -87,6 +97,86 @@ export async function logout(apiBaseUrl?: string): Promise<void> {
   }
 }
 
+
+export class AuthRequestError extends Error {
+  readonly detail: unknown
+
+  constructor(detail: unknown) {
+    super("AuthRequestError")
+    this.name = "AuthRequestError"
+    this.detail = detail
+  }
+}
+
+
+export function tryFollowAuthRedirectResponse(response: Response): boolean {
+  const fallback = `${window.location.origin}/login/complete`
+
+  if (response.type === "opaqueredirect") {
+    window.location.assign(fallback)
+    return true
+  }
+
+  if (response.status !== 301 && response.status !== 302 && response.status !== 303) {
+    return false
+  }
+
+  const raw = response.headers.get("Location")?.trim()
+  if (!raw) {
+    window.location.assign(fallback)
+    return true
+  }
+  try {
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      window.location.assign(raw)
+    } else if (raw.startsWith("/")) {
+      window.location.assign(new URL(raw, window.location.origin).toString())
+    } else {
+      window.location.assign(fallback)
+    }
+  } catch {
+    window.location.assign(fallback)
+  }
+  return true
+}
+
+
+export async function loginWithPassword(
+  email: string,
+  password: string,
+  apiBaseUrl?: string
+): Promise<void> {
+  const base = resolveApiBaseUrl(apiBaseUrl)
+  const body = new URLSearchParams()
+  body.set("username", email.trim())
+  body.set("password", password)
+
+  const response = await fetch(`${base}/auth/login`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    redirect: "manual",
+    body: body.toString(),
+  })
+
+  if (tryFollowAuthRedirectResponse(response)) {
+    return
+  }
+
+  const text = await response.text()
+  const trimmed = text.trim()
+  let detail: unknown = response.statusText
+  if (trimmed) {
+    try {
+      const json = JSON.parse(trimmed) as { detail?: unknown }
+      detail = json.detail ?? json
+    } catch {
+      detail = trimmed
+    }
+  }
+  throw new AuthRequestError(detail)
+}
+
 export async function fetchGoogleAuthorizationUrl(
   apiBaseUrl?: string
 ): Promise<OAuthAuthorizeResponse> {
@@ -103,43 +193,6 @@ export async function fetchGoogleAuthorizationUrl(
   }
 
   return payload
-}
-
-export interface RegisterPayload {
-  email: string
-  password: string
-  invite_token: string
-}
-
-export async function registerWithEmailPassword(
-  payload: RegisterPayload,
-  apiBaseUrl?: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/auth/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-      const data = await response.json()
-      return {
-        success: false,
-        error: data.detail || "Error al registrarse",
-      }
-    }
-
-    return { success: true }
-  } catch (error) {
-    return {
-      success: false,
-      error: "Error al conectar con el servidor",
-    }
-  }
 }
 
 export interface InviteCreatePayload {
