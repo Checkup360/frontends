@@ -5,8 +5,9 @@ import {
 } from "@workspace/auth/api"
 import { AuthStatus } from "@workspace/auth/components/auth-status"
 import { useEffect, useRef } from "react"
-import { Link, Outlet, Route, Routes } from "react-router-dom"
+import { Outlet, Route, Routes } from "react-router-dom"
 import AuthError from "./components/auth-error"
+import { HeroCheckup360 } from "./components/hero-checkup360"
 import Invite from "./components/invite"
 import Login from "./components/login"
 import NotFound from "./components/not-found"
@@ -20,7 +21,7 @@ function RootLayout() {
           webBaseUrl={window.location.origin}
         />
       </header>
-      <main className="p-6">
+      <main>
         <Outlet />
       </main>
     </div>
@@ -28,18 +29,7 @@ function RootLayout() {
 }
 
 function HomePage() {
-  return (
-    <div className="mx-auto mt-20 max-w-xl text-center">
-      <h1 className="text-2xl font-semibold">Checkup360 Web</h1>
-      <p className="mt-3 text-sm text-muted-foreground">
-        Sesión iniciada. Si necesitás autenticarte, entrá a{" "}
-        <Link to="/login" className="underline">
-          /login
-        </Link>
-        .
-      </p>
-    </div>
-  )
+  return <HeroCheckup360 />
 }
 
 function LoginComplete() {
