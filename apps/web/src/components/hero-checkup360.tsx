@@ -9,18 +9,18 @@ type HeroCheckup360Props = {
 
 const heroCards = [
   {
-    title: "Para empleados",
-    description: "Carga de datos de salud y recomendaciones preventivas personalizadas.",
+    title: "For employees",
+    description: "Health data input and personalized preventive recommendations.",
     icon: HeartPulse,
   },
   {
-    title: "Para empleadores",
-    description: "Indicadores agregados y anónimos para detectar tendencias de riesgo.",
+    title: "For employers",
+    description: "Aggregated indicators to detect risk trends.",
     icon: ShieldCheck,
   },
   {
-    title: "Motor de riesgo",
-    description: "Predicción de riesgo mediante modelos de machine learning.",
+    title: "Risk engine",
+    description: "Risk prediction using machine learning models.",
     icon: BrainCircuit,
   },
 ]
@@ -43,7 +43,7 @@ export function HeroCheckup360({ className }: HeroCheckup360Props) {
             <div className="flex flex-col items-start gap-6 text-left">
               <div className="inline-flex items-center gap-2 rounded-full border bg-muted/40 px-4 py-1.5 text-sm text-muted-foreground shadow-sm backdrop-blur">
                 <Activity className="size-4 text-primary" />
-                Salud ocupacional preventiva impulsada por IA
+                AI-powered preventive occupational health
               </div>
 
               <div className="space-y-5">
@@ -52,27 +52,25 @@ export function HeroCheckup360({ className }: HeroCheckup360Props) {
                 </h1>
 
                 <p className="max-w-2xl text-balance text-2xl font-medium tracking-tight text-foreground/85 md:text-3xl">
-                  Gestioná la salud de tus equipos antes de que el riesgo se convierta
-                  en problema.
+                  Manage your team’s health before risk turns into a problem.
                 </p>
               </div>
 
               <p className="max-w-2xl text-pretty text-base leading-7 text-muted-foreground md:text-lg">
-                Integramos datos de salud, analítica predictiva y recomendaciones
-                personalizadas para ayudar a empresas a monitorear riesgos, prevenir
-                enfermedades crónicas y tomar mejores decisiones.
+                We integrate health data, predictive analytics, and personalized recommendations
+                to help companies monitor risks, prevent chronic diseases, and make better decisions.
               </p>
 
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
                 <Button size="lg" asChild>
                   <Link to="/login">
-                    Iniciar sesión
+                    Log in
                     <LogIn className="ml-2 size-4" />
                   </Link>
                 </Button>
                 <Button variant="outline" size="lg" asChild>
                   <a href="mailto:team.checkup360@gmail.com">
-                    Contacto
+                    Contact
                     <ArrowUpRight className="ml-2 size-4" />
                   </a>
                 </Button>
@@ -84,34 +82,34 @@ export function HeroCheckup360({ className }: HeroCheckup360Props) {
               <div className="rounded-lg border bg-card/80 p-4 shadow-2xl shadow-foreground/10 backdrop-blur">
                 <div className="flex items-center justify-between border-b pb-4">
                   <div>
-                    <p className="text-sm font-medium">Riesgo poblacional</p>
-                    <p className="text-xs text-muted-foreground">Vista agregada y anónima</p>
+                    <p className="text-sm font-medium">Population risk</p>
+                    <p className="text-xs text-muted-foreground">Aggregated and anonymized view</p>
                   </div>
                   <div className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
-                    IA activa
+                    AI active
                   </div>
                 </div>
 
                 <div className="grid gap-3 py-5 sm:grid-cols-3">
                   <div className="rounded-lg bg-muted/60 p-4">
                     <p className="text-2xl font-semibold">84%</p>
-                    <p className="mt-1 text-xs text-muted-foreground">sin alertas críticas</p>
+                    <p className="mt-1 text-xs text-muted-foreground">no critical alerts</p>
                   </div>
                   <div className="rounded-lg bg-muted/60 p-4">
                     <p className="text-2xl font-semibold">12</p>
-                    <p className="mt-1 text-xs text-muted-foreground">tendencias detectadas</p>
+                    <p className="mt-1 text-xs text-muted-foreground">detected trends</p>
                   </div>
                   <div className="rounded-lg bg-muted/60 p-4">
                     <p className="text-2xl font-semibold">3.8x</p>
-                    <p className="mt-1 text-xs text-muted-foreground">priorización clínica</p>
+                    <p className="mt-1 text-xs text-muted-foreground">clinical prioritization</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   {[
-                    ["Cardiometabólico", "72%"],
-                    ["Estrés y descanso", "58%"],
-                    ["Actividad física", "44%"],
+                    ["Cardiometabolic", "72%"],
+                    ["Stress & recovery", "58%"],
+                    ["Physical activity", "44%"],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <div className="mb-1.5 flex justify-between text-xs">
