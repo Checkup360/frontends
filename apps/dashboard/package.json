@@ -14,6 +14,8 @@
   "dependencies": {
     "@workspace/auth": "workspace:*",
     "@workspace/ui": "workspace:*",
+    "lucide-react": "^1.11.0",
+    "recharts": "^2.10.3",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.9.4"
