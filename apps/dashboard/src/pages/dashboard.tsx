@@ -1,13 +1,13 @@
 import { AreaScores } from "@/components/area-scores"
+import { EmployeesTable } from "@/components/employees-table"
 import { RiskTrend } from "@/components/risk-trend"
 import { StatCard } from "@/components/stat-card"
-import { WorkersTable } from "@/components/workers-table"
-import { Users, TrendingUp, AlertTriangle, Activity } from "lucide-react"
+import { AlertTriangle, TrendingUp, Users } from "lucide-react"
 
 export function DashboardPage() {
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
           label="Total employees"
           value="551"
@@ -30,12 +30,6 @@ export function DashboardPage() {
           icon={AlertTriangle}
           tone="warning"
         />
-        <StatCard
-          label="Active assessments"
-          value="89%"
-          icon={Activity}
-          tone="primary"
-        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -47,7 +41,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <WorkersTable />
+      <EmployeesTable />
     </div>
   )
 }

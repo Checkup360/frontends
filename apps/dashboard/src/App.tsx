@@ -2,29 +2,21 @@ import {
   resolveWebBaseUrl,
   resolveVitePublicApiBaseUrl,
 } from "@workspace/auth/api"
-import { AuthStatus } from "@workspace/auth/components/auth-status"
 import { RequireAuthRedirect } from "@workspace/auth/components/require-auth-redirect"
 import { Button } from "@workspace/ui/components/button"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
+import { DashboardShell } from "@/components/dashboard-shell"
 import { DashboardPage } from "@/pages/dashboard"
+import { EmployeesPage } from "@/pages/employees"
+import { InvitePeoplePage } from "@/pages/invite-people"
 
 function ProtectedLayout() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env as any)
+  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
   const webBaseUrl = resolveWebBaseUrl()
 
   return (
     <RequireAuthRedirect apiBaseUrl={apiBaseUrl} webBaseUrl={webBaseUrl}>
-      <div className="flex min-h-svh flex-col p-6">
-        <header className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-          </div>
-          <AuthStatus apiBaseUrl={apiBaseUrl} webBaseUrl={webBaseUrl} />
-        </header>
-        <main className="flex-1 w-full overflow-auto">
-          <Outlet />
-        </main>
-      </div>
+      <Outlet />
     </RequireAuthRedirect>
   )
 }
@@ -48,8 +40,14 @@ export function App() {
   return (
     <Routes>
       <Route element={<ProtectedLayout />}>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="*" element={<NotFound />} />
+        <Route element={<DashboardShell />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/employees" element={<EmployeesPage />} />
+          <Route path="/people/invite" element={<InvitePeoplePage />} />
+          <Route path="/organization" element={<NotFound />} />
+          <Route path="/settings" element={<NotFound />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
       </Route>
     </Routes>
   )

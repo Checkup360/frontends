@@ -1,5 +1,14 @@
 import { Card } from "@workspace/ui/components/card";
 import { Badge } from "@workspace/ui/components/badge";
+import { Input } from "@workspace/ui/components/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@workspace/ui/components/table";
 import { useMemo, useState } from "react";
 
 type Worker = {
@@ -26,7 +35,7 @@ const riskClass: Record<Worker["risk"], string> = {
   High: "bg-destructive/15 text-destructive border-transparent",
 };
 
-export function WorkersTable() {
+export function EmployeesTable() {
   const [q, setQ] = useState("");
   const filtered = useMemo(
     () => workers.filter((w) => `${w.name} ${w.area}`.toLowerCase().includes(q.toLowerCase())),
@@ -39,39 +48,39 @@ export function WorkersTable() {
           <h3 className="text-base font-semibold text-foreground">Employees</h3>
           <p className="text-sm text-muted-foreground">Individual data and risk level</p>
         </div>
-        <input
+        <Input
           type="text"
           placeholder="Search by name or area…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
+          className="w-full sm:max-w-xs"
         />
       </div>
       <div className="overflow-hidden rounded-lg border border-border/60">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-muted-foreground">
-            <tr className="text-left">
-              <th className="px-4 py-3 font-medium">Employee</th>
-              <th className="px-4 py-3 font-medium">Area</th>
-              <th className="px-4 py-3 font-medium">Score</th>
-              <th className="px-4 py-3 font-medium">Risk</th>
-              <th className="px-4 py-3 font-medium">Last assessment</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead>Employee</TableHead>
+              <TableHead>Area</TableHead>
+              <TableHead>Score</TableHead>
+              <TableHead>Risk</TableHead>
+              <TableHead>Last assessment</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filtered.map((w) => (
-              <tr key={w.name} className="border-t border-border/60 hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3 font-medium text-foreground">{w.name}</td>
-                <td className="px-4 py-3 text-muted-foreground">{w.area}</td>
-                <td className="px-4 py-3 font-semibold tabular-nums text-foreground">{w.score}</td>
-                <td className="px-4 py-3">
+              <TableRow key={w.name}>
+                <TableCell className="font-medium text-foreground">{w.name}</TableCell>
+                <TableCell className="text-muted-foreground">{w.area}</TableCell>
+                <TableCell className="font-semibold tabular-nums text-foreground">{w.score}</TableCell>
+                <TableCell>
                   <Badge variant="outline" className={riskClass[w.risk]}>{w.risk}</Badge>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{w.lastCheck}</td>
-              </tr>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{w.lastCheck}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </Card>
   );

@@ -16,11 +16,13 @@ export function resolveApiBaseUrl(apiBaseUrl?: string): string {
 }
 
 /** Reads `VITE_PUBLIC_API_ORIGIN`, then legacy `VITE_API_URL`, then dev default. */
-export function resolveVitePublicApiBaseUrl(env: {
-  VITE_PUBLIC_API_ORIGIN?: string
-  VITE_API_URL?: string
-}): string {
-  const raw = env.VITE_PUBLIC_API_ORIGIN ?? env.VITE_API_URL
+export function resolveVitePublicApiBaseUrl(env: Record<string, unknown>): string {
+  const raw =
+    typeof env.VITE_PUBLIC_API_ORIGIN === "string"
+      ? env.VITE_PUBLIC_API_ORIGIN
+      : typeof env.VITE_API_URL === "string"
+        ? env.VITE_API_URL
+        : undefined
   return resolveApiBaseUrl(raw)
 }
 
