@@ -11,6 +11,9 @@ type AuthStatusProps = {
 export function AuthStatus({ apiBaseUrl, webBaseUrl }: AuthStatusProps) {
   const { email, isLoading, clear } = useCurrentUser(apiBaseUrl)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const isLoginRoute =
+    window.location.pathname === "/login" ||
+    window.location.pathname === "/login/complete"
 
   const loginUrl = useMemo(
     () => buildLoginUrl({ webBaseUrl, nextUrl: window.location.href }),
@@ -30,6 +33,8 @@ export function AuthStatus({ apiBaseUrl, webBaseUrl }: AuthStatusProps) {
   if (isLoading) return null
 
   if (!email) {
+    if (isLoginRoute) return null
+
     return (
       <Button asChild variant="outline" size="sm">
         <a href={loginUrl}>Sign in</a>

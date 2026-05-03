@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Badge } from "@workspace/ui/components/badge"
+import { SelectableOptionGroup } from "@workspace/components/components/selectable-option-group"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -11,7 +11,6 @@ import {
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { Separator } from "@workspace/ui/components/separator"
-import { cn } from "@workspace/ui/lib/utils"
 import { Check, Copy, MailPlus, ShieldCheck, UserRound } from "lucide-react"
 
 type Role = "org_admin" | "employee"
@@ -82,35 +81,7 @@ export function InvitePeoplePage() {
           <form className="space-y-6" onSubmit={handleGenerate}>
             <div className="grid gap-3">
               <Label>Role</Label>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {roles.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    onClick={() => setRole(item.value)}
-                    className={cn(
-                      "rounded-lg border border-border/70 bg-background p-4 text-left transition-colors hover:bg-muted/50",
-                      role === item.value && "border-primary bg-primary/5 ring-2 ring-primary/15"
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <item.icon className="size-4 text-primary" />
-                        <span className="text-sm font-medium">{item.label}</span>
-                      </div>
-                      {role === item.value ? (
-                        <Badge variant="secondary">
-                          <Check className="size-3" />
-                          Selected
-                        </Badge>
-                      ) : null}
-                    </div>
-                    <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                      {item.description}
-                    </p>
-                  </button>
-                ))}
-              </div>
+              <SelectableOptionGroup options={roles} value={role} onValueChange={setRole} />
             </div>
 
             <div className="grid gap-2">

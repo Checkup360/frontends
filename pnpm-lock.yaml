@@ -26,9 +26,15 @@ importers:
       '@workspace/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@workspace/components':
+        specifier: workspace:*
+        version: link:../../packages/components
       '@workspace/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      lucide-react:
+        specifier: ^1.11.0
+        version: 1.11.0(react@19.2.5)
       react:
         specifier: ^19.2.5
         version: 19.2.5
@@ -84,6 +90,9 @@ importers:
       '@workspace/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@workspace/components':
+        specifier: workspace:*
+        version: link:../../packages/components
       '@workspace/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -212,6 +221,25 @@ importers:
       '@workspace/ui':
         specifier: workspace:*
         version: link:../ui
+      react:
+        specifier: ^19.2.4
+        version: 19.2.5
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.10
+        version: 19.2.14
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/components:
+    dependencies:
+      '@workspace/ui':
+        specifier: workspace:*
+        version: link:../ui
+      lucide-react:
+        specifier: ^1.11.0
+        version: 1.11.0(react@19.2.5)
       react:
         specifier: ^19.2.4
         version: 19.2.5

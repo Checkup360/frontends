@@ -2,10 +2,13 @@ import {
   resolveWebBaseUrl,
   resolveVitePublicApiBaseUrl,
 } from "@workspace/auth/api"
-import { AuthStatus } from "@workspace/auth/components/auth-status"
 import { RequireAuthRedirect } from "@workspace/auth/components/require-auth-redirect"
 import { Button } from "@workspace/ui/components/button"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
+
+import { BackofficeShell } from "@/components/backoffice-shell"
+import { InvitationsPage } from "@/pages/invitations"
+import { OrganizationsPage } from "@/pages/organizations"
 
 function ProtectedLayout() {
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
@@ -13,31 +16,8 @@ function ProtectedLayout() {
 
   return (
     <RequireAuthRedirect apiBaseUrl={apiBaseUrl} webBaseUrl={webBaseUrl}>
-      <div className="flex min-h-svh flex-col p-6">
-        <header className="mb-4 flex justify-end">
-          <AuthStatus apiBaseUrl={apiBaseUrl} webBaseUrl={webBaseUrl} />
-        </header>
-        <main>
-          <Outlet />
-        </main>
-      </div>
+      <Outlet />
     </RequireAuthRedirect>
-  )
-}
-
-function HomePage() {
-  return (
-    <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-      <div>
-        <h1 className="font-medium">Project ready!</h1>
-        <p>You may now add components and start building.</p>
-        <p>We&apos;ve already added the button component for you.</p>
-        <Button className="mt-2">Button</Button>
-      </div>
-      <div className="text-muted-foreground font-mono text-xs">
-        (Press <kbd>d</kbd> to toggle dark mode)
-      </div>
-    </div>
   )
 }
 
@@ -60,8 +40,11 @@ export function App() {
   return (
     <Routes>
       <Route element={<ProtectedLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="*" element={<NotFound />} />
+        <Route element={<BackofficeShell />}>
+          <Route path="/" element={<OrganizationsPage />} />
+          <Route path="/invitations" element={<InvitationsPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
       </Route>
     </Routes>
   )
