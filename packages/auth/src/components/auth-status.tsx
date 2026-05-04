@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { buildLoginUrl, logout } from "@workspace/auth/api"
+import { buildLoginUrl, logout, resolveWebBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 
@@ -17,7 +17,7 @@ export function AuthStatus({ apiBaseUrl, webBaseUrl }: AuthStatusProps) {
 
   const loginUrl = useMemo(
     () => buildLoginUrl({ webBaseUrl, nextUrl: window.location.href }),
-    [webBaseUrl],
+    [webBaseUrl]
   )
 
   const handleLogout = async () => {
@@ -25,6 +25,7 @@ export function AuthStatus({ apiBaseUrl, webBaseUrl }: AuthStatusProps) {
     try {
       await logout(apiBaseUrl)
       clear()
+      window.location.replace(resolveWebBaseUrl(webBaseUrl))
     } finally {
       setIsLoggingOut(false)
     }

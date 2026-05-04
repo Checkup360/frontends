@@ -1,4 +1,7 @@
-import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
+import {
+  resolveVitePublicApiBaseUrl,
+  resolveWebBaseUrl,
+} from "@workspace/auth/api"
 import { SidebarAccount } from "@workspace/auth/components/sidebar-account"
 import {
   WorkspaceShell,
@@ -18,18 +21,21 @@ const pageMeta: Record<string, WorkspaceShellPageMeta> = {
   "/": {
     eyebrow: "Administration",
     title: "Organizations",
-    description: "Manage organizations, create invitations, and monitor workspace access.",
+    description:
+      "Manage organizations, create invitations, and monitor workspace access.",
   },
   "/invitations": {
     eyebrow: "Administration",
     title: "Invitations",
-    description: "Review invitation links prepared for organization onboarding.",
+    description:
+      "Review invitation links prepared for organization onboarding.",
   },
 }
 
 export function BackofficeShell() {
   const { pathname } = useLocation()
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
+  const webBaseUrl = resolveWebBaseUrl()
 
   return (
     <WorkspaceShell
@@ -46,6 +52,7 @@ export function BackofficeShell() {
       sidebarFooter={
         <SidebarAccount
           apiBaseUrl={apiBaseUrl}
+          webBaseUrl={webBaseUrl}
           roleLabel="Platform admin"
           inviteAction={
             <Button variant="outline" size="sm" asChild>
@@ -58,7 +65,12 @@ export function BackofficeShell() {
         />
       }
       renderLink={({ item, className, children }) => (
-        <NavLink key={item.to} to={item.to} end={item.end} className={className}>
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end={item.end}
+          className={className}
+        >
           {children}
         </NavLink>
       )}

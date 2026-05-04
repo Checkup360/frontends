@@ -1,16 +1,18 @@
 import type { ReactNode } from "react"
-import { logout } from "@workspace/auth/api"
+import { logout, resolveWebBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 
 type SidebarAccountProps = {
   apiBaseUrl: string
+  webBaseUrl?: string
   inviteAction?: ReactNode
   roleLabel?: string
 }
 
 export function SidebarAccount({
   apiBaseUrl,
+  webBaseUrl,
   inviteAction,
   roleLabel = "Organization member",
 }: SidebarAccountProps) {
@@ -19,6 +21,7 @@ export function SidebarAccount({
   const handleLogout = async () => {
     await logout(apiBaseUrl)
     clear()
+    window.location.replace(resolveWebBaseUrl(webBaseUrl))
   }
 
   if (isLoading) {

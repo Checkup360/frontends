@@ -1,4 +1,7 @@
-import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
+import {
+  resolveVitePublicApiBaseUrl,
+  resolveWebBaseUrl,
+} from "@workspace/auth/api"
 import { SidebarAccount } from "@workspace/auth/components/sidebar-account"
 import {
   WorkspaceShell,
@@ -6,7 +9,13 @@ import {
   type WorkspaceShellPageMeta,
 } from "@workspace/components/components/workspace-shell"
 import { Button } from "@workspace/ui/components/button"
-import { Building2, LayoutDashboard, MailPlus, Settings, Users } from "lucide-react"
+import {
+  Building2,
+  LayoutDashboard,
+  MailPlus,
+  Settings,
+  Users,
+} from "lucide-react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
 import { OrganizationSelector } from "./organization-selector"
 
@@ -30,18 +39,21 @@ const pageMeta: Record<string, WorkspaceShellPageMeta> = {
   "/employees": {
     eyebrow: "People operations",
     title: "Employees",
-    description: "Review individual checkups, areas, and health risk categories.",
+    description:
+      "Review individual checkups, areas, and health risk categories.",
   },
   "/people/invite": {
     eyebrow: "Access management",
     title: "Invite people",
-    description: "Prepare invitation links for organization admins and employees.",
+    description:
+      "Prepare invitation links for organization admins and employees.",
   },
 }
 
 export function DashboardShell() {
   const { pathname } = useLocation()
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
+  const webBaseUrl = resolveWebBaseUrl()
 
   return (
     <WorkspaceShell
@@ -60,6 +72,7 @@ export function DashboardShell() {
       sidebarFooter={
         <SidebarAccount
           apiBaseUrl={apiBaseUrl}
+          webBaseUrl={webBaseUrl}
           inviteAction={
             <Button variant="outline" size="sm" asChild>
               <NavLink to="/people/invite">
@@ -71,7 +84,12 @@ export function DashboardShell() {
         />
       }
       renderLink={({ item, className, children }) => (
-        <NavLink key={item.to} to={item.to} end={item.end} className={className}>
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end={item.end}
+          className={className}
+        >
           {children}
         </NavLink>
       )}

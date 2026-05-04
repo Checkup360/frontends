@@ -27,12 +27,18 @@ interface OrgInvitationFormProps {
   onBack?: () => void
   apiBaseUrl?: string
   onSuccessChange?: (success: boolean) => void
+  fixedOrganization?: OrganizationResponse
+  title?: string
+  description?: string
 }
 
 export function OrgInvitationForm({
   onBack,
   apiBaseUrl,
   onSuccessChange,
+  fixedOrganization,
+  title = "Organization registration",
+  description = "Create an invitation for a user in an existing organization.",
 }: OrgInvitationFormProps) {
   const [organizations, setOrganizations] = useState<OrganizationResponse[]>([])
   const [selected, setSelected] = useState<OrganizationResponse | null>(null)
@@ -55,8 +61,16 @@ export function OrgInvitationForm({
   const isAdminRole = role === "admin"
   const isEmailFilled = email.trim().length > 0
   const shouldBeSingleUse = isAdminRole || isEmailFilled
+  const selectedOrganization = fixedOrganization ?? selected
 
   useEffect(() => {
+    if (fixedOrganization) {
+      setOrgsLoading(false)
+      setOrganizations([])
+      setSelected(null)
+      return
+    }
+
     const fetchOrganizations = async () => {
       setOrgsLoading(true)
       setOrgsError("")
@@ -71,7 +85,7 @@ export function OrgInvitationForm({
       }
     }
     fetchOrganizations()
-  }, [apiBaseUrl])
+  }, [apiBaseUrl, fixedOrganization])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -79,7 +93,7 @@ export function OrgInvitationForm({
     setSuccess(false)
     onSuccessChange?.(false)
 
-    if (!selected) {
+    if (!selectedOrganization) {
       setError({
         code: "organization_required",
         message: "Please select an organization",
@@ -113,7 +127,7 @@ export function OrgInvitationForm({
     try {
       const result = await createOrgInvitation(
         {
-          organization_id: selected.id,
+          organization_id: selectedOrganization.id,
           role,
           email: email.trim() || undefined,
           max_uses: shouldBeSingleUse ? 1 : maxUsesNum,
@@ -132,10 +146,12 @@ export function OrgInvitationForm({
       setSuccess(true)
       onSuccessChange?.(true)
       setInviteUrl(result.success.invite_url)
-      setGeneratedOrganization(selected)
+      setGeneratedOrganization(selectedOrganization)
       setGeneratedRole(role)
       setGeneratedEmail(email.trim())
-      setSelected(null)
+      if (!fixedOrganization) {
+        setSelected(null)
+      }
       setRole("member")
       setEmail("")
       setMaxUses("1")
@@ -162,7 +178,9 @@ export function OrgInvitationForm({
     setGeneratedOrganization(null)
     setGeneratedRole("member")
     setGeneratedEmail("")
-    setSelected(null)
+    if (!fixedOrganization) {
+      setSelected(null)
+    }
     setRole("member")
     setEmail("")
     setMaxUses("1")
@@ -252,10 +270,8 @@ export function OrgInvitationForm({
   return (
     <div className="flex min-h-[430px] flex-col space-y-5">
       <div>
-        <h2 className="text-lg font-semibold">Organization registration</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Create an invitation for a user in an existing organization.
-        </p>
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
@@ -269,16 +285,27 @@ export function OrgInvitationForm({
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="organization">Organization</Label>
-            <OrganizationSelector
-              selected={selected}
-              onSelect={setSelected}
-              organizations={organizations}
-              loading={orgsLoading}
-              error={orgsError || undefined}
-            />
-          </div>
+          {fixedOrganization ? (
+            <div className="space-y-2">
+              <Label>Organization</Label>
+              <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
+                <p className="text-sm font-medium text-foreground">
+                  {fixedOrganization.name}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="organization">Organization</Label>
+              <OrganizationSelector
+                selected={selected}
+                onSelect={setSelected}
+                organizations={organizations}
+                loading={orgsLoading}
+                error={orgsError || undefined}
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
@@ -402,7 +429,7 @@ export function OrgInvitationForm({
               Back
             </Button>
           )}
-          <Button type="submit" disabled={loading || !selected}>
+          <Button type="submit" disabled={loading || !selectedOrganization}>
             {loading ? (
               <>
                 <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />

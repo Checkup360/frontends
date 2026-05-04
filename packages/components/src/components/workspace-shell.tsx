@@ -1,6 +1,12 @@
 import { useState, type ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
-import { Activity, HeartPulse, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react"
+import {
+  Activity,
+  HeartPulse,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+} from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { Separator } from "@workspace/ui/components/separator"
@@ -34,6 +40,7 @@ type WorkspaceShellProps = {
   activePath: string
   pageMeta: Record<string, WorkspaceShellPageMeta>
   fallbackMeta: WorkspaceShellPageMeta
+  sidebarHeader?: ReactNode
   sidebarFooter: ReactNode
   children: ReactNode
   renderLink: (props: WorkspaceShellLinkRenderProps) => ReactNode
@@ -58,19 +65,24 @@ export function WorkspaceShell({
   activePath,
   pageMeta,
   fallbackMeta,
+  sidebarHeader,
   sidebarFooter,
   children,
   renderLink,
 }: WorkspaceShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const meta = pageMeta[activePath] ?? fallbackMeta
-  const sidebarWidthClassName = sidebarCollapsed ? "lg:w-[76px]" : "lg:w-[280px]"
+  const sidebarWidthClassName = sidebarCollapsed
+    ? "lg:w-[76px]"
+    : "lg:w-[280px]"
 
   return (
     <div
       className={cn(
         "min-h-svh bg-muted/25 text-foreground",
-        sidebarCollapsed ? "lg:[--workspace-sidebar:76px]" : "lg:[--workspace-sidebar:280px]"
+        sidebarCollapsed
+          ? "lg:[--workspace-sidebar:76px]"
+          : "lg:[--workspace-sidebar:280px]"
       )}
     >
       <aside
@@ -91,8 +103,12 @@ export function WorkspaceShell({
           {!sidebarCollapsed ? (
             <>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold leading-none">CheckUp360</p>
-                <p className="mt-1 truncate text-xs text-muted-foreground">{appLabel}</p>
+                <p className="truncate text-sm leading-none font-semibold">
+                  CheckUp360
+                </p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  {appLabel}
+                </p>
               </div>
               <Button
                 type="button"
@@ -118,7 +134,8 @@ export function WorkspaceShell({
         </div>
 
         {!sidebarCollapsed ? (
-          <div className="px-3 pb-3">
+          <div className="space-y-3 px-3 pb-3">
+            {sidebarHeader}
             <div className="flex h-9 items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 text-sm text-muted-foreground">
               <Search className="size-4" />
               <span>{searchPlaceholder}</span>
@@ -143,7 +160,9 @@ export function WorkspaceShell({
               children: (
                 <>
                   <item.icon className="size-4" />
-                  <span className={cn(sidebarCollapsed && "sr-only")}>{item.label}</span>
+                  <span className={cn(sidebarCollapsed && "sr-only")}>
+                    {item.label}
+                  </span>
                 </>
               ),
             })
@@ -167,7 +186,9 @@ export function WorkspaceShell({
               children: (
                 <>
                   <item.icon className="size-4" />
-                  <span className={cn(sidebarCollapsed && "sr-only")}>{item.label}</span>
+                  <span className={cn(sidebarCollapsed && "sr-only")}>
+                    {item.label}
+                  </span>
                 </>
               ),
             })
@@ -183,19 +204,23 @@ export function WorkspaceShell({
         <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
           <div className="flex min-h-16 flex-col gap-3 px-4 py-4 sm:px-6 lg:px-8">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs font-medium tracking-widest text-muted-foreground uppercase">
                 <Activity className="size-3.5" />
                 {meta.eyebrow}
               </div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
                 {meta.title}
               </h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{meta.description}</p>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                {meta.description}
+              </p>
             </div>
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          {children}
+        </main>
       </div>
     </div>
   )

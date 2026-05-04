@@ -1,5 +1,5 @@
 import { useEffect, useMemo, type ReactNode } from "react"
-import { buildLoginUrl } from "@workspace/auth/api"
+import { resolveWebBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 
 type RequireOrgAdminProps = {
@@ -16,24 +16,21 @@ export function RequireOrgAdmin({
   children,
 }: RequireOrgAdminProps) {
   const { user, isLoading } = useCurrentUser(apiBaseUrl)
-  const loginUrl = useMemo(
-    () => buildLoginUrl({ webBaseUrl, nextUrl: window.location.href }),
-    [webBaseUrl],
-  )
+  const homeUrl = useMemo(() => resolveWebBaseUrl(webBaseUrl), [webBaseUrl])
 
   const isOrgAdmin = useMemo(
     () =>
       user &&
       user.memberships &&
       user.memberships.some((m) => m.role === "admin"),
-    [user],
+    [user]
   )
 
   useEffect(() => {
     if (!isLoading && !user) {
-      window.location.replace(loginUrl)
+      window.location.replace(homeUrl)
     }
-  }, [isLoading, loginUrl, user])
+  }, [homeUrl, isLoading, user])
 
   useEffect(() => {
     if (!isLoading && user && !isOrgAdmin) {

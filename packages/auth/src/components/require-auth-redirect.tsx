@@ -1,5 +1,5 @@
 import { useEffect, useMemo, type ReactNode } from "react"
-import { buildLoginUrl } from "@workspace/auth/api"
+import { resolveWebBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 
 type RequireAuthRedirectProps = {
@@ -16,16 +16,13 @@ export function RequireAuthRedirect({
   children,
 }: RequireAuthRedirectProps) {
   const { user, isLoading } = useCurrentUser(apiBaseUrl)
-  const loginUrl = useMemo(
-    () => buildLoginUrl({ webBaseUrl, nextUrl: window.location.href }),
-    [webBaseUrl],
-  )
+  const homeUrl = useMemo(() => resolveWebBaseUrl(webBaseUrl), [webBaseUrl])
 
   useEffect(() => {
     if (!isLoading && !user) {
-      window.location.replace(loginUrl)
+      window.location.replace(homeUrl)
     }
-  }, [isLoading, loginUrl, user])
+  }, [homeUrl, isLoading, user])
 
   if (isLoading || !user) {
     return (
