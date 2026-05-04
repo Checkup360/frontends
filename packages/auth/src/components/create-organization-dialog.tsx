@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { createOrganization, resolveApiBaseUrl, type CreateOrganizationError } from "@workspace/auth/api"
+import { createOrganization, type CreateOrganizationError } from "@workspace/auth/api"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -90,7 +90,7 @@ export function CreateOrganizationDialog({
       )
 
       if ("error" in result) {
-        setError(result.error)
+        setError(result.error || { code: "unknown_error", message: "Unknown error" })
         return
       }
 

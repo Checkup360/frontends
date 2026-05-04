@@ -3,6 +3,9 @@ import {
   parseOAuthAuthorizeResponse,
   type AuthMeResponse,
   type OAuthAuthorizeResponse,
+  type CreateSysadminInvitationPayload,
+  type CreateOrgInvitationPayload,
+  type InviteError,
 } from "@workspace/auth/schemas"
 import { publicDevDefaults } from "../../../apps.config"
 
@@ -323,6 +326,112 @@ export async function listOrganizations(apiBaseUrl?: string): Promise<Organizati
   } catch (error) {
     console.error("Error listing organizations:", error)
     return []
+  }
+}
+
+function getInvitationErrorMessage(code: string): string {
+  const messages: Record<string, string> = {
+    organization_not_found: "Organization not found.",
+    role_requires_organization: "Role requires an organization to be selected.",
+    invalid_invite: "Invalid invitation link.",
+    invite_used: "This invitation link has already been used.",
+    invite_expired: "This invitation link has expired.",
+    email_mismatch: "The email does not match the invitation.",
+    unknown_error: "Failed to create invitation. Please try again.",
+    network_error: "Network error. Please try again.",
+  }
+  return messages[code] || "An error occurred. Please try again."
+}
+
+export async function createSysadminInvitation(
+  payload: CreateSysadminInvitationPayload,
+  apiBaseUrl?: string,
+): Promise<{ success: InviteCreateResponse; error?: never } | { success?: never; error: InviteError }> {
+  try {
+    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/admin/invites`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      try {
+        const data = (await response.json()) as { detail?: string }
+        const detail = data.detail || "Unknown error"
+        return {
+          error: {
+            code: detail,
+            message: getInvitationErrorMessage(detail),
+          },
+        }
+      } catch {
+        return {
+          error: {
+            code: "unknown_error",
+            message: getInvitationErrorMessage("unknown_error"),
+          },
+        }
+      }
+    }
+
+    return { success: (await response.json()) as InviteCreateResponse }
+  } catch (error) {
+    console.error("Error creating sysadmin invitation:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: getInvitationErrorMessage("network_error"),
+      },
+    }
+  }
+}
+
+export async function createOrgInvitation(
+  payload: CreateOrgInvitationPayload,
+  apiBaseUrl?: string,
+): Promise<{ success: InviteCreateResponse; error?: never } | { success?: never; error: InviteError }> {
+  try {
+    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/admin/invites`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      try {
+        const data = (await response.json()) as { detail?: string }
+        const detail = data.detail || "Unknown error"
+        return {
+          error: {
+            code: detail,
+            message: getInvitationErrorMessage(detail),
+          },
+        }
+      } catch {
+        return {
+          error: {
+            code: "unknown_error",
+            message: getInvitationErrorMessage("unknown_error"),
+          },
+        }
+      }
+    }
+
+    return { success: (await response.json()) as InviteCreateResponse }
+  } catch (error) {
+    console.error("Error creating organization invitation:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: getInvitationErrorMessage("network_error"),
+      },
+    }
   }
 }
 

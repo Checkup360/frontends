@@ -221,6 +221,9 @@ importers:
       '@workspace/ui':
         specifier: workspace:*
         version: link:../ui
+      lucide-react:
+        specifier: ^1.11.0
+        version: 1.11.0(react@19.2.5)
       react:
         specifier: ^19.2.4
         version: 19.2.5
@@ -234,6 +237,9 @@ importers:
 
   packages/components:
     dependencies:
+      '@workspace/auth':
+        specifier: workspace:*
+        version: link:../auth
       '@workspace/ui':
         specifier: workspace:*
         version: link:../ui
@@ -256,6 +262,9 @@ importers:
       '@fontsource-variable/geist':
         specifier: ^5.2.8
         version: 5.2.8
+      '@radix-ui/react-select':
+        specifier: ^2.1.2
+        version: 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1

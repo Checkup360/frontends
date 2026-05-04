@@ -19,6 +19,27 @@ export type InviteCreateResponse = {
   invite_url: string
 }
 
+export type OrgRole = "admin" | "member"
+
+export interface CreateSysadminInvitationPayload {
+  email?: string
+  expires_in_hours?: number
+  is_sysadmin: true
+}
+
+export interface CreateOrgInvitationPayload {
+  organization_id: string
+  role: OrgRole
+  email?: string
+  max_uses?: number
+  expires_in_hours?: number
+}
+
+export interface InviteError {
+  code: string
+  message: string
+}
+
 export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
   if (!payload || typeof payload !== "object") return null
 
