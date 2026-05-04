@@ -8,6 +8,7 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { Building2, LayoutDashboard, MailPlus, Settings, Users } from "lucide-react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
+import { OrganizationSelector } from "./organization-selector"
 
 const navigation: WorkspaceShellNavItem[] = [
   { label: "Overview", to: "/", icon: LayoutDashboard, end: true },
@@ -55,6 +56,7 @@ export function DashboardShell() {
         title: "Workspace",
         description: "Manage your organization health workspace.",
       }}
+      sidebarHeader={<OrganizationSelector apiBaseUrl={apiBaseUrl} />}
       sidebarFooter={
         <SidebarAccount
           apiBaseUrl={apiBaseUrl}

@@ -2,7 +2,7 @@ import {
   resolveWebBaseUrl,
   resolveVitePublicApiBaseUrl,
 } from "@workspace/auth/api"
-import { RequireAuthRedirect } from "@workspace/auth/components/require-auth-redirect"
+import { RequireOrgAdmin } from "@workspace/auth/components/require-org-admin"
 import { Button } from "@workspace/ui/components/button"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
 import { DashboardShell } from "@/components/dashboard-shell"
@@ -15,9 +15,9 @@ function ProtectedLayout() {
   const webBaseUrl = resolveWebBaseUrl()
 
   return (
-    <RequireAuthRedirect apiBaseUrl={apiBaseUrl} webBaseUrl={webBaseUrl}>
+    <RequireOrgAdmin apiBaseUrl={apiBaseUrl} webBaseUrl={webBaseUrl}>
       <Outlet />
-    </RequireAuthRedirect>
+    </RequireOrgAdmin>
   )
 }
 
@@ -52,3 +52,4 @@ export function App() {
     </Routes>
   )
 }
+

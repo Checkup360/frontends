@@ -207,9 +207,20 @@ export interface InviteCreateResponse {
   invite_url: string
 }
 
+export interface CreateOrganizationPayload {
+  name: string
+  slug: string
+}
+
+export interface OrganizationResponse {
+  id: string
+  name: string
+  slug: string
+}
+
 export async function createInvite(
   payload: InviteCreatePayload,
-  apiBaseUrl?: string
+  apiBaseUrl?: string,
 ): Promise<InviteCreateResponse | null> {
   try {
     const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/admin/invites`, {
@@ -234,3 +245,84 @@ export async function createInvite(
     return null
   }
 }
+
+export interface CreateOrganizationError {
+  code: string
+  message: string
+}
+
+export async function createOrganization(
+  payload: CreateOrganizationPayload,
+  apiBaseUrl?: string,
+): Promise<{ success: OrganizationResponse; error?: never } | { success?: never; error: CreateOrganizationError }> {
+  try {
+    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/organizations`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      try {
+        const data = (await response.json()) as { detail?: string }
+        const detail = data.detail || "Unknown error"
+        return {
+          error: {
+            code: detail,
+            message: getOrganizationErrorMessage(detail),
+          },
+        }
+      } catch {
+        return {
+          error: {
+            code: "unknown_error",
+            message: "Failed to create organization",
+          },
+        }
+      }
+    }
+
+    return { success: (await response.json()) as OrganizationResponse }
+  } catch (error) {
+    console.error("Error creating organization:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: "Network error. Please try again.",
+      },
+    }
+  }
+}
+
+function getOrganizationErrorMessage(code: string): string {
+  const messages: Record<string, string> = {
+    organization_slug_already_exists: "This URL identifier is already taken. Please choose another.",
+    invalid_slug_format: "URL identifier can only contain lowercase letters, numbers, and hyphens.",
+    slug_required: "URL identifier is required.",
+    name_required: "Organization name is required.",
+    unknown_error: "Failed to create organization. Please try again.",
+    network_error: "Network error. Please try again.",
+  }
+  return messages[code] || "An error occurred. Please try again."
+}
+
+export async function listOrganizations(apiBaseUrl?: string): Promise<OrganizationResponse[]> {
+  try {
+    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/organizations`, {
+      credentials: "include",
+    })
+
+    if (!response.ok) {
+      return []
+    }
+
+    return (await response.json()) as OrganizationResponse[]
+  } catch (error) {
+    console.error("Error listing organizations:", error)
+    return []
+  }
+}
+
