@@ -4,13 +4,15 @@ import {
   resolveVitePublicApiBaseUrl,
 } from "@workspace/auth/api"
 import { AuthStatus } from "@workspace/auth/components/auth-status"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { useEffect, useRef } from "react"
-import { Outlet, Route, Routes } from "react-router-dom"
+import { Outlet, Route, Routes, Navigate } from "react-router-dom"
 import AuthError from "./components/auth-error"
 import { HeroCheckup360 } from "./components/hero-checkup360"
 import Invite from "./components/invite"
 import Login from "./components/login"
 import NotFound from "./components/not-found"
+import { DashboardPage } from "./pages/dashboard"
 
 function RootLayout() {
   return (
@@ -29,6 +31,21 @@ function RootLayout() {
 }
 
 function HomePage() {
+  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
+  const { isLoading, user } = useCurrentUser(apiBaseUrl)
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
+
+  if (user) {
+    return <DashboardPage />
+  }
+
   return <HeroCheckup360 />
 }
 
