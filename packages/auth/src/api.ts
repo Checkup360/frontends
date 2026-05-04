@@ -394,7 +394,7 @@ export async function createOrgInvitation(
   apiBaseUrl?: string,
 ): Promise<{ success: InviteCreateResponse; error?: never } | { success?: never; error: InviteError }> {
   try {
-    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/admin/invites`, {
+    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/invites/organization`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
