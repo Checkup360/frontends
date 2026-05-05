@@ -24,10 +24,8 @@ export const appsConfig: Record<AppName, AppRuntimeConfig> = {
   },
 }
 
-/** Local API origin; production uses `VITE_PUBLIC_API_ORIGIN` in `frontends/.env`. */
 const API_DEV_PORT = 8000
 
-/** Defaults aligned with this file and backend `PUBLIC_WEB_ORIGIN` localhost behavior. */
 export const publicDevDefaults = {
   apiOrigin: `http://localhost:${API_DEV_PORT}`,
   webOrigin: `http://localhost:${appsConfig.web.devPort}`,
