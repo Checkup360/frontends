@@ -42,7 +42,6 @@ export function CreateOrganizationDialog({
   const [slug, setSlug] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<CreateOrganizationError | null>(null)
-  const [success, setSuccess] = useState(false)
   const [touched, setTouched] = useState(false)
 
   const handleNameChange = (value: string) => {
@@ -59,7 +58,6 @@ export function CreateOrganizationDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    setSuccess(false)
 
     const trimmedName = name.trim()
     const trimmedSlug = slug.trim()
@@ -94,14 +92,11 @@ export function CreateOrganizationDialog({
         return
       }
 
-      setSuccess(true)
       setName("")
       setSlug("")
       setTouched(false)
-      setTimeout(() => {
-        onOpenChange(false)
-        onSuccess?.()
-      }, 1000)
+      onOpenChange(false)
+      onSuccess?.()
     } finally {
       setLoading(false)
     }
@@ -112,7 +107,6 @@ export function CreateOrganizationDialog({
       setName("")
       setSlug("")
       setError(null)
-      setSuccess(false)
       setTouched(false)
     }
     onOpenChange(newOpen)
@@ -129,12 +123,6 @@ export function CreateOrganizationDialog({
           {error && (
             <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
               {error.message}
-            </div>
-          )}
-
-          {success && (
-            <div className="rounded-md bg-green-50 p-4 text-sm text-green-900">
-              Organization created successfully!
             </div>
           )}
 

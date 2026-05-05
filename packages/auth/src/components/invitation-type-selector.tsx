@@ -67,7 +67,7 @@ export function InvitationTypeSelector({
               key={option.value}
               htmlFor={`invitation-type-${option.value}`}
               className={cn(
-                "flex min-h-32 cursor-pointer items-start gap-5 rounded-xl border bg-background p-6 text-left transition-all",
+                "flex min-h-32 cursor-pointer items-center rounded-xl border bg-background px-2 py-6 text-left transition-all",
                 "hover:border-primary/50 hover:bg-muted/40 has-[[data-disabled]]:pointer-events-none has-[[data-disabled]]:opacity-50",
                 isSelected
                   ? "border-primary bg-muted/30 ring-2 ring-primary"
@@ -82,7 +82,7 @@ export function InvitationTypeSelector({
               />
               <span
                 className={cn(
-                  "flex size-12 shrink-0 items-center justify-center rounded-lg",
+                  "flex size-12 items-center justify-center rounded-lg",
                   isSelected
                     ? "bg-primary/10 text-primary"
                     : "bg-muted text-muted-foreground"

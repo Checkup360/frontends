@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -21,7 +21,10 @@ export function OrganizationSelector({
   onOrganizationChange,
 }: OrganizationSelectorProps) {
   const { user } = useCurrentUser(apiBaseUrl)
-  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null)
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(() => {
+    return localStorage.getItem(SELECTED_ORG_STORAGE_KEY)
+  })
+  const selectedOrgIdRef = useRef(selectedOrgId)
 
   const adminOrganizations = useMemo(
     () => user?.memberships?.filter((m) => m.role === "admin") || [],
@@ -34,19 +37,21 @@ export function OrganizationSelector({
   )
 
   useEffect(() => {
+    selectedOrgIdRef.current = selectedOrgId
+  }, [selectedOrgId])
+
+  useEffect(() => {
     if (adminOrganizations.length === 0) return
 
-    const savedOrgId = localStorage.getItem(SELECTED_ORG_STORAGE_KEY)
-    if (
-      savedOrgId &&
-      adminOrganizations.some((org) => org.organization_id === savedOrgId)
-    ) {
-      setSelectedOrgId(savedOrgId)
-    } else {
-      const firstOrgId = adminOrganizations[0].organization_id
-      setSelectedOrgId(firstOrgId)
-      localStorage.setItem(SELECTED_ORG_STORAGE_KEY, firstOrgId)
+    // Si el ID actual es válido, no hacer nada
+    if (selectedOrgIdRef.current && adminOrganizations.some((org) => org.organization_id === selectedOrgIdRef.current)) {
+      return
     }
+
+    // Si no, usar el primero disponible
+    const firstOrgId = adminOrganizations[0].organization_id
+    setSelectedOrgId(firstOrgId)
+    localStorage.setItem(SELECTED_ORG_STORAGE_KEY, firstOrgId)
   }, [adminOrganizations])
 
   const handleSelectOrg = (orgId: string, orgName: string) => {

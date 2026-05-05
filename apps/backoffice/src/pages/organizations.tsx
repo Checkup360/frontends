@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { CreateOrganizationDialog } from "@workspace/auth/components/create-organization-dialog"
 import { listOrganizations, type OrganizationResponse } from "@workspace/auth/api"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { toast } from "@workspace/ui/components/sonner"
 import {
   Card,
   CardContent,
@@ -40,6 +41,7 @@ export function OrganizationsPage() {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
+  const loadOrganizationsRef = useRef<() => Promise<void>>(() => Promise.resolve())
 
   const filtered = useMemo(
     () =>
@@ -49,25 +51,26 @@ export function OrganizationsPage() {
     [organizations, query],
   )
 
-  const loadOrganizations = async () => {
-    setLoading(true)
-    try {
-      const orgs = await listOrganizations(apiBaseUrl)
-      setOrganizations(
-        orgs.map((org) => ({
-          ...org,
-          status: "Active" as OrganizationStatus,
-          collaborators: 0,
-        })),
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
+    const loadOrganizations = async () => {
+      setLoading(true)
+      try {
+        const orgs = await listOrganizations(apiBaseUrl)
+        setOrganizations(
+          orgs.map((org) => ({
+            ...org,
+            status: "Active" as OrganizationStatus,
+            collaborators: 0,
+          })),
+        )
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadOrganizationsRef.current = loadOrganizations
     void loadOrganizations()
-  }, [])
+  }, [apiBaseUrl])
 
   const overview = [
     {
@@ -193,7 +196,12 @@ export function OrganizationsPage() {
       <CreateOrganizationDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSuccess={loadOrganizations}
+        onSuccess={() => {
+          toast.success("Organization created!", {
+            description: "The organization has been successfully created."
+          })
+          void loadOrganizationsRef.current?.()
+        }}
         apiBaseUrl={apiBaseUrl}
       />
     </div>

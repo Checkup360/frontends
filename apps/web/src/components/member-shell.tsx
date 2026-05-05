@@ -15,6 +15,13 @@ import {
   Settings,
 } from "lucide-react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
+import type { ReactNode } from "react"
+
+interface RenderLinkProps {
+  item: WorkspaceShellNavItem
+  className: string
+  children: ReactNode
+}
 
 const navigation: WorkspaceShellNavItem[] = [
   { label: "Overview", to: "/", icon: LayoutDashboard, end: true },
@@ -73,7 +80,7 @@ export function MemberShell() {
           webBaseUrl={webBaseUrl}
         />
       }
-      renderLink={(props: any) => (
+      renderLink={(props: RenderLinkProps) => (
         <NavLink
           key={props.item.to}
           to={props.item.to}

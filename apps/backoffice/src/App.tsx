@@ -4,11 +4,13 @@ import {
 } from "@workspace/auth/api"
 import { RequireSysadmin } from "@workspace/auth/components/require-sysadmin"
 import { Button } from "@workspace/ui/components/button"
+import { Toaster } from "@workspace/ui/components/sonner"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
 
 import { BackofficeShell } from "@/components/backoffice-shell"
 import { InvitationsPage } from "@/pages/invitations"
 import { OrganizationsPage } from "@/pages/organizations"
+import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
@@ -38,15 +40,18 @@ function NotFound() {
 
 export function App() {
   return (
-    <Routes>
-      <Route element={<ProtectedLayout />}>
-        <Route element={<BackofficeShell />}>
-          <Route path="/" element={<OrganizationsPage />} />
-          <Route path="/invitations" element={<InvitationsPage />} />
-          <Route path="*" element={<NotFound />} />
+    <ThemeProvider>
+      <Toaster />
+      <Routes>
+        <Route element={<ProtectedLayout />}>
+          <Route element={<BackofficeShell />}>
+            <Route path="/" element={<OrganizationsPage />} />
+            <Route path="/invitations" element={<InvitationsPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </ThemeProvider>
   )
 }
 

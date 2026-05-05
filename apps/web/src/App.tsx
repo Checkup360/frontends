@@ -5,6 +5,7 @@ import {
 } from "@workspace/auth/api"
 import { AuthStatus } from "@workspace/auth/components/auth-status"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
+import { Toaster } from "@workspace/ui/components/sonner"
 import { useEffect, useRef } from "react"
 import { Outlet, Route, Routes } from "react-router-dom"
 import AuthError from "./components/auth-error"
@@ -18,6 +19,7 @@ import { MemberOverviewPage } from "./pages/member-overview"
 import { MemberNewsPage } from "./pages/member-news"
 import { MemberFormsPage } from "./pages/member-forms"
 import { MemberSettingsPage } from "./pages/member-settings"
+import { ThemeProvider } from "./components/theme-provider"
 
 function RootLayout() {
   return (
@@ -108,27 +110,30 @@ function RequireMemberRole({ children }: { children: React.ReactNode }) {
 
 export function App() {
   return (
-    <Routes>
-      <Route element={<RootLayout />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/login/complete" element={<LoginComplete />} />
-        <Route path="/auth/error" element={<AuthError />} />
-        <Route path="/invite/:token" element={<Invite />} />
-        <Route
-          element={
-            <RequireMemberRole>
-              <MemberShell />
-            </RequireMemberRole>
-          }
-        >
-          <Route path="/" element={<MemberOverviewPage />} />
-          <Route path="/news" element={<MemberNewsPage />} />
-          <Route path="/forms" element={<MemberFormsPage />} />
-          <Route path="/settings" element={<MemberSettingsPage />} />
+    <ThemeProvider>
+      <Toaster />
+      <Routes>
+        <Route element={<RootLayout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/login/complete" element={<LoginComplete />} />
+          <Route path="/auth/error" element={<AuthError />} />
+          <Route path="/invite/:token" element={<Invite />} />
+          <Route
+            element={
+              <RequireMemberRole>
+                <MemberShell />
+              </RequireMemberRole>
+            }
+          >
+            <Route path="/" element={<MemberOverviewPage />} />
+            <Route path="/news" element={<MemberNewsPage />} />
+            <Route path="/forms" element={<MemberFormsPage />} />
+            <Route path="/settings" element={<MemberSettingsPage />} />
+          </Route>
+          <Route path="/" element={<HomePage />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
-        <Route path="/" element={<HomePage />} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </ThemeProvider>
   )
 }
