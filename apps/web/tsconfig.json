@@ -9,7 +9,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@workspace/ui/*": ["../../packages/ui/src/*"],
-      "@workspace/auth/*": ["../../packages/auth/src/*"]
+      "@workspace/auth/*": ["../../packages/auth/src/*"],
+      "@workspace/components/*": ["../../packages/components/src/*"]
     }
   }
 }
