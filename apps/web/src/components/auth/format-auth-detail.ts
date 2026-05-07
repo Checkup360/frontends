@@ -13,22 +13,22 @@ export function reasonFromFastApiDetail(detail: unknown): string {
 }
 
 const LOGIN_MESSAGES: Record<string, string> = {
-  LOGIN_BAD_CREDENTIALS: "Email o contraseña incorrectos.",
-  LOGIN_USER_NOT_VERIFIED: "Tu cuenta aún no está verificada.",
+  LOGIN_BAD_CREDENTIALS: "Email or password are incorrect.",
+  LOGIN_USER_NOT_VERIFIED: "Your account is not verified yet.",
 }
 
 const INVITE_MESSAGES: Record<string, string> = {
-  no_invite: "Necesitás una invitación válida.",
-  invalid_invite: "Esta invitación no es válida.",
-  invite_used: "Esta invitación ya fue usada.",
-  invite_expired: "Esta invitación expiró.",
-  email_mismatch: "El email no coincide con el de la invitación.",
+  no_invite: "You need a valid invitation.",
+  invalid_invite: "This invitation is not valid.",
+  invite_used: "This invitation has already been used.",
+  invite_expired: "This invitation has expired.",
+  email_mismatch: "The email does not match the invitation.",
 }
 
 export function formatAuthFormError(detail: unknown): string {
   if (typeof detail === "string") {
     if (detail === "REGISTER_USER_ALREADY_EXISTS") {
-      return "Ya existe una cuenta con ese email."
+      return "An account with that email already exists."
     }
     if (LOGIN_MESSAGES[detail]) {
       return LOGIN_MESSAGES[detail]
@@ -49,5 +49,5 @@ export function formatAuthFormError(detail: unknown): string {
       )
     }
   }
-  return "No se pudo completar la operación."
+  return "Failed to complete the operation."
 }

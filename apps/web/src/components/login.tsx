@@ -46,7 +46,7 @@ export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
       if (err instanceof AuthRequestError) {
         setFormError(formatAuthFormError(err.detail))
       } else {
-        setFormError("Error al conectar con el servidor.")
+        setFormError("Error connecting to the server.")
       }
     } finally {
       setFormLoading(false)
@@ -65,18 +65,18 @@ export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
 
       window.location.assign(payload.authorization_url)
     } catch (error) {
-      setGoogleError(error instanceof Error ? error.message : "No se pudo iniciar sesión con Google.")
+      setGoogleError(error instanceof Error ? error.message : "Failed to sign in with Google.")
       setGoogleLoading(false)
     }
   }
 
   return (
     <AuthShell
-      title="Iniciar sesión"
-      description="Entrá con tu email y contraseña o con Google. Para una cuenta nueva necesitás un enlace de invitación."
+      title="Sign in"
+      description="Sign in with your email and password or with Google. For a new account you need an invitation link"
       footer={
         <p className="text-pretty text-xs text-muted-foreground">
-          Al continuar aceptás los términos y la política de privacidad del servicio.
+          By continuing you accept the terms and privacy policy
         </p>
       }
     >
@@ -95,7 +95,7 @@ export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
         />
 
         <Button type="submit" className="w-full" disabled={formLoading}>
-          {formLoading ? "Entrando…" : "Iniciar sesión"}
+          {formLoading ? "Signing in…" : "Sign in"}
         </Button>
       </form>
 
@@ -104,16 +104,16 @@ export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
       <GoogleSignInButton
         onClick={handleGoogleSignIn}
         loading={googleLoading}
-        label="Continuar con Google"
-        loadingLabel="Redirigiendo a Google…"
+        label="Continue with Google"
+        loadingLabel="Redirecting to Google…"
       />
       {googleError ? <p className="mt-3 text-center text-xs text-destructive">{googleError}</p> : null}
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        ¿Tenés invitación?{" "}
-        <span className="text-foreground/80">Abrí el enlace que te enviaron.</span>{" "}
+        Do you have an invitation?{" "}
+        <span className="text-foreground/80">Open the link you received.</span>{" "}
         <Link to="/" className="font-medium text-primary underline underline-offset-4">
-          Inicio
+          Home
         </Link>
       </p>
     </AuthShell>

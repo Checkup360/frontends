@@ -35,7 +35,7 @@ export function EmailPasswordFields({
           type="email"
           name="email"
           autoComplete={emailAutocomplete}
-          placeholder="nombre@empresa.com"
+          placeholder="name@company.com"
           className="mt-2"
           value={email}
           onChange={(e) => onEmailChange(e.target.value)}
@@ -45,7 +45,7 @@ export function EmailPasswordFields({
       </div>
       <div>
         <Label htmlFor={passwordId} className="font-medium text-foreground">
-          Contraseña
+          Password
         </Label>
         <Input
           id={passwordId}

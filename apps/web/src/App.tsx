@@ -75,7 +75,7 @@ function LoginComplete() {
 
   return (
     <div className="mx-auto mt-20 max-w-xl text-center text-sm text-muted-foreground">
-      Completando login...
+      Completing login...
     </div>
   )
 }

@@ -1,6 +1,3 @@
-/**
- * Lee el cuerpo de una respuesta de error FastAPI sin asumir JSON no vacío.
- */
 export async function readFastApiErrorDetail(response: Response): Promise<unknown> {
   const text = await response.text()
   const trimmed = text.trim()

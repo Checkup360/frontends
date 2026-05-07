@@ -58,7 +58,7 @@ export default function Invite() {
       window.location.assign(payload.authorization_url)
     } catch (e) {
       setGoogleError(
-        e instanceof Error ? e.message : "No se pudo iniciar el registro con Google.",
+        e instanceof Error ? e.message : "Failed to start the registration with Google.",
       )
     } finally {
       setGoogleLoading(false)
@@ -105,18 +105,18 @@ export default function Invite() {
   if (!token) {
     return (
       <div className="flex min-h-dvh items-center justify-center px-4">
-        <p className="text-center text-sm text-muted-foreground">Invitación inválida.</p>
+        <p className="text-center text-sm text-muted-foreground">Invalid invitation.</p>
       </div>
     )
   }
 
   return (
     <AuthShell
-      title="Crear cuenta"
-      description="Completá los datos y tocá Crear cuenta, o continuá con Google."
+      title="Create account"
+      description="Complete the data and click Create account, or continue with Google."
       footer={
         <p className="text-pretty text-xs text-muted-foreground">
-          Al registrarte aceptás los términos y la política de privacidad del servicio.
+          By registering you accept the terms and privacy policy of the service.
         </p>
       }
     >
@@ -137,7 +137,7 @@ export default function Invite() {
         />
 
         <Button type="submit" className="w-full" disabled={registerLoading || googleLoading}>
-          {registerLoading ? "Creando cuenta…" : "Crear cuenta"}
+          {registerLoading ? "Creating account…" : "Create account"}
         </Button>
       </form>
 
@@ -146,8 +146,8 @@ export default function Invite() {
       <GoogleSignInButton
         onClick={startGoogle}
         loading={googleLoading}
-        label="Continuar con Google"
-        loadingLabel="Redirigiendo a Google…"
+        label="Continue with Google"
+        loadingLabel="Redirecting to Google…"
         disabled={registerLoading}
       />
       {googleError ? (
@@ -155,9 +155,9 @@ export default function Invite() {
       ) : null}
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        ¿Ya tenés cuenta?{" "}
+        Do you already have an account?{" "}
         <Link to="/login" className="font-medium text-primary underline underline-offset-4">
-          Iniciar sesión
+          Sign in
         </Link>
       </p>
     </AuthShell>

@@ -96,7 +96,7 @@ export async function logout(apiBaseUrl?: string): Promise<void> {
     credentials: "include",
   })
   if (!response.ok) {
-    throw new Error("No se pudo cerrar sesion")
+    throw new Error("Failed to close session")
   }
 }
 
@@ -187,12 +187,12 @@ export async function fetchGoogleAuthorizationUrl(
     credentials: "include",
   })
   if (!response.ok) {
-    throw new Error("No se pudo iniciar el login con Google")
+    throw new Error("Failed to start login with Google")
   }
 
   const payload = parseOAuthAuthorizeResponse(await response.json())
   if (!payload) {
-    throw new Error("Respuesta invalida del backend")
+    throw new Error("Invalid response from server")
   }
 
   return payload

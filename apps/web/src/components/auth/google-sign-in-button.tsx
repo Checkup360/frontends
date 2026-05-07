@@ -13,8 +13,8 @@ export function GoogleSignInButton({
   onClick,
   disabled,
   loading,
-  label = "Continuar con Google",
-  loadingLabel = "Redirigiendo a Google…",
+  label = "Continue with Google",
+  loadingLabel = "Redirecting to Google…",
 }: GoogleSignInButtonProps) {
   return (
     <Button

@@ -10,7 +10,7 @@ export default function InviteEntry() {
 
   const handleContinue = () => {
     if (!inviteToken.trim()) {
-      alert("Por favor, ingresa un token de invitación válido")
+      alert("Please enter a valid invitation token")
       return
     }
     navigate(`/invite/${encodeURIComponent(inviteToken.trim())}`)
@@ -26,7 +26,7 @@ export default function InviteEntry() {
     <div className="mx-auto mt-20 max-w-sm rounded-lg border border-gray-200 p-6 shadow-sm">
       <h1 className="text-2xl font-bold">Bienvenido</h1>
       <p className="mt-2 text-sm text-gray-600">
-        Para empezar, ingresa el token de invitación que recibiste
+        To get started, enter the invitation token you received
       </p>
 
       <div className="mt-6 space-y-4">
@@ -35,7 +35,7 @@ export default function InviteEntry() {
           <Input
             id="invite_token"
             type="text"
-            placeholder="Pega tu token aquí..."
+            placeholder="Paste your token here..."
             value={inviteToken}
             onChange={(e) => setInviteToken(e.target.value)}
             onKeyDown={handleKeyDown}

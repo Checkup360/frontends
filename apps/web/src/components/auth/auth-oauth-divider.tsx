@@ -4,7 +4,7 @@ type AuthOAuthDividerProps = {
   label?: string
 }
 
-export function AuthOAuthDivider({ label = "o continuá con" }: AuthOAuthDividerProps) {
+export function AuthOAuthDivider({ label = "or continue with" }: AuthOAuthDividerProps) {
   return (
     <div className="relative my-6">
       <div className="absolute inset-0 flex items-center">

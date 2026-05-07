@@ -33,7 +33,7 @@ export function CreateInviteForm({ apiBaseUrl }: CreateInviteFormProps) {
       )
 
       if (!response) {
-        setError("Error al crear la invitación")
+        setError("Error creating the invitation")
         return
       }
 
@@ -41,7 +41,7 @@ export function CreateInviteForm({ apiBaseUrl }: CreateInviteFormProps) {
       setInviteUrl(response.invite_url)
       setEmail("")
     } catch (err) {
-      setError("Error inesperado al crear la invitación")
+      setError("Unexpected error creating the invitation")
       console.error(err)
     } finally {
       setLoading(false)
@@ -50,9 +50,9 @@ export function CreateInviteForm({ apiBaseUrl }: CreateInviteFormProps) {
 
   return (
     <div className="rounded-lg border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold">Crear invitación</h2>
+      <h2 className="text-lg font-semibold">Create invitation</h2>
       <p className="mt-2 text-sm text-gray-600">
-        Genera un link de invitación para un nuevo usuario
+        Generate an invitation link for a new user
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -64,7 +64,7 @@ export function CreateInviteForm({ apiBaseUrl }: CreateInviteFormProps) {
 
         {success && inviteUrl && (
           <div className="rounded-md bg-green-50 p-4">
-            <p className="text-sm font-medium text-green-900">¡Invitación creada!</p>
+            <p className="text-sm font-medium text-green-900">Invitation created!</p>
             <div className="mt-3 flex gap-2">
               <input
                 type="text"
@@ -78,32 +78,32 @@ export function CreateInviteForm({ apiBaseUrl }: CreateInviteFormProps) {
                 size="sm"
                 onClick={() => {
                   navigator.clipboard.writeText(inviteUrl)
-                  alert("¡Enlace copiado al portapapeles!")
+                  alert("Invitation link copied to clipboard!")
                 }}
               >
-                Copiar
+                Copy
               </Button>
             </div>
           </div>
         )}
 
         <div>
-          <Label htmlFor="email">Email (opcional)</Label>
+          <Label htmlFor="email">Email (optional)</Label>
           <Input
             id="email"
             type="email"
-            placeholder="usuario@ejemplo.com"
+            placeholder="user@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={loading}
           />
           <p className="mt-1 text-xs text-gray-500">
-            Si lo especificas, la invitación solo será válida para este email
+            If specified, the invitation will only be valid for this email
           </p>
         </div>
 
         <div>
-          <Label htmlFor="expires_in_hours">Expira en (horas)</Label>
+          <Label htmlFor="expires_in_hours">Expires in (hours)</Label>
           <Input
             id="expires_in_hours"
             type="number"
@@ -116,7 +116,7 @@ export function CreateInviteForm({ apiBaseUrl }: CreateInviteFormProps) {
         </div>
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Creando..." : "Crear invitación"}
+          {loading ? "Creating..." : "Create invitation"}
         </Button>
       </form>
     </div>

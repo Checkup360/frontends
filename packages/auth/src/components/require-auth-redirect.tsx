@@ -31,7 +31,7 @@ export function RequireAuthRedirect({
     return (
       fallback ?? (
         <div className="flex min-h-svh items-center justify-center bg-background px-4 text-center text-sm text-muted-foreground">
-          Redirigiendo al login...
+          Redirecting to login...
         </div>
       )
     )
