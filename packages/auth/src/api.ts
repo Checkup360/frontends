@@ -18,12 +18,17 @@ export function resolveApiBaseUrl(apiBaseUrl?: string): string {
   return raw.replace(/\/$/, "")
 }
 
-/** Reads `VITE_PUBLIC_API_ORIGIN`, falling back to the local dev default. */
+
 export function resolveVitePublicApiBaseUrl(env: Record<string, unknown>): string {
-  const raw =
-    typeof env.VITE_PUBLIC_API_ORIGIN === "string"
-      ? env.VITE_PUBLIC_API_ORIGIN
-      : undefined
+  // Priority: window.__CONFIG__ (staging) > env var (build-time) > default
+  let raw: string | undefined
+
+  if (typeof window !== "undefined" && (window as any).__CONFIG__?.apiOrigin) {
+    raw = (window as any).__CONFIG__.apiOrigin
+  } else if (typeof env.VITE_PUBLIC_API_ORIGIN === "string") {
+    raw = env.VITE_PUBLIC_API_ORIGIN
+  }
+
   return resolveApiBaseUrl(raw)
 }
 
