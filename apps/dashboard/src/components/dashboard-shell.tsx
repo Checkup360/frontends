@@ -1,6 +1,5 @@
 import {
   resolveVitePublicApiBaseUrl,
-  resolveWebBaseUrl,
 } from "@workspace/auth/api"
 import { SidebarAccount } from "@workspace/auth/components/sidebar-account"
 import {
@@ -53,7 +52,6 @@ const pageMeta: Record<string, WorkspaceShellPageMeta> = {
 export function DashboardShell() {
   const { pathname } = useLocation()
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const webBaseUrl = resolveWebBaseUrl()
 
   return (
     <WorkspaceShell
@@ -72,7 +70,6 @@ export function DashboardShell() {
       sidebarFooter={
         <SidebarAccount
           apiBaseUrl={apiBaseUrl}
-          webBaseUrl={webBaseUrl}
           inviteAction={
             <Button variant="outline" size="sm" asChild>
               <NavLink to="/people/invite">

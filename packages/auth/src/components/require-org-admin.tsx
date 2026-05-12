@@ -4,21 +4,19 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 
 type RequireOrgAdminProps = {
   apiBaseUrl?: string
-  webBaseUrl?: string
   fallback?: ReactNode
   children: ReactNode
 }
 
 export function RequireOrgAdmin({
   apiBaseUrl,
-  webBaseUrl,
   fallback,
   children,
 }: RequireOrgAdminProps) {
   const { user, isLoading } = useCurrentUser(apiBaseUrl)
   const loginUrl = useMemo(
-    () => buildLoginUrl({ webBaseUrl, nextUrl: window.location.href }),
-    [webBaseUrl],
+    () => buildLoginUrl({ nextUrl: window.location.href }),
+    [],
   )
 
   const isOrgAdmin = useMemo(

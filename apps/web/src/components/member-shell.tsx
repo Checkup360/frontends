@@ -1,6 +1,5 @@
 import {
   resolveVitePublicApiBaseUrl,
-  resolveWebBaseUrl,
 } from "@workspace/auth/api"
 import { SidebarAccount } from "@workspace/auth/components/sidebar-account"
 import {
@@ -59,7 +58,6 @@ const pageMeta: Record<string, WorkspaceShellPageMeta> = {
 export function MemberShell() {
   const { pathname } = useLocation()
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const webBaseUrl = resolveWebBaseUrl()
 
   return (
     <WorkspaceShell
@@ -77,7 +75,6 @@ export function MemberShell() {
       sidebarFooter={
         <SidebarAccount
           apiBaseUrl={apiBaseUrl}
-          webBaseUrl={webBaseUrl}
         />
       }
       renderLink={(props: RenderLinkProps) => (

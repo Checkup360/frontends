@@ -1,6 +1,5 @@
 import {
   resolveVitePublicApiBaseUrl,
-  resolveWebBaseUrl,
 } from "@workspace/auth/api"
 import { SidebarAccount } from "@workspace/auth/components/sidebar-account"
 import {
@@ -35,7 +34,6 @@ const pageMeta: Record<string, WorkspaceShellPageMeta> = {
 export function BackofficeShell() {
   const { pathname } = useLocation()
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const webBaseUrl = resolveWebBaseUrl()
 
   return (
     <WorkspaceShell
@@ -52,7 +50,6 @@ export function BackofficeShell() {
       sidebarFooter={
         <SidebarAccount
           apiBaseUrl={apiBaseUrl}
-          webBaseUrl={webBaseUrl}
           roleLabel="Platform admin"
           inviteAction={
             <Button variant="outline" size="sm" asChild>

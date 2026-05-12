@@ -1,14 +1,13 @@
 import { useMemo, useState } from "react"
-import { buildLoginUrl, logout, resolveWebBaseUrl } from "@workspace/auth/api"
+import { buildLoginUrl, logout, resolveVitePublicWebBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 
 type AuthStatusProps = {
   apiBaseUrl?: string
-  webBaseUrl?: string
 }
 
-export function AuthStatus({ apiBaseUrl, webBaseUrl }: AuthStatusProps) {
+export function AuthStatus({ apiBaseUrl }: AuthStatusProps) {
   const { email, isLoading, clear } = useCurrentUser(apiBaseUrl)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const isLoginRoute =
@@ -16,8 +15,8 @@ export function AuthStatus({ apiBaseUrl, webBaseUrl }: AuthStatusProps) {
     window.location.pathname === "/login/complete"
 
   const loginUrl = useMemo(
-    () => buildLoginUrl({ webBaseUrl, nextUrl: window.location.href }),
-    [webBaseUrl]
+    () => buildLoginUrl({ nextUrl: window.location.href }),
+    []
   )
 
   const handleLogout = async () => {
@@ -25,7 +24,7 @@ export function AuthStatus({ apiBaseUrl, webBaseUrl }: AuthStatusProps) {
     try {
       await logout(apiBaseUrl)
       clear()
-      window.location.replace(resolveWebBaseUrl(webBaseUrl))
+      window.location.replace(resolveVitePublicWebBaseUrl())
     } finally {
       setIsLoggingOut(false)
     }

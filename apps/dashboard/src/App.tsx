@@ -1,5 +1,4 @@
 import {
-  resolveWebBaseUrl,
   resolveVitePublicApiBaseUrl,
 } from "@workspace/auth/api"
 import { RequireOrgAdmin } from "@workspace/auth/components/require-org-admin"
@@ -14,10 +13,9 @@ import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const webBaseUrl = resolveWebBaseUrl()
 
   return (
-    <RequireOrgAdmin apiBaseUrl={apiBaseUrl} webBaseUrl={webBaseUrl}>
+    <RequireOrgAdmin apiBaseUrl={apiBaseUrl}>
       <Outlet />
     </RequireOrgAdmin>
   )

@@ -27,7 +27,6 @@ function RootLayout() {
       <header className="sticky top-0 z-30 flex justify-end border-b border-border/60 bg-background/85 px-4 py-3 backdrop-blur-md">
         <AuthStatus
           apiBaseUrl={resolveVitePublicApiBaseUrl(import.meta.env)}
-          webBaseUrl={window.location.origin}
         />
       </header>
       <main>

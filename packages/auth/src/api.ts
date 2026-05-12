@@ -32,19 +32,21 @@ export function resolveVitePublicApiBaseUrl(env: Record<string, unknown>): strin
   return resolveApiBaseUrl(raw)
 }
 
-export function resolveWebBaseUrl(webBaseUrl?: string): string {
-  const raw = webBaseUrl?.trim() || DEFAULT_WEB_BASE_URL
+export function resolveVitePublicWebBaseUrl(): string {
+  let raw: string | undefined
+  if (typeof window !== "undefined" && (window as any).__CONFIG__?.webOrigin) {
+    raw = (window as any).__CONFIG__.webOrigin
+  }
+  raw = raw?.trim() || DEFAULT_WEB_BASE_URL
   return raw.replace(/\/$/, "")
 }
 
 export function buildLoginUrl({
-  webBaseUrl,
   nextUrl,
 }: {
-  webBaseUrl?: string
   nextUrl: string
 }): string {
-  const url = new URL("/login", resolveWebBaseUrl(webBaseUrl))
+  const url = new URL("/login", resolveVitePublicWebBaseUrl())
   url.searchParams.set("next", nextUrl)
   return url.toString()
 }

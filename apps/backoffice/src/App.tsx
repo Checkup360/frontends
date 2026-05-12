@@ -1,5 +1,4 @@
 import {
-  resolveWebBaseUrl,
   resolveVitePublicApiBaseUrl,
 } from "@workspace/auth/api"
 import { RequireSysadmin } from "@workspace/auth/components/require-sysadmin"
@@ -14,10 +13,9 @@ import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const webBaseUrl = resolveWebBaseUrl()
 
   return (
-    <RequireSysadmin apiBaseUrl={apiBaseUrl} webBaseUrl={webBaseUrl}>
+    <RequireSysadmin apiBaseUrl={apiBaseUrl}>
       <Outlet />
     </RequireSysadmin>
   )
