@@ -6,7 +6,8 @@ on:
       - "v*"
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
   packages: write
 
 jobs:
@@ -58,26 +59,35 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
 
-  trigger-deploy:
+  update-version:
     needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get latest backend tag
-        id: backend
-        run: |
-          TAG=$(gh api \
-            repos/${{ github.repository_owner }}/backend/tags \
-            --jq '.[0].name')
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout infra repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/infra
+          token: ${{ secrets.REPO_DISPATCH_TOKEN }}
 
-      - name: Trigger infra deploy workflow
-        run: |
-          gh workflow run deploy-staging.yml \
-            --repo ${{ github.repository_owner }}/infra \
-            -f backend_version=${{ steps.backend.outputs.tag }} \
-            -f frontends_version=${{ github.ref_name }}
-        env:
-          GH_TOKEN: ${{ secrets.REPO_DISPATCH_TOKEN }}
+      - name: Update frontends version in staging.yml
+        uses: mikefarah/yq@v4.53.2
+        with:
+          cmd: yq -i '.frontends = "${{ github.ref_name }}"' versions/staging.yml
+
+      - name: Create or update PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.REPO_DISPATCH_TOKEN }}
+          commit-message: "chore(staging): update frontends to ${{ github.ref_name }}"
+          branch: "update/frontends-${{ github.ref_name }}"
+          delete-branch: true
+          title: "Staging Deploy: Frontends ${{ github.ref_name }}"
+          body: |
+            Automated version update from frontends release
+            
+            **Frontends**: `${{ github.ref_name }}`
+            **Backend**: [latest in versions/staging.yml]
+            
+            This PR updates the frontends version for staging. Once approved and merged, the deployment will start automatically.
+          labels: deployment,automated
