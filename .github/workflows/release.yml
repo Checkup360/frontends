@@ -3,7 +3,7 @@ name: Release images
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v*"
 
 permissions:
   contents: read
@@ -57,3 +57,27 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+
+  trigger-deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get latest backend tag
+        id: backend
+        run: |
+          TAG=$(gh api \
+            repos/${{ github.repository_owner }}/backend/tags \
+            --jq '.[0].name')
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger infra deploy workflow
+        run: |
+          gh workflow run deploy-staging.yml \
+            --repo ${{ github.repository_owner }}/infra \
+            -f backend_version=${{ steps.backend.outputs.tag }} \
+            -f frontends_version=${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ secrets.REPO_DISPATCH_TOKEN }}
