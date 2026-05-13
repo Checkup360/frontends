@@ -1,9 +1,5 @@
-import {
-  resolveVitePublicApiBaseUrl,
-  buildLoginUrl,
-} from "@workspace/auth/api"
+import { buildLoginUrl } from "@workspace/auth/api"
 import { RequireOrgAdmin } from "@workspace/auth/components/require-org-admin"
-import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
@@ -14,17 +10,14 @@ import { InvitePeoplePage } from "@/pages/invite-people"
 import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-
   return (
-    <RequireOrgAdmin apiBaseUrl={apiBaseUrl}>
+    <RequireOrgAdmin>
       <Outlet />
     </RequireOrgAdmin>
   )
 }
 
 function AccessDenied() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
   const loginUrl = buildLoginUrl({ nextUrl: window.location.href })
 
   return (

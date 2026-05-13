@@ -1,9 +1,5 @@
-import {
-  resolveVitePublicApiBaseUrl,
-  buildLoginUrl,
-} from "@workspace/auth/api"
+import { buildLoginUrl } from "@workspace/auth/api"
 import { RequireSysadmin } from "@workspace/auth/components/require-sysadmin"
-import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
@@ -14,17 +10,14 @@ import { OrganizationsPage } from "@/pages/organizations"
 import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-
   return (
-    <RequireSysadmin apiBaseUrl={apiBaseUrl}>
+    <RequireSysadmin>
       <Outlet />
     </RequireSysadmin>
   )
 }
 
 function AccessDenied() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
   const loginUrl = buildLoginUrl({ nextUrl: window.location.href })
 
   return (
