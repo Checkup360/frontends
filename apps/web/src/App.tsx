@@ -69,7 +69,11 @@ function LoginComplete() {
 
   useEffect(() => {
     clearPostLoginRedirectUrl()
-    window.location.replace(redirectUrl.current)
+    // Agregar un pequeño delay para asegurar que el backend procesó el login
+    const timer = setTimeout(() => {
+      window.location.replace(redirectUrl.current)
+    }, 100)
+    return () => clearTimeout(timer)
   }, [])
 
   return (

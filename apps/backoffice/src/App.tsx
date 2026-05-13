@@ -1,7 +1,9 @@
 import {
   resolveVitePublicApiBaseUrl,
+  buildLoginUrl,
 } from "@workspace/auth/api"
 import { RequireSysadmin } from "@workspace/auth/components/require-sysadmin"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
@@ -18,6 +20,26 @@ function ProtectedLayout() {
     <RequireSysadmin apiBaseUrl={apiBaseUrl}>
       <Outlet />
     </RequireSysadmin>
+  )
+}
+
+function AccessDenied() {
+  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
+  const loginUrl = buildLoginUrl({ nextUrl: window.location.href })
+
+  return (
+    <div className="flex min-h-svh flex-col items-center justify-center px-4 text-center">
+      <p className="text-6xl font-semibold tracking-tight text-muted-foreground/40">403</p>
+      <h1 className="mt-4 text-xl font-semibold text-foreground">Access Denied</h1>
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+        You don't have permission to access this area. Only system admins can access the backoffice.
+      </p>
+      <div className="mt-8 flex gap-3">
+        <Button asChild variant="outline">
+          <a href={loginUrl}>Sign in with different account</a>
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -41,6 +63,7 @@ export function App() {
     <ThemeProvider>
       <Toaster />
       <Routes>
+        <Route path="/access-denied" element={<AccessDenied />} />
         <Route element={<ProtectedLayout />}>
           <Route element={<BackofficeShell />}>
             <Route path="/" element={<OrganizationsPage />} />
