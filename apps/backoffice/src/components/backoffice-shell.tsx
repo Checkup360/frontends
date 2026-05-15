@@ -5,7 +5,7 @@ import {
   type WorkspaceShellNavItem,
 } from "@workspace/components/components/workspace-shell"
 import { Building2, MailPlus, Settings } from "lucide-react"
-import { NavLink, Outlet } from "react-router-dom"
+import { NavLink, Outlet, useLocation } from "react-router-dom"
 
 const navigation: WorkspaceShellNavItem[] = [
   { title: "Organizations", url: "/", icon: Building2, to: "/", end: true },
@@ -22,6 +22,7 @@ const secondaryNavigation: WorkspaceShellNavItem[] = [
 ]
 
 export function BackofficeShell() {
+  const { pathname } = useLocation()
   const { user, clear } = useCurrentUser()
 
   const handleLogout = async () => {
@@ -42,10 +43,23 @@ export function BackofficeShell() {
       }
     : undefined
 
+  const getTitleForPath = () => {
+    switch (pathname) {
+      case "/":
+        return "Organizations"
+      case "/invitations":
+        return "Invitations"
+      case "/settings":
+        return "Settings"
+      default:
+        return "Backoffice"
+    }
+  }
+
   return (
     <WorkspaceShell
       appLabel="Backoffice"
-      title="Organizations"
+      title={getTitleForPath()}
       navigation={navigation}
       secondaryNavigation={secondaryNavigation}
       user={userData}

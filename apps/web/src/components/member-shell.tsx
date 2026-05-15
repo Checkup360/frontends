@@ -8,7 +8,7 @@ import {
   type WorkspaceShellNavItem,
 } from "@workspace/components/components/workspace-shell"
 import { LayoutDashboard, Newspaper, FileText, Settings } from "lucide-react"
-import { NavLink, Outlet } from "react-router-dom"
+import { NavLink, Outlet, useLocation } from "react-router-dom"
 
 const navigation: WorkspaceShellNavItem[] = [
   { title: "Overview", url: "/", icon: LayoutDashboard, to: "/", end: true },
@@ -21,6 +21,7 @@ const secondaryNavigation: WorkspaceShellNavItem[] = [
 ]
 
 export function MemberShell() {
+  const { pathname } = useLocation()
   const { user, clear } = useCurrentUser()
 
   const handleLogout = async () => {
@@ -41,10 +42,25 @@ export function MemberShell() {
       }
     : undefined
 
+  const getTitleForPath = () => {
+    switch (pathname) {
+      case "/":
+        return "Overview"
+      case "/news":
+        return "News"
+      case "/forms":
+        return "Forms"
+      case "/settings":
+        return "Settings"
+      default:
+        return "Member dashboard"
+    }
+  }
+
   return (
     <WorkspaceShell
       appLabel="Member dashboard"
-      title="Dashboard"
+      title={getTitleForPath()}
       navigation={navigation}
       secondaryNavigation={secondaryNavigation}
       user={userData}

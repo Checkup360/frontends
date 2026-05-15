@@ -91,11 +91,11 @@ export function InvitationsPage() {
   return (
     <div className="mx-auto flex w-full max-w-7xl justify-center">
       <Card className="w-full max-w-4xl shadow-sm">
-        <CardHeader className="px-8 pt-7 pb-4 md:px-10">
+        <CardHeader className="px-6 pt-6 pb-3 md:px-8">
           <InvitationStepper currentStep={currentStep} />
         </CardHeader>
-        <CardContent className="px-8 pb-7 md:px-10 md:pb-8">
-          <div className="min-h-[430px] py-6">
+        <CardContent className="px-6 pb-6 md:px-8">
+          <div className={selectedType === null ? "py-5" : "min-h-[430px] py-6"}>
             {selectedType === null && (
               <InvitationTypeCard
                 onSelect={(type) => {

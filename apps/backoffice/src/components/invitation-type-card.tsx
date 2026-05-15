@@ -12,6 +12,7 @@ type InvitationType = "sysadmin" | "organization"
 
 interface InvitationTypeCardProps {
   onSelect: (type: InvitationType) => void
+  onBack?: () => void
   loading?: boolean
 }
 
@@ -37,6 +38,7 @@ const invitationTypes: Array<{
 
 export function InvitationTypeCard({
   onSelect,
+  onBack,
   loading,
 }: InvitationTypeCardProps) {
   const [selected, setSelected] = useState<InvitationType>("sysadmin")
@@ -46,7 +48,7 @@ export function InvitationTypeCard({
   }
 
   return (
-    <div className="flex min-h-[380px] flex-col justify-between">
+    <div className="flex flex-col">
       <div>
         <h2 className="text-lg font-semibold tracking-tight">
           Choose invitation type
@@ -100,13 +102,23 @@ export function InvitationTypeCard({
         </RadioGroup>
       </div>
 
-      <Button
-        onClick={handleContinue}
-        disabled={loading}
-        className="mt-6 w-full sm:w-auto"
-      >
-        Continue
-      </Button>
+      <div className="mt-6 flex items-center justify-between border-t pt-5">
+        {onBack ? (
+          <Button
+            type="button"
+            onClick={onBack}
+            variant="outline"
+            disabled={loading}
+          >
+            Back
+          </Button>
+        ) : (
+          <span />
+        )}
+        <Button type="button" onClick={handleContinue} disabled={loading}>
+          Continue
+        </Button>
+      </div>
     </div>
   )
 }
