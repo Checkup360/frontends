@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent } from "@workspace/ui/components/card"
+import { Skeleton } from "@workspace/ui/components/skeleton"
 
 export function InvitePeoplePage() {
   const { user, isLoading } = useCurrentUser()
@@ -19,9 +20,17 @@ export function InvitePeoplePage() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Loading invitation form...
+      <Card className="mx-auto w-full max-w-3xl">
+        <CardContent className="space-y-6 py-6 md:px-8">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-72 max-w-full" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-10 w-32" />
+          </div>
         </CardContent>
       </Card>
     )

@@ -2,22 +2,19 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@workspace/ui/components/card"
 import { AlertCircle, CheckCircle2, Clock, Heart } from "lucide-react"
 import { OverviewStatCard } from "@workspace/components/components/card"
+import { MemberOverviewSkeleton } from "@/components/member-overview-skeleton"
 
 export function MemberOverviewPage() {
   const { user, isLoading } = useCurrentUser()
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    )
+    return <MemberOverviewSkeleton />
   }
 
   const organization = user?.memberships?.[0]

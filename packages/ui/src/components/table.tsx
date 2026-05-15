@@ -1,6 +1,13 @@
 import * as React from "react"
 
+import { Skeleton } from "@workspace/ui/components/skeleton"
 import { cn } from "@workspace/ui/lib/utils"
+
+type TableSkeletonColumn = {
+  cellClassName?: string
+  skeletonClassName?: string
+  lines?: string[]
+}
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
@@ -102,6 +109,32 @@ function TableCaption({
   )
 }
 
+function TableRowsSkeleton({
+  rows = 5,
+  columns,
+}: {
+  rows?: number
+  columns: TableSkeletonColumn[]
+}) {
+  return Array.from({ length: rows }).map((_, rowIndex) => (
+    <TableRow key={rowIndex}>
+      {columns.map((column, columnIndex) => (
+        <TableCell key={columnIndex} className={column.cellClassName}>
+          {column.lines ? (
+            <div className="space-y-2">
+              {column.lines.map((lineClassName, lineIndex) => (
+                <Skeleton key={lineIndex} className={lineClassName} />
+              ))}
+            </div>
+          ) : (
+            <Skeleton className={column.skeletonClassName ?? "h-4 w-24"} />
+          )}
+        </TableCell>
+      ))}
+    </TableRow>
+  ))
+}
+
 export {
   Table,
   TableHeader,
@@ -111,4 +144,5 @@ export {
   TableRow,
   TableCell,
   TableCaption,
+  TableRowsSkeleton,
 }

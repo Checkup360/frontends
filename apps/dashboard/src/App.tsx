@@ -3,6 +3,7 @@ import { RequireOrgAdmin } from "@workspace/auth/components/require-org-admin"
 import { Button } from "@workspace/ui/components/button"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
+import { DashboardLoadingSkeleton } from "@/components/dashboard-loading-skeleton"
 import { DashboardShell } from "@/components/dashboard-shell"
 import { DashboardPage } from "@/pages/dashboard"
 import { EmployeesPage } from "@/pages/employees"
@@ -11,7 +12,7 @@ import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
   return (
-    <RequireOrgAdmin>
+    <RequireOrgAdmin fallback={<DashboardLoadingSkeleton />}>
       <Outlet />
     </RequireOrgAdmin>
   )

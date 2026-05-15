@@ -4,6 +4,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
 
+import { BackofficeLoadingSkeleton } from "@/components/backoffice-loading-skeleton"
 import { BackofficeShell } from "@/components/backoffice-shell"
 import { InvitationsPage } from "@/pages/invitations"
 import { OrganizationsPage } from "@/pages/organizations"
@@ -11,7 +12,7 @@ import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
   return (
-    <RequireSysadmin>
+    <RequireSysadmin fallback={<BackofficeLoadingSkeleton />}>
       <Outlet />
     </RequireSysadmin>
   )

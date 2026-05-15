@@ -5,7 +5,10 @@ import {
   type OrganizationResponse,
 } from "@workspace/api"
 
-import { OverviewStatCard } from "@workspace/components/components/card"
+import {
+  OverviewStatCard,
+  OverviewStatCardSkeleton,
+} from "@workspace/components/components/card"
 
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -24,6 +27,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
+  TableRowsSkeleton,
   TableRow,
 } from "@workspace/ui/components/table"
 import { Link2, Plus, Trash2 } from "lucide-react"
@@ -41,6 +45,17 @@ const statusClass: Record<OrganizationStatus, string> = {
   Pending:
     "border-transparent bg-[color:var(--warning)]/15 text-[color:var(--warning)]",
 }
+
+const organizationsTableSkeletonColumns = [
+  { lines: ["h-4 w-36", "h-3 w-24"] },
+  { skeletonClassName: "h-4 w-8" },
+  { skeletonClassName: "h-4 w-10" },
+  { skeletonClassName: "h-6 w-20 rounded-full" },
+  {
+    cellClassName: "text-right",
+    skeletonClassName: "ml-auto h-8 w-16",
+  },
+]
 
 export function OrganizationsPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([])
@@ -115,15 +130,19 @@ export function OrganizationsPage() {
       </div>
 
       <section className="grid gap-4 md:grid-cols-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs dark:*:data-[slot=card]:bg-card">
-        {overview.map((item) => (
-          <OverviewStatCard
-            key={item.label}
-            label={item.label}
-            value={item.value}
-            hint={item.hint}
-            iconVariant="none"
-          />
-        ))}
+        {loading
+          ? Array.from({ length: 3 }).map((_, index) => (
+              <OverviewStatCardSkeleton key={index} />
+            ))
+          : overview.map((item) => (
+              <OverviewStatCard
+                key={item.label}
+                label={item.label}
+                value={item.value}
+                hint={item.hint}
+                iconVariant="none"
+              />
+            ))}
       </section>
 
       <Card>
@@ -153,14 +172,10 @@ export function OrganizationsPage() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="py-4 text-center text-muted-foreground"
-                    >
-                      Loading organizations...
-                    </TableCell>
-                  </TableRow>
+                  <TableRowsSkeleton
+                    rows={5}
+                    columns={organizationsTableSkeletonColumns}
+                  />
                 ) : filtered.length === 0 ? (
                   <TableRow>
                     <TableCell

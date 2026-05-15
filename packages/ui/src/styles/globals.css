@@ -137,6 +137,12 @@
     }
 }
 
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 [data-description] {
   color: var(--text-secondary-foreground) !important;
 }

@@ -1,3 +1,4 @@
+import { AuthLoadingSkeleton } from "@workspace/auth/components/auth-loading-skeleton"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { useEffect } from "react"
 
@@ -12,11 +13,7 @@ export function DashboardPage() {
   }, [isLoading, user])
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    )
+    return <AuthLoadingSkeleton />
   }
 
   return null

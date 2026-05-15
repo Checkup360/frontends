@@ -1,6 +1,7 @@
 import { useEffect, useMemo, type ReactNode } from "react"
 import { buildLoginUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
+import { AuthLoadingSkeleton } from "./auth-loading-skeleton"
 
 type RequireOrgAdminProps = {
   fallback?: ReactNode
@@ -44,13 +45,7 @@ export function RequireOrgAdmin({
   }, [isLoading, user, isOrgAdmin])
 
   if (isLoading || !user || !isOrgAdmin) {
-    return (
-      fallback ?? (
-        <div className="flex min-h-svh items-center justify-center bg-background px-4 text-center text-sm text-muted-foreground">
-          Checking access...
-        </div>
-      )
-    )
+    return fallback ?? <AuthLoadingSkeleton />
   }
 
   return children

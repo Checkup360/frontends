@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
+import { Skeleton } from "@workspace/ui/components/skeleton"
 
 export interface OverviewStatCardProps {
   /** Main label/description for the card */
@@ -101,6 +102,21 @@ export function OverviewStatCard({
           )}
         </CardFooter>
       )}
+    </Card>
+  )
+}
+
+export function OverviewStatCardSkeleton() {
+  return (
+    <Card className="@container/card">
+      <CardHeader className="relative min-h-[124px]">
+        <Skeleton className="h-3.5 w-24" />
+        <Skeleton className="h-9 w-20" />
+        <Skeleton className="mt-1 h-3 w-36 max-w-[70%]" />
+        <CardAction>
+          <Skeleton className="h-7 w-14 rounded-full" />
+        </CardAction>
+      </CardHeader>
     </Card>
   )
 }

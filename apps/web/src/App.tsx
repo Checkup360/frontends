@@ -3,12 +3,14 @@ import {
   fetchCurrentUser,
   getRedirectUrlByUserRole,
 } from "@workspace/api"
+import { AuthLoadingSkeleton } from "@workspace/auth/components/auth-loading-skeleton"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { useEffect } from "react"
 import { Outlet, Route, Routes } from "react-router-dom"
 import AuthError from "./components/auth-error"
 import { HeroCheckup360 } from "./components/hero-checkup360"
+import { MemberLoadingSkeleton } from "./components/member-loading-skeleton"
 import { MemberShell } from "./components/member-shell"
 import Invite from "./components/invite"
 import Login from "./components/login"
@@ -34,11 +36,7 @@ function HomePage() {
   const { isLoading, user } = useCurrentUser()
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    )
+    return <AuthLoadingSkeleton />
   }
 
   // Solo mostrar DashboardPage si el usuario es member (no admin, no sysadmin)
@@ -86,11 +84,7 @@ function RequireMemberRole({ children }: { children: React.ReactNode }) {
   const { isLoading, user } = useCurrentUser()
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    )
+    return <MemberLoadingSkeleton />
   }
 
   // Solo mostrar si el usuario es member (no admin, no sysadmin)

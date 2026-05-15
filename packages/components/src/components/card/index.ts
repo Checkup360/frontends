@@ -1,2 +1,5 @@
-export { OverviewStatCard } from "./overview-stat-card"
+export {
+  OverviewStatCard,
+  OverviewStatCardSkeleton,
+} from "./overview-stat-card"
 export type { OverviewStatCardProps } from "./overview-stat-card"
