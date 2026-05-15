@@ -36,6 +36,22 @@ export function resolveBackofficeUrl(): string {
   return resolveUrl("backofficeOrigin", publicDevDefaults.backofficeOrigin)
 }
 
+export function getRedirectUrlByUserRole(user: AuthMeResponse | null | undefined): string {
+  if (!user) {
+    return `${resolveWebUrl()}/`
+  }
+
+  if (user.is_sysadmin) {
+    return `${resolveBackofficeUrl()}/`
+  }
+
+  if (user.memberships?.some((m) => m.role === "admin")) {
+    return `${resolveDashboardUrl()}/`
+  }
+
+  return `${resolveWebUrl()}/`
+}
+
 export function buildLoginUrl({ nextUrl }: { nextUrl: string }): string {
   const url = new URL("/login", resolveWebUrl())
   url.searchParams.set("next", nextUrl)

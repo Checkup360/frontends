@@ -1,10 +1,11 @@
 import {
   clearPostLoginRedirectUrl,
-  readPostLoginRedirectUrl,
+  fetchCurrentUser,
+  getRedirectUrlByUserRole,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Toaster } from "@workspace/ui/components/sonner"
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { Outlet, Route, Routes } from "react-router-dom"
 import AuthError from "./components/auth-error"
 import { HeroCheckup360 } from "./components/hero-checkup360"
@@ -53,20 +54,24 @@ function HomePage() {
     return <DashboardPage />
   }
 
-  return <HeroCheckup360 />
+  return <HeroCheckup360 user={user} />
 }
 
 function LoginComplete() {
-  const redirectUrl = useRef(
-    readPostLoginRedirectUrl(`${window.location.origin}/`)
-  )
-
   useEffect(() => {
-    clearPostLoginRedirectUrl()
-    // Agregar un pequeño delay para asegurar que el backend procesó el login
+    const performRedirect = async () => {
+      // Siempre hacer fetch del usuario para determinar a dónde redirigir
+      const user = await fetchCurrentUser()
+      const finalRedirectUrl = getRedirectUrlByUserRole(user)
+      
+      clearPostLoginRedirectUrl()
+      window.location.replace(finalRedirectUrl)
+    }
+
     const timer = setTimeout(() => {
-      window.location.replace(redirectUrl.current)
+      void performRedirect()
     }, 100)
+
     return () => clearTimeout(timer)
   }, [])
 

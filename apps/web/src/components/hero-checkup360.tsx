@@ -7,11 +7,15 @@ import {
   HeartPulse,
   LogIn,
   ShieldCheck,
+  ArrowRight,
 } from "lucide-react"
 import { Link } from "react-router-dom"
+import { getRedirectUrlByUserRole } from "@workspace/api"
+import type { AuthMeResponse } from "@workspace/api"
 
 type HeroCheckup360Props = {
   className?: string
+  user?: AuthMeResponse | null
 }
 
 const heroCards = [
@@ -33,7 +37,21 @@ const heroCards = [
   },
 ]
 
-export function HeroCheckup360({ className }: HeroCheckup360Props) {
+export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
+  const isAdminOrSysadmin =
+    user && (user.is_sysadmin || user.memberships?.some((m) => m.role === "admin"))
+
+  const getButtonLabel = () => {
+    if (user?.is_sysadmin) return "Backoffice"
+    if (user?.memberships?.some((m) => m.role === "admin")) return "Dashboard"
+    return "Dashboard"
+  }
+
+  const handleNavigate = () => {
+    const redirectUrl = getRedirectUrlByUserRole(user)
+    window.location.replace(redirectUrl)
+  }
+
   return (
     <div className={cn("bg-background", className)}>
       <section className="overflow-hidden py-20 md:min-h-[calc(100svh-65px)] md:py-28">
@@ -71,18 +89,27 @@ export function HeroCheckup360({ className }: HeroCheckup360Props) {
               </p>
 
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                <Button size="lg" asChild>
-                  <Link to="/login">
-                    Log in
-                    <LogIn className="ml-2 size-4" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <a href="mailto:team.checkup360@gmail.com">
-                    Contact
-                    <ArrowUpRight className="ml-2 size-4" />
-                  </a>
-                </Button>
+                {isAdminOrSysadmin ? (
+                  <Button size="lg" onClick={handleNavigate}>
+                    {getButtonLabel()}
+                    <ArrowRight className="ml-2 size-4" />
+                  </Button>
+                ) : (
+                  <>
+                    <Button size="lg" asChild>
+                      <Link to="/login">
+                        Log in
+                        <LogIn className="ml-2 size-4" />
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="lg" asChild>
+                      <a href="mailto:team.checkup360@gmail.com">
+                        Contact
+                        <ArrowUpRight className="ml-2 size-4" />
+                      </a>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
