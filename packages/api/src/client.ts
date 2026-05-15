@@ -11,21 +11,33 @@ import {
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
-const DEFAULT_API_BASE_URL = publicDevDefaults.apiOrigin
-const DEFAULT_WEB_BASE_URL = publicDevDefaults.webOrigin
 const POST_LOGIN_REDIRECT_STORAGE_KEY = "auth.postLoginRedirectUrl"
 
-export function resolveVitePublicWebBaseUrl(): string {
-  let raw: string | undefined
-  if (typeof window !== "undefined" && (window as any).__CONFIG__?.webOrigin) {
-    raw = (window as any).__CONFIG__.webOrigin
+function resolveUrl(configKey: string, defaultValue: string): string {
+  if (typeof window !== "undefined" && (window as any).__CONFIG__?.[configKey]) {
+    return ((window as any).__CONFIG__[configKey] as string).replace(/\/$/, "")
   }
-  raw = raw?.trim() || DEFAULT_WEB_BASE_URL
-  return raw.replace(/\/$/, "")
+  return defaultValue
+}
+
+function resolveApiBaseUrl(): string {
+  return resolveUrl("apiOrigin", publicDevDefaults.apiOrigin)
+}
+
+export function resolveWebUrl(): string {
+  return resolveUrl("webOrigin", publicDevDefaults.webOrigin)
+}
+
+export function resolveDashboardUrl(): string {
+  return resolveUrl("dashboardOrigin", publicDevDefaults.dashboardOrigin)
+}
+
+export function resolveBackofficeUrl(): string {
+  return resolveUrl("backofficeOrigin", publicDevDefaults.backofficeOrigin)
 }
 
 export function buildLoginUrl({ nextUrl }: { nextUrl: string }): string {
-  const url = new URL("/login", resolveVitePublicWebBaseUrl())
+  const url = new URL("/login", resolveWebUrl())
   url.searchParams.set("next", nextUrl)
   return url.toString()
 }
@@ -65,13 +77,6 @@ export function consumePostLoginRedirectUrl(fallbackUrl: string): string {
   return url
 }
 
-function getApiBaseUrl(): string {
-  if (typeof window !== "undefined" && (window as any).__CONFIG__?.apiOrigin) {
-    return ((window as any).__CONFIG__.apiOrigin as string).replace(/\/$/, "")
-  }
-  return DEFAULT_API_BASE_URL
-}
-
 async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Promise<Response> {
   const res = await fetch(input, init)
   if (res.status === 401) {
@@ -82,7 +87,7 @@ async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Promise<Re
 }
 
 export async function fetchCurrentUser(): Promise<AuthMeResponse | null> {
-  const response = await fetchWithAuth(`${getApiBaseUrl()}${apiRoutes.auth.me}`, {
+  const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.auth.me}`, {
     credentials: "include",
   })
   if (response.status === 401) return null
@@ -91,7 +96,7 @@ export async function fetchCurrentUser(): Promise<AuthMeResponse | null> {
 }
 
 export async function logout(): Promise<void> {
-  const response = await fetchWithAuth(`${getApiBaseUrl()}${apiRoutes.auth.logout}`, {
+  const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.auth.logout}`, {
     method: "POST",
     credentials: "include",
   })
@@ -146,7 +151,7 @@ export async function loginWithPassword(email: string, password: string): Promis
   body.set("username", email.trim())
   body.set("password", password)
 
-  const response = await fetch(`${getApiBaseUrl()}${apiRoutes.auth.login}`, {
+  const response = await fetch(`${resolveApiBaseUrl()}${apiRoutes.auth.login}`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -173,7 +178,7 @@ export async function loginWithPassword(email: string, password: string): Promis
 }
 
 export async function fetchGoogleAuthorizationUrl(): Promise<OAuthAuthorizeResponse> {
-  const response = await fetch(`${getApiBaseUrl()}${apiRoutes.auth.googleAuthorize}`, {
+  const response = await fetch(`${resolveApiBaseUrl()}${apiRoutes.auth.googleAuthorize}`, {
     credentials: "include",
   })
   if (!response.ok) {
@@ -208,7 +213,7 @@ export async function createInvite(
   payload: InviteCreatePayload
 ): Promise<InviteCreateResponse | null> {
   try {
-    const response = await fetchWithAuth(`${getApiBaseUrl()}${apiRoutes.invites.admin}`, {
+    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.invites.admin}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -241,7 +246,7 @@ export async function createOrganization(
   payload: CreateOrganizationPayload
 ): Promise<{ success: OrganizationResponse; error?: never } | { success?: never; error: CreateOrganizationError }> {
   try {
-    const response = await fetchWithAuth(`${getApiBaseUrl()}${apiRoutes.organizations}`, {
+    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.organizations}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -304,7 +309,7 @@ function getOrganizationErrorMessage(code: string): string {
 
 export async function listOrganizations(): Promise<OrganizationResponse[]> {
   try {
-    const response = await fetchWithAuth(`${getApiBaseUrl()}${apiRoutes.organizations}`, {
+    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.organizations}`, {
       credentials: "include",
     })
 
@@ -338,7 +343,7 @@ export async function createSysadminInvitation(
   payload: CreateSysadminInvitationPayload
 ): Promise<{ success: InviteCreateResponse; error?: never } | { success?: never; error: InviteError }> {
   try {
-    const response = await fetchWithAuth(`${getApiBaseUrl()}${apiRoutes.invites.admin}`, {
+    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.invites.admin}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -392,7 +397,7 @@ export async function createOrgInvitation(
   payload: CreateOrgInvitationPayload
 ): Promise<{ success: InviteCreateResponse; error?: never } | { success?: never; error: InviteError }> {
   try {
-    const response = await fetchWithAuth(`${getApiBaseUrl()}${apiRoutes.invites.organization}`, {
+    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.invites.organization}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -443,7 +448,7 @@ export async function createOrgInvitation(
 }
 
 export async function startInviteGoogleSession(token: string): Promise<Response> {
-  return fetchWithAuth(`${getApiBaseUrl()}${apiRoutes.invites.googleSession(token)}`, {
+  return fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.invites.googleSession(token)}`, {
     method: "POST",
     credentials: "include",
   })
@@ -453,7 +458,7 @@ export async function registerWithInvite(
   token: string,
   payload: { email: string; password: string }
 ): Promise<Response> {
-  return fetch(`${getApiBaseUrl()}${apiRoutes.invites.register(token)}`, {
+  return fetch(`${resolveApiBaseUrl()}${apiRoutes.invites.register(token)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

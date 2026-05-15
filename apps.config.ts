@@ -29,4 +29,6 @@ const API_DEV_PORT = 8000
 export const publicDevDefaults = {
   apiOrigin: `http://localhost:${API_DEV_PORT}`,
   webOrigin: `http://localhost:${appsConfig.web.devPort}`,
+  dashboardOrigin: `http://localhost:${appsConfig.dashboard.devPort}`,
+  backofficeOrigin: `http://localhost:${appsConfig.backoffice.devPort}`,
 } as const

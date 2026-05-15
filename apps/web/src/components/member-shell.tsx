@@ -1,6 +1,6 @@
 import {
   logout,
-  resolveVitePublicWebBaseUrl,
+  resolveWebUrl,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
@@ -27,7 +27,7 @@ export function MemberShell() {
     try {
       await logout()
       clear()
-      window.location.replace(resolveVitePublicWebBaseUrl())
+      window.location.replace(resolveWebUrl())
     } catch (error) {
       console.error("Logout failed:", error)
     }

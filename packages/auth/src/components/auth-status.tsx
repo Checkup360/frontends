@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { buildLoginUrl, logout, resolveVitePublicWebBaseUrl } from "@workspace/api"
+import { buildLoginUrl, logout, resolveWebUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 
@@ -21,7 +21,7 @@ export function AuthStatus() {
     try {
       await logout()
       clear()
-      window.location.replace(resolveVitePublicWebBaseUrl())
+      window.location.replace(resolveWebUrl())
     } finally {
       setIsLoggingOut(false)
     }

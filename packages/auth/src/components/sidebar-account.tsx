@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { logout, resolveVitePublicWebBaseUrl } from "@workspace/api"
+import { logout, resolveWebUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 
@@ -17,7 +17,7 @@ export function SidebarAccount({
   const handleLogout = async () => {
     await logout()
     clear()
-    window.location.replace(resolveVitePublicWebBaseUrl())
+    window.location.replace(resolveWebUrl())
   }
 
   if (isLoading) {
