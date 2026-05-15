@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="/config.js"></script>
     <title>Checkup360 - Dashboard</title>
+    <script>
+      try {
+        const storageKey = "theme"
+        const theme = localStorage.getItem(storageKey)
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+        const appliedTheme = theme || systemTheme
+        
+        if (appliedTheme === "dark") {
+          document.documentElement.classList.add("dark")
+        } else {
+          document.documentElement.classList.remove("dark")
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
