@@ -1,4 +1,4 @@
-import { logout } from "@workspace/api"
+import { logout, resolveWebUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   WorkspaceShell,
@@ -42,7 +42,7 @@ export function DashboardShell() {
     try {
       await logout()
       clear()
-      window.location.replace("/")
+      window.location.replace(resolveWebUrl())
     } catch (error) {
       console.error("Logout failed:", error)
     }

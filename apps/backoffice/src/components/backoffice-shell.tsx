@@ -1,11 +1,11 @@
-import { logout } from "@workspace/api"
+import { logout, resolveWebUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   WorkspaceShell,
   type WorkspaceShellNavItem,
 } from "@workspace/components/components/workspace-shell"
 import { Building2, MailPlus, Settings } from "lucide-react"
-import { NavLink, Outlet, useNavigate } from "react-router-dom"
+import { NavLink, Outlet } from "react-router-dom"
 
 const navigation: WorkspaceShellNavItem[] = [
   { title: "Organizations", url: "/", icon: Building2, to: "/", end: true },
@@ -23,13 +23,12 @@ const secondaryNavigation: WorkspaceShellNavItem[] = [
 
 export function BackofficeShell() {
   const { user, clear } = useCurrentUser()
-  const navigate = useNavigate()
 
   const handleLogout = async () => {
     try {
       await logout()
       clear()
-      navigate("/access-denied")
+      window.location.replace(resolveWebUrl())
     } catch (error) {
       console.error("Logout failed:", error)
     }
