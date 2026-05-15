@@ -8,11 +8,11 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { AuthOAuthDivider } from "./auth/auth-oauth-divider"
-import { AuthShell } from "./auth/auth-shell"
-import { EmailPasswordFields } from "./auth/email-password-fields"
-import { formatAuthFormError } from "./auth/format-auth-detail"
-import { GoogleSignInButton } from "./auth/google-sign-in-button"
+import { AuthOAuthDivider } from "./auth-oauth-divider"
+import { AuthShell } from "./auth-shell"
+import { EmailPasswordFields } from "./email-password-fields"
+import { formatAuthFormError } from "./format-auth-detail"
+import { GoogleSignInButton } from "./google-sign-in-button"
 
 type LoginProps = {
   googleAuthorizeUrl?: string

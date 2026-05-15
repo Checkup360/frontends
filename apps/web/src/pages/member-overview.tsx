@@ -11,14 +11,16 @@ import {
 } from "lucide-react"
 
 import {
+  memberNewsArticles,
+  NewsCard,
+} from "@/components/member/news"
+import {
   HealthEvolutionChart,
   HealthScoreHero,
-  NewsCard,
   RecommendationCard,
   type Recommendation,
-} from "@/components/member-overview"
-import { memberNewsArticles } from "@/components/member-overview/articles"
-import { MemberOverviewSkeleton } from "@/components/member-overview-skeleton"
+} from "@/components/member/overview"
+import { MemberOverviewSkeleton } from "@/components/member/overview-skeleton"
 
 const recommendations: Recommendation[] = [
   {

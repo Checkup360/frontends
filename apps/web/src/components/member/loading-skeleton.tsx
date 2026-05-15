@@ -1,5 +1,5 @@
 import { WorkspaceShellSkeleton } from "@workspace/components/components/workspace-shell-skeleton"
-import { MemberOverviewSkeleton } from "./member-overview-skeleton"
+import { MemberOverviewSkeleton } from "./overview-skeleton"
 
 export function MemberLoadingSkeleton() {
   return (

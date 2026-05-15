@@ -14,7 +14,7 @@
     "pre-commit": "pnpm exec lint-staged"
   },
   "lint-staged": {
-    "*.{ts,tsx}": "pnpm turbo typecheck build"
+    "*.{ts,tsx}": "bash -c 'pnpm turbo typecheck build'"
   },
   "devDependencies": {
     "lint-staged": "^15.2.11",

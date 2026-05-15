@@ -1,7 +1,7 @@
 import {
   memberNewsArticles,
   NewsCard,
-} from "@/components/member-overview"
+} from "@/components/member/news"
 
 export function MemberNewsPage() {
   return (

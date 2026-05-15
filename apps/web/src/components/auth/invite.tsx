@@ -7,14 +7,14 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { useCallback, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { AuthOAuthDivider } from "./auth/auth-oauth-divider"
-import { AuthShell } from "./auth/auth-shell"
-import { EmailPasswordFields } from "./auth/email-password-fields"
+import { AuthOAuthDivider } from "./auth-oauth-divider"
+import { AuthShell } from "./auth-shell"
+import { EmailPasswordFields } from "./email-password-fields"
 import {
   formatAuthFormError,
-} from "./auth/format-auth-detail"
-import { readFastApiErrorDetail } from "./auth/read-fastapi-detail"
-import { GoogleSignInButton } from "./auth/google-sign-in-button"
+} from "./format-auth-detail"
+import { readFastApiErrorDetail } from "./read-fastapi-detail"
+import { GoogleSignInButton } from "./google-sign-in-button"
 
 export default function Invite() {
   const { token = "" } = useParams<{ token: string }>()
