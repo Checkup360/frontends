@@ -23,6 +23,9 @@ importers:
 
   apps/backoffice:
     dependencies:
+      '@workspace/api':
+        specifier: workspace:*
+        version: link:../../packages/api
       '@workspace/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -87,6 +90,9 @@ importers:
 
   apps/dashboard:
     dependencies:
+      '@workspace/api':
+        specifier: workspace:*
+        version: link:../../packages/api
       '@workspace/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -154,6 +160,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@workspace/api':
+        specifier: workspace:*
+        version: link:../../packages/api
       '@workspace/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -219,8 +228,17 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0(vite@7.3.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.2))(workbox-build@7.4.0(@types/babel__core@7.20.5))(workbox-window@7.4.0)
 
+  packages/api:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/auth:
     dependencies:
+      '@workspace/api':
+        specifier: workspace:*
+        version: link:../api
       '@workspace/ui':
         specifier: workspace:*
         version: link:../ui
@@ -240,6 +258,9 @@ importers:
 
   packages/components:
     dependencies:
+      '@workspace/api':
+        specifier: workspace:*
+        version: link:../api
       '@workspace/auth':
         specifier: workspace:*
         version: link:../auth

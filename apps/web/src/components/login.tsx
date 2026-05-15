@@ -4,7 +4,7 @@ import {
   getPostLoginRedirectUrl,
   loginWithPassword,
   savePostLoginRedirectUrl,
-} from "@workspace/auth/api"
+} from "@workspace/api"
 import { Button } from "@workspace/ui/components/button"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"

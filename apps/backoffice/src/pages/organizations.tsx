@@ -3,8 +3,10 @@ import { CreateOrganizationDialog } from "@workspace/auth/components/create-orga
 import {
   listOrganizations,
   type OrganizationResponse,
-} from "@workspace/auth/api"
+} from "@workspace/api"
+
 import { OverviewStatCard } from "@workspace/components/components/card"
+
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { toast } from "@workspace/ui/components/sonner"

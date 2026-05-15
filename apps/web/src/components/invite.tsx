@@ -3,7 +3,7 @@ import {
   tryFollowAuthRedirectResponse,
   startInviteGoogleSession,
   registerWithInvite,
-} from "@workspace/auth/api"
+} from "@workspace/api"
 import { Button } from "@workspace/ui/components/button"
 import { useCallback, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"

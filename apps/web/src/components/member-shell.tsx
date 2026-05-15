@@ -1,7 +1,7 @@
 import {
   logout,
   resolveVitePublicWebBaseUrl,
-} from "@workspace/auth/api"
+} from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   WorkspaceShell,

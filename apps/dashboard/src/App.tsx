@@ -1,4 +1,4 @@
-import { buildLoginUrl } from "@workspace/auth/api"
+import { buildLoginUrl } from "@workspace/api"
 import { RequireOrgAdmin } from "@workspace/auth/components/require-org-admin"
 import { Button } from "@workspace/ui/components/button"
 import { Toaster } from "@workspace/ui/components/sonner"

@@ -6,7 +6,7 @@ import {
   type CreateSysadminInvitationPayload,
   type CreateOrgInvitationPayload,
   type InviteError,
-} from "@workspace/auth/schemas"
+} from "@workspace/api"
 import { publicDevDefaults } from "../../../apps.config"
 
 const DEFAULT_API_BASE_URL = publicDevDefaults.apiOrigin

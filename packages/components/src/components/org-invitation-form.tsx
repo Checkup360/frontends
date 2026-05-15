@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react"
-import { createOrgInvitation, listOrganizations } from "@workspace/auth/api"
+import { createOrgInvitation, listOrganizations } from "@workspace/api"
 import { OrganizationSelector } from "./organization-selector"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
@@ -20,8 +20,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react"
-import type { OrganizationResponse } from "@workspace/auth/api"
-import type { OrgRole, InviteError } from "@workspace/auth/schemas"
+import type { OrganizationResponse, OrgRole, InviteError } from "@workspace/api"
 
 interface OrgInvitationFormProps {
   onBack?: () => void

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, type ReactNode } from "react"
-import { buildLoginUrl } from "@workspace/auth/api"
+import { buildLoginUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 
 type RequireSysadminProps = {

@@ -11,7 +11,9 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
+      "@workspace/api": ["../api/src/index.ts"],
       "@workspace/components/*": ["./src/*"],
+      "@workspace/api/*": ["../api/src/*"],
       "@workspace/ui/*": ["../ui/src/*"]
     }
   },

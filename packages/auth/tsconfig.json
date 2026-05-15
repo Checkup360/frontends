@@ -10,7 +10,9 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
+      "@workspace/api": ["../api/src/index.ts"],
       "@workspace/ui/*": ["../ui/src/*"],
+      "@workspace/api/*": ["../api/src/*"],
       "@workspace/auth/*": ["./src/*"]
     }
   },

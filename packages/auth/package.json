@@ -7,6 +7,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@workspace/api": "workspace:*",
     "@workspace/ui": "workspace:*",
     "lucide-react": "^1.11.0",
     "react": "^19.2.4"
@@ -16,9 +17,7 @@
     "typescript": "^5.9.3"
   },
   "exports": {
-    "./api": "./src/api.ts",
     "./components/*": "./src/components/*.tsx",
-    "./hooks/*": "./src/hooks/*.ts",
-    "./schemas": "./src/schemas.ts"
+    "./hooks/*": "./src/hooks/*.ts"
   }
 }

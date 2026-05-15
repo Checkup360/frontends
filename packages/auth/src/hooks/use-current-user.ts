@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { fetchCurrentUser } from "@workspace/auth/api"
-import type { AuthMeResponse } from "@workspace/auth/schemas"
+import { fetchCurrentUser, type AuthMeResponse } from "@workspace/api"
 
 
 export function useCurrentUser() {

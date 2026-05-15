@@ -65,9 +65,7 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
   }
 }
 
-export function parseOAuthAuthorizeResponse(
-  payload: unknown
-): OAuthAuthorizeResponse | null {
+export function parseOAuthAuthorizeResponse(payload: unknown): OAuthAuthorizeResponse | null {
   if (!payload || typeof payload !== "object") return null
 
   const maybeUrl = (payload as { authorization_url?: unknown }).authorization_url

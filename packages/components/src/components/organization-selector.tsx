@@ -3,7 +3,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Badge } from "@workspace/ui/components/badge"
 import { ChevronDown, X } from "lucide-react"
-import type { OrganizationResponse } from "@workspace/auth/api"
+import type { OrganizationResponse } from "@workspace/api"
 
 interface OrganizationSelectorProps {
   selected: OrganizationResponse | null

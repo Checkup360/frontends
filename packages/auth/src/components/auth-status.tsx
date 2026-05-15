@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { buildLoginUrl, logout, resolveVitePublicWebBaseUrl } from "@workspace/auth/api"
+import { buildLoginUrl, logout, resolveVitePublicWebBaseUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 

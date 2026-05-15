@@ -1,7 +1,7 @@
 import {
   clearPostLoginRedirectUrl,
   readPostLoginRedirectUrl,
-} from "@workspace/auth/api"
+} from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { useEffect, useRef } from "react"

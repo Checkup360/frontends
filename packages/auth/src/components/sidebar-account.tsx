@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { logout, resolveVitePublicWebBaseUrl } from "@workspace/auth/api"
+import { logout, resolveVitePublicWebBaseUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 
