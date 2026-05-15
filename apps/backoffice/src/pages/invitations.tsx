@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { InvitationTypeSelector } from "@workspace/auth/components/invitation-type-selector"
+import { InvitationTypeCard } from "@/components/invitation-type-card"
 import { SysadminInvitationForm } from "@workspace/auth/components/sysadmin-invitation-form"
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card"
@@ -97,7 +97,7 @@ export function InvitationsPage() {
         <CardContent className="px-8 pb-7 md:px-10 md:pb-8">
           <div className="min-h-[430px] py-6">
             {selectedType === null && (
-              <InvitationTypeSelector
+              <InvitationTypeCard
                 onSelect={(type) => {
                   setCompleted(false)
                   setSelectedType(type)
