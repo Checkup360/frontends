@@ -11,9 +11,13 @@
     "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm turbo typecheck build"
+    "pre-commit": "pnpm exec lint-staged"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": "pnpm turbo typecheck build"
   },
   "devDependencies": {
+    "lint-staged": "^15.2.11",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "simple-git-hooks": "^2.12.1",
