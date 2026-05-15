@@ -18,7 +18,7 @@ function ProtectedLayout() {
 }
 
 function AccessDenied() {
-  const loginUrl = buildLoginUrl({ nextUrl: window.location.href })
+  const loginUrl = buildLoginUrl({ nextUrl: `${window.location.origin}/` })
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center px-4 text-center">
