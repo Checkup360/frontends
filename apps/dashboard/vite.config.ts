@@ -19,6 +19,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@workspace/components": path.resolve(
+        __dirname,
+        "../../packages/components/src"
+      ),
     },
   },
 })

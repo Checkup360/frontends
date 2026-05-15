@@ -7,7 +7,7 @@ import {
   CardDescription,
 } from "@workspace/ui/components/card"
 import { AlertCircle, CheckCircle2, Clock, Heart } from "lucide-react"
-import { StatCard } from "@/components/stat-card"
+import { OverviewStatCard } from "@workspace/components/components/card"
 
 export function MemberOverviewPage() {
   const { user, isLoading } = useCurrentUser()
@@ -60,21 +60,37 @@ export function MemberOverviewPage() {
           </CardContent>
         </Card>
 
-        <StatCard
+        <OverviewStatCard
           label="Checkups Completed"
           value="3"
           hint="of 4 this year"
           icon={CheckCircle2}
           tone="success"
           delta={20}
+          iconVariant="icon"
+          footerTitle={
+            <div className="flex items-center gap-2">
+              On track
+              <CheckCircle2 className="size-4" />
+            </div>
+          }
+          footerDescription="Keep maintaining your schedule"
         />
 
-        <StatCard
+        <OverviewStatCard
           label="Pending Forms"
           value="1"
           hint="Due in 5 days"
           icon={Clock}
           tone="warning"
+          iconVariant="icon"
+          footerTitle={
+            <div className="flex items-center gap-2">
+              Action needed
+              <Clock className="size-4" />
+            </div>
+          }
+          footerDescription="Complete before deadline"
         />
       </div>
 
@@ -174,3 +190,5 @@ export function MemberOverviewPage() {
     </div>
   )
 }
+
+export default MemberOverviewPage

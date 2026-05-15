@@ -4,6 +4,7 @@ import {
   listOrganizations,
   type OrganizationResponse,
 } from "@workspace/auth/api"
+import { OverviewStatCard } from "@workspace/components/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { toast } from "@workspace/ui/components/sonner"
@@ -111,19 +112,15 @@ export function OrganizationsPage() {
         </Button>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs dark:*:data-[slot=card]:bg-card">
         {overview.map((item) => (
-          <Card key={item.label}>
-            <CardContent className="pt-0">
-              <p className="text-sm font-medium text-muted-foreground">
-                {item.label}
-              </p>
-              <p className="mt-8 text-3xl font-semibold tracking-tight text-foreground">
-                {item.value}
-              </p>
-              <p className="mt-6 text-xs text-muted-foreground">{item.hint}</p>
-            </CardContent>
-          </Card>
+          <OverviewStatCard
+            key={item.label}
+            label={item.label}
+            value={item.value}
+            hint={item.hint}
+            iconVariant="none"
+          />
         ))}
       </section>
 
@@ -240,3 +237,5 @@ export function OrganizationsPage() {
     </div>
   )
 }
+
+export default OrganizationsPage

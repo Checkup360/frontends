@@ -20,6 +20,10 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@workspace/components": path.resolve(
+        __dirname,
+        "../../packages/components/src"
+      ),
     },
   },
 })
