@@ -43,10 +43,16 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@workspace/ui/styles": path.resolve(__dirname, "../../packages/ui/src/styles"),
+      "@workspace/ui/styles": path.resolve(
+        __dirname,
+        "../../packages/ui/src/styles"
+      ),
       "@workspace/ui": path.resolve(__dirname, "../../packages/ui/src"),
       "@workspace/auth": path.resolve(__dirname, "../../packages/auth/src"),
-      "@workspace/components": path.resolve(__dirname, "../../packages/components/src"),
+      "@workspace/components": path.resolve(
+        __dirname,
+        "../../packages/components/src"
+      ),
     },
   },
 })

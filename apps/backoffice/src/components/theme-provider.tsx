@@ -8,9 +8,9 @@ type ThemeProviderState = {
   setTheme: (theme: Theme) => void
 }
 
-const ThemeProviderContext = React.createContext<ThemeProviderState | undefined>(
-  undefined
-)
+const ThemeProviderContext = React.createContext<
+  ThemeProviderState | undefined
+>(undefined)
 
 function resolveTheme(theme: Theme): "dark" | "light" {
   if (theme === "system") {

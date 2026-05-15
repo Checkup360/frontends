@@ -6,8 +6,8 @@ import { AlertTriangle, TrendingUp, Users } from "lucide-react"
 
 export function DashboardPage() {
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="mx-auto w-full max-w-7xl space-y-8">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <StatCard
           label="Total employees"
           value="551"
@@ -32,7 +32,7 @@ export function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <RiskTrend />
         </div>

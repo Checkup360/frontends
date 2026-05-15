@@ -4,13 +4,15 @@ type AuthOAuthDividerProps = {
   label?: string
 }
 
-export function AuthOAuthDivider({ label = "or continue with" }: AuthOAuthDividerProps) {
+export function AuthOAuthDivider({
+  label = "or continue with",
+}: AuthOAuthDividerProps) {
   return (
     <div className="relative my-6">
       <div className="absolute inset-0 flex items-center">
         <Separator className="w-full" />
       </div>
-      <div className="relative flex justify-center text-xs uppercase tracking-wide">
+      <div className="relative flex justify-center text-xs tracking-wide uppercase">
         <span className="bg-card/60 px-2 text-muted-foreground">{label}</span>
       </div>
     </div>

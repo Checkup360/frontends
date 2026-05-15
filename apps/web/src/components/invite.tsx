@@ -9,7 +9,10 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { AuthOAuthDivider } from "./auth/auth-oauth-divider"
 import { AuthShell } from "./auth/auth-shell"
 import { EmailPasswordFields } from "./auth/email-password-fields"
-import { formatAuthFormError, reasonFromFastApiDetail } from "./auth/format-auth-detail"
+import {
+  formatAuthFormError,
+  reasonFromFastApiDetail,
+} from "./auth/format-auth-detail"
 import { readFastApiErrorDetail } from "./auth/read-fastapi-detail"
 import { GoogleSignInButton } from "./auth/google-sign-in-button"
 
@@ -28,9 +31,11 @@ export default function Invite() {
 
   const goToError = useCallback(
     (reason: string) => {
-      navigate(`/auth/error?reason=${encodeURIComponent(reason)}`, { replace: true })
+      navigate(`/auth/error?reason=${encodeURIComponent(reason)}`, {
+        replace: true,
+      })
     },
-    [navigate],
+    [navigate]
   )
 
   const startGoogle = async () => {
@@ -46,7 +51,7 @@ export default function Invite() {
         {
           method: "POST",
           credentials: "include",
-        },
+        }
       )
       if (!pending.ok) {
         const detail = await readFastApiErrorDetail(pending)
@@ -58,7 +63,9 @@ export default function Invite() {
       window.location.assign(payload.authorization_url)
     } catch (e) {
       setGoogleError(
-        e instanceof Error ? e.message : "Failed to start the registration with Google.",
+        e instanceof Error
+          ? e.message
+          : "Failed to start the registration with Google."
       )
     } finally {
       setGoogleLoading(false)
@@ -82,7 +89,7 @@ export default function Invite() {
           credentials: "include",
           redirect: "manual",
           body: JSON.stringify({ email, password }),
-        },
+        }
       )
 
       if (tryFollowAuthRedirectResponse(response)) {
@@ -105,7 +112,9 @@ export default function Invite() {
   if (!token) {
     return (
       <div className="flex min-h-dvh items-center justify-center px-4">
-        <p className="text-center text-sm text-muted-foreground">Invalid invitation.</p>
+        <p className="text-center text-sm text-muted-foreground">
+          Invalid invitation.
+        </p>
       </div>
     )
   }
@@ -115,14 +124,19 @@ export default function Invite() {
       title="Create account"
       description="Complete the data and click Create account, or continue with Google."
       footer={
-        <p className="text-pretty text-xs text-muted-foreground">
+        <p className="text-xs text-pretty text-muted-foreground">
           By registering you accept the terms and privacy policy of the service.
         </p>
       }
     >
-      <form onSubmit={(e) => void handlePasswordRegister(e)} className="space-y-4">
+      <form
+        onSubmit={(e) => void handlePasswordRegister(e)}
+        className="space-y-4"
+      >
         {registerError ? (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{registerError}</div>
+          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            {registerError}
+          </div>
         ) : null}
 
         <EmailPasswordFields
@@ -136,7 +150,11 @@ export default function Invite() {
           passwordAutocomplete="new-password"
         />
 
-        <Button type="submit" className="w-full" disabled={registerLoading || googleLoading}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={registerLoading || googleLoading}
+        >
           {registerLoading ? "Creating account…" : "Create account"}
         </Button>
       </form>
@@ -151,12 +169,17 @@ export default function Invite() {
         disabled={registerLoading}
       />
       {googleError ? (
-        <p className="mt-3 text-center text-xs text-destructive">{googleError}</p>
+        <p className="mt-3 text-center text-xs text-destructive">
+          {googleError}
+        </p>
       ) : null}
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Do you already have an account?{" "}
-        <Link to="/login" className="font-medium text-primary underline underline-offset-4">
+        <Link
+          to="/login"
+          className="font-medium text-primary underline underline-offset-4"
+        >
           Sign in
         </Link>
       </p>

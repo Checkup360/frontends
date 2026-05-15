@@ -3,7 +3,6 @@ import {
   readPostLoginRedirectUrl,
   resolveVitePublicApiBaseUrl,
 } from "@workspace/auth/api"
-import { AuthStatus } from "@workspace/auth/components/auth-status"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { useEffect, useRef } from "react"
@@ -24,11 +23,6 @@ import { ThemeProvider } from "./components/theme-provider"
 function RootLayout() {
   return (
     <div className="relative min-h-svh">
-      <header className="sticky top-0 z-30 flex justify-end border-b border-border/60 bg-background/85 px-4 py-3 backdrop-blur-md">
-        <AuthStatus
-          apiBaseUrl={resolveVitePublicApiBaseUrl(import.meta.env)}
-        />
-      </header>
       <main>
         <Outlet />
       </main>
@@ -65,7 +59,9 @@ function HomePage() {
 }
 
 function LoginComplete() {
-  const redirectUrl = useRef(readPostLoginRedirectUrl(`${window.location.origin}/`))
+  const redirectUrl = useRef(
+    readPostLoginRedirectUrl(`${window.location.origin}/`)
+  )
 
   useEffect(() => {
     clearPostLoginRedirectUrl()

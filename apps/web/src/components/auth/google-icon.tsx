@@ -1,7 +1,7 @@
 import type { JSX, SVGProps } from "react"
 
 export function GoogleIcon(
-  props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>,
+  props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>
 ) {
   return (
     <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden {...props}>

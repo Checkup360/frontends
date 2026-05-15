@@ -1,4 +1,3 @@
-
 export function reasonFromFastApiDetail(detail: unknown): string {
   if (typeof detail === "string") {
     return detail
@@ -40,13 +39,14 @@ export function formatAuthFormError(detail: unknown): string {
   }
   if (detail && typeof detail === "object" && "code" in detail) {
     const o = detail as { code?: string; reason?: string }
-    if (o.code === "REGISTER_INVALID_PASSWORD" && typeof o.reason === "string") {
+    if (
+      o.code === "REGISTER_INVALID_PASSWORD" &&
+      typeof o.reason === "string"
+    ) {
       return o.reason
     }
     if (typeof o.code === "string") {
-      return (
-        LOGIN_MESSAGES[o.code] ?? INVITE_MESSAGES[o.code] ?? o.code
-      )
+      return LOGIN_MESSAGES[o.code] ?? INVITE_MESSAGES[o.code] ?? o.code
     }
   }
   return "Failed to complete the operation."

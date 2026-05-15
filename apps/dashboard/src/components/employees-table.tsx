@@ -1,6 +1,6 @@
-import { Card } from "@workspace/ui/components/card";
-import { Badge } from "@workspace/ui/components/badge";
-import { Input } from "@workspace/ui/components/input";
+import { Card } from "@workspace/ui/components/card"
+import { Badge } from "@workspace/ui/components/badge"
+import { Input } from "@workspace/ui/components/input"
 import {
   Table,
   TableBody,
@@ -8,45 +8,93 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@workspace/ui/components/table";
-import { useMemo, useState } from "react";
+} from "@workspace/ui/components/table"
+import { useMemo, useState } from "react"
 
 type Worker = {
-  name: string;
-  area: string;
-  score: number;
-  risk: "Low" | "Medium" | "High";
-  lastCheck: string;
-};
+  name: string
+  area: string
+  score: number
+  risk: "Low" | "Medium" | "High"
+  lastCheck: string
+}
 
 const workers: Worker[] = [
-  { name: "Lucy Mendez", area: "Operations", score: 88, risk: "Low", lastCheck: "3 days ago" },
-  { name: "Carlos Perez", area: "Production", score: 62, risk: "High", lastCheck: "1 week ago" },
-  { name: "Mariana Soto", area: "Administration", score: 91, risk: "Low", lastCheck: "2 days ago" },
-  { name: "Diego Ramirez", area: "Logistics", score: 71, risk: "Medium", lastCheck: "5 days ago" },
-  { name: "Sofia Alvarez", area: "IT", score: 84, risk: "Low", lastCheck: "yesterday" },
-  { name: "Javier Torres", area: "Production", score: 58, risk: "High", lastCheck: "2 weeks ago" },
-  { name: "Paula Gomez", area: "Sales", score: 76, risk: "Medium", lastCheck: "4 days ago" },
-];
+  {
+    name: "Lucy Mendez",
+    area: "Operations",
+    score: 88,
+    risk: "Low",
+    lastCheck: "3 days ago",
+  },
+  {
+    name: "Carlos Perez",
+    area: "Production",
+    score: 62,
+    risk: "High",
+    lastCheck: "1 week ago",
+  },
+  {
+    name: "Mariana Soto",
+    area: "Administration",
+    score: 91,
+    risk: "Low",
+    lastCheck: "2 days ago",
+  },
+  {
+    name: "Diego Ramirez",
+    area: "Logistics",
+    score: 71,
+    risk: "Medium",
+    lastCheck: "5 days ago",
+  },
+  {
+    name: "Sofia Alvarez",
+    area: "IT",
+    score: 84,
+    risk: "Low",
+    lastCheck: "yesterday",
+  },
+  {
+    name: "Javier Torres",
+    area: "Production",
+    score: 58,
+    risk: "High",
+    lastCheck: "2 weeks ago",
+  },
+  {
+    name: "Paula Gomez",
+    area: "Sales",
+    score: 76,
+    risk: "Medium",
+    lastCheck: "4 days ago",
+  },
+]
 
 const riskClass: Record<Worker["risk"], string> = {
   Low: "bg-[color:var(--success)]/15 text-[color:var(--success)] border-transparent",
-  Medium: "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-transparent",
+  Medium:
+    "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-transparent",
   High: "bg-destructive/15 text-destructive border-transparent",
-};
+}
 
 export function EmployeesTable() {
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState("")
   const filtered = useMemo(
-    () => workers.filter((w) => `${w.name} ${w.area}`.toLowerCase().includes(q.toLowerCase())),
-    [q],
-  );
+    () =>
+      workers.filter((w) =>
+        `${w.name} ${w.area}`.toLowerCase().includes(q.toLowerCase())
+      ),
+    [q]
+  )
   return (
-    <Card className="p-6 border-border/60 shadow-[var(--shadow-card)]">
-      <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+    <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h3 className="text-base font-semibold text-foreground">Employees</h3>
-          <p className="text-sm text-muted-foreground">Individual data and risk level</p>
+          <p className="text-sm text-muted-foreground">
+            Individual data and risk level
+          </p>
         </div>
         <Input
           type="text"
@@ -70,18 +118,28 @@ export function EmployeesTable() {
           <TableBody>
             {filtered.map((w) => (
               <TableRow key={w.name}>
-                <TableCell className="font-medium text-foreground">{w.name}</TableCell>
-                <TableCell className="text-muted-foreground">{w.area}</TableCell>
-                <TableCell className="font-semibold tabular-nums text-foreground">{w.score}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={riskClass[w.risk]}>{w.risk}</Badge>
+                <TableCell className="font-medium text-foreground">
+                  {w.name}
                 </TableCell>
-                <TableCell className="text-muted-foreground">{w.lastCheck}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {w.area}
+                </TableCell>
+                <TableCell className="font-semibold text-foreground tabular-nums">
+                  {w.score}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className={riskClass[w.risk]}>
+                    {w.risk}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {w.lastCheck}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
     </Card>
-  );
+  )
 }

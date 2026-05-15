@@ -22,10 +22,15 @@ function AccessDenied() {
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center px-4 text-center">
-      <p className="text-6xl font-semibold tracking-tight text-muted-foreground/40">403</p>
-      <h1 className="mt-4 text-xl font-semibold text-foreground">Access Denied</h1>
+      <p className="text-6xl font-semibold tracking-tight text-muted-foreground/40">
+        403
+      </p>
+      <h1 className="mt-4 text-xl font-semibold text-foreground">
+        Access Denied
+      </h1>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-        You don't have permission to access this area. Only organization admins can access the dashboard.
+        You don't have permission to access this area. Only organization admins
+        can access the dashboard.
       </p>
       <div className="mt-8 flex gap-3">
         <Button asChild variant="outline">
@@ -39,8 +44,12 @@ function AccessDenied() {
 function NotFound() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
-      <p className="text-6xl font-semibold tracking-tight text-muted-foreground/40">404</p>
-      <h1 className="mt-4 text-xl font-semibold text-foreground">Page not found</h1>
+      <p className="text-6xl font-semibold tracking-tight text-muted-foreground/40">
+        404
+      </p>
+      <h1 className="mt-4 text-xl font-semibold text-foreground">
+        Page not found
+      </h1>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">
         The route you're looking for doesn't exist or has been moved.
       </p>
@@ -71,4 +80,3 @@ export function App() {
     </ThemeProvider>
   )
 }
-

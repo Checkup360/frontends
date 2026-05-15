@@ -25,7 +25,9 @@ export function GoogleSignInButton({
       disabled={disabled || loading}
     >
       <GoogleIcon className="size-5 shrink-0" />
-      <span className="text-sm font-medium">{loading ? loadingLabel : label}</span>
+      <span className="text-sm font-medium">
+        {loading ? loadingLabel : label}
+      </span>
     </Button>
   )
 }

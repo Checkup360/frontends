@@ -1,4 +1,6 @@
-export async function readFastApiErrorDetail(response: Response): Promise<unknown> {
+export async function readFastApiErrorDetail(
+  response: Response
+): Promise<unknown> {
   const text = await response.text()
   const trimmed = text.trim()
   if (!trimmed) {

@@ -1,6 +1,13 @@
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
-import { Activity, ArrowUpRight, BrainCircuit, HeartPulse, LogIn, ShieldCheck } from "lucide-react"
+import {
+  Activity,
+  ArrowUpRight,
+  BrainCircuit,
+  HeartPulse,
+  LogIn,
+  ShieldCheck,
+} from "lucide-react"
 import { Link } from "react-router-dom"
 
 type HeroCheckup360Props = {
@@ -10,7 +17,8 @@ type HeroCheckup360Props = {
 const heroCards = [
   {
     title: "For employees",
-    description: "Health data input and personalized preventive recommendations.",
+    description:
+      "Health data input and personalized preventive recommendations.",
     icon: HeartPulse,
   },
   {
@@ -33,7 +41,7 @@ export function HeroCheckup360({ className }: HeroCheckup360Props) {
           <div className="relative isolate grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
             <div
               aria-hidden
-              className="pointer-events-none absolute left-1/2 top-1/2 -z-10 size-[760px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-border/70 p-16 opacity-80 mask-[linear-gradient(to_top,transparent,white,white,transparent)] md:size-[1200px] md:p-32"
+              className="pointer-events-none absolute top-1/2 left-1/2 -z-10 size-[760px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-border/70 mask-[linear-gradient(to_top,transparent,white,white,transparent)] p-16 opacity-80 md:size-[1200px] md:p-32"
             >
               <div className="size-full rounded-full border border-border/70 p-16 md:p-32">
                 <div className="size-full rounded-full border border-border/70" />
@@ -47,18 +55,19 @@ export function HeroCheckup360({ className }: HeroCheckup360Props) {
               </div>
 
               <div className="space-y-5">
-                <h1 className="max-w-4xl text-balance text-5xl font-semibold tracking-tight sm:text-6xl md:text-7xl">
+                <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl md:text-7xl">
                   CheckUp360
                 </h1>
 
-                <p className="max-w-2xl text-balance text-2xl font-medium tracking-tight text-foreground/85 md:text-3xl">
+                <p className="max-w-2xl text-2xl font-medium tracking-tight text-balance text-foreground/85 md:text-3xl">
                   Manage your team’s health before risk turns into a problem.
                 </p>
               </div>
 
-              <p className="max-w-2xl text-pretty text-base leading-7 text-muted-foreground md:text-lg">
-                We integrate health data, predictive analytics, and personalized recommendations
-                to help companies monitor risks, prevent chronic diseases, and make better decisions.
+              <p className="max-w-2xl text-base leading-7 text-pretty text-muted-foreground md:text-lg">
+                We integrate health data, predictive analytics, and personalized
+                recommendations to help companies monitor risks, prevent chronic
+                diseases, and make better decisions.
               </p>
 
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
@@ -83,7 +92,9 @@ export function HeroCheckup360({ className }: HeroCheckup360Props) {
                 <div className="flex items-center justify-between border-b pb-4">
                   <div>
                     <p className="text-sm font-medium">Population risk</p>
-                    <p className="text-xs text-muted-foreground">Aggregated and anonymized view</p>
+                    <p className="text-xs text-muted-foreground">
+                      Aggregated and anonymized view
+                    </p>
                   </div>
                   <div className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
                     AI active
@@ -93,15 +104,21 @@ export function HeroCheckup360({ className }: HeroCheckup360Props) {
                 <div className="grid gap-3 py-5 sm:grid-cols-3">
                   <div className="rounded-lg bg-muted/60 p-4">
                     <p className="text-2xl font-semibold">84%</p>
-                    <p className="mt-1 text-xs text-muted-foreground">no critical alerts</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      no critical alerts
+                    </p>
                   </div>
                   <div className="rounded-lg bg-muted/60 p-4">
                     <p className="text-2xl font-semibold">12</p>
-                    <p className="mt-1 text-xs text-muted-foreground">detected trends</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      detected trends
+                    </p>
                   </div>
                   <div className="rounded-lg bg-muted/60 p-4">
                     <p className="text-2xl font-semibold">3.8x</p>
-                    <p className="mt-1 text-xs text-muted-foreground">clinical prioritization</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      clinical prioritization
+                    </p>
                   </div>
                 </div>
 
@@ -117,7 +134,10 @@ export function HeroCheckup360({ className }: HeroCheckup360Props) {
                         <span className="text-muted-foreground">{value}</span>
                       </div>
                       <div className="h-2 rounded-full bg-muted">
-                        <div className="h-full rounded-full bg-primary" style={{ width: value }} />
+                        <div
+                          className="h-full rounded-full bg-primary"
+                          style={{ width: value }}
+                        />
                       </div>
                     </div>
                   ))}
@@ -133,7 +153,9 @@ export function HeroCheckup360({ className }: HeroCheckup360Props) {
                 >
                   <card.icon className="mb-4 size-5 text-primary" />
                   <p className="text-sm font-medium">{card.title}</p>
-                  <p className="mt-2 text-sm text-muted-foreground">{card.description}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {card.description}
+                  </p>
                 </div>
               ))}
             </div>

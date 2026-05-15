@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState, useRef } from "react"
 import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { CreateOrganizationDialog } from "@workspace/auth/components/create-organization-dialog"
-import { listOrganizations, type OrganizationResponse } from "@workspace/auth/api"
+import {
+  listOrganizations,
+  type OrganizationResponse,
+} from "@workspace/auth/api"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { toast } from "@workspace/ui/components/sonner"
@@ -31,8 +34,10 @@ interface Organization extends OrganizationResponse {
 }
 
 const statusClass: Record<OrganizationStatus, string> = {
-  Active: "border-transparent bg-[color:var(--success)]/15 text-[color:var(--success)]",
-  Pending: "border-transparent bg-[color:var(--warning)]/15 text-[color:var(--warning)]",
+  Active:
+    "border-transparent bg-[color:var(--success)]/15 text-[color:var(--success)]",
+  Pending:
+    "border-transparent bg-[color:var(--warning)]/15 text-[color:var(--warning)]",
 }
 
 export function OrganizationsPage() {
@@ -41,14 +46,18 @@ export function OrganizationsPage() {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const loadOrganizationsRef = useRef<() => Promise<void>>(() => Promise.resolve())
+  const loadOrganizationsRef = useRef<() => Promise<void>>(() =>
+    Promise.resolve()
+  )
 
   const filtered = useMemo(
     () =>
       organizations.filter((organization) =>
-        `${organization.name} ${organization.slug}`.toLowerCase().includes(query.toLowerCase()),
+        `${organization.name} ${organization.slug}`
+          .toLowerCase()
+          .includes(query.toLowerCase())
       ),
-    [organizations, query],
+    [organizations, query]
   )
 
   useEffect(() => {
@@ -61,7 +70,7 @@ export function OrganizationsPage() {
             ...org,
             status: "Active" as OrganizationStatus,
             collaborators: 0,
-          })),
+          }))
         )
       } finally {
         setLoading(false)
@@ -80,12 +89,16 @@ export function OrganizationsPage() {
     },
     {
       label: "Active",
-      value: organizations.filter((organization) => organization.status === "Active").length.toString(),
+      value: organizations
+        .filter((organization) => organization.status === "Active")
+        .length.toString(),
       hint: "with users registered",
     },
     {
       label: "Pending",
-      value: organizations.filter((organization) => organization.status === "Pending").length.toString(),
+      value: organizations
+        .filter((organization) => organization.status === "Pending")
+        .length.toString(),
       hint: "awaiting user registration",
     },
   ]
@@ -104,7 +117,9 @@ export function OrganizationsPage() {
         {overview.map((item) => (
           <Card key={item.label}>
             <CardContent className="pt-0">
-              <p className="text-sm font-medium text-muted-foreground">{item.label}</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                {item.label}
+              </p>
               <p className="mt-8 text-3xl font-semibold tracking-tight text-foreground">
                 {item.value}
               </p>
@@ -142,13 +157,19 @@ export function OrganizationsPage() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="py-4 text-center text-muted-foreground"
+                    >
                       Loading organizations...
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="py-4 text-center text-muted-foreground"
+                    >
                       {organizations.length === 0
                         ? "No organizations yet"
                         : "No organizations match your search"}
@@ -159,27 +180,42 @@ export function OrganizationsPage() {
                     <TableRow key={organization.id}>
                       <TableCell>
                         <div>
-                          <p className="font-medium text-foreground">{organization.name}</p>
-                          <p className="text-xs text-muted-foreground">{organization.slug}</p>
+                          <p className="font-medium text-foreground">
+                            {organization.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {organization.slug}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">-</TableCell>
-                      <TableCell className="tabular-nums text-muted-foreground">
+                      <TableCell className="text-muted-foreground tabular-nums">
                         {organization.collaborators}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={statusClass[organization.status]}>
+                        <Badge
+                          variant="outline"
+                          className={statusClass[organization.status]}
+                        >
                           {organization.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-1">
                           {organization.status === "Pending" ? (
-                            <Button variant="ghost" size="icon-sm" aria-label="Copy invitation link">
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label="Copy invitation link"
+                            >
                               <Link2 className="size-4" />
                             </Button>
                           ) : null}
-                          <Button variant="ghost" size="icon-sm" aria-label="Delete organization">
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label="Delete organization"
+                          >
                             <Trash2 className="size-4 text-destructive" />
                           </Button>
                         </div>
@@ -198,7 +234,7 @@ export function OrganizationsPage() {
         onOpenChange={setDialogOpen}
         onSuccess={() => {
           toast.success("Organization created!", {
-            description: "The organization has been successfully created."
+            description: "The organization has been successfully created.",
           })
           void loadOrganizationsRef.current?.()
         }}
@@ -207,4 +243,3 @@ export function OrganizationsPage() {
     </div>
   )
 }
-

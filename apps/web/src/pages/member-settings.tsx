@@ -1,6 +1,12 @@
 import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@workspace/ui/components/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -36,7 +42,9 @@ export function MemberSettingsPage() {
               disabled
               className="bg-muted"
             />
-            <p className="text-xs text-muted-foreground">Your email cannot be changed</p>
+            <p className="text-xs text-muted-foreground">
+              Your email cannot be changed
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -73,7 +81,9 @@ export function MemberSettingsPage() {
           <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
             <div>
               <p className="text-sm font-medium">Email Notifications</p>
-              <p className="text-xs text-muted-foreground">Receive updates via email</p>
+              <p className="text-xs text-muted-foreground">
+                Receive updates via email
+              </p>
             </div>
             <input type="checkbox" defaultChecked className="h-4 w-4" />
           </div>
@@ -81,7 +91,9 @@ export function MemberSettingsPage() {
           <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
             <div>
               <p className="text-sm font-medium">Form Reminders</p>
-              <p className="text-xs text-muted-foreground">Get reminded about pending forms</p>
+              <p className="text-xs text-muted-foreground">
+                Get reminded about pending forms
+              </p>
             </div>
             <input type="checkbox" defaultChecked className="h-4 w-4" />
           </div>
@@ -89,7 +101,9 @@ export function MemberSettingsPage() {
           <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
             <div>
               <p className="text-sm font-medium">News Updates</p>
-              <p className="text-xs text-muted-foreground">Stay informed with news</p>
+              <p className="text-xs text-muted-foreground">
+                Stay informed with news
+              </p>
             </div>
             <input type="checkbox" defaultChecked className="h-4 w-4" />
           </div>

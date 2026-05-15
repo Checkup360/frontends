@@ -1,13 +1,9 @@
-import {
-  resolveVitePublicApiBaseUrl,
-} from "@workspace/auth/api"
-import { SidebarAccount } from "@workspace/auth/components/sidebar-account"
+import { logout, resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   WorkspaceShell,
   type WorkspaceShellNavItem,
-  type WorkspaceShellPageMeta,
 } from "@workspace/components/components/workspace-shell"
-import { Button } from "@workspace/ui/components/button"
 import {
   Building2,
   LayoutDashboard,
@@ -16,80 +12,78 @@ import {
   Users,
 } from "lucide-react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
-import { OrganizationSelector } from "./organization-selector"
 
 const navigation: WorkspaceShellNavItem[] = [
-  { label: "Overview", to: "/", icon: LayoutDashboard, end: true },
-  { label: "Employees", to: "/employees", icon: Users },
-  { label: "Invite people", to: "/people/invite", icon: MailPlus },
+  { title: "Overview", url: "/", icon: LayoutDashboard, to: "/", end: true },
+  { title: "Employees", url: "/employees", icon: Users, to: "/employees" },
+  {
+    title: "Invite people",
+    url: "/people/invite",
+    icon: MailPlus,
+    to: "/people/invite",
+  },
 ]
 
 const secondaryNavigation: WorkspaceShellNavItem[] = [
-  { label: "Organization", to: "/organization", icon: Building2 },
-  { label: "Settings", to: "/settings", icon: Settings },
+  {
+    title: "Organization",
+    url: "/organization",
+    icon: Building2,
+    to: "/organization",
+  },
+  { title: "Settings", url: "/settings", icon: Settings, to: "/settings" },
 ]
-
-const pageMeta: Record<string, WorkspaceShellPageMeta> = {
-  "/": {
-    eyebrow: "Occupational health",
-    title: "Dashboard",
-    description: "Aggregated health signals and workforce risk monitoring.",
-  },
-  "/employees": {
-    eyebrow: "People operations",
-    title: "Employees",
-    description:
-      "Review individual checkups, areas, and health risk categories.",
-  },
-  "/people/invite": {
-    eyebrow: "Access management",
-    title: "Invite people",
-    description:
-      "Prepare invitation links for organization admins and employees.",
-  },
-}
 
 export function DashboardShell() {
   const { pathname } = useLocation()
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
+  const { user, clear } = useCurrentUser(apiBaseUrl)
+
+  const handleLogout = async () => {
+    try {
+      await logout(apiBaseUrl)
+      clear()
+      window.location.replace("/")
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
+  }
+
+  const userData = user
+    ? {
+        name: user.email.split("@")[0],
+        email: user.email,
+        avatar: "",
+      }
+    : undefined
+
+  // Determine title based on current path
+  const getTitleForPath = () => {
+    switch (pathname) {
+      case "/":
+        return "Dashboard"
+      case "/employees":
+        return "Employees"
+      case "/people/invite":
+        return "Invite people"
+      case "/organization":
+        return "Organization"
+      case "/settings":
+        return "Settings"
+      default:
+        return "Dashboard"
+    }
+  }
 
   return (
     <WorkspaceShell
       appLabel="Company dashboard"
-      searchPlaceholder="Search employees..."
+      title={getTitleForPath()}
       navigation={navigation}
       secondaryNavigation={secondaryNavigation}
-      activePath={pathname}
-      pageMeta={pageMeta}
-      fallbackMeta={{
-        eyebrow: "CheckUp360",
-        title: "Workspace",
-        description: "Manage your organization health workspace.",
-      }}
-      sidebarHeader={<OrganizationSelector apiBaseUrl={apiBaseUrl} />}
-      sidebarFooter={
-        <SidebarAccount
-          apiBaseUrl={apiBaseUrl}
-          inviteAction={
-            <Button variant="outline" size="sm" asChild>
-              <NavLink to="/people/invite">
-                <MailPlus className="size-4" />
-                Invite
-              </NavLink>
-            </Button>
-          }
-        />
-      }
-      renderLink={({ item, className, children }) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.end}
-          className={className}
-        >
-          {children}
-        </NavLink>
-      )}
+      user={userData}
+      onLogout={handleLogout}
+      linkComponent={NavLink}
     >
       <Outlet />
     </WorkspaceShell>

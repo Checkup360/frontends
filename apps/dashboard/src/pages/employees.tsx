@@ -27,7 +27,9 @@ export function EmployeesPage() {
             <CardContent className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="mt-2 text-2xl font-semibold tracking-tight">{stat.value}</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight">
+                  {stat.value}
+                </p>
               </div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <stat.icon className="size-5" />
@@ -42,20 +44,26 @@ export function EmployeesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Employee access</CardTitle>
-            <CardDescription>Front-end states for role assignment and rollout.</CardDescription>
+            <CardDescription>
+              Front-end states for role assignment and rollout.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
               <div>
                 <p className="text-sm font-medium">Org admins</p>
-                <p className="text-xs text-muted-foreground">Can invite and manage people</p>
+                <p className="text-xs text-muted-foreground">
+                  Can invite and manage people
+                </p>
               </div>
               <Badge variant="secondary">8 users</Badge>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
               <div>
                 <p className="text-sm font-medium">Employees</p>
-                <p className="text-xs text-muted-foreground">Can complete personal checkups</p>
+                <p className="text-xs text-muted-foreground">
+                  Can complete personal checkups
+                </p>
               </div>
               <Badge variant="secondary">604 users</Badge>
             </div>

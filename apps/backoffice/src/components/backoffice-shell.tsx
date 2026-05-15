@@ -1,76 +1,58 @@
-import {
-  resolveVitePublicApiBaseUrl,
-} from "@workspace/auth/api"
-import { SidebarAccount } from "@workspace/auth/components/sidebar-account"
+import { logout, resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   WorkspaceShell,
   type WorkspaceShellNavItem,
-  type WorkspaceShellPageMeta,
 } from "@workspace/components/components/workspace-shell"
-import { Button } from "@workspace/ui/components/button"
-import { Building2, MailPlus } from "lucide-react"
-import { NavLink, Outlet, useLocation } from "react-router-dom"
+import { Building2, MailPlus, Settings } from "lucide-react"
+import { NavLink, Outlet, useNavigate } from "react-router-dom"
 
 const navigation: WorkspaceShellNavItem[] = [
-  { label: "Organizations", to: "/", icon: Building2, end: true },
-  { label: "Invitations", to: "/invitations", icon: MailPlus },
+  { title: "Organizations", url: "/", icon: Building2, to: "/", end: true },
+  {
+    title: "Invitations",
+    url: "/invitations",
+    icon: MailPlus,
+    to: "/invitations",
+  },
 ]
 
-const pageMeta: Record<string, WorkspaceShellPageMeta> = {
-  "/": {
-    eyebrow: "Administration",
-    title: "Organizations",
-    description:
-      "Manage organizations, create invitations, and monitor workspace access.",
-  },
-  "/invitations": {
-    eyebrow: "Administration",
-    title: "Invitations",
-    description:
-      "Review invitation links prepared for organization onboarding.",
-  },
-}
+const secondaryNavigation: WorkspaceShellNavItem[] = [
+  { title: "Settings", url: "/settings", icon: Settings, to: "/settings" },
+]
 
 export function BackofficeShell() {
-  const { pathname } = useLocation()
   const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
+  const { user, clear } = useCurrentUser(apiBaseUrl)
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await logout(apiBaseUrl)
+      clear()
+      navigate("/access-denied")
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
+  }
+
+  const userData = user
+    ? {
+        name: user.email.split("@")[0],
+        email: user.email,
+        avatar: "",
+      }
+    : undefined
 
   return (
     <WorkspaceShell
       appLabel="Backoffice"
-      searchPlaceholder="Search workspace..."
+      title="Organizations"
       navigation={navigation}
-      activePath={pathname}
-      pageMeta={pageMeta}
-      fallbackMeta={{
-        eyebrow: "Administration",
-        title: "Backoffice",
-        description: "Manage platform operations.",
-      }}
-      sidebarFooter={
-        <SidebarAccount
-          apiBaseUrl={apiBaseUrl}
-          roleLabel="Platform admin"
-          inviteAction={
-            <Button variant="outline" size="sm" asChild>
-              <NavLink to="/invitations">
-                <MailPlus className="size-4" />
-                Invite
-              </NavLink>
-            </Button>
-          }
-        />
-      }
-      renderLink={({ item, className, children }) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.end}
-          className={className}
-        >
-          {children}
-        </NavLink>
-      )}
+      secondaryNavigation={secondaryNavigation}
+      user={userData}
+      onLogout={handleLogout}
+      linkComponent={NavLink}
     >
       <Outlet />
     </WorkspaceShell>

@@ -1,6 +1,12 @@
 import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@workspace/ui/components/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@workspace/ui/components/card"
 import { AlertCircle, CheckCircle2, Clock, Heart } from "lucide-react"
 import { StatCard } from "@/components/stat-card"
 
@@ -34,7 +40,9 @@ export function MemberOverviewPage() {
                 <span className="text-4xl font-bold tracking-tight text-destructive">
                   42
                 </span>
-                <span className="text-xs text-muted-foreground">out of 100</span>
+                <span className="text-xs text-muted-foreground">
+                  out of 100
+                </span>
               </div>
               <div className="flex-1">
                 <div className="mb-1 text-right text-xs font-medium text-muted-foreground">
@@ -93,13 +101,16 @@ export function MemberOverviewPage() {
                 <AlertCircle className="h-4 w-4 text-[color:var(--warning)]" />
                 <span className="text-sm font-medium">Alerts</span>
               </div>
-              <span className="text-sm text-[color:var(--warning)]">1 warning</span>
+              <span className="text-sm text-[color:var(--warning)]">
+                1 warning
+              </span>
             </div>
             <p className="mt-4 text-xs text-muted-foreground">
-              Last updated: {new Date().toLocaleDateString("en-US", { 
-                year: "numeric", 
-                month: "long", 
-                day: "numeric" 
+              Last updated:{" "}
+              {new Date().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               })}
             </p>
           </CardContent>
@@ -137,23 +148,25 @@ export function MemberOverviewPage() {
         <CardContent>
           <div className="space-y-3">
             <div className="flex gap-3 border-b border-border/40 pb-3 last:border-b-0">
-              <div className="h-2 w-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
+              <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">Health checkup submitted</p>
                 <p className="text-xs text-muted-foreground">3 days ago</p>
               </div>
             </div>
             <div className="flex gap-3 border-b border-border/40 pb-3 last:border-b-0">
-              <div className="h-2 w-2 rounded-full bg-[color:var(--warning)] mt-2 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
+              <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-[color:var(--warning)]" />
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">New form assigned</p>
                 <p className="text-xs text-muted-foreground">5 days ago</p>
               </div>
             </div>
             <div className="flex gap-3 border-b border-border/40 pb-3 last:border-b-0">
-              <div className="h-2 w-2 rounded-full bg-[color:var(--success)] mt-2 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">You joined {organization?.organization_name}</p>
+              <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-[color:var(--success)]" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">
+                  You joined {organization?.organization_name}
+                </p>
                 <p className="text-xs text-muted-foreground">1 month ago</p>
               </div>
             </div>

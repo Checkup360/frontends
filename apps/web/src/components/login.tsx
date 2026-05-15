@@ -29,7 +29,9 @@ export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [googleError, setGoogleError] = useState<string | null>(null)
 
-  const postLoginRedirectUrl = getPostLoginRedirectUrl(new URL(window.location.href))
+  const postLoginRedirectUrl = getPostLoginRedirectUrl(
+    new URL(window.location.href)
+  )
 
   useEffect(() => {
     savePostLoginRedirectUrl(postLoginRedirectUrl)
@@ -58,14 +60,17 @@ export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
       setGoogleError(null)
       setGoogleLoading(true)
       savePostLoginRedirectUrl(postLoginRedirectUrl)
-      const payload =
-        googleAuthorizeUrl ?
-          { authorization_url: googleAuthorizeUrl }
+      const payload = googleAuthorizeUrl
+        ? { authorization_url: googleAuthorizeUrl }
         : await fetchGoogleAuthorizationUrl(resolvedApi)
 
       window.location.assign(payload.authorization_url)
     } catch (error) {
-      setGoogleError(error instanceof Error ? error.message : "Failed to sign in with Google.")
+      setGoogleError(
+        error instanceof Error
+          ? error.message
+          : "Failed to sign in with Google."
+      )
       setGoogleLoading(false)
     }
   }
@@ -75,14 +80,16 @@ export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
       title="Sign in"
       description="Sign in with your email and password or with Google. For a new account you need an invitation link"
       footer={
-        <p className="text-pretty text-xs text-muted-foreground">
+        <p className="text-xs text-pretty text-muted-foreground">
           By continuing you accept the terms and privacy policy
         </p>
       }
     >
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         {formError ? (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{formError}</div>
+          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            {formError}
+          </div>
         ) : null}
 
         <EmailPasswordFields
@@ -107,12 +114,19 @@ export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
         label="Continue with Google"
         loadingLabel="Redirecting to Google…"
       />
-      {googleError ? <p className="mt-3 text-center text-xs text-destructive">{googleError}</p> : null}
+      {googleError ? (
+        <p className="mt-3 text-center text-xs text-destructive">
+          {googleError}
+        </p>
+      ) : null}
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Do you have an invitation?{" "}
         <span className="text-foreground/80">Open the link you received.</span>{" "}
-        <Link to="/" className="font-medium text-primary underline underline-offset-4">
+        <Link
+          to="/"
+          className="font-medium text-primary underline underline-offset-4"
+        >
           Home
         </Link>
       </p>

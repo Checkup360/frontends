@@ -54,7 +54,9 @@ export function StatCard({
               <ArrowDownRight className="h-3.5 w-3.5 text-destructive" />
             )}
             <span
-              className={positive ? "text-[color:var(--success)]" : "text-destructive"}
+              className={
+                positive ? "text-[color:var(--success)]" : "text-destructive"
+              }
             >
               {positive ? "+" : ""}
               {delta}%

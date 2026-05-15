@@ -16,15 +16,18 @@ export default function AuthError() {
     },
     invalid_token: {
       title: "Invalid invitation link",
-      message: "The invitation link is not valid. Please ask an administrator to send you a new invitation link.",
+      message:
+        "The invitation link is not valid. Please ask an administrator to send you a new invitation link.",
     },
     invite_used: {
       title: "Invitation already used",
-      message: "This invitation has already been used by another user. Please ask an administrator to send you a new invitation.",
+      message:
+        "This invitation has already been used by another user. Please ask an administrator to send you a new invitation.",
     },
     invite_expired: {
       title: "Invitation expired",
-      message: "The invitation has expired. Please ask an administrator to send you a new invitation.",
+      message:
+        "The invitation has expired. Please ask an administrator to send you a new invitation.",
     },
     email_mismatch: {
       title: "Email does not match",
@@ -33,7 +36,8 @@ export default function AuthError() {
     },
     no_request: {
       title: "Error in the request",
-      message: "An error occurred while processing your request. Please try again.",
+      message:
+        "An error occurred while processing your request. Please try again.",
     },
   }
 
