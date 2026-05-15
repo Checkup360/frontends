@@ -13,25 +13,6 @@ const DEFAULT_API_BASE_URL = publicDevDefaults.apiOrigin
 const DEFAULT_WEB_BASE_URL = publicDevDefaults.webOrigin
 const POST_LOGIN_REDIRECT_STORAGE_KEY = "auth.postLoginRedirectUrl"
 
-export function resolveApiBaseUrl(apiBaseUrl?: string): string {
-  const raw = apiBaseUrl?.trim() || DEFAULT_API_BASE_URL
-  return raw.replace(/\/$/, "")
-}
-
-
-export function resolveVitePublicApiBaseUrl(env: Record<string, unknown>): string {
-  // Priority: window.__CONFIG__ (staging) > env var (build-time) > default
-  let raw: string | undefined
-
-  if (typeof window !== "undefined" && (window as any).__CONFIG__?.apiOrigin) {
-    raw = (window as any).__CONFIG__.apiOrigin
-  } else if (typeof env.VITE_PUBLIC_API_ORIGIN === "string") {
-    raw = env.VITE_PUBLIC_API_ORIGIN
-  }
-
-  return resolveApiBaseUrl(raw)
-}
-
 export function resolveVitePublicWebBaseUrl(): string {
   let raw: string | undefined
   if (typeof window !== "undefined" && (window as any).__CONFIG__?.webOrigin) {
@@ -86,19 +67,33 @@ export function consumePostLoginRedirectUrl(fallbackUrl: string): string {
   return url
 }
 
-export async function fetchCurrentUser(
-  apiBaseUrl?: string
-): Promise<AuthMeResponse | null> {
-  const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/auth/me`, {
+function getApiBaseUrl(): string {
+  if (typeof window !== "undefined" && (window as any).__CONFIG__?.apiOrigin) {
+    return ((window as any).__CONFIG__.apiOrigin as string).replace(/\/$/, "")
+  }
+  return DEFAULT_API_BASE_URL
+}
+
+async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Promise<Response> {
+  const res = await fetch(input, init)
+  if (res.status === 401) {
+    document.cookie = "auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    window.dispatchEvent(new Event("auth-logout"))
+  }
+  return res
+}
+
+export async function fetchCurrentUser(): Promise<AuthMeResponse | null> {
+  const response = await fetchWithAuth(`${getApiBaseUrl()}/auth/me`, {
     credentials: "include",
   })
+  if (response.status === 401) return null
   if (!response.ok) return null
-
   return parseAuthMeResponse(await response.json())
 }
 
-export async function logout(apiBaseUrl?: string): Promise<void> {
-  const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/auth/logout`, {
+export async function logout(): Promise<void> {
+  const response = await fetchWithAuth(`${getApiBaseUrl()}/auth/logout`, {
     method: "POST",
     credentials: "include",
   })
@@ -153,15 +148,13 @@ export function tryFollowAuthRedirectResponse(response: Response): boolean {
 
 export async function loginWithPassword(
   email: string,
-  password: string,
-  apiBaseUrl?: string
+  password: string
 ): Promise<void> {
-  const base = resolveApiBaseUrl(apiBaseUrl)
   const body = new URLSearchParams()
   body.set("username", email.trim())
   body.set("password", password)
 
-  const response = await fetch(`${base}/auth/login`, {
+  const response = await fetch(`${getApiBaseUrl()}/auth/login`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -187,10 +180,8 @@ export async function loginWithPassword(
   throw new AuthRequestError(detail)
 }
 
-export async function fetchGoogleAuthorizationUrl(
-  apiBaseUrl?: string
-): Promise<OAuthAuthorizeResponse> {
-  const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/auth/google/authorize`, {
+export async function fetchGoogleAuthorizationUrl(): Promise<OAuthAuthorizeResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/auth/google/authorize`, {
     credentials: "include",
   })
   if (!response.ok) {
@@ -227,11 +218,10 @@ export interface OrganizationResponse {
 }
 
 export async function createInvite(
-  payload: InviteCreatePayload,
-  apiBaseUrl?: string,
+  payload: InviteCreatePayload
 ): Promise<InviteCreateResponse | null> {
   try {
-    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/admin/invites`, {
+    const response = await fetchWithAuth(`${getApiBaseUrl()}/admin/invites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -243,6 +233,7 @@ export async function createInvite(
       }),
     })
 
+    if (response.status === 401) return null
     if (!response.ok) {
       return null
     }
@@ -260,11 +251,10 @@ export interface CreateOrganizationError {
 }
 
 export async function createOrganization(
-  payload: CreateOrganizationPayload,
-  apiBaseUrl?: string,
+  payload: CreateOrganizationPayload
 ): Promise<{ success: OrganizationResponse; error?: never } | { success?: never; error: CreateOrganizationError }> {
   try {
-    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/organizations`, {
+    const response = await fetchWithAuth(`${getApiBaseUrl()}/organizations`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -273,6 +263,14 @@ export async function createOrganization(
       body: JSON.stringify(payload),
     })
 
+    if (response.status === 401) {
+      return {
+        error: {
+          code: "unauthorized",
+          message: "Session expired. Please log in again.",
+        },
+      }
+    }
     if (!response.ok) {
       try {
         const data = (await response.json()) as { detail?: string }
@@ -317,12 +315,13 @@ function getOrganizationErrorMessage(code: string): string {
   return messages[code] || "An error occurred. Please try again."
 }
 
-export async function listOrganizations(apiBaseUrl?: string): Promise<OrganizationResponse[]> {
+export async function listOrganizations(): Promise<OrganizationResponse[]> {
   try {
-    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/organizations`, {
+    const response = await fetchWithAuth(`${getApiBaseUrl()}/organizations`, {
       credentials: "include",
     })
 
+    if (response.status === 401) return []
     if (!response.ok) {
       return []
     }
@@ -349,11 +348,10 @@ function getInvitationErrorMessage(code: string): string {
 }
 
 export async function createSysadminInvitation(
-  payload: CreateSysadminInvitationPayload,
-  apiBaseUrl?: string,
+  payload: CreateSysadminInvitationPayload
 ): Promise<{ success: InviteCreateResponse; error?: never } | { success?: never; error: InviteError }> {
   try {
-    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/admin/invites`, {
+    const response = await fetchWithAuth(`${getApiBaseUrl()}/admin/invites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -361,6 +359,15 @@ export async function createSysadminInvitation(
       credentials: "include",
       body: JSON.stringify(payload),
     })
+
+    if (response.status === 401) {
+      return {
+        error: {
+          code: "unauthorized",
+          message: getInvitationErrorMessage("unknown_error"),
+        },
+      }
+    }
 
     if (!response.ok) {
       try {
@@ -395,11 +402,10 @@ export async function createSysadminInvitation(
 }
 
 export async function createOrgInvitation(
-  payload: CreateOrgInvitationPayload,
-  apiBaseUrl?: string,
+  payload: CreateOrgInvitationPayload
 ): Promise<{ success: InviteCreateResponse; error?: never } | { success?: never; error: InviteError }> {
   try {
-    const response = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/invites/organization`, {
+    const response = await fetchWithAuth(`${getApiBaseUrl()}/invites/organization`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -407,6 +413,15 @@ export async function createOrgInvitation(
       credentials: "include",
       body: JSON.stringify(payload),
     })
+
+    if (response.status === 401) {
+      return {
+        error: {
+          code: "unauthorized",
+          message: getInvitationErrorMessage("unknown_error"),
+        },
+      }
+    }
 
     if (!response.ok) {
       try {
@@ -440,3 +455,42 @@ export async function createOrgInvitation(
   }
 }
 
+// Invite flow helpers (used by frontend invite pages)
+export async function startInviteGoogleSession(token: string): Promise<void> {
+  const response = await fetchWithAuth(
+    `${getApiBaseUrl()}/invites/${encodeURIComponent(token)}/google-session`,
+    {
+      method: "POST",
+      credentials: "include",
+    }
+  )
+
+  if (response.status === 401) {
+    throw new AuthRequestError({ code: "unauthorized", message: "Session expired" })
+  }
+
+  if (!response.ok) {
+    let detail: unknown = response.statusText
+    try {
+      detail = await response.json()
+    } catch {
+      /* ignore */
+    }
+    throw new AuthRequestError(detail)
+  }
+}
+
+export async function registerWithInvite(
+  token: string,
+  payload: { email: string; password: string }
+): Promise<Response> {
+  const response = await fetch(`${getApiBaseUrl()}/invites/${encodeURIComponent(token)}/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    redirect: "manual",
+    body: JSON.stringify(payload),
+  })
+
+  return response
+}

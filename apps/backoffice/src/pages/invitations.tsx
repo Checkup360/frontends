@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { InvitationTypeSelector } from "@workspace/auth/components/invitation-type-selector"
 import { SysadminInvitationForm } from "@workspace/auth/components/sysadmin-invitation-form"
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
@@ -82,7 +81,6 @@ function InvitationStepper({ currentStep }: { currentStep: number }) {
 export function InvitationsPage() {
   const [selectedType, setSelectedType] = useState<SelectedType>(null)
   const [completed, setCompleted] = useState(false)
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
   const currentStep = completed ? 3 : selectedType ? 2 : 1
 
   const handleBack = () => {
@@ -110,7 +108,6 @@ export function InvitationsPage() {
             {selectedType === "sysadmin" && (
               <SysadminInvitationForm
                 onBack={handleBack}
-                apiBaseUrl={apiBaseUrl}
                 onSuccessChange={setCompleted}
               />
             )}
@@ -118,7 +115,6 @@ export function InvitationsPage() {
             {selectedType === "organization" && (
               <OrgInvitationForm
                 onBack={handleBack}
-                apiBaseUrl={apiBaseUrl}
                 onSuccessChange={setCompleted}
               />
             )}

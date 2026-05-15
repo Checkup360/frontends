@@ -4,20 +4,18 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 
 type SidebarAccountProps = {
-  apiBaseUrl: string
   inviteAction?: ReactNode
   roleLabel?: string
 }
 
 export function SidebarAccount({
-  apiBaseUrl,
   inviteAction,
   roleLabel = "Organization member",
 }: SidebarAccountProps) {
-  const { email, isLoading, clear } = useCurrentUser(apiBaseUrl)
+  const { email, isLoading, clear } = useCurrentUser()
 
   const handleLogout = async () => {
-    await logout(apiBaseUrl)
+    await logout()
     clear()
     window.location.replace(resolveVitePublicWebBaseUrl())
   }

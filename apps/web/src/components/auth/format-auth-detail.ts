@@ -1,16 +1,3 @@
-export function reasonFromFastApiDetail(detail: unknown): string {
-  if (typeof detail === "string") {
-    return detail
-  }
-  if (detail && typeof detail === "object" && "code" in detail) {
-    const c = (detail as { code?: unknown }).code
-    if (typeof c === "string") {
-      return c
-    }
-  }
-  return "invalid_invite"
-}
-
 const LOGIN_MESSAGES: Record<string, string> = {
   LOGIN_BAD_CREDENTIALS: "Email or password are incorrect.",
   LOGIN_USER_NOT_VERIFIED: "Your account is not verified yet.",

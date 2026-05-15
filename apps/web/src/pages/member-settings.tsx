@@ -1,4 +1,3 @@
-import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   Card,
@@ -12,8 +11,7 @@ import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 
 export function MemberSettingsPage() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const { user, isLoading } = useCurrentUser(apiBaseUrl)
+  const { user, isLoading } = useCurrentUser()
 
   if (isLoading) {
     return (

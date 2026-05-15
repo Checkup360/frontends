@@ -1,4 +1,4 @@
-import { logout, resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
+import { logout } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   WorkspaceShell,
@@ -22,13 +22,12 @@ const secondaryNavigation: WorkspaceShellNavItem[] = [
 ]
 
 export function BackofficeShell() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const { user, clear } = useCurrentUser(apiBaseUrl)
+  const { user, clear } = useCurrentUser()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
     try {
-      await logout(apiBaseUrl)
+      await logout()
       clear()
       navigate("/access-denied")
     } catch (error) {

@@ -1,10 +1,8 @@
-import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { useEffect } from "react"
 
 export function DashboardPage() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const { user, isLoading } = useCurrentUser(apiBaseUrl)
+  const { user, isLoading } = useCurrentUser()
 
   useEffect(() => {
     // Redirigir automáticamente a la página de member overview

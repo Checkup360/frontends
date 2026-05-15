@@ -15,13 +15,11 @@ import type { InviteError } from "@workspace/auth/schemas"
 
 interface SysadminInvitationFormProps {
   onBack?: () => void
-  apiBaseUrl?: string
   onSuccessChange?: (success: boolean) => void
 }
 
 export function SysadminInvitationForm({
   onBack,
-  apiBaseUrl,
   onSuccessChange,
 }: SysadminInvitationFormProps) {
   const [email, setEmail] = useState("")
@@ -56,14 +54,11 @@ export function SysadminInvitationForm({
 
     setLoading(true)
     try {
-      const result = await createSysadminInvitation(
-        {
-          email: email.trim() || undefined,
-          expires_in_hours: expiresInHoursNum,
-          is_sysadmin: true,
-        },
-        apiBaseUrl
-      )
+      const result = await createSysadminInvitation({
+        email: email.trim() || undefined,
+        expires_in_hours: expiresInHoursNum,
+        is_sysadmin: true,
+      })
 
       if ("error" in result) {
         setError(

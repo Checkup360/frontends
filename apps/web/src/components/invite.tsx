@@ -1,7 +1,8 @@
 import {
   fetchGoogleAuthorizationUrl,
-  resolveVitePublicApiBaseUrl,
   tryFollowAuthRedirectResponse,
+  startInviteGoogleSession,
+  registerWithInvite,
 } from "@workspace/auth/api"
 import { Button } from "@workspace/ui/components/button"
 import { useCallback, useState } from "react"
@@ -11,7 +12,6 @@ import { AuthShell } from "./auth/auth-shell"
 import { EmailPasswordFields } from "./auth/email-password-fields"
 import {
   formatAuthFormError,
-  reasonFromFastApiDetail,
 } from "./auth/format-auth-detail"
 import { readFastApiErrorDetail } from "./auth/read-fastapi-detail"
 import { GoogleSignInButton } from "./auth/google-sign-in-button"
@@ -19,7 +19,6 @@ import { GoogleSignInButton } from "./auth/google-sign-in-button"
 export default function Invite() {
   const { token = "" } = useParams<{ token: string }>()
   const navigate = useNavigate()
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
 
   const [googleLoading, setGoogleLoading] = useState(false)
   const [googleError, setGoogleError] = useState<string | null>(null)
@@ -46,20 +45,9 @@ export default function Invite() {
     setGoogleError(null)
     setGoogleLoading(true)
     try {
-      const pending = await fetch(
-        `${apiBaseUrl}/invites/${encodeURIComponent(token)}/google-session`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      )
-      if (!pending.ok) {
-        const detail = await readFastApiErrorDetail(pending)
-        goToError(reasonFromFastApiDetail(detail))
-        return
-      }
+      await startInviteGoogleSession(token)
 
-      const payload = await fetchGoogleAuthorizationUrl(apiBaseUrl)
+      const payload = await fetchGoogleAuthorizationUrl()
       window.location.assign(payload.authorization_url)
     } catch (e) {
       setGoogleError(
@@ -81,16 +69,7 @@ export default function Invite() {
     setRegisterLoading(true)
     setRegisterError("")
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/invites/${encodeURIComponent(token)}/register`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          redirect: "manual",
-          body: JSON.stringify({ email, password }),
-        }
-      )
+      const response = await registerWithInvite(token, { email, password })
 
       if (tryFollowAuthRedirectResponse(response)) {
         return

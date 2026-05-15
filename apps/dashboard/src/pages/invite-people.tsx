@@ -1,12 +1,10 @@
 import { useMemo } from "react"
-import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent } from "@workspace/ui/components/card"
 
 export function InvitePeoplePage() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const { user, isLoading } = useCurrentUser(apiBaseUrl)
+  const { user, isLoading } = useCurrentUser()
 
   const organization = useMemo(() => {
     const membership = user?.memberships.find((item) => item.role === "admin")
@@ -44,7 +42,6 @@ export function InvitePeoplePage() {
       <Card>
         <CardContent className="py-6 md:px-8">
           <OrgInvitationForm
-            apiBaseUrl={apiBaseUrl}
             fixedOrganization={organization}
             title="Invite people"
             description="Create an invitation link for this organization."

@@ -25,7 +25,6 @@ import type { OrgRole, InviteError } from "@workspace/auth/schemas"
 
 interface OrgInvitationFormProps {
   onBack?: () => void
-  apiBaseUrl?: string
   onSuccessChange?: (success: boolean) => void
   fixedOrganization?: OrganizationResponse
   title?: string
@@ -34,7 +33,6 @@ interface OrgInvitationFormProps {
 
 export function OrgInvitationForm({
   onBack,
-  apiBaseUrl,
   onSuccessChange,
   fixedOrganization,
   title = "Organization registration",
@@ -75,7 +73,7 @@ export function OrgInvitationForm({
       setOrgsLoading(true)
       setOrgsError("")
       try {
-        const orgs = await listOrganizations(apiBaseUrl)
+        const orgs = await listOrganizations()
         setOrganizations(orgs)
       } catch (err) {
         setOrgsError("Failed to load organizations")
@@ -85,7 +83,7 @@ export function OrgInvitationForm({
       }
     }
     fetchOrganizations()
-  }, [apiBaseUrl, fixedOrganization])
+  }, [fixedOrganization])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -133,7 +131,6 @@ export function OrgInvitationForm({
           max_uses: shouldBeSingleUse ? 1 : maxUsesNum,
           expires_in_hours: expiresInHoursNum,
         },
-        apiBaseUrl
       )
 
       if ("error" in result) {

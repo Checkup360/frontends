@@ -1,4 +1,4 @@
-import { logout, resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
+import { logout } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   WorkspaceShell,
@@ -36,12 +36,11 @@ const secondaryNavigation: WorkspaceShellNavItem[] = [
 
 export function DashboardShell() {
   const { pathname } = useLocation()
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const { user, clear } = useCurrentUser(apiBaseUrl)
+  const { user, clear } = useCurrentUser()
 
   const handleLogout = async () => {
     try {
-      await logout(apiBaseUrl)
+      await logout()
       clear()
       window.location.replace("/")
     } catch (error) {

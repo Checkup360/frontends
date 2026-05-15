@@ -4,11 +4,8 @@ import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 
-interface CreateInviteFormProps {
-  apiBaseUrl?: string
-}
 
-export function CreateInviteForm({ apiBaseUrl }: CreateInviteFormProps) {
+export function CreateInviteForm() {
   const [email, setEmail] = useState("")
   const [expiresInHours, setExpiresInHours] = useState("24")
   const [loading, setLoading] = useState(false)
@@ -28,8 +25,7 @@ export function CreateInviteForm({ apiBaseUrl }: CreateInviteFormProps) {
         {
           email: email || undefined,
           expires_in_hours: parseInt(expiresInHours),
-        },
-        apiBaseUrl
+        }
       )
 
       if (!response) {

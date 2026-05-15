@@ -3,7 +3,6 @@ import {
   fetchGoogleAuthorizationUrl,
   getPostLoginRedirectUrl,
   loginWithPassword,
-  resolveVitePublicApiBaseUrl,
   savePostLoginRedirectUrl,
 } from "@workspace/auth/api"
 import { Button } from "@workspace/ui/components/button"
@@ -17,11 +16,10 @@ import { GoogleSignInButton } from "./auth/google-sign-in-button"
 
 type LoginProps = {
   googleAuthorizeUrl?: string
-  apiBaseUrl?: string
 }
 
-export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
-  const resolvedApi = apiBaseUrl ?? resolveVitePublicApiBaseUrl(import.meta.env)
+export default function Login({ googleAuthorizeUrl }: LoginProps) {
+  
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [formError, setFormError] = useState<string | null>(null)
@@ -43,7 +41,7 @@ export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
     setFormLoading(true)
     savePostLoginRedirectUrl(postLoginRedirectUrl)
     try {
-      await loginWithPassword(email, password, resolvedApi)
+      await loginWithPassword(email, password)
     } catch (err) {
       if (err instanceof AuthRequestError) {
         setFormError(formatAuthFormError(err.detail))
@@ -62,7 +60,7 @@ export default function Login({ googleAuthorizeUrl, apiBaseUrl }: LoginProps) {
       savePostLoginRedirectUrl(postLoginRedirectUrl)
       const payload = googleAuthorizeUrl
         ? { authorization_url: googleAuthorizeUrl }
-        : await fetchGoogleAuthorizationUrl(resolvedApi)
+        : await fetchGoogleAuthorizationUrl()
 
       window.location.assign(payload.authorization_url)
     } catch (error) {

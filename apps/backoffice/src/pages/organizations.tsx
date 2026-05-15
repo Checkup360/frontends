@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, useRef } from "react"
-import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { CreateOrganizationDialog } from "@workspace/auth/components/create-organization-dialog"
 import {
   listOrganizations,
@@ -45,7 +44,6 @@ export function OrganizationsPage() {
   const [query, setQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
   const loadOrganizationsRef = useRef<() => Promise<void>>(() =>
     Promise.resolve()
   )
@@ -64,7 +62,7 @@ export function OrganizationsPage() {
     const loadOrganizations = async () => {
       setLoading(true)
       try {
-        const orgs = await listOrganizations(apiBaseUrl)
+        const orgs = await listOrganizations()
         setOrganizations(
           orgs.map((org) => ({
             ...org,
@@ -79,7 +77,7 @@ export function OrganizationsPage() {
 
     loadOrganizationsRef.current = loadOrganizations
     void loadOrganizations()
-  }, [apiBaseUrl])
+  }, [])
 
   const overview = [
     {
@@ -238,7 +236,6 @@ export function OrganizationsPage() {
           })
           void loadOrganizationsRef.current?.()
         }}
-        apiBaseUrl={apiBaseUrl}
       />
     </div>
   )

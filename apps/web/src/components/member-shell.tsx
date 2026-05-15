@@ -1,6 +1,5 @@
 import {
   logout,
-  resolveVitePublicApiBaseUrl,
   resolveVitePublicWebBaseUrl,
 } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
@@ -22,12 +21,11 @@ const secondaryNavigation: WorkspaceShellNavItem[] = [
 ]
 
 export function MemberShell() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const { user, clear } = useCurrentUser(apiBaseUrl)
+  const { user, clear } = useCurrentUser()
 
   const handleLogout = async () => {
     try {
-      await logout(apiBaseUrl)
+      await logout()
       clear()
       window.location.replace(resolveVitePublicWebBaseUrl())
     } catch (error) {

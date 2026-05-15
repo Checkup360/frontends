@@ -14,7 +14,6 @@ interface CreateOrganizationDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
-  apiBaseUrl?: string
 }
 
 function generateSlug(name: string): string {
@@ -36,7 +35,6 @@ export function CreateOrganizationDialog({
   open,
   onOpenChange,
   onSuccess,
-  apiBaseUrl,
 }: CreateOrganizationDialogProps) {
   const [name, setName] = useState("")
   const [slug, setSlug] = useState("")
@@ -84,7 +82,6 @@ export function CreateOrganizationDialog({
     try {
       const result = await createOrganization(
         { name: trimmedName, slug: trimmedSlug },
-        apiBaseUrl,
       )
 
       if ("error" in result) {

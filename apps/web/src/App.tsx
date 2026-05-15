@@ -1,7 +1,6 @@
 import {
   clearPostLoginRedirectUrl,
   readPostLoginRedirectUrl,
-  resolveVitePublicApiBaseUrl,
 } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Toaster } from "@workspace/ui/components/sonner"
@@ -31,8 +30,7 @@ function RootLayout() {
 }
 
 function HomePage() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const { isLoading, user } = useCurrentUser(apiBaseUrl)
+  const { isLoading, user } = useCurrentUser()
 
   if (isLoading) {
     return (
@@ -80,8 +78,7 @@ function LoginComplete() {
 }
 
 function RequireMemberRole({ children }: { children: React.ReactNode }) {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const { isLoading, user } = useCurrentUser(apiBaseUrl)
+  const { isLoading, user } = useCurrentUser()
 
   if (isLoading) {
     return (

@@ -3,12 +3,9 @@ import { buildLoginUrl, logout, resolveVitePublicWebBaseUrl } from "@workspace/a
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
 
-type AuthStatusProps = {
-  apiBaseUrl?: string
-}
 
-export function AuthStatus({ apiBaseUrl }: AuthStatusProps) {
-  const { email, isLoading, clear } = useCurrentUser(apiBaseUrl)
+export function AuthStatus() {
+  const { email, isLoading, clear } = useCurrentUser()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const isLoginRoute =
     window.location.pathname === "/login" ||
@@ -22,7 +19,7 @@ export function AuthStatus({ apiBaseUrl }: AuthStatusProps) {
   const handleLogout = async () => {
     setIsLoggingOut(true)
     try {
-      await logout(apiBaseUrl)
+      await logout()
       clear()
       window.location.replace(resolveVitePublicWebBaseUrl())
     } finally {

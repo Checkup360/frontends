@@ -3,17 +3,15 @@ import { buildLoginUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 
 type RequireAuthRedirectProps = {
-  apiBaseUrl?: string
   fallback?: ReactNode
   children: ReactNode
 }
 
 export function RequireAuthRedirect({
-  apiBaseUrl,
   fallback,
   children,
 }: RequireAuthRedirectProps) {
-  const { user, isLoading } = useCurrentUser(apiBaseUrl)
+  const { user, isLoading } = useCurrentUser()
   const loginUrl = useMemo(
     () => buildLoginUrl({ nextUrl: window.location.href }),
     [],

@@ -1,4 +1,3 @@
-import { resolveVitePublicApiBaseUrl } from "@workspace/auth/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   Card,
@@ -11,8 +10,7 @@ import { AlertCircle, CheckCircle2, Clock, Heart } from "lucide-react"
 import { StatCard } from "@/components/stat-card"
 
 export function MemberOverviewPage() {
-  const apiBaseUrl = resolveVitePublicApiBaseUrl(import.meta.env)
-  const { user, isLoading } = useCurrentUser(apiBaseUrl)
+  const { user, isLoading } = useCurrentUser()
 
   if (isLoading) {
     return (
