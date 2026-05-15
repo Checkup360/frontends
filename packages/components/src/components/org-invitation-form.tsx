@@ -1,6 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react"
 import { createOrgInvitation, listOrganizations } from "@workspace/api"
-import { OrganizationSelector } from "./organization-selector"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -59,6 +58,7 @@ export function OrgInvitationForm({
   const isEmailFilled = email.trim().length > 0
   const shouldBeSingleUse = isAdminRole || isEmailFilled
   const selectedOrganization = fixedOrganization ?? selected
+  const selectedOrganizationId = selected?.id ?? ""
 
   useEffect(() => {
     if (fixedOrganization) {
@@ -293,13 +293,41 @@ export function OrgInvitationForm({
           ) : (
             <div className="space-y-2">
               <Label htmlFor="organization">Organization</Label>
-              <OrganizationSelector
-                selected={selected}
-                onSelect={setSelected}
-                organizations={organizations}
-                loading={orgsLoading}
-                error={orgsError || undefined}
-              />
+              <Select
+                value={selectedOrganizationId}
+                onValueChange={(organizationId) => {
+                  const organization =
+                    organizations.find((org) => org.id === organizationId) ??
+                    null
+                  setSelected(organization)
+                }}
+                disabled={loading || orgsLoading || organizations.length === 0}
+              >
+                <SelectTrigger id="organization">
+                  <SelectValue
+                    placeholder={
+                      orgsLoading
+                        ? "Loading organizations..."
+                        : "Select organization"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {organizations.map((organization) => (
+                    <SelectItem key={organization.id} value={organization.id}>
+                      {organization.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {orgsError && (
+                <p className="text-xs text-destructive">{orgsError}</p>
+              )}
+              {!orgsLoading && organizations.length === 0 && !orgsError && (
+                <p className="text-xs text-muted-foreground">
+                  No organizations available.
+                </p>
+              )}
             </div>
           )}
 
