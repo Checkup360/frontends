@@ -1,4 +1,5 @@
 import { buildLoginUrl } from "@workspace/api"
+import { AuthProvider } from "@workspace/auth/provider"
 import { RequireOrgAdmin } from "@workspace/auth/components/require-org-admin"
 import { Button } from "@workspace/ui/components/button"
 import { Toaster } from "@workspace/ui/components/sonner"
@@ -61,23 +62,28 @@ function NotFound() {
   )
 }
 
+
+
 export function App() {
   return (
     <ThemeProvider>
-      <Toaster />
-      <Routes>
-        <Route path="/access-denied" element={<AccessDenied />} />
-        <Route element={<ProtectedLayout />}>
-          <Route element={<DashboardShell />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/employees" element={<EmployeesPage />} />
-            <Route path="/people/invite" element={<InvitePeoplePage />} />
-            <Route path="/organization" element={<NotFound />} />
-            <Route path="/settings" element={<NotFound />} />
-            <Route path="*" element={<NotFound />} />
+      <AuthProvider>
+        <Toaster />
+        <Routes>
+          <Route path="/access-denied" element={<AccessDenied />} />
+          <Route element={<ProtectedLayout />}>
+            <Route element={<DashboardShell />}>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/employees" element={<EmployeesPage />} />
+              <Route path="/people/invite" element={<InvitePeoplePage />} />
+              <Route path="/organization" element={<NotFound />} />
+              <Route path="/settings" element={<NotFound />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
+      </AuthProvider>
     </ThemeProvider>
   )
 }
+

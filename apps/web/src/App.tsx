@@ -5,6 +5,7 @@ import {
 } from "@workspace/api"
 import { AuthLoadingSkeleton } from "@workspace/auth/components/auth-loading-skeleton"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
+import { AuthProvider } from "@workspace/auth/provider"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { useEffect } from "react"
 import { Outlet, Route, Routes } from "react-router-dom"
@@ -103,32 +104,38 @@ function RequireMemberRole({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+
+
 export function App() {
   return (
     <ThemeProvider>
-      <Toaster />
-      <Routes>
-        <Route element={<RootLayout />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/login/complete" element={<LoginComplete />} />
-          <Route path="/auth/error" element={<AuthError />} />
-          <Route path="/invite/:token" element={<Invite />} />
-          <Route
-            element={
-              <RequireMemberRole>
-                <MemberShell />
-              </RequireMemberRole>
-            }
-          >
-            <Route path="/" element={<MemberOverviewPage />} />
-            <Route path="/news" element={<MemberNewsPage />} />
-            <Route path="/forms" element={<MemberFormsPage />} />
-            <Route path="/settings" element={<MemberSettingsPage />} />
+      <AuthProvider>
+        <Toaster />
+        <Routes>
+          <Route element={<RootLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/login/complete" element={<LoginComplete />} />
+            <Route path="/auth/error" element={<AuthError />} />
+            <Route path="/invite/:token" element={<Invite />} />
+            <Route
+              element={
+                <RequireMemberRole>
+                  <MemberShell />
+                </RequireMemberRole>
+              }
+            >
+              <Route path="/" element={<MemberOverviewPage />} />
+              <Route path="/news" element={<MemberNewsPage />} />
+              <Route path="/forms" element={<MemberFormsPage />} />
+              <Route path="/settings" element={<MemberSettingsPage />} />
+            </Route>
+            <Route path="/" element={<HomePage />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
-          <Route path="/" element={<HomePage />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
+        </Routes>
+      </AuthProvider>
     </ThemeProvider>
   )
 }
+
+
