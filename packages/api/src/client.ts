@@ -2,12 +2,14 @@ import { publicDevDefaults } from "../../../apps.config"
 import {
   parseAuthMeResponse,
   parseOAuthAuthorizeResponse,
+  parseInviteMetadataResponse,
   type AuthMeResponse,
   type OAuthAuthorizeResponse,
   type CreateSysadminInvitationPayload,
   type CreateOrgInvitationPayload,
   type InviteError,
   type InviteCreateResponse,
+  type InviteMetadataResponse,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -470,11 +472,25 @@ export async function startInviteGoogleSession(token: string): Promise<Response>
   })
 }
 
-export async function registerWithInvite(
+export async function getInviteMetadata(
+  token: string
+): Promise<InviteMetadataResponse | null> {
+  try {
+    const response = await fetch(`${resolveApiBaseUrl()}${apiRoutes.invites.metadata(token)}`, {
+      credentials: "include",
+    })
+    if (!response.ok) return null
+    return parseInviteMetadataResponse(await response.json())
+  } catch {
+    return null
+  }
+}
+
+export async function redeemInvite(
   token: string,
   payload: { email: string; password: string }
 ): Promise<Response> {
-  return fetch(`${resolveApiBaseUrl()}${apiRoutes.invites.register(token)}`, {
+  return fetch(`${resolveApiBaseUrl()}${apiRoutes.invites.redeem(token)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

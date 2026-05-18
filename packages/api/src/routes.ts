@@ -8,8 +8,9 @@ export const apiRoutes = {
   invites: {
     admin: "/admin/invites",
     organization: "/invites/organization",
+    metadata: (token: string) => `/invites/${encodeURIComponent(token)}`,
+    redeem: (token: string) => `/invites/${encodeURIComponent(token)}/redeem`,
     googleSession: (token: string) => `/invites/${encodeURIComponent(token)}/google-session`,
-    register: (token: string) => `/invites/${encodeURIComponent(token)}/register`,
   },
   organizations: "/organizations",
 } as const

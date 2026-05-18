@@ -53,6 +53,12 @@ export default function Login({ googleAuthorizeUrl }: LoginProps) {
     }
   }
 
+  useEffect(() => {
+    const handler = () => setGoogleLoading(false)
+    window.addEventListener("pageshow", handler)
+    return () => window.removeEventListener("pageshow", handler)
+  }, [])
+
   const handleGoogleSignIn = async () => {
     try {
       setGoogleError(null)
@@ -69,6 +75,7 @@ export default function Login({ googleAuthorizeUrl }: LoginProps) {
           ? error.message
           : "Failed to sign in with Google."
       )
+    } finally {
       setGoogleLoading(false)
     }
   }

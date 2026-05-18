@@ -74,6 +74,17 @@ export function parseOAuthAuthorizeResponse(payload: unknown): OAuthAuthorizeRes
   return { authorization_url: maybeUrl }
 }
 
+export type InviteMetadataResponse = {
+  organization_id: string | null
+  organization_name: string | null
+  role: string | null
+  is_sysadmin: boolean
+}
+
+export type RedeemResponse = {
+  ok: boolean
+}
+
 export function parseInviteCreateResponse(payload: unknown): InviteCreateResponse | null {
   if (!payload || typeof payload !== "object") return null
 
@@ -83,4 +94,26 @@ export function parseInviteCreateResponse(payload: unknown): InviteCreateRespons
   if (typeof maybeToken !== "string" || typeof maybeUrl !== "string") return null
 
   return { token: maybeToken, invite_url: maybeUrl }
+}
+
+export function parseInviteMetadataResponse(payload: unknown): InviteMetadataResponse | null {
+  if (!payload || typeof payload !== "object") return null
+  const o = payload as Record<string, unknown>
+  if (typeof o.organization_id !== "string" && o.organization_id !== null) return null
+  if (typeof o.organization_name !== "string" && o.organization_name !== null) return null
+  if (typeof o.role !== "string" && o.role !== null) return null
+  if (typeof o.is_sysadmin !== "boolean") return null
+  return {
+    organization_id: o.organization_id as string | null,
+    organization_name: o.organization_name as string | null,
+    role: o.role as string | null,
+    is_sysadmin: o.is_sysadmin as boolean,
+  }
+}
+
+export function parseRedeemResponse(payload: unknown): RedeemResponse | null {
+  if (!payload || typeof payload !== "object") return null
+  const o = payload as Record<string, unknown>
+  if (typeof o.ok !== "boolean") return null
+  return { ok: o.ok }
 }
