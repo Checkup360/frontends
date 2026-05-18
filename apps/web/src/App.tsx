@@ -8,7 +8,7 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { AuthProvider } from "@workspace/auth/provider"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { useEffect } from "react"
-import { Outlet, Route, Routes } from "react-router-dom"
+import { Navigate, Outlet, Route, Routes } from "react-router-dom"
 import AuthError from "./components/auth/auth-error"
 import Invite from "./components/auth/invite"
 import Login from "./components/auth/login"
@@ -21,7 +21,21 @@ import { MemberOverviewPage } from "./pages/member-overview"
 import { MemberNewsPage } from "./pages/member-news"
 import { MemberFormsPage } from "./pages/member-forms"
 import { MemberSettingsPage } from "./pages/member-settings"
+import { MemberOnboardingPage } from "./pages/member-onboarding"
 import { ThemeProvider } from "./components/shared/theme-provider"
+
+function isMemberOnlyUser(
+  user: ReturnType<typeof useCurrentUser>["user"]
+): boolean {
+  return Boolean(
+    user &&
+      !user.is_sysadmin &&
+      Array.isArray(user.memberships) &&
+      user.memberships.length > 0 &&
+      user.memberships.some((m) => m.role === "member") &&
+      !user.memberships.some((m) => m.role === "admin")
+  )
+}
 
 function RootLayout() {
   return (
@@ -40,16 +54,12 @@ function HomePage() {
     return <AuthLoadingSkeleton />
   }
 
-  // Solo mostrar DashboardPage si el usuario es member (no admin, no sysadmin)
-  const hasOnlyMemberRole =
-    user &&
-    !user.is_sysadmin &&
-    Array.isArray(user.memberships) &&
-    user.memberships.length > 0 &&
-    user.memberships.some((m) => m.role === "member") &&
-    !user.memberships.some((m) => m.role === "admin")
+  const hasOnlyMemberRole = isMemberOnlyUser(user)
 
   if (hasOnlyMemberRole) {
+    if (user?.requires_onboarding) {
+      return <Navigate to="/onboarding" replace />
+    }
     return <DashboardPage />
   }
 
@@ -88,17 +98,14 @@ function RequireMemberRole({ children }: { children: React.ReactNode }) {
     return <MemberLoadingSkeleton />
   }
 
-  // Solo mostrar si el usuario es member (no admin, no sysadmin)
-  const hasOnlyMemberRole =
-    user &&
-    !user.is_sysadmin &&
-    Array.isArray(user.memberships) &&
-    user.memberships.length > 0 &&
-    user.memberships.some((m) => m.role === "member") &&
-    !user.memberships.some((m) => m.role === "admin")
+  const hasOnlyMemberRole = isMemberOnlyUser(user)
 
   if (!hasOnlyMemberRole) {
     return <HomePage />
+  }
+
+  if (user?.requires_onboarding) {
+    return <Navigate to="/onboarding" replace />
   }
 
   return <>{children}</>
@@ -115,6 +122,7 @@ export function App() {
           <Route element={<RootLayout />}>
             <Route path="/login" element={<Login />} />
             <Route path="/login/complete" element={<LoginComplete />} />
+            <Route path="/onboarding" element={<MemberOnboardingPage />} />
             <Route path="/auth/error" element={<AuthError />} />
             <Route path="/invite/:token" element={<Invite />} />
             <Route
@@ -137,5 +145,4 @@ export function App() {
     </ThemeProvider>
   )
 }
-
 

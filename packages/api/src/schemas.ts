@@ -8,6 +8,7 @@ export type AuthMeResponse = {
   email: string
   is_sysadmin: boolean
   memberships: OrganizationMembership[]
+  requires_onboarding: boolean
 }
 
 export type OAuthAuthorizeResponse = {
@@ -52,6 +53,10 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
   const maybeMemberships = (payload as { memberships?: unknown }).memberships
   if (!Array.isArray(maybeMemberships)) return null
 
+  const maybeRequiresOnboarding = (payload as { requires_onboarding?: unknown })
+    .requires_onboarding
+  if (typeof maybeRequiresOnboarding !== "boolean") return null
+
   const memberships = maybeMemberships.map((m) => ({
     organization_id: (m as { organization_id?: unknown }).organization_id as string,
     organization_name: (m as { organization_name?: unknown }).organization_name as string,
@@ -62,6 +67,7 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
     email: maybeEmail,
     is_sysadmin: maybeIsSysadmin,
     memberships,
+    requires_onboarding: maybeRequiresOnboarding,
   }
 }
 

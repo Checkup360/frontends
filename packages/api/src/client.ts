@@ -43,6 +43,10 @@ export function getRedirectUrlByUserRole(user: AuthMeResponse | null | undefined
     return `${resolveWebUrl()}/`
   }
 
+  if (user.requires_onboarding) {
+    return `${resolveWebUrl()}/onboarding`
+  }
+
   if (user.is_sysadmin) {
     return `${resolveBackofficeUrl()}/`
   }
@@ -111,6 +115,57 @@ export async function fetchCurrentUser(): Promise<AuthMeResponse | null> {
   if (response.status === 401) return null
   if (!response.ok) return null
   return parseAuthMeResponse(await response.json())
+}
+
+export interface SubmitMemberDetailsError {
+  code: string
+  message: string
+}
+
+export async function submitMemberDetails(payload: {
+  date_of_birth: string
+}): Promise<{ success: true; error?: never } | { success?: never; error: SubmitMemberDetailsError }> {
+  try {
+    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.members.myDetails}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    })
+
+    if (response.status === 401) {
+      return {
+        error: {
+          code: "unauthorized",
+          message: "Session expired. Please log in again.",
+        },
+      }
+    }
+
+    if (!response.ok) {
+      return {
+        error: {
+          code: "invalid_date_of_birth",
+          message:
+            response.status === 403
+              ? "This onboarding is only available for members."
+              : "Enter a valid birth date that is not in the future.",
+        },
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error submitting member details:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: "Network error. Please try again.",
+      },
+    }
+  }
 }
 
 export async function logout(): Promise<void> {
