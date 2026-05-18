@@ -25,7 +25,9 @@ export default function Invite() {
   const navigate = useNavigate()
   const { user, isLoading: authLoading, refresh } = useCurrentUser()
   const userRef = useRef(user)
-  userRef.current = user
+  useEffect(() => {
+    userRef.current = user
+  }, [user])
 
   const [metadata, setMetadata] = useState<InviteMetadataResponse | null>(null)
   const [metadataError, setMetadataError] = useState(false)
