@@ -5,11 +5,12 @@ import {
   startInviteGoogleSession,
   getInviteMetadata,
   redeemInvite,
+  logout,
   type InviteMetadataResponse,
 } from "@workspace/api"
 import { Button } from "@workspace/ui/components/button"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Link, useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { AuthOAuthDivider } from "./auth-oauth-divider"
 import { AuthShell } from "./auth-shell"
 import { EmailPasswordFields } from "./email-password-fields"
@@ -23,7 +24,7 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 export default function Invite() {
   const { token = "" } = useParams<{ token: string }>()
   const navigate = useNavigate()
-  const { user, isLoading: authLoading, refresh } = useCurrentUser()
+  const { user, isLoading: authLoading, refresh, clear } = useCurrentUser()
   const userRef = useRef(user)
   useEffect(() => {
     userRef.current = user
@@ -67,6 +68,16 @@ export default function Invite() {
     const freshUser = userRef.current
     window.location.assign(getRedirectUrlByUserRole(freshUser))
   }, [refresh])
+
+  const handleSignInWithDifferentAccount = useCallback(async () => {
+    try {
+      await logout()
+      clear()
+      window.location.reload()
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
+  }, [clear])
 
   useEffect(() => {
     const handler = () => setGoogleLoading(false)
@@ -202,12 +213,12 @@ export default function Invite() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Not {user.email}?{" "}
-          <Link
-            to={`/login?next=${encodeURIComponent(window.location.pathname)}`}
-            className="font-medium text-primary underline underline-offset-4"
+          <button
+            onClick={handleSignInWithDifferentAccount}
+            className="font-medium text-primary underline underline-offset-4 cursor-pointer bg-none border-none p-0"
           >
             Sign in with a different account
-          </Link>
+          </button>
         </p>
       </AuthShell>
     )
