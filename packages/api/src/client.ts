@@ -282,6 +282,12 @@ export interface OrganizationResponse {
   slug: string
 }
 
+export interface DashboardEmployee {
+  id: string
+  email: string
+  role: "member"
+}
+
 export async function createInvite(
   payload: InviteCreatePayload
 ): Promise<InviteCreateResponse | null> {
@@ -394,6 +400,24 @@ export async function listOrganizations(): Promise<OrganizationResponse[]> {
     return (await response.json()) as OrganizationResponse[]
   } catch (error) {
     console.error("Error listing organizations:", error)
+    return []
+  }
+}
+
+export async function listDashboardEmployees(): Promise<DashboardEmployee[]> {
+  try {
+    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.dashboard.employees}`, {
+      credentials: "include",
+    })
+
+    if (response.status === 401) return []
+    if (!response.ok) {
+      return []
+    }
+
+    return (await response.json()) as DashboardEmployee[]
+  } catch (error) {
+    console.error("Error listing dashboard employees:", error)
     return []
   }
 }

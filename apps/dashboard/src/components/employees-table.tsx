@@ -1,3 +1,4 @@
+import { listDashboardEmployees } from "@workspace/api"
 import { Card } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { Input } from "@workspace/ui/components/input"
@@ -9,83 +10,59 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 type Worker = {
-  name: string
+  id: string
+  email: string
   area: string
-  score: number
-  risk: "Low" | "Medium" | "High"
+  score: string
+  risk: "Pending"
   lastCheck: string
 }
 
-const workers: Worker[] = [
-  {
-    name: "Lucy Mendez",
-    area: "Operations",
-    score: 88,
-    risk: "Low",
-    lastCheck: "3 days ago",
-  },
-  {
-    name: "Carlos Perez",
-    area: "Production",
-    score: 62,
-    risk: "High",
-    lastCheck: "1 week ago",
-  },
-  {
-    name: "Mariana Soto",
-    area: "Administration",
-    score: 91,
-    risk: "Low",
-    lastCheck: "2 days ago",
-  },
-  {
-    name: "Diego Ramirez",
-    area: "Logistics",
-    score: 71,
-    risk: "Medium",
-    lastCheck: "5 days ago",
-  },
-  {
-    name: "Sofia Alvarez",
-    area: "IT",
-    score: 84,
-    risk: "Low",
-    lastCheck: "yesterday",
-  },
-  {
-    name: "Javier Torres",
-    area: "Production",
-    score: 58,
-    risk: "High",
-    lastCheck: "2 weeks ago",
-  },
-  {
-    name: "Paula Gomez",
-    area: "Sales",
-    score: 76,
-    risk: "Medium",
-    lastCheck: "4 days ago",
-  },
-]
-
 const riskClass: Record<Worker["risk"], string> = {
-  Low: "bg-[color:var(--success)]/15 text-[color:var(--success)] border-transparent",
-  Medium:
-    "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-transparent",
-  High: "bg-destructive/15 text-destructive border-transparent",
+  Pending: "bg-muted text-muted-foreground border-transparent",
 }
 
 export function EmployeesTable() {
   const [q, setQ] = useState("")
+  const [workers, setWorkers] = useState<Worker[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadEmployees() {
+      setLoading(true)
+      const employees = await listDashboardEmployees()
+      if (!active) return
+      setWorkers(
+        employees.map((employee) => ({
+          id: employee.id,
+          email: employee.email,
+          area: "Unassigned",
+          score: "N/A",
+          risk: "Pending",
+          lastCheck: "Not assessed",
+        }))
+      )
+      setLoading(false)
+    }
+
+    void loadEmployees()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
   const filtered = useMemo(
     () =>
       workers.filter((w) =>
-        `${w.name} ${w.area}`.toLowerCase().includes(q.toLowerCase())
+        `${w.email} ${w.area}`.toLowerCase().includes(q.toLowerCase())
       ),
-    [q]
+    [q, workers]
   )
   return (
     <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
@@ -98,7 +75,7 @@ export function EmployeesTable() {
         </div>
         <Input
           type="text"
-          placeholder="Search by name or area…"
+          placeholder="Search by email or area..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
           className="w-full sm:max-w-xs"
@@ -116,27 +93,47 @@ export function EmployeesTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((w) => (
-              <TableRow key={w.name}>
-                <TableCell className="font-medium text-foreground">
-                  {w.name}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {w.area}
-                </TableCell>
-                <TableCell className="font-semibold text-foreground tabular-nums">
-                  {w.score}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={riskClass[w.risk]}>
-                    {w.risk}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {w.lastCheck}
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="h-28 text-center text-muted-foreground"
+                >
+                  Loading employees...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : filtered.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="h-28 text-center text-muted-foreground"
+                >
+                  No employees found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((w) => (
+                <TableRow key={w.id}>
+                  <TableCell className="font-medium text-foreground">
+                    {w.email}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {w.area}
+                  </TableCell>
+                  <TableCell className="font-semibold text-foreground tabular-nums">
+                    {w.score}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={riskClass[w.risk]}>
+                      {w.risk}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {w.lastCheck}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

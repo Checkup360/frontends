@@ -13,6 +13,9 @@ export const apiRoutes = {
     googleSession: (token: string) => `/invites/${encodeURIComponent(token)}/google-session`,
   },
   organizations: "/organizations",
+  dashboard: {
+    employees: "/dashboard/employees",
+  },
   members: {
     myDetails: "/members/me/details",
   },
