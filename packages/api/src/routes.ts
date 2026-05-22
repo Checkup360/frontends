@@ -14,6 +14,7 @@ export const apiRoutes = {
   },
   organizations: "/organizations",
   dashboard: {
+    summary: "/dashboard/summary",
     employees: "/dashboard/employees",
   },
   members: {

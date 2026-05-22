@@ -288,6 +288,10 @@ export interface DashboardEmployee {
   role: "member"
 }
 
+export interface DashboardSummary {
+  total_employees: number
+}
+
 export async function createInvite(
   payload: InviteCreatePayload
 ): Promise<InviteCreateResponse | null> {
@@ -419,6 +423,24 @@ export async function listDashboardEmployees(): Promise<DashboardEmployee[]> {
   } catch (error) {
     console.error("Error listing dashboard employees:", error)
     return []
+  }
+}
+
+export async function fetchDashboardSummary(): Promise<DashboardSummary | null> {
+  try {
+    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.dashboard.summary}`, {
+      credentials: "include",
+    })
+
+    if (response.status === 401) return null
+    if (!response.ok) {
+      return null
+    }
+
+    return (await response.json()) as DashboardSummary
+  } catch (error) {
+    console.error("Error fetching dashboard summary:", error)
+    return null
   }
 }
 

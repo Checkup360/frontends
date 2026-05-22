@@ -1,16 +1,36 @@
 import { AreaScores } from "@/components/area-scores"
 import { EmployeesTable } from "@/components/employees-table"
 import { RiskTrend } from "@/components/risk-trend"
+import { fetchDashboardSummary } from "@workspace/api"
 import { OverviewStatCard } from "@workspace/components/components/card"
 import { AlertTriangle, TrendingUp, Users } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export function DashboardPage() {
+  const [totalEmployees, setTotalEmployees] = useState<string>("...")
+
+  useEffect(() => {
+    let active = true
+
+    async function loadSummary() {
+      const summary = await fetchDashboardSummary()
+      if (!active) return
+      setTotalEmployees(summary ? summary.total_employees.toString() : "0")
+    }
+
+    void loadSummary()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <OverviewStatCard
           label="Total employees"
-          value="551"
+          value={totalEmployees}
           delta={12}
           icon={Users}
           iconVariant="icon"
