@@ -51,7 +51,7 @@ export function getRedirectUrlByUserRole(user: AuthMeResponse | null | undefined
     return `${resolveBackofficeUrl()}/`
   }
 
-  if (user.memberships?.some((m) => m.role === "admin")) {
+  if (user.memberships?.some((m) => m.roles?.includes("admin"))) {
     return `${resolveDashboardUrl()}/`
   }
 

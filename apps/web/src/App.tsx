@@ -32,8 +32,8 @@ function isMemberOnlyUser(
       !user.is_sysadmin &&
       Array.isArray(user.memberships) &&
       user.memberships.length > 0 &&
-      user.memberships.some((m) => m.role === "member") &&
-      !user.memberships.some((m) => m.role === "admin")
+      user.memberships.some((m) => m.roles?.includes("member")) &&
+      !user.memberships.some((m) => m.roles?.includes("admin"))
   )
 }
 

@@ -8,7 +8,7 @@ export function InvitePeoplePage() {
   const { user, isLoading } = useCurrentUser()
 
   const organization = useMemo(() => {
-    const membership = user?.memberships.find((item) => item.role === "admin")
+    const membership = user?.memberships.find((item) => item.roles?.includes("admin"))
     if (!membership) return null
 
     return {

@@ -194,7 +194,7 @@ export function MemberOnboardingPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const maxDate = useMemo(() => todayIsoDate(), [])
-  const memberOrganization = user?.memberships?.find((m) => m.role === "member")
+  const memberOrganization = user?.memberships?.find((m) => m.roles?.includes("member"))
   const organizationName =
     memberOrganization?.organization_name ?? "Your organization"
   const activeStep = steps.find((step) => step.id === currentStep) ?? steps[0]

@@ -22,7 +22,7 @@ export function RequireOrgAdmin({
     () =>
       user &&
       user.memberships &&
-      user.memberships.some((m) => m.role === "admin"),
+      user.memberships.some((m) => m.roles?.includes("admin")),
     [user]
   )
 

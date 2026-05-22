@@ -1,7 +1,7 @@
 export type OrganizationMembership = {
   organization_id: string
   organization_name: string
-  role: string
+  roles: string[]
 }
 
 export type AuthMeResponse = {
@@ -60,7 +60,7 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
   const memberships = maybeMemberships.map((m) => ({
     organization_id: (m as { organization_id?: unknown }).organization_id as string,
     organization_name: (m as { organization_name?: unknown }).organization_name as string,
-    role: (m as { role?: unknown }).role as string,
+    roles: (m as { roles?: unknown }).roles as string[],
   }))
 
   return {
