@@ -93,7 +93,7 @@ export function OrganizationsPage() {
       await deleteOrganization(deleteConfirmOrg.id)
       toast.success("Organization deleted")
       void loadOrganizationsRef.current?.()
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete organization")
     } finally {
       setDeleteConfirmOrg(null)

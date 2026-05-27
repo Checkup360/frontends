@@ -104,6 +104,8 @@ async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Promise<Re
   if (res.status === 401) {
     document.cookie = "auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
     window.dispatchEvent(new Event("auth-logout"))
+  } else if (res.status === 403) {
+    window.dispatchEvent(new Event("auth-forbidden"))
   }
   return res
 }

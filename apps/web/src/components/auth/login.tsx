@@ -68,7 +68,9 @@ export default function Login({ googleAuthorizeUrl }: LoginProps) {
         ? { authorization_url: googleAuthorizeUrl }
         : await fetchGoogleAuthorizationUrl()
 
-      window.location.assign(payload.authorization_url)
+      const url = new URL(payload.authorization_url)
+      url.searchParams.set("prompt", "select_account")
+      window.location.assign(url.toString())
     } catch (error) {
       setGoogleError(
         error instanceof Error

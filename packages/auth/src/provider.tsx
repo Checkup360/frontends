@@ -46,9 +46,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onLogout = () => setUser(null)
+    const onForbidden = () => void refresh()
+    
     window.addEventListener("auth-logout", onLogout)
-    return () => window.removeEventListener("auth-logout", onLogout)
-  }, [])
+    window.addEventListener("auth-forbidden", onForbidden)
+    
+    return () => {
+      window.removeEventListener("auth-logout", onLogout)
+      window.removeEventListener("auth-forbidden", onForbidden)
+    }
+  }, [refresh])
 
   const value: AuthContextValue = {
     user,
