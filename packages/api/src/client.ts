@@ -600,3 +600,14 @@ export async function redeemInvite(
     body: JSON.stringify(payload),
   })
 }
+
+export async function deleteOrganization(id: string): Promise<void> {
+  const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.organizations}/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  })
+  
+  if (!response.ok) {
+    throw new Error("Failed to delete organization")
+  }
+}

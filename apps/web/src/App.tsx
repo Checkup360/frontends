@@ -1,13 +1,16 @@
 import {
+  buildLoginUrl,
   clearPostLoginRedirectUrl,
   fetchCurrentUser,
   getRedirectUrlByUserRole,
+  logout,
 } from "@workspace/api"
 import { AuthLoadingSkeleton } from "@workspace/auth/components/auth-loading-skeleton"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { AuthProvider } from "@workspace/auth/provider"
+import { Button } from "@workspace/ui/components/button"
 import { Toaster } from "@workspace/ui/components/sonner"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Navigate, Outlet, Route, Routes } from "react-router-dom"
 import AuthError from "./components/auth/auth-error"
 import Invite from "./components/auth/invite"
@@ -46,6 +49,36 @@ function RootLayout() {
   )
 }
 
+function NoOrganizationError() {
+  const loginUrl = buildLoginUrl({ nextUrl: `${window.location.origin}/` })
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    await logout()
+    window.location.replace("/")
+  }
+
+  return (
+    <div className="flex min-h-svh flex-col items-center justify-center px-4 text-center">
+      <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+        No Organization Found
+      </h1>
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+        You don't belong to any active organization. Please ask an administrator for a new invitation link.
+      </p>
+      <div className="mt-8 flex flex-col gap-3">
+        <Button asChild variant="outline" className="w-full sm:w-auto">
+          <a href={loginUrl}>Sign in with different account</a>
+        </Button>
+        <Button variant="ghost" onClick={handleLogout} disabled={loggingOut} className="w-full sm:w-auto">
+          {loggingOut ? "Logging out..." : "Log out"}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function HomePage() {
   const { isLoading, user } = useCurrentUser()
 
@@ -60,6 +93,12 @@ function HomePage() {
       return <Navigate to="/onboarding" replace />
     }
     return <DashboardPage />
+  }
+
+  const hasNoMemberships = user && !user.is_sysadmin && (!user.memberships || user.memberships.length === 0)
+
+  if (hasNoMemberships) {
+    return <NoOrganizationError />
   }
 
   return <HeroCheckup360 user={user} />
@@ -100,6 +139,10 @@ function RequireMemberRole({ children }: { children: React.ReactNode }) {
   const hasOnlyMemberRole = isMemberOnlyUser(user)
 
   if (!hasOnlyMemberRole) {
+    const hasNoMemberships = user && !user.is_sysadmin && (!user.memberships || user.memberships.length === 0)
+    if (hasNoMemberships) {
+      return <NoOrganizationError />
+    }
     return <HomePage />
   }
 

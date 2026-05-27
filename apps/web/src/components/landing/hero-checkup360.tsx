@@ -43,7 +43,6 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
 
   const getButtonLabel = () => {
     if (user?.is_sysadmin) return "Backoffice"
-    if (user?.memberships?.some((m) => m.roles?.includes("admin"))) return "Dashboard"
     return "Dashboard"
   }
 

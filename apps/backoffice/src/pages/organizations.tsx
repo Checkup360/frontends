@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useRef } from "react"
 import { CreateOrganizationDialog } from "@workspace/auth/components/create-organization-dialog"
 import {
   listOrganizations,
+  deleteOrganization,
   type OrganizationResponse,
 } from "@workspace/api"
 
@@ -20,6 +21,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog"
 import { Input } from "@workspace/ui/components/input"
 import {
   Table,
@@ -62,6 +71,7 @@ export function OrganizationsPage() {
   const [query, setQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteConfirmOrg, setDeleteConfirmOrg] = useState<{ id: string; name: string } | null>(null)
   const loadOrganizationsRef = useRef<() => Promise<void>>(() =>
     Promise.resolve()
   )
@@ -75,6 +85,20 @@ export function OrganizationsPage() {
       ),
     [organizations, query]
   )
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirmOrg) return
+    
+    try {
+      await deleteOrganization(deleteConfirmOrg.id)
+      toast.success("Organization deleted")
+      void loadOrganizationsRef.current?.()
+    } catch (error) {
+      toast.error("Failed to delete organization")
+    } finally {
+      setDeleteConfirmOrg(null)
+    }
+  }
 
   useEffect(() => {
     const loadOrganizations = async () => {
@@ -227,6 +251,7 @@ export function OrganizationsPage() {
                             variant="ghost"
                             size="icon-sm"
                             aria-label="Delete organization"
+                            onClick={() => setDeleteConfirmOrg({ id: organization.id, name: organization.name })}
                           >
                             <Trash2 className="size-4 text-destructive" />
                           </Button>
@@ -251,6 +276,25 @@ export function OrganizationsPage() {
           void loadOrganizationsRef.current?.()
         }}
       />
+
+      <Dialog open={!!deleteConfirmOrg} onOpenChange={(open) => !open && setDeleteConfirmOrg(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete <strong>{deleteConfirmOrg?.name}</strong> and remove all associated memberships from our servers.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmOrg(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Delete organization
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
