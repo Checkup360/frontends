@@ -84,7 +84,7 @@ export function OrganizationsPage() {
         setOrganizations(
           orgs.map((org) => ({
             ...org,
-            status: "Active" as OrganizationStatus,
+            status: (org.collaborators_count > 0 ? "Active" : "Pending") as OrganizationStatus,
             collaborators: org.collaborators_count,
           }))
         )
