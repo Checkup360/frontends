@@ -25,6 +25,7 @@ interface OrgInvitationFormProps {
   onBack?: () => void
   onSuccessChange?: (success: boolean) => void
   fixedOrganization?: OrganizationResponse
+  initialOrganizationId?: string
   title?: string
   description?: string
 }
@@ -33,6 +34,7 @@ export function OrgInvitationForm({
   onBack,
   onSuccessChange,
   fixedOrganization,
+  initialOrganizationId,
   title = "Organization registration",
   description = "Create an invitation for a user in an existing organization.",
 }: OrgInvitationFormProps) {
@@ -58,7 +60,7 @@ export function OrgInvitationForm({
   const isEmailFilled = email.trim().length > 0
   const shouldBeSingleUse = isAdminRole || isEmailFilled
   const selectedOrganization = fixedOrganization ?? selected
-  const selectedOrganizationId = selected?.id ?? ""
+  const selectedOrganizationId = selected?.id ?? fixedOrganization?.id ?? ""
 
   useEffect(() => {
     if (fixedOrganization) {
@@ -71,9 +73,15 @@ export function OrgInvitationForm({
     const fetchOrganizations = async () => {
       setOrgsLoading(true)
       setOrgsError("")
+      setSelected(null)
       try {
         const orgs = await listOrganizations()
         setOrganizations(orgs)
+        if (initialOrganizationId) {
+          setSelected(
+            orgs.find((org) => org.id === initialOrganizationId) ?? null
+          )
+        }
       } catch (err) {
         setOrgsError("Failed to load organizations")
         console.error(err)
@@ -82,7 +90,7 @@ export function OrgInvitationForm({
       }
     }
     fetchOrganizations()
-  }, [fixedOrganization])
+  }, [fixedOrganization, initialOrganizationId])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()

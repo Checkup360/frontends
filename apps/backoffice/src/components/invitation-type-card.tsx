@@ -1,5 +1,5 @@
 import { Building2, ShieldCheck } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@workspace/ui/components/button"
 import { Label } from "@workspace/ui/components/label"
 import {
@@ -14,6 +14,7 @@ interface InvitationTypeCardProps {
   onSelect: (type: InvitationType) => void
   onBack?: () => void
   loading?: boolean
+  initialType?: InvitationType
 }
 
 const invitationTypes: Array<{
@@ -40,8 +41,13 @@ export function InvitationTypeCard({
   onSelect,
   onBack,
   loading,
+  initialType = "sysadmin",
 }: InvitationTypeCardProps) {
-  const [selected, setSelected] = useState<InvitationType>("sysadmin")
+  const [selected, setSelected] = useState<InvitationType>(initialType)
+
+  useEffect(() => {
+    setSelected(initialType)
+  }, [initialType])
 
   const handleContinue = () => {
     onSelect(selected)

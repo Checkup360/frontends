@@ -1,17 +1,27 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { InvitationTypeCard } from "@/components/invitation-type-card"
 import { SysadminInvitationForm } from "@workspace/auth/components/sysadmin-invitation-form"
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card"
 import { Stepper } from "@workspace/ui/components/stepper"
+import { useSearchParams } from "react-router-dom"
 
 type SelectedType = null | "sysadmin" | "organization"
 
 const steps = [{ label: "Type" }, { label: "Details" }, { label: "Complete" }]
 
 export function InvitationsPage() {
-  const [selectedType, setSelectedType] = useState<SelectedType>(null)
+  const [searchParams] = useSearchParams()
+  const initialType = useMemo<"sysadmin" | "organization">(() => {
+    return searchParams.get("type") === "organization"
+      ? "organization"
+      : "sysadmin"
+  }, [searchParams])
+  const [selectedType, setSelectedType] = useState<SelectedType>(
+    initialType === "organization" ? "organization" : null
+  )
   const [completed, setCompleted] = useState(false)
+  const initialOrganizationId = searchParams.get("organizationId") ?? undefined
   const currentStep = completed ? 3 : selectedType ? 2 : 1
 
   const handleBack = () => {
@@ -31,6 +41,7 @@ export function InvitationsPage() {
           >
             {selectedType === null && (
               <InvitationTypeCard
+                initialType={initialType}
                 onSelect={(type) => {
                   setCompleted(false)
                   setSelectedType(type)
@@ -49,6 +60,7 @@ export function InvitationsPage() {
               <OrgInvitationForm
                 onBack={handleBack}
                 onSuccessChange={setCompleted}
+                initialOrganizationId={initialOrganizationId}
               />
             )}
           </div>

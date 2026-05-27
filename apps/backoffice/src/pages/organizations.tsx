@@ -39,6 +39,7 @@ import {
   TableRowsSkeleton,
   TableRow,
 } from "@workspace/ui/components/table"
+import { Link } from "react-router-dom"
 import { Link2, Plus, Trash2 } from "lucide-react"
 
 type OrganizationStatus = "Active" | "Pending"
@@ -238,15 +239,20 @@ export function OrganizationsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-1">
-                          {organization.status === "Pending" ? (
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label="Copy invitation link"
+                          <Button
+                            asChild
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Create invitation for ${organization.name}`}
+                          >
+                            <Link
+                              to={`/invitations?type=organization&organizationId=${encodeURIComponent(
+                                organization.id
+                              )}`}
                             >
                               <Link2 className="size-4" />
-                            </Button>
-                          ) : null}
+                            </Link>
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon-sm"
