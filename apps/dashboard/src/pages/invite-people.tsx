@@ -15,6 +15,7 @@ export function InvitePeoplePage() {
       id: membership.organization_id,
       name: membership.organization_name,
       slug: "",
+      collaborators_count: 0,
     }
   }, [user])
 

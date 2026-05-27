@@ -43,16 +43,16 @@ export function getRedirectUrlByUserRole(user: AuthMeResponse | null | undefined
     return `${resolveWebUrl()}/`
   }
 
-  if (user.requires_onboarding) {
-    return `${resolveWebUrl()}/onboarding`
-  }
-
   if (user.is_sysadmin) {
     return `${resolveBackofficeUrl()}/`
   }
 
   if (user.memberships?.some((m) => m.roles?.includes("admin"))) {
     return `${resolveDashboardUrl()}/`
+  }
+
+  if (user.requires_onboarding) {
+    return `${resolveWebUrl()}/onboarding`
   }
 
   return `${resolveWebUrl()}/`
@@ -280,6 +280,7 @@ export interface OrganizationResponse {
   id: string
   name: string
   slug: string
+  collaborators_count: number
 }
 
 export interface DashboardEmployee {
