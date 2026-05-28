@@ -21,8 +21,8 @@ export function RequireOrgAdmin({
   const isOrgAdmin = useMemo(
     () =>
       user &&
-      user.memberships &&
-      user.memberships.some((m) => m.roles?.includes("admin")),
+      user.membership &&
+      user.membership.roles?.includes("admin"),
     [user]
   )
 

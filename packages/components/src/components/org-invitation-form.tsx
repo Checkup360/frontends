@@ -131,13 +131,20 @@ export function OrgInvitationForm({
     setLoading(true)
     try {
       const result = await createOrgInvitation(
-        {
-          organization_id: selectedOrganization.id,
-          role,
-          email: email.trim() || undefined,
-          max_uses: shouldBeSingleUse ? 1 : maxUsesNum,
-          expires_in_hours: expiresInHoursNum,
-        },
+        !fixedOrganization
+          ? {
+              organization_id: selectedOrganization.id,
+              role,
+              email: email.trim() || undefined,
+              max_uses: shouldBeSingleUse ? 1 : maxUsesNum,
+              expires_in_hours: expiresInHoursNum,
+            }
+          : {
+              role,
+              email: email.trim() || undefined,
+              max_uses: shouldBeSingleUse ? 1 : maxUsesNum,
+              expires_in_hours: expiresInHoursNum,
+            }
       )
 
       if ("error" in result) {

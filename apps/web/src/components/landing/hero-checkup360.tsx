@@ -39,7 +39,7 @@ const heroCards = [
 
 export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
   const isAdminOrSysadmin =
-    user && (user.is_sysadmin || user.memberships?.some((m) => m.roles?.includes("admin")))
+    user && (user.is_sysadmin || user.membership?.roles?.includes("admin"))
 
   const getButtonLabel = () => {
     if (user?.is_sysadmin) return "Backoffice"

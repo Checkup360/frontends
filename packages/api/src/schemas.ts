@@ -7,7 +7,7 @@ export type OrganizationMembership = {
 export type AuthMeResponse = {
   email: string
   is_sysadmin: boolean
-  memberships: OrganizationMembership[]
+  membership: OrganizationMembership | null
   requires_onboarding: boolean
 }
 
@@ -29,7 +29,7 @@ export interface CreateSysadminInvitationPayload {
 }
 
 export interface CreateOrgInvitationPayload {
-  organization_id: string
+  organization_id?: string
   role: OrgRole
   email?: string
   max_uses?: number
@@ -50,23 +50,25 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
   const maybeIsSysadmin = (payload as { is_sysadmin?: unknown }).is_sysadmin
   if (typeof maybeIsSysadmin !== "boolean") return null
 
-  const maybeMemberships = (payload as { memberships?: unknown }).memberships
-  if (!Array.isArray(maybeMemberships)) return null
-
   const maybeRequiresOnboarding = (payload as { requires_onboarding?: unknown })
     .requires_onboarding
   if (typeof maybeRequiresOnboarding !== "boolean") return null
 
-  const memberships = maybeMemberships.map((m) => ({
-    organization_id: (m as { organization_id?: unknown }).organization_id as string,
-    organization_name: (m as { organization_name?: unknown }).organization_name as string,
-    roles: (m as { roles?: unknown }).roles as string[],
-  }))
+  const maybeMembership = (payload as { membership?: unknown }).membership
+  let membership: OrganizationMembership | null = null
+
+  if (maybeMembership !== null && typeof maybeMembership === "object") {
+    membership = {
+      organization_id: (maybeMembership as { organization_id?: unknown }).organization_id as string,
+      organization_name: (maybeMembership as { organization_name?: unknown }).organization_name as string,
+      roles: (maybeMembership as { roles?: unknown }).roles as string[],
+    }
+  }
 
   return {
     email: maybeEmail,
     is_sysadmin: maybeIsSysadmin,
-    memberships,
+    membership,
     requires_onboarding: maybeRequiresOnboarding,
   }
 }

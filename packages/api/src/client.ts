@@ -47,7 +47,7 @@ export function getRedirectUrlByUserRole(user: AuthMeResponse | null | undefined
     return `${resolveBackofficeUrl()}/`
   }
 
-  if (user.memberships?.some((m) => m.roles?.includes("admin"))) {
+  if (user.membership?.roles?.includes("admin")) {
     return `${resolveDashboardUrl()}/`
   }
 
@@ -608,7 +608,7 @@ export async function deleteOrganization(id: string): Promise<void> {
     method: "DELETE",
     credentials: "include",
   })
-  
+
   if (!response.ok) {
     throw new Error("Failed to delete organization")
   }

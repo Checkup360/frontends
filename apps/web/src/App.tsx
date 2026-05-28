@@ -32,10 +32,9 @@ function isMemberOnlyUser(
 ): boolean {
   return Boolean(
     user &&
-      !user.is_sysadmin &&
-      Array.isArray(user.memberships) &&
-      user.memberships.length > 0 &&
-      user.memberships.some((m) => m.roles?.includes("member"))
+    !user.is_sysadmin &&
+    user.membership &&
+    user.membership.roles?.includes("member")
   )
 }
 
@@ -95,7 +94,7 @@ function HomePage() {
     return <DashboardPage />
   }
 
-  const hasNoMemberships = user && !user.is_sysadmin && (!user.memberships || user.memberships.length === 0)
+  const hasNoMemberships = user && !user.is_sysadmin && !user.membership
 
   if (hasNoMemberships) {
     return <NoOrganizationError />
@@ -110,7 +109,7 @@ function LoginComplete() {
       // Siempre hacer fetch del usuario para determinar a dónde redirigir
       const user = await fetchCurrentUser()
       const finalRedirectUrl = getRedirectUrlByUserRole(user)
-      
+
       clearPostLoginRedirectUrl()
       window.location.replace(finalRedirectUrl)
     }
@@ -139,7 +138,7 @@ function RequireMemberRole({ children }: { children: React.ReactNode }) {
   const hasOnlyMemberRole = isMemberOnlyUser(user)
 
   if (!hasOnlyMemberRole) {
-    const hasNoMemberships = user && !user.is_sysadmin && (!user.memberships || user.memberships.length === 0)
+    const hasNoMemberships = user && !user.is_sysadmin && !user.membership
     if (hasNoMemberships) {
       return <NoOrganizationError />
     }
