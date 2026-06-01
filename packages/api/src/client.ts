@@ -332,6 +332,7 @@ export interface OrganizationEmployee {
   email: string
   roles: OrganizationEmployeeRole[]
   department: DepartmentResponse | null
+  status: string
 }
 
 export async function createInvite(
@@ -466,13 +467,23 @@ export async function listOrganizations(): Promise<OrganizationResponse[]> {
 
 export async function listOrganizationEmployees(
   organizationId: string,
-  roles?: OrganizationEmployeeRole[]
+  roles?: OrganizationEmployeeRole[],
+  filters?: {
+    departmentId?: string
+    status?: string
+  }
 ): Promise<OrganizationEmployee[]> {
   try {
     const url = new URL(
       `${resolveApiBaseUrl()}${apiRoutes.organizationEmployees(organizationId)}`
     )
     roles?.forEach((role) => url.searchParams.append("role", role))
+    if (filters?.departmentId) {
+      url.searchParams.append("department_id", filters.departmentId)
+    }
+    if (filters?.status) {
+      url.searchParams.append("status", filters.status)
+    }
 
     const response = await fetchWithAuth(url.toString(), {
       credentials: "include",
