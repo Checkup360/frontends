@@ -2,11 +2,14 @@ import { useEffect, useMemo, useState } from "react"
 import { InvitationTypeCard } from "@/components/invitation-type-card"
 import { SysadminInvitationForm } from "@workspace/auth/components/sysadmin-invitation-form"
 import { CreateInvitationButton } from "@workspace/components/components/create-invitation-button"
+import { DeleteInvitationsDialog } from "@workspace/components/components/delete-invitations-dialog"
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card"
 import { Stepper } from "@workspace/ui/components/stepper"
 import { Link, useSearchParams } from "react-router-dom"
 import {
+  deleteOrgInvitations,
+  deleteSysadminInvitations,
   listOrgInvitations,
   listSysadminInvitations,
   listOrganizations,
@@ -16,6 +19,7 @@ import {
 } from "@workspace/api"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { Checkbox } from "@workspace/ui/components/checkbox"
 import { toast } from "@workspace/ui/components/sonner"
 import {
   Select,
@@ -42,6 +46,7 @@ import {
   Shield,
   ArrowLeft,
   Mail,
+  Trash2,
 } from "lucide-react"
 
 type SelectedType = null | "sysadmin" | "organization"
@@ -116,6 +121,9 @@ export function InvitationsPage() {
   )
   const [selectedRole, setSelectedRole] = useState("all")
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [selectedInviteIds, setSelectedInviteIds] = useState<string[]>([])
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Data arrays
   const [sysadminInvites, setSysadminInvites] = useState<SysadminInvite[]>([])
@@ -162,6 +170,7 @@ export function InvitationsPage() {
   const loadInvites = async () => {
     if (activeTab === "organization" && (!selectedOrg || selectedOrg === "none")) {
       setOrgInvites([])
+      setSelectedInviteIds([])
       setLoading(false)
       return
     }
@@ -170,12 +179,14 @@ export function InvitationsPage() {
       if (activeTab === "sysadmin") {
         const data = await listSysadminInvitations()
         setSysadminInvites(data)
+        setSelectedInviteIds([])
       } else {
         const data = await listOrgInvitations({
           organizationId: selectedOrg,
           role: selectedRole,
         })
         setOrgInvites(data)
+        setSelectedInviteIds([])
       }
     } catch (err) {
       console.error("Failed to load invitations list:", err)
@@ -213,6 +224,18 @@ export function InvitationsPage() {
     const start = (currentPage - 1) * pageSize
     return filteredOrgInvites.slice(start, start + pageSize)
   }, [filteredOrgInvites, currentPage, pageSize])
+  const paginatedInviteIds = useMemo(() => {
+    return activeTab === "sysadmin"
+      ? paginatedSysadminInvites.map((invite) => invite.id)
+      : paginatedOrgInvites.map((invite) => invite.id)
+  }, [activeTab, paginatedOrgInvites, paginatedSysadminInvites])
+  const selectedCount = selectedInviteIds.length
+  const allPageSelected =
+    paginatedInviteIds.length > 0 &&
+    paginatedInviteIds.every((id) => selectedInviteIds.includes(id))
+  const somePageSelected =
+    paginatedInviteIds.some((id) => selectedInviteIds.includes(id)) &&
+    !allPageSelected
 
   const hasActiveFilters = selectedOrg !== "" || selectedRole !== "all"
 
@@ -220,6 +243,44 @@ export function InvitationsPage() {
     setSelectedOrg("")
     setSelectedRole("all")
     setCurrentPage(1)
+    setSelectedInviteIds([])
+  }
+
+  const toggleInviteSelection = (id: string, checked: boolean) => {
+    setSelectedInviteIds((prev) =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter((x) => x !== id)
+    )
+  }
+
+  const togglePageSelection = (checked: boolean) => {
+    setSelectedInviteIds((prev) => {
+      if (!checked) {
+        return prev.filter((id) => !paginatedInviteIds.includes(id))
+      }
+      return Array.from(new Set([...prev, ...paginatedInviteIds]))
+    })
+  }
+
+  const handleDeleteSelected = async () => {
+    if (selectedInviteIds.length === 0) return
+
+    setDeleteLoading(true)
+    try {
+      const deleted =
+        activeTab === "sysadmin"
+          ? await deleteSysadminInvitations(selectedInviteIds)
+          : await deleteOrgInvitations(selectedInviteIds)
+      toast.success(
+        deleted === 1 ? "Invitation deleted" : `${deleted} invitations deleted`
+      )
+      setDeleteDialogOpen(false)
+      await loadInvites()
+    } catch (error) {
+      console.error("Failed to delete invitations:", error)
+      toast.error("Failed to delete invitations")
+    } finally {
+      setDeleteLoading(false)
+    }
   }
 
   // --- RENDERING ---
@@ -301,6 +362,7 @@ export function InvitationsPage() {
             onClick={() => {
               setActiveTab("sysadmin")
               setCurrentPage(1)
+              setSelectedInviteIds([])
               handleResetFilters()
             }}
             className={`pb-3 text-sm font-semibold transition-all relative ${
@@ -318,6 +380,7 @@ export function InvitationsPage() {
             onClick={() => {
               setActiveTab("organization")
               setCurrentPage(1)
+              setSelectedInviteIds([])
               handleResetFilters()
             }}
             className={`pb-3 text-sm font-semibold transition-all relative ${
@@ -342,6 +405,25 @@ export function InvitationsPage() {
 
       {/* Main Table Card */}
       <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
+        {selectedCount > 0 && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {selectedCount}
+              </span>{" "}
+              selected
+            </p>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="size-4" />
+              Delete selected
+            </Button>
+          </div>
+        )}
+
         <div className="mb-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             {activeTab === "organization" && (
@@ -430,6 +512,15 @@ export function InvitationsPage() {
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        aria-label="Select page invitations"
+                        checked={allPageSelected || (somePageSelected && "indeterminate")}
+                        onCheckedChange={(checked) =>
+                          togglePageSelection(checked === true)
+                        }
+                      />
+                    </TableHead>
                     <TableHead className="font-semibold text-foreground">Email</TableHead>
                     {activeTab === "organization" && (
                       <TableHead className="font-semibold text-foreground">Organization</TableHead>
@@ -447,6 +538,9 @@ export function InvitationsPage() {
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i} className="animate-pulse">
+                        <TableCell>
+                          <div className="size-4 rounded bg-muted" />
+                        </TableCell>
                         <TableCell>
                           <div className="h-4 bg-muted rounded w-2/3" />
                         </TableCell>
@@ -481,8 +575,17 @@ export function InvitationsPage() {
                       const rem = formatRemainingTime(invite.expires_at, invite.uses, invite.max_uses)
                       return (
                         <TableRow key={invite.id} className="group hover:bg-muted/40 transition-colors">
+                          <TableCell>
+                            <Checkbox
+                              aria-label={`Select invitation ${invite.email ?? invite.id}`}
+                              checked={selectedInviteIds.includes(invite.id)}
+                              onCheckedChange={(checked) =>
+                                toggleInviteSelection(invite.id, checked === true)
+                              }
+                            />
+                          </TableCell>
                           <TableCell className="font-medium text-foreground">
-                            {invite.email ?? <span className="text-muted-foreground/60">— (Public Link)</span>}
+                            {invite.email ?? <span className="text-muted-foreground/60">—</span>}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 capitalize font-medium">
@@ -498,7 +601,7 @@ export function InvitationsPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="flex justify-end">
+                            <div className="flex justify-end gap-1">
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
@@ -511,6 +614,17 @@ export function InvitationsPage() {
                                   <Clipboard className="size-4" />
                                 )}
                               </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                title="Delete invitation"
+                                onClick={() => {
+                                  setSelectedInviteIds([invite.id])
+                                  setDeleteDialogOpen(true)
+                                }}
+                              >
+                                <Trash2 className="size-4 text-destructive" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -521,8 +635,17 @@ export function InvitationsPage() {
                       const rem = formatRemainingTime(invite.expires_at, invite.uses, invite.max_uses)
                       return (
                         <TableRow key={invite.id} className="group hover:bg-muted/40 transition-colors">
+                          <TableCell>
+                            <Checkbox
+                              aria-label={`Select invitation ${invite.email ?? invite.id}`}
+                              checked={selectedInviteIds.includes(invite.id)}
+                              onCheckedChange={(checked) =>
+                                toggleInviteSelection(invite.id, checked === true)
+                              }
+                            />
+                          </TableCell>
                           <TableCell className="font-medium text-foreground">
-                            {invite.email ?? <span className="text-muted-foreground/60">— (Public Link)</span>}
+                            {invite.email ?? <span className="text-muted-foreground/60">—</span>}
                           </TableCell>
                           <TableCell className="text-muted-foreground font-medium">
                             {invite.organization_id ? (
@@ -560,7 +683,7 @@ export function InvitationsPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="flex justify-end">
+                            <div className="flex justify-end gap-1">
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
@@ -572,6 +695,17 @@ export function InvitationsPage() {
                                 ) : (
                                   <Clipboard className="size-4" />
                                 )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                title="Delete invitation"
+                                onClick={() => {
+                                  setSelectedInviteIds([invite.id])
+                                  setDeleteDialogOpen(true)
+                                }}
+                              >
+                                <Trash2 className="size-4 text-destructive" />
                               </Button>
                             </div>
                           </TableCell>
@@ -647,8 +781,15 @@ export function InvitationsPage() {
               </div>
             </div>
             </>
-          )}
+        )}
       </Card>
+      <DeleteInvitationsDialog
+        count={selectedCount}
+        loading={deleteLoading}
+        open={deleteDialogOpen}
+        onConfirm={handleDeleteSelected}
+        onOpenChange={setDeleteDialogOpen}
+      />
     </div>
   )
 }

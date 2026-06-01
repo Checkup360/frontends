@@ -924,6 +924,27 @@ export async function listOrgInvitations(filters?: {
   }
 }
 
+export async function deleteOrgInvitations(ids: string[]): Promise<number> {
+  const response = await fetchWithAuth(
+    `${resolveApiBaseUrl()}${apiRoutes.invites.organization}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ ids }),
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error("Failed to delete organization invitations")
+  }
+
+  const payload = (await response.json()) as { deleted_count?: number }
+  return payload.deleted_count ?? 0
+}
+
 export async function listSysadminInvitations(): Promise<SysadminInvite[]> {
   try {
     const response = await fetchWithAuth(
@@ -939,4 +960,25 @@ export async function listSysadminInvitations(): Promise<SysadminInvite[]> {
     console.error("Error listing sysadmin invitations:", error)
     return []
   }
+}
+
+export async function deleteSysadminInvitations(ids: string[]): Promise<number> {
+  const response = await fetchWithAuth(
+    `${resolveApiBaseUrl()}${apiRoutes.invites.admin}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ ids }),
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error("Failed to delete sysadmin invitations")
+  }
+
+  const payload = (await response.json()) as { deleted_count?: number }
+  return payload.deleted_count ?? 0
 }

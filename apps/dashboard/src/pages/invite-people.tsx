@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { CreateInvitationButton } from "@workspace/components/components/create-invitation-button"
+import { DeleteInvitationsDialog } from "@workspace/components/components/delete-invitations-dialog"
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Skeleton } from "@workspace/ui/components/skeleton"
+import { toast } from "@workspace/ui/components/sonner"
 import {
   Select,
   SelectContent,
@@ -22,6 +25,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table"
 import {
+  deleteOrgInvitations,
   listOrgInvitations,
   type OrganizationInvite,
 } from "@workspace/api"
@@ -33,6 +37,7 @@ import {
   Copy,
   Check,
   Mail,
+  Trash2,
 } from "lucide-react"
 
 // Formatting helper for remaining time
@@ -71,6 +76,9 @@ export function InvitePeoplePage() {
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [selectedInviteIds, setSelectedInviteIds] = useState<string[]>([])
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Filters State
   const [selectedRole, setSelectedRole] = useState("all")
@@ -99,6 +107,7 @@ export function InvitePeoplePage() {
     try {
       const data = await listOrgInvitations()
       setInvites(data)
+      setSelectedInviteIds([])
     } catch (err) {
       console.error("Failed to load invitations:", err)
     } finally {
@@ -137,12 +146,57 @@ export function InvitePeoplePage() {
     const start = (currentPage - 1) * pageSize
     return filteredInvites.slice(start, start + pageSize)
   }, [filteredInvites, currentPage, pageSize])
+  const paginatedInviteIds = useMemo(
+    () => paginatedInvites.map((invite) => invite.id),
+    [paginatedInvites]
+  )
+  const selectedCount = selectedInviteIds.length
+  const allPageSelected =
+    paginatedInviteIds.length > 0 &&
+    paginatedInviteIds.every((id) => selectedInviteIds.includes(id))
+  const somePageSelected =
+    paginatedInviteIds.some((id) => selectedInviteIds.includes(id)) &&
+    !allPageSelected
 
   const hasActiveFilters = selectedRole !== "all"
 
   const handleResetFilters = () => {
     setSelectedRole("all")
     setCurrentPage(1)
+  }
+
+  const toggleInviteSelection = (id: string, checked: boolean) => {
+    setSelectedInviteIds((prev) =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter((x) => x !== id)
+    )
+  }
+
+  const togglePageSelection = (checked: boolean) => {
+    setSelectedInviteIds((prev) => {
+      if (!checked) {
+        return prev.filter((id) => !paginatedInviteIds.includes(id))
+      }
+      return Array.from(new Set([...prev, ...paginatedInviteIds]))
+    })
+  }
+
+  const handleDeleteSelected = async () => {
+    if (selectedInviteIds.length === 0) return
+
+    setDeleteLoading(true)
+    try {
+      const deleted = await deleteOrgInvitations(selectedInviteIds)
+      toast.success(
+        deleted === 1 ? "Invitation deleted" : `${deleted} invitations deleted`
+      )
+      setDeleteDialogOpen(false)
+      await loadInvites()
+    } catch (error) {
+      console.error("Failed to delete invitations:", error)
+      toast.error("Failed to delete invitations")
+    } finally {
+      setDeleteLoading(false)
+    }
   }
 
   if (userLoading) {
@@ -225,6 +279,25 @@ export function InvitePeoplePage() {
           </div>
         </div>
 
+        {selectedCount > 0 && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {selectedCount}
+              </span>{" "}
+              selected
+            </p>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="size-4" />
+              Delete selected
+            </Button>
+          </div>
+        )}
+
         {/* Filters Toolbar */}
         <div className="mb-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -280,6 +353,15 @@ export function InvitePeoplePage() {
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        aria-label="Select page invitations"
+                        checked={allPageSelected || (somePageSelected && "indeterminate")}
+                        onCheckedChange={(checked) =>
+                          togglePageSelection(checked === true)
+                        }
+                      />
+                    </TableHead>
                     <TableHead className="font-semibold text-foreground">Email</TableHead>
                     <TableHead className="font-semibold text-foreground">Role</TableHead>
                     <TableHead className="font-semibold text-foreground">Department</TableHead>
@@ -292,6 +374,9 @@ export function InvitePeoplePage() {
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i} className="animate-pulse">
+                        <TableCell>
+                          <div className="size-4 rounded bg-muted" />
+                        </TableCell>
                         <TableCell>
                           <div className="h-4 bg-muted rounded w-2/3" />
                         </TableCell>
@@ -326,6 +411,15 @@ export function InvitePeoplePage() {
                           key={inv.id}
                           className="group hover:bg-muted/40 transition-colors"
                         >
+                          <TableCell>
+                            <Checkbox
+                              aria-label={`Select invitation ${inv.email ?? inv.id}`}
+                              checked={selectedInviteIds.includes(inv.id)}
+                              onCheckedChange={(checked) =>
+                                toggleInviteSelection(inv.id, checked === true)
+                              }
+                            />
+                          </TableCell>
                           <TableCell className="font-medium text-foreground">
                             {inv.email || <span className="text-muted-foreground/60">—</span>}
                           </TableCell>
@@ -369,21 +463,35 @@ export function InvitePeoplePage() {
                               </Badge>
                             )}
                           </TableCell>
-                          <TableCell className="text-center">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
-                              onClick={() => handleCopy(inv.id, inv.invite_url)}
-                              disabled={rem.status === "expired" || rem.status === "used"}
-                              title="Copy invitation link"
-                            >
-                              {copiedId === inv.id ? (
-                                <Check className="size-4 text-emerald-500" />
-                              ) : (
-                                <Copy className="size-4 text-muted-foreground hover:text-foreground" />
-                              )}
-                            </Button>
+                          <TableCell>
+                            <div className="flex justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                onClick={() => handleCopy(inv.id, inv.invite_url)}
+                                disabled={rem.status === "expired" || rem.status === "used"}
+                                title="Copy invitation link"
+                              >
+                                {copiedId === inv.id ? (
+                                  <Check className="size-4 text-emerald-500" />
+                                ) : (
+                                  <Copy className="size-4 text-muted-foreground hover:text-foreground" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                title="Delete invitation"
+                                onClick={() => {
+                                  setSelectedInviteIds([inv.id])
+                                  setDeleteDialogOpen(true)
+                                }}
+                              >
+                                <Trash2 className="size-4 text-destructive" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       )
@@ -466,6 +574,13 @@ export function InvitePeoplePage() {
           </>
         )}
       </Card>
+      <DeleteInvitationsDialog
+        count={selectedCount}
+        loading={deleteLoading}
+        open={deleteDialogOpen}
+        onConfirm={handleDeleteSelected}
+        onOpenChange={setDeleteDialogOpen}
+      />
     </div>
   )
 }
