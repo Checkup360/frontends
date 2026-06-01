@@ -64,18 +64,15 @@ export function ResourceList({
   onRename,
   onDelete,
 }: ResourceListProps) {
-  // Create
   const [newName, setNewName] = useState("")
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState("")
 
-  // Rename
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState("")
   const [saving, setSaving] = useState(false)
   const [editError, setEditError] = useState("")
 
-  // Delete confirm dialog
   const [deleteTarget, setDeleteTarget] = useState<ResourceItem | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
@@ -142,7 +139,6 @@ export function ResourceList({
 
   return (
     <>
-      {/* Create card */}
       <Card>
         <CardHeader>
           <CardTitle>Create {resourceLabel}</CardTitle>
@@ -168,8 +164,13 @@ export function ResourceList({
                 }}
                 disabled={creating}
               />
+              {newName.trim() && (
+                <p className="text-xs text-muted-foreground mt-1.5 pl-0.5">
+                  URL identifier: <span className="font-mono text-foreground font-medium bg-muted/60 px-1 py-0.5 rounded border border-border/40">{newName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}</span>
+                </p>
+              )}
               {createError && (
-                <p className="flex items-center gap-1.5 text-xs text-destructive">
+                <p className="flex items-center gap-1.5 text-xs text-destructive mt-1.5">
                   <AlertCircle className="size-3 shrink-0" />
                   {createError}
                 </p>
@@ -187,7 +188,6 @@ export function ResourceList({
         </CardContent>
       </Card>
 
-      {/* List card */}
       <Card>
         <CardHeader>
           <CardTitle>{title}</CardTitle>
@@ -320,7 +320,6 @@ export function ResourceList({
         </CardContent>
       </Card>
 
-      {/* Delete confirm dialog */}
       <Dialog
         open={!!deleteTarget}
         onOpenChange={(open) => {
