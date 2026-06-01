@@ -1,9 +1,6 @@
-import { listOrganizationEmployees } from "@workspace/api"
+import { listOrganizationEmployees, listDepartments } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
-import {
-  Card,
-  CardContent,
-} from "@workspace/ui/components/card"
+import { Card, CardContent } from "@workspace/ui/components/card"
 import { Activity, Building2, ShieldCheck, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
@@ -14,6 +11,7 @@ export function EmployeesPage() {
   const { user } = useCurrentUser()
   const organizationId = user?.membership?.organization_id
   const [totalEmployees, setTotalEmployees] = useState<string>("...")
+  const [totalDepartments, setTotalDepartments] = useState<string>("...")
 
   useEffect(() => {
     let active = true
@@ -21,11 +19,16 @@ export function EmployeesPage() {
     async function loadSummary() {
       if (!organizationId) {
         setTotalEmployees("0")
+        setTotalDepartments("0")
         return
       }
-      const members = await listOrganizationEmployees(organizationId, ["member"])
+      const members = await listOrganizationEmployees(organizationId, [
+        "member",
+      ])
+      const departments = await listDepartments(organizationId)
       if (!active) return
       setTotalEmployees(members.length.toString())
+      setTotalDepartments(departments.length.toString())
     }
 
     void loadSummary()
@@ -39,10 +42,10 @@ export function EmployeesPage() {
     () => [
       { label: "Total employees", value: totalEmployees, icon: Users },
       { label: "Evaluated this cycle", value: "551", icon: ShieldCheck },
-      { label: "Active areas", value: "6", icon: Building2 },
+      { label: "Active areas", value: totalDepartments, icon: Building2 },
       { label: "Follow-ups", value: "42", icon: Activity },
     ],
-    [totalEmployees]
+    [totalEmployees, totalDepartments]
   )
 
   return (
