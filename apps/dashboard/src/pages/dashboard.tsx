@@ -1,21 +1,30 @@
 import { AreaScores } from "@/components/area-scores"
 import { EmployeesTable } from "@/components/employees-table"
 import { RiskTrend } from "@/components/risk-trend"
-import { fetchDashboardSummary } from "@workspace/api"
+import { listOrganizationEmployees } from "@workspace/api"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { OverviewStatCard } from "@workspace/components/components/card"
 import { AlertTriangle, TrendingUp, Users } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export function DashboardPage() {
+  const { user } = useCurrentUser()
+  const organizationId = user?.membership?.organization_id
   const [totalEmployees, setTotalEmployees] = useState<string>("...")
 
   useEffect(() => {
     let active = true
 
     async function loadSummary() {
-      const summary = await fetchDashboardSummary()
+      if (!organizationId) {
+        setTotalEmployees("0")
+        return
+      }
+      const employees = await listOrganizationEmployees(organizationId, [
+        "member",
+      ])
       if (!active) return
-      setTotalEmployees(summary ? summary.total_employees.toString() : "0")
+      setTotalEmployees(employees.length.toString())
     }
 
     void loadSummary()
@@ -23,7 +32,7 @@ export function DashboardPage() {
     return () => {
       active = false
     }
-  }, [])
+  }, [organizationId])
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
@@ -64,7 +73,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <EmployeesTable />
+      <EmployeesTable organizationId={organizationId} />
     </div>
   )
 }

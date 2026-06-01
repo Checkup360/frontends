@@ -10,13 +10,12 @@ export const apiRoutes = {
     organization: "/invites/organization",
     metadata: (token: string) => `/invites/${encodeURIComponent(token)}`,
     redeem: (token: string) => `/invites/${encodeURIComponent(token)}/redeem`,
-    googleSession: (token: string) => `/invites/${encodeURIComponent(token)}/google-session`,
+    googleSession: (token: string) =>
+      `/invites/${encodeURIComponent(token)}/google-session`,
   },
   organizations: "/organizations",
-  dashboard: {
-    summary: "/dashboard/summary",
-    employees: "/dashboard/employees",
-  },
+  organizationEmployees: (organizationId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/employees`,
   members: {
     myDetails: "/members/me/details",
   },

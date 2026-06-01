@@ -1,4 +1,7 @@
-import { listDashboardEmployees } from "@workspace/api"
+import {
+  listOrganizationEmployees,
+  type OrganizationEmployeeRole,
+} from "@workspace/api"
 import { Card } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { Input } from "@workspace/ui/components/input"
@@ -25,7 +28,17 @@ const riskClass: Record<Worker["risk"], string> = {
   Pending: "bg-muted text-muted-foreground border-transparent",
 }
 
-export function EmployeesTable() {
+const MEMBER_ROLES: OrganizationEmployeeRole[] = ["member"]
+
+interface EmployeesTableProps {
+  organizationId: string | null | undefined
+  roles?: OrganizationEmployeeRole[]
+}
+
+export function EmployeesTable({
+  organizationId,
+  roles = MEMBER_ROLES,
+}: EmployeesTableProps) {
   const [q, setQ] = useState("")
   const [workers, setWorkers] = useState<Worker[]>([])
   const [loading, setLoading] = useState(true)
@@ -34,8 +47,13 @@ export function EmployeesTable() {
     let active = true
 
     async function loadEmployees() {
+      if (!organizationId) {
+        setWorkers([])
+        setLoading(false)
+        return
+      }
       setLoading(true)
-      const employees = await listDashboardEmployees()
+      const employees = await listOrganizationEmployees(organizationId, roles)
       if (!active) return
       setWorkers(
         employees.map((employee) => ({
@@ -55,7 +73,7 @@ export function EmployeesTable() {
     return () => {
       active = false
     }
-  }, [])
+  }, [organizationId, roles])
 
   const filtered = useMemo(
     () =>

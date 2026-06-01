@@ -1,4 +1,5 @@
-import { fetchDashboardSummary } from "@workspace/api"
+import { listOrganizationEmployees } from "@workspace/api"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Badge } from "@workspace/ui/components/badge"
 import {
   Card,
@@ -14,15 +15,27 @@ import { AreaScores } from "@/components/area-scores"
 import { EmployeesTable } from "@/components/employees-table"
 
 export function EmployeesPage() {
+  const { user } = useCurrentUser()
+  const organizationId = user?.membership?.organization_id
   const [totalEmployees, setTotalEmployees] = useState<string>("...")
+  const [totalAdmins, setTotalAdmins] = useState<string>("...")
 
   useEffect(() => {
     let active = true
 
     async function loadSummary() {
-      const summary = await fetchDashboardSummary()
+      if (!organizationId) {
+        setTotalEmployees("0")
+        setTotalAdmins("0")
+        return
+      }
+      const [members, admins] = await Promise.all([
+        listOrganizationEmployees(organizationId, ["member"]),
+        listOrganizationEmployees(organizationId, ["admin"]),
+      ])
       if (!active) return
-      setTotalEmployees(summary ? summary.total_employees.toString() : "0")
+      setTotalEmployees(members.length.toString())
+      setTotalAdmins(admins.length.toString())
     }
 
     void loadSummary()
@@ -30,7 +43,7 @@ export function EmployeesPage() {
     return () => {
       active = false
     }
-  }, [])
+  }, [organizationId])
 
   const peopleStats = useMemo(
     () => [
@@ -63,7 +76,7 @@ export function EmployeesPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_380px]">
-        <EmployeesTable />
+        <EmployeesTable organizationId={organizationId} />
         <Card>
           <CardHeader>
             <CardTitle>Employee access</CardTitle>
@@ -79,7 +92,7 @@ export function EmployeesPage() {
                   Can invite and manage people
                 </p>
               </div>
-              <Badge variant="secondary">8 users</Badge>
+              <Badge variant="secondary">{totalAdmins} users</Badge>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
               <div>

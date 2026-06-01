@@ -16,7 +16,10 @@ import { apiRoutes } from "./routes"
 const POST_LOGIN_REDIRECT_STORAGE_KEY = "auth.postLoginRedirectUrl"
 
 function resolveUrl(configKey: string, defaultValue: string): string {
-  if (typeof window !== "undefined" && (window as any).__CONFIG__?.[configKey]) {
+  if (
+    typeof window !== "undefined" &&
+    (window as any).__CONFIG__?.[configKey]
+  ) {
     return ((window as any).__CONFIG__[configKey] as string).replace(/\/$/, "")
   }
   return defaultValue
@@ -38,7 +41,9 @@ export function resolveBackofficeUrl(): string {
   return resolveUrl("backofficeOrigin", publicDevDefaults.backofficeOrigin)
 }
 
-export function getRedirectUrlByUserRole(user: AuthMeResponse | null | undefined): string {
+export function getRedirectUrlByUserRole(
+  user: AuthMeResponse | null | undefined
+): string {
   if (!user) {
     return `${resolveWebUrl()}/`
   }
@@ -99,7 +104,10 @@ export function consumePostLoginRedirectUrl(fallbackUrl: string): string {
   return url
 }
 
-async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Promise<Response> {
+async function fetchWithAuth(
+  input: RequestInfo,
+  init?: RequestInit
+): Promise<Response> {
   const res = await fetch(input, init)
   if (res.status === 401) {
     document.cookie = "auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
@@ -111,9 +119,12 @@ async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Promise<Re
 }
 
 export async function fetchCurrentUser(): Promise<AuthMeResponse | null> {
-  const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.auth.me}`, {
-    credentials: "include",
-  })
+  const response = await fetchWithAuth(
+    `${resolveApiBaseUrl()}${apiRoutes.auth.me}`,
+    {
+      credentials: "include",
+    }
+  )
   if (response.status === 401) return null
   if (!response.ok) return null
   return parseAuthMeResponse(await response.json())
@@ -126,16 +137,22 @@ export interface SubmitMemberDetailsError {
 
 export async function submitMemberDetails(payload: {
   date_of_birth: string
-}): Promise<{ success: true; error?: never } | { success?: never; error: SubmitMemberDetailsError }> {
+}): Promise<
+  | { success: true; error?: never }
+  | { success?: never; error: SubmitMemberDetailsError }
+> {
   try {
-    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.members.myDetails}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    })
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.myDetails}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }
+    )
 
     if (response.status === 401) {
       return {
@@ -171,10 +188,13 @@ export async function submitMemberDetails(payload: {
 }
 
 export async function logout(): Promise<void> {
-  const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.auth.logout}`, {
-    method: "POST",
-    credentials: "include",
-  })
+  const response = await fetchWithAuth(
+    `${resolveApiBaseUrl()}${apiRoutes.auth.logout}`,
+    {
+      method: "POST",
+      credentials: "include",
+    }
+  )
   if (!response.ok) {
     throw new Error("Failed to close session")
   }
@@ -198,7 +218,11 @@ export function tryFollowAuthRedirectResponse(response: Response): boolean {
     return true
   }
 
-  if (response.status !== 301 && response.status !== 302 && response.status !== 303) {
+  if (
+    response.status !== 301 &&
+    response.status !== 302 &&
+    response.status !== 303
+  ) {
     return false
   }
 
@@ -221,18 +245,24 @@ export function tryFollowAuthRedirectResponse(response: Response): boolean {
   return true
 }
 
-export async function loginWithPassword(email: string, password: string): Promise<void> {
+export async function loginWithPassword(
+  email: string,
+  password: string
+): Promise<void> {
   const body = new URLSearchParams()
   body.set("username", email.trim())
   body.set("password", password)
 
-  const response = await fetch(`${resolveApiBaseUrl()}${apiRoutes.auth.login}`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    redirect: "manual",
-    body: body.toString(),
-  })
+  const response = await fetch(
+    `${resolveApiBaseUrl()}${apiRoutes.auth.login}`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      redirect: "manual",
+      body: body.toString(),
+    }
+  )
 
   if (tryFollowAuthRedirectResponse(response)) {
     return
@@ -253,9 +283,12 @@ export async function loginWithPassword(email: string, password: string): Promis
 }
 
 export async function fetchGoogleAuthorizationUrl(): Promise<OAuthAuthorizeResponse> {
-  const response = await fetch(`${resolveApiBaseUrl()}${apiRoutes.auth.googleAuthorize}`, {
-    credentials: "include",
-  })
+  const response = await fetch(
+    `${resolveApiBaseUrl()}${apiRoutes.auth.googleAuthorize}`,
+    {
+      credentials: "include",
+    }
+  )
   if (!response.ok) {
     throw new Error("Failed to start login with Google")
   }
@@ -285,31 +318,32 @@ export interface OrganizationResponse {
   collaborators_count: number
 }
 
-export interface DashboardEmployee {
+export type OrganizationEmployeeRole = "admin" | "member"
+
+export interface OrganizationEmployee {
   id: string
   email: string
-  role: "member"
-}
-
-export interface DashboardSummary {
-  total_employees: number
+  roles: OrganizationEmployeeRole[]
 }
 
 export async function createInvite(
   payload: InviteCreatePayload
 ): Promise<InviteCreateResponse | null> {
   try {
-    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.invites.admin}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        email: payload.email || null,
-        expires_in_hours: payload.expires_in_hours || 24,
-      }),
-    })
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.invites.admin}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: payload.email || null,
+          expires_in_hours: payload.expires_in_hours || 24,
+        }),
+      }
+    )
 
     if (response.status === 401) return null
     if (!response.ok) {
@@ -330,16 +364,22 @@ export interface CreateOrganizationError {
 
 export async function createOrganization(
   payload: CreateOrganizationPayload
-): Promise<{ success: OrganizationResponse; error?: never } | { success?: never; error: CreateOrganizationError }> {
+): Promise<
+  | { success: OrganizationResponse; error?: never }
+  | { success?: never; error: CreateOrganizationError }
+> {
   try {
-    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.organizations}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    })
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizations}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }
+    )
 
     if (response.status === 401) {
       return {
@@ -383,8 +423,10 @@ export async function createOrganization(
 
 function getOrganizationErrorMessage(code: string): string {
   const messages: Record<string, string> = {
-    organization_slug_already_exists: "This URL identifier is already taken. Please choose another.",
-    invalid_slug_format: "URL identifier can only contain lowercase letters, numbers, and hyphens.",
+    organization_slug_already_exists:
+      "This URL identifier is already taken. Please choose another.",
+    invalid_slug_format:
+      "URL identifier can only contain lowercase letters, numbers, and hyphens.",
     slug_required: "URL identifier is required.",
     name_required: "Organization name is required.",
     unknown_error: "Failed to create organization. Please try again.",
@@ -395,9 +437,12 @@ function getOrganizationErrorMessage(code: string): string {
 
 export async function listOrganizations(): Promise<OrganizationResponse[]> {
   try {
-    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.organizations}`, {
-      credentials: "include",
-    })
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizations}`,
+      {
+        credentials: "include",
+      }
+    )
 
     if (response.status === 401) return []
     if (!response.ok) {
@@ -411,9 +456,17 @@ export async function listOrganizations(): Promise<OrganizationResponse[]> {
   }
 }
 
-export async function listDashboardEmployees(): Promise<DashboardEmployee[]> {
+export async function listOrganizationEmployees(
+  organizationId: string,
+  roles?: OrganizationEmployeeRole[]
+): Promise<OrganizationEmployee[]> {
   try {
-    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.dashboard.employees}`, {
+    const url = new URL(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationEmployees(organizationId)}`
+    )
+    roles?.forEach((role) => url.searchParams.append("role", role))
+
+    const response = await fetchWithAuth(url.toString(), {
       credentials: "include",
     })
 
@@ -422,28 +475,10 @@ export async function listDashboardEmployees(): Promise<DashboardEmployee[]> {
       return []
     }
 
-    return (await response.json()) as DashboardEmployee[]
+    return (await response.json()) as OrganizationEmployee[]
   } catch (error) {
-    console.error("Error listing dashboard employees:", error)
+    console.error("Error listing organization employees:", error)
     return []
-  }
-}
-
-export async function fetchDashboardSummary(): Promise<DashboardSummary | null> {
-  try {
-    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.dashboard.summary}`, {
-      credentials: "include",
-    })
-
-    if (response.status === 401) return null
-    if (!response.ok) {
-      return null
-    }
-
-    return (await response.json()) as DashboardSummary
-  } catch (error) {
-    console.error("Error fetching dashboard summary:", error)
-    return null
   }
 }
 
@@ -463,16 +498,22 @@ function getInvitationErrorMessage(code: string): string {
 
 export async function createSysadminInvitation(
   payload: CreateSysadminInvitationPayload
-): Promise<{ success: InviteCreateResponse; error?: never } | { success?: never; error: InviteError }> {
+): Promise<
+  | { success: InviteCreateResponse; error?: never }
+  | { success?: never; error: InviteError }
+> {
   try {
-    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.invites.admin}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    })
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.invites.admin}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }
+    )
 
     if (response.status === 401) {
       return {
@@ -517,16 +558,22 @@ export async function createSysadminInvitation(
 
 export async function createOrgInvitation(
   payload: CreateOrgInvitationPayload
-): Promise<{ success: InviteCreateResponse; error?: never } | { success?: never; error: InviteError }> {
+): Promise<
+  | { success: InviteCreateResponse; error?: never }
+  | { success?: never; error: InviteError }
+> {
   try {
-    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.invites.organization}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    })
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.invites.organization}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }
+    )
 
     if (response.status === 401) {
       return {
@@ -569,20 +616,28 @@ export async function createOrgInvitation(
   }
 }
 
-export async function startInviteGoogleSession(token: string): Promise<Response> {
-  return fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.invites.googleSession(token)}`, {
-    method: "POST",
-    credentials: "include",
-  })
+export async function startInviteGoogleSession(
+  token: string
+): Promise<Response> {
+  return fetchWithAuth(
+    `${resolveApiBaseUrl()}${apiRoutes.invites.googleSession(token)}`,
+    {
+      method: "POST",
+      credentials: "include",
+    }
+  )
 }
 
 export async function getInviteMetadata(
   token: string
 ): Promise<InviteMetadataResponse | null> {
   try {
-    const response = await fetch(`${resolveApiBaseUrl()}${apiRoutes.invites.metadata(token)}`, {
-      credentials: "include",
-    })
+    const response = await fetch(
+      `${resolveApiBaseUrl()}${apiRoutes.invites.metadata(token)}`,
+      {
+        credentials: "include",
+      }
+    )
     if (!response.ok) return null
     return parseInviteMetadataResponse(await response.json())
   } catch {
@@ -604,10 +659,13 @@ export async function redeemInvite(
 }
 
 export async function deleteOrganization(id: string): Promise<void> {
-  const response = await fetchWithAuth(`${resolveApiBaseUrl()}${apiRoutes.organizations}/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  })
+  const response = await fetchWithAuth(
+    `${resolveApiBaseUrl()}${apiRoutes.organizations}/${id}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  )
 
   if (!response.ok) {
     throw new Error("Failed to delete organization")
