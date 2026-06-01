@@ -26,7 +26,7 @@ import {
 } from "@workspace/ui/components/table"
 import {
   deleteOrgInvitations,
-  listOrgInvitations,
+  listOrgInvitationsPage,
   type OrganizationInvite,
 } from "@workspace/api"
 import {
@@ -73,6 +73,7 @@ function formatRemainingTime(
 export function InvitePeoplePage() {
   const { user, isLoading: userLoading } = useCurrentUser()
   const [invites, setInvites] = useState<OrganizationInvite[]>([])
+  const [totalItems, setTotalItems] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -105,8 +106,13 @@ export function InvitePeoplePage() {
   const loadInvites = async () => {
     setLoading(true)
     try {
-      const data = await listOrgInvitations()
-      setInvites(data)
+      const data = await listOrgInvitationsPage({
+        role: selectedRole,
+        page: currentPage,
+        pageSize,
+      })
+      setInvites(data.items)
+      setTotalItems(data.total)
       setSelectedInviteIds([])
     } catch (err) {
       console.error("Failed to load invitations:", err)
@@ -120,7 +126,7 @@ export function InvitePeoplePage() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       void loadInvites()
     }
-  }, [organization])
+  }, [organization, selectedRole, currentPage, pageSize])
 
   // Copy handler
   const handleCopy = (id: string, url: string) => {
@@ -129,23 +135,9 @@ export function InvitePeoplePage() {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  // Client-side search and filters
-  const filteredInvites = useMemo(() => {
-    return invites.filter((inv) => {
-      const matchesRole =
-        selectedRole === "all" || inv.role?.toLowerCase() === selectedRole
-
-      return matchesRole
-    })
-  }, [invites, selectedRole])
-
   // Pagination values
-  const totalItems = filteredInvites.length
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const paginatedInvites = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredInvites.slice(start, start + pageSize)
-  }, [filteredInvites, currentPage, pageSize])
+  const paginatedInvites = invites
   const paginatedInviteIds = useMemo(
     () => paginatedInvites.map((invite) => invite.id),
     [paginatedInvites]
@@ -336,7 +328,7 @@ export function InvitePeoplePage() {
           </div>
         </div>
 
-        {!loading && filteredInvites.length === 0 ? (
+        {!loading && invites.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-300">
             <div className="rounded-full bg-primary/10 p-4 mb-4">
               <Mail className="size-8 text-primary animate-pulse" />

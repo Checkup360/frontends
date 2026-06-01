@@ -1,5 +1,5 @@
 import {
-  listOrganizationEmployees,
+  listOrganizationEmployeesPage,
   listDepartments,
   type OrganizationEmployee,
   type OrganizationEmployeeRole,
@@ -22,9 +22,10 @@ import {
   TableCell,
   TableHead,
   TableHeader,
+  TableRowsSkeleton,
   TableRow,
 } from "@workspace/ui/components/table"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -34,6 +35,14 @@ const statusClasses: Record<string, string> = {
 }
 
 const MEMBER_ROLES: OrganizationEmployeeRole[] = ["member"]
+
+const employeeTableSkeletonColumns = [
+  { skeletonClassName: "h-4 w-48" },
+  { skeletonClassName: "h-4 w-28" },
+  { skeletonClassName: "h-4 w-10" },
+  { skeletonClassName: "h-5 w-20 rounded-full" },
+  { skeletonClassName: "h-4 w-24" },
+]
 
 interface EmployeesTableProps {
   organizationId: string | null | undefined
@@ -49,6 +58,7 @@ export function EmployeesTable({
   // State for raw data
   const [employees, setEmployees] = useState<OrganizationEmployee[]>([])
   const [departments, setDepartments] = useState<DepartmentResponse[]>([])
+  const [totalItems, setTotalItems] = useState(0)
   const [loading, setLoading] = useState(true)
 
   // Filters State
@@ -80,14 +90,21 @@ export function EmployeesTable({
         setDepartments(depts)
 
         // Build backend query filter parameters
-        const apiFilters: { departmentId?: string; status?: string } = {}
+        const apiFilters: {
+          departmentId?: string
+          status?: string
+          search?: string
+          page: number
+          pageSize: number
+        } = { page: currentPage, pageSize }
         if (selectedDept !== "all") apiFilters.departmentId = selectedDept
         if (selectedStatus !== "all") apiFilters.status = selectedStatus
+        if (search.trim()) apiFilters.search = search.trim()
 
-        // Hit the filtered backend API!
-        const data = await listOrganizationEmployees(organizationId, roles, apiFilters)
+        const data = await listOrganizationEmployeesPage(organizationId, roles, apiFilters)
         if (!active) return
-        setEmployees(data)
+        setEmployees(data.items)
+        setTotalItems(data.total)
       } catch (err) {
         console.error("Failed to load employees:", err)
       } finally {
@@ -100,25 +117,10 @@ export function EmployeesTable({
     return () => {
       active = false
     }
-  }, [organizationId, roles, selectedDept, selectedStatus])
-
-  // Client-side text search filter
-  const filteredEmployees = useMemo(() => {
-    return employees.filter((emp) => {
-      const emailMatch = emp.email.toLowerCase().includes(search.toLowerCase())
-      const deptName = emp.department?.name || "Unassigned"
-      const areaMatch = deptName.toLowerCase().includes(search.toLowerCase())
-      return emailMatch || areaMatch
-    })
-  }, [employees, search])
+  }, [organizationId, roles, selectedDept, selectedStatus, search, currentPage, pageSize])
 
   // Computed Pagination values
-  const totalItems = filteredEmployees.length
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const paginatedEmployees = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredEmployees.slice(start, start + pageSize)
-  }, [filteredEmployees, currentPage, pageSize])
 
   const hasActiveFilters = search !== "" || selectedDept !== "all" || selectedStatus !== "all"
 
@@ -227,22 +229,15 @@ export function EmployeesTable({
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <span className="size-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
-                    <span>Loading employees...</span>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : paginatedEmployees.length === 0 ? (
+              <TableRowsSkeleton columns={employeeTableSkeletonColumns} />
+            ) : employees.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
                   No employees found matching the active criteria.
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedEmployees.map((w) => (
+              employees.map((w) => (
                 <TableRow
                   key={w.id}
                   className="group cursor-pointer hover:bg-muted/40 transition-colors"

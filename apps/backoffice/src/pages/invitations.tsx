@@ -10,8 +10,8 @@ import { Link, useSearchParams } from "react-router-dom"
 import {
   deleteOrgInvitations,
   deleteSysadminInvitations,
-  listOrgInvitations,
-  listSysadminInvitations,
+  listOrgInvitationsPage,
+  listSysadminInvitationsPage,
   listOrganizations,
   type OrganizationInvite,
   type SysadminInvite,
@@ -129,6 +129,7 @@ export function InvitationsPage() {
   const [sysadminInvites, setSysadminInvites] = useState<SysadminInvite[]>([])
   const [orgInvites, setOrgInvites] = useState<OrganizationInvite[]>([])
   const [organizations, setOrganizations] = useState<OrganizationResponse[]>([])
+  const [totalItems, setTotalItems] = useState(0)
   const [loading, setLoading] = useState(true)
 
   // Pagination
@@ -170,6 +171,7 @@ export function InvitationsPage() {
   const loadInvites = async () => {
     if (activeTab === "organization" && (!selectedOrg || selectedOrg === "none")) {
       setOrgInvites([])
+      setTotalItems(0)
       setSelectedInviteIds([])
       setLoading(false)
       return
@@ -177,15 +179,22 @@ export function InvitationsPage() {
     setLoading(true)
     try {
       if (activeTab === "sysadmin") {
-        const data = await listSysadminInvitations()
-        setSysadminInvites(data)
+        const data = await listSysadminInvitationsPage({
+          page: currentPage,
+          pageSize,
+        })
+        setSysadminInvites(data.items)
+        setTotalItems(data.total)
         setSelectedInviteIds([])
       } else {
-        const data = await listOrgInvitations({
+        const data = await listOrgInvitationsPage({
           organizationId: selectedOrg,
           role: selectedRole,
+          page: currentPage,
+          pageSize,
         })
-        setOrgInvites(data)
+        setOrgInvites(data.items)
+        setTotalItems(data.total)
         setSelectedInviteIds([])
       }
     } catch (err) {
@@ -200,30 +209,12 @@ export function InvitationsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadInvites()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedOrg, selectedRole, isCreating])
-
-  // --- Filter Computations ---
-  const filteredSysadminInvites = useMemo(() => {
-    return sysadminInvites
-  }, [sysadminInvites])
-
-  const filteredOrgInvites = useMemo(() => {
-    return orgInvites
-  }, [orgInvites])
+  }, [activeTab, selectedOrg, selectedRole, currentPage, pageSize, isCreating])
 
   // Pagination computations
-  const totalItems = activeTab === "sysadmin" ? filteredSysadminInvites.length : filteredOrgInvites.length
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  
-  const paginatedSysadminInvites = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredSysadminInvites.slice(start, start + pageSize)
-  }, [filteredSysadminInvites, currentPage, pageSize])
-
-  const paginatedOrgInvites = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredOrgInvites.slice(start, start + pageSize)
-  }, [filteredOrgInvites, currentPage, pageSize])
+  const paginatedSysadminInvites = sysadminInvites
+  const paginatedOrgInvites = orgInvites
   const paginatedInviteIds = useMemo(() => {
     return activeTab === "sysadmin"
       ? paginatedSysadminInvites.map((invite) => invite.id)
@@ -493,7 +484,7 @@ export function InvitationsPage() {
                 Please choose an organization from the dropdown list above to view and manage its invitations.
               </p>
             </div>
-          ) : !loading && (activeTab === "sysadmin" ? filteredSysadminInvites.length : filteredOrgInvites.length) === 0 ? (
+          ) : !loading && (activeTab === "sysadmin" ? sysadminInvites.length : orgInvites.length) === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-300">
               <div className="rounded-full bg-primary/10 p-4 mb-4">
                 <Mail className="size-8 text-primary animate-pulse" />

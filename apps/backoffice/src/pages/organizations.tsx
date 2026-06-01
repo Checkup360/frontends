@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useRef } from "react"
 import { CreateOrganizationDialog } from "@workspace/auth/components/create-organization-dialog"
 import {
   listOrganizations,
+  listOrganizationsPage,
   deleteOrganization,
   type OrganizationResponse,
 } from "@workspace/api"
@@ -37,6 +38,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
+  TableRowsSkeleton,
   TableRow,
 } from "@workspace/ui/components/table"
 import { Link, useNavigate } from "react-router-dom"
@@ -56,9 +58,22 @@ const statusClass: Record<OrganizationStatus, string> = {
     "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 capitalize",
 }
 
+const organizationTableSkeletonColumns = [
+  { lines: ["h-4 w-40", "h-3 w-24"] },
+  { skeletonClassName: "h-4 w-6" },
+  { skeletonClassName: "h-4 w-10" },
+  { skeletonClassName: "h-5 w-20 rounded-full" },
+  {
+    cellClassName: "text-right",
+    skeletonClassName: "ml-auto h-8 w-16",
+  },
+]
+
 export function OrganizationsPage() {
   const navigate = useNavigate()
   const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [overviewOrganizations, setOverviewOrganizations] = useState<Organization[]>([])
+  const [totalItems, setTotalItems] = useState(0)
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteConfirmOrg, setDeleteConfirmOrg] = useState<{
@@ -83,15 +98,30 @@ export function OrganizationsPage() {
   const loadOrganizations = async () => {
     setLoading(true)
     try {
-      // Fetch organizations from backend with status filtering!
-      const orgs = await listOrganizations({ status: selectedStatus })
+      const [pageResult, overviewOrgs] = await Promise.all([
+        listOrganizationsPage({
+          status: selectedStatus,
+          search,
+          page: currentPage,
+          pageSize,
+        }),
+        listOrganizations(),
+      ])
       setOrganizations(
-        orgs.map((org) => ({
+        pageResult.items.map((org) => ({
           ...org,
           status: (org.collaborators_count > 0 ? "Active" : "Pending") as OrganizationStatus,
           collaborators: org.collaborators_count,
         }))
       )
+      setOverviewOrganizations(
+        overviewOrgs.map((org) => ({
+          ...org,
+          status: (org.collaborators_count > 0 ? "Active" : "Pending") as OrganizationStatus,
+          collaborators: org.collaborators_count,
+        }))
+      )
+      setTotalItems(pageResult.total)
     } catch (err) {
       console.error("Failed to load organizations:", err)
       toast.error("Failed to load organizations.")
@@ -105,7 +135,7 @@ export function OrganizationsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadOrganizations()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStatus]) // re-fetch when backend status filter changes!
+  }, [selectedStatus, search, currentPage, pageSize])
 
   const handleDeleteConfirm = async () => {
     if (!deleteConfirmOrg) return
@@ -121,22 +151,8 @@ export function OrganizationsPage() {
     }
   }
 
-  // Client-side text search filter (matches name or slug)
-  const filteredOrganizations = useMemo(() => {
-    return organizations.filter((org) => {
-      const nameMatch = org.name.toLowerCase().includes(search.toLowerCase())
-      const slugMatch = org.slug.toLowerCase().includes(search.toLowerCase())
-      return nameMatch || slugMatch
-    })
-  }, [organizations, search])
-
   // Computed Pagination values
-  const totalItems = filteredOrganizations.length
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const paginatedOrganizations = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredOrganizations.slice(start, start + pageSize)
-  }, [filteredOrganizations, currentPage, pageSize])
 
   const hasActiveFilters = search !== "" || selectedStatus !== "all"
 
@@ -151,25 +167,25 @@ export function OrganizationsPage() {
     return [
       {
         label: "Total",
-        value: organizations.length.toString(),
+        value: overviewOrganizations.length.toString(),
         hint: "organizations registered",
       },
       {
         label: "Active",
-        value: organizations
+        value: overviewOrganizations
           .filter((org) => org.status === "Active")
           .length.toString(),
         hint: "with users registered",
       },
       {
         label: "Pending",
-        value: organizations
+        value: overviewOrganizations
           .filter((org) => org.status === "Pending")
           .length.toString(),
         hint: "awaiting user registration",
       },
     ]
-  }, [organizations])
+  }, [overviewOrganizations])
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 animate-in fade-in duration-300">
@@ -292,18 +308,10 @@ export function OrganizationsPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-32 text-center text-muted-foreground"
-                  >
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <span className="size-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
-                      <span>Loading organizations...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : paginatedOrganizations.length === 0 ? (
+                <TableRowsSkeleton
+                  columns={organizationTableSkeletonColumns}
+                />
+              ) : organizations.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={5}
@@ -313,7 +321,7 @@ export function OrganizationsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedOrganizations.map((org) => (
+                organizations.map((org) => (
                   <TableRow
                     key={org.id}
                     className="group cursor-pointer hover:bg-muted/40 transition-colors"

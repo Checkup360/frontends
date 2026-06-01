@@ -346,6 +346,27 @@ export interface OrganizationEmployee {
   status: string
 }
 
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  page_size: number
+}
+
+function paginatedFromHeaders<T>(
+  response: Response,
+  items: T[],
+  fallbackPage: number,
+  fallbackPageSize: number
+): PaginatedResponse<T> {
+  return {
+    items,
+    total: Number(response.headers.get("X-Total-Count") ?? items.length),
+    page: Number(response.headers.get("X-Page") ?? fallbackPage),
+    page_size: Number(response.headers.get("X-Page-Size") ?? fallbackPageSize),
+  }
+}
+
 export async function createInvite(
   payload: InviteCreatePayload
 ): Promise<InviteCreateResponse | null> {
@@ -482,6 +503,50 @@ export async function listOrganizations(filters?: {
   }
 }
 
+export async function listOrganizationsPage(filters: {
+  status?: string
+  search?: string
+  page: number
+  pageSize: number
+}): Promise<PaginatedResponse<OrganizationResponse>> {
+  try {
+    const queryParams = new URLSearchParams()
+    if (filters.status && filters.status !== "all") {
+      queryParams.append("status", filters.status.toLowerCase())
+    }
+    if (filters.search?.trim()) {
+      queryParams.append("search", filters.search.trim())
+    }
+    queryParams.append("page", filters.page.toString())
+    queryParams.append("page_size", filters.pageSize.toString())
+
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizations}?${queryParams.toString()}`,
+      { credentials: "include" }
+    )
+
+    if (response.status === 401 || !response.ok) {
+      return {
+        items: [],
+        total: 0,
+        page: filters.page,
+        page_size: filters.pageSize,
+      }
+    }
+
+    const items = (await response.json()) as OrganizationResponse[]
+    return paginatedFromHeaders(response, items, filters.page, filters.pageSize)
+  } catch (error) {
+    console.error("Error listing paginated organizations:", error)
+    return {
+      items: [],
+      total: 0,
+      page: filters.page,
+      page_size: filters.pageSize,
+    }
+  }
+}
+
 export async function getOrganizationSummary(
   organizationId: string
 ): Promise<OrganizationSummaryResponse | null> {
@@ -538,6 +603,60 @@ export async function listOrganizationEmployees(
   } catch (error) {
     console.error("Error listing organization employees:", error)
     return []
+  }
+}
+
+export async function listOrganizationEmployeesPage(
+  organizationId: string,
+  roles: OrganizationEmployeeRole[] | undefined,
+  filters: {
+    departmentId?: string
+    status?: string
+    search?: string
+    page: number
+    pageSize: number
+  }
+): Promise<PaginatedResponse<OrganizationEmployee>> {
+  try {
+    const url = new URL(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationEmployees(organizationId)}`
+    )
+    roles?.forEach((role) => url.searchParams.append("role", role))
+    if (filters.departmentId) {
+      url.searchParams.append("department_id", filters.departmentId)
+    }
+    if (filters.status) {
+      url.searchParams.append("status", filters.status)
+    }
+    if (filters.search?.trim()) {
+      url.searchParams.append("search", filters.search.trim())
+    }
+    url.searchParams.append("page", filters.page.toString())
+    url.searchParams.append("page_size", filters.pageSize.toString())
+
+    const response = await fetchWithAuth(url.toString(), {
+      credentials: "include",
+    })
+
+    if (response.status === 401 || !response.ok) {
+      return {
+        items: [],
+        total: 0,
+        page: filters.page,
+        page_size: filters.pageSize,
+      }
+    }
+
+    const items = (await response.json()) as OrganizationEmployee[]
+    return paginatedFromHeaders(response, items, filters.page, filters.pageSize)
+  } catch (error) {
+    console.error("Error listing paginated organization employees:", error)
+    return {
+      items: [],
+      total: 0,
+      page: filters.page,
+      page_size: filters.pageSize,
+    }
   }
 }
 
@@ -924,6 +1043,48 @@ export async function listOrgInvitations(filters?: {
   }
 }
 
+export async function listOrgInvitationsPage(filters: {
+  organizationId?: string
+  role?: string
+  page: number
+  pageSize: number
+}): Promise<PaginatedResponse<OrganizationInvite>> {
+  try {
+    const queryParams = new URLSearchParams()
+    if (filters.organizationId && filters.organizationId !== "all") {
+      queryParams.append("organization_id", filters.organizationId)
+    }
+    if (filters.role && filters.role !== "all") {
+      queryParams.append("role", filters.role.toLowerCase())
+    }
+    queryParams.append("page", filters.page.toString())
+    queryParams.append("page_size", filters.pageSize.toString())
+
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.invites.organization}?${queryParams.toString()}`,
+      { method: "GET", credentials: "include" }
+    )
+    if (!response.ok) {
+      return {
+        items: [],
+        total: 0,
+        page: filters.page,
+        page_size: filters.pageSize,
+      }
+    }
+    const items = (await response.json()) as OrganizationInvite[]
+    return paginatedFromHeaders(response, items, filters.page, filters.pageSize)
+  } catch (error) {
+    console.error("Error listing paginated organization invitations:", error)
+    return {
+      items: [],
+      total: 0,
+      page: filters.page,
+      page_size: filters.pageSize,
+    }
+  }
+}
+
 export async function deleteOrgInvitations(ids: string[]): Promise<number> {
   const response = await fetchWithAuth(
     `${resolveApiBaseUrl()}${apiRoutes.invites.organization}`,
@@ -959,6 +1120,43 @@ export async function listSysadminInvitations(): Promise<SysadminInvite[]> {
   } catch (error) {
     console.error("Error listing sysadmin invitations:", error)
     return []
+  }
+}
+
+export async function listSysadminInvitationsPage(filters: {
+  page: number
+  pageSize: number
+}): Promise<PaginatedResponse<SysadminInvite>> {
+  try {
+    const queryParams = new URLSearchParams()
+    queryParams.append("page", filters.page.toString())
+    queryParams.append("page_size", filters.pageSize.toString())
+
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.invites.admin}?${queryParams.toString()}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    )
+    if (!response.ok) {
+      return {
+        items: [],
+        total: 0,
+        page: filters.page,
+        page_size: filters.pageSize,
+      }
+    }
+    const items = (await response.json()) as SysadminInvite[]
+    return paginatedFromHeaders(response, items, filters.page, filters.pageSize)
+  } catch (error) {
+    console.error("Error listing paginated sysadmin invitations:", error)
+    return {
+      items: [],
+      total: 0,
+      page: filters.page,
+      page_size: filters.pageSize,
+    }
   }
 }
 
