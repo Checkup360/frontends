@@ -4,7 +4,7 @@ import { SysadminInvitationForm } from "@workspace/auth/components/sysadmin-invi
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card"
 import { Stepper } from "@workspace/ui/components/stepper"
-import { useSearchParams } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import {
   listOrgInvitations,
   listSysadminInvitations,
@@ -92,9 +92,12 @@ export function InvitationsPage() {
       ? "organization"
       : "sysadmin"
   }, [searchParams])
+  const shouldStartCreating = searchParams.get("create") === "1"
 
   // --- Views Switcher ---
-  const [isCreating, setIsCreating] = useState(false)
+  const [isCreating, setIsCreating] = useState(
+    initialType === "organization" && shouldStartCreating
+  )
 
   // --- Creation Stepper Flow State ---
   const [selectedType, setSelectedType] = useState<SelectedType>(
@@ -105,8 +108,12 @@ export function InvitationsPage() {
   const currentStep = completed ? 3 : selectedType ? 2 : 1
 
   // --- Listing Filters and Data State ---
-  const [activeTab, setActiveTab] = useState<"sysadmin" | "organization">("sysadmin")
-  const [selectedOrg, setSelectedOrg] = useState("")
+  const [activeTab, setActiveTab] = useState<"sysadmin" | "organization">(
+    initialType
+  )
+  const [selectedOrg, setSelectedOrg] = useState(
+    searchParams.get("organizationId") ?? ""
+  )
   const [selectedRole, setSelectedRole] = useState("all")
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
@@ -523,7 +530,16 @@ export function InvitationsPage() {
                             {invite.email ?? <span className="text-muted-foreground/60">— (Public Link)</span>}
                           </TableCell>
                           <TableCell className="text-muted-foreground font-medium">
-                            {invite.organization_name ?? "General Workspace"}
+                            {invite.organization_id ? (
+                              <Link
+                                to={`/organizations/${invite.organization_id}`}
+                                className="text-foreground transition-colors hover:text-primary"
+                              >
+                                {invite.organization_name ?? "General Workspace"}
+                              </Link>
+                            ) : (
+                              (invite.organization_name ?? "General Workspace")
+                            )}
                           </TableCell>
                           <TableCell>
                             <Badge

@@ -320,6 +320,15 @@ export interface OrganizationResponse {
   collaborators_count: number
 }
 
+export interface OrganizationSummaryResponse {
+  id: string
+  name: string
+  slug: string
+  total_members: number
+  total_employees: number
+  total_admins: number
+}
+
 export interface DepartmentResponse {
   id: string
   organization_id: string
@@ -470,6 +479,29 @@ export async function listOrganizations(filters?: {
   } catch (error) {
     console.error("Error listing organizations:", error)
     return []
+  }
+}
+
+export async function getOrganizationSummary(
+  organizationId: string
+): Promise<OrganizationSummaryResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationSummary(organizationId)}`,
+      {
+        credentials: "include",
+      }
+    )
+
+    if (response.status === 401) return null
+    if (!response.ok) {
+      return null
+    }
+
+    return (await response.json()) as OrganizationSummaryResponse
+  } catch (error) {
+    console.error("Error loading organization summary:", error)
+    return null
   }
 }
 
@@ -908,4 +940,3 @@ export async function listSysadminInvitations(): Promise<SysadminInvite[]> {
     return []
   }
 }
-

@@ -50,6 +50,10 @@ export function BackofficeShell() {
     : undefined
 
   const getTitleForPath = () => {
+    if (/^\/organizations\/[^/]+$/.test(pathname)) {
+      return "Organization"
+    }
+
     switch (pathname) {
       case "/":
         return "Organizations"

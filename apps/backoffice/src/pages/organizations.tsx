@@ -39,7 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Link2, Plus, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react"
 
 type OrganizationStatus = "Active" | "Pending"
@@ -57,6 +57,7 @@ const statusClass: Record<OrganizationStatus, string> = {
 }
 
 export function OrganizationsPage() {
+  const navigate = useNavigate()
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -309,7 +310,8 @@ export function OrganizationsPage() {
                 paginatedOrganizations.map((org) => (
                   <TableRow
                     key={org.id}
-                    className="group hover:bg-muted/40 transition-colors"
+                    className="group cursor-pointer hover:bg-muted/40 transition-colors"
+                    onClick={() => navigate(`/organizations/${org.id}`)}
                   >
                     <TableCell>
                       <div>
@@ -339,6 +341,7 @@ export function OrganizationsPage() {
                           variant="ghost"
                           size="icon-sm"
                           title={`Create invitation for ${org.name}`}
+                          onClick={(event) => event.stopPropagation()}
                         >
                           <Link
                             to={`/invitations?type=organization&organizationId=${encodeURIComponent(
@@ -352,9 +355,10 @@ export function OrganizationsPage() {
                           variant="ghost"
                           size="icon-sm"
                           title="Delete organization"
-                          onClick={() =>
+                          onClick={(event) => {
+                            event.stopPropagation()
                             setDeleteConfirmOrg({ id: org.id, name: org.name })
-                          }
+                          }}
                         >
                           <Trash2 className="size-4 text-destructive" />
                         </Button>
