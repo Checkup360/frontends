@@ -5,7 +5,6 @@ import {
   type WorkspaceShellNavItem,
 } from "@workspace/components/components/workspace-shell"
 import {
-  Building2,
   Folders,
   LayoutDashboard,
   MailPlus,
@@ -32,12 +31,6 @@ const navigation: WorkspaceShellNavItem[] = [
 ]
 
 const secondaryNavigation: WorkspaceShellNavItem[] = [
-  {
-    title: "Organization",
-    url: "/organization",
-    icon: Building2,
-    to: "/organization",
-  },
   { title: "Settings", url: "/settings", icon: Settings, to: "/settings" },
 ]
 
@@ -74,8 +67,6 @@ export function DashboardShell() {
         return "Invite people"
       case "/departments":
         return "Departments"
-      case "/organization":
-        return "Organization"
       case "/settings":
         return "Settings"
       default:

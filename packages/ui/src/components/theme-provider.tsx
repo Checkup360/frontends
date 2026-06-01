@@ -76,6 +76,19 @@ function isEditableTarget(target: EventTarget | null) {
   return false
 }
 
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop()?.split(";").shift() || null
+  return null
+}
+
+function setCookie(name: string, value: string) {
+  if (typeof document === "undefined") return
+  document.cookie = `${name}=${value}; path=/; max-age=31536000`
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "system",
@@ -84,7 +97,11 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setThemeState] = React.useState<Theme>(() => {
-    const storedTheme = localStorage.getItem(storageKey)
+    const cookieTheme = getCookie("theme")
+    if (isTheme(cookieTheme)) {
+      return cookieTheme
+    }
+    const storedTheme = typeof localStorage !== "undefined" ? localStorage.getItem(storageKey) : null
     if (isTheme(storedTheme)) {
       return storedTheme
     }
@@ -94,7 +111,10 @@ export function ThemeProvider({
 
   const setTheme = React.useCallback(
     (nextTheme: Theme) => {
-      localStorage.setItem(storageKey, nextTheme)
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(storageKey, nextTheme)
+      }
+      setCookie("theme", nextTheme)
       setThemeState(nextTheme)
     },
     [storageKey]
@@ -166,7 +186,10 @@ export function ThemeProvider({
                 ? "light"
                 : "dark"
 
-        localStorage.setItem(storageKey, nextTheme)
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem(storageKey, nextTheme)
+        }
+        setCookie("theme", nextTheme)
         return nextTheme
       })
     }
@@ -202,6 +225,26 @@ export function ThemeProvider({
       window.removeEventListener("storage", handleStorageChange)
     }
   }, [defaultTheme, storageKey])
+
+  // Sync theme from cookie when window gets focus (for seamless multi-port switching)
+  React.useEffect(() => {
+    const syncTheme = () => {
+      const cookieTheme = getCookie("theme")
+      if (isTheme(cookieTheme) && cookieTheme !== theme) {
+        setThemeState(cookieTheme)
+      }
+    }
+    window.addEventListener("focus", syncTheme)
+    return () => window.removeEventListener("focus", syncTheme)
+  }, [theme])
+
+  // Proactively set cookie if not present
+  React.useEffect(() => {
+    const cookieTheme = getCookie("theme")
+    if (!cookieTheme) {
+      setCookie("theme", theme)
+    }
+  }, [theme])
 
   const value = React.useMemo(
     () => ({

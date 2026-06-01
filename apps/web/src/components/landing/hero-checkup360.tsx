@@ -8,10 +8,13 @@ import {
   LogIn,
   ShieldCheck,
   ArrowRight,
+  Sun,
+  Moon,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { getRedirectUrlByUserRole } from "@workspace/api"
 import type { AuthMeResponse } from "@workspace/api"
+import { useTheme } from "@workspace/ui/components/theme-provider"
 
 type HeroCheckup360Props = {
   className?: string
@@ -38,8 +41,20 @@ const heroCards = [
 ]
 
 export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
+  const { theme, setTheme } = useTheme()
   const isAdminOrSysadmin =
     user && (user.is_sysadmin || user.membership?.roles?.includes("admin"))
+
+  const toggleTheme = () => {
+    const resolvedTheme =
+      theme === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+        : theme
+
+    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+  }
 
   const getButtonLabel = () => {
     if (user?.is_sysadmin) return "Backoffice"
@@ -52,7 +67,22 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
   }
 
   return (
-    <div className={cn("bg-background", className)}>
+    <div className={cn("relative bg-background", className)}>
+      {/* Floating Theme Toggle on Landing page */}
+      <div className="absolute top-4 right-4 z-50">
+        <button
+          onClick={toggleTheme}
+          className="flex size-10 items-center justify-center rounded-lg border border-border/40 bg-background/80 text-muted-foreground shadow-lg backdrop-blur-md transition-all hover:bg-muted hover:text-foreground"
+          aria-label="Toggle color theme"
+        >
+          {theme === "dark" ? (
+            <Sun className="size-5 animate-in spin-in-45 duration-300" />
+          ) : (
+            <Moon className="size-5 animate-in spin-in-45 duration-300" />
+          )}
+        </button>
+      </div>
+
       <section className="overflow-hidden py-20 md:min-h-[calc(100svh-65px)] md:py-28">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="relative isolate grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
