@@ -1,5 +1,9 @@
 import { useState, useEffect, type FormEvent } from "react"
-import { createOrgInvitation, listOrganizations } from "@workspace/api"
+import {
+  createOrgInvitation,
+  listDepartments,
+  listOrganizations,
+} from "@workspace/api"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -19,7 +23,12 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react"
-import type { OrganizationResponse, OrgRole, InviteError } from "@workspace/api"
+import type {
+  DepartmentResponse,
+  OrganizationResponse,
+  OrgRole,
+  InviteError,
+} from "@workspace/api"
 
 interface OrgInvitationFormProps {
   onBack?: () => void
@@ -39,13 +48,16 @@ export function OrgInvitationForm({
   description = "Create an invitation for a user in an existing organization.",
 }: OrgInvitationFormProps) {
   const [organizations, setOrganizations] = useState<OrganizationResponse[]>([])
+  const [departments, setDepartments] = useState<DepartmentResponse[]>([])
   const [selected, setSelected] = useState<OrganizationResponse | null>(null)
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState("")
   const [role, setRole] = useState<OrgRole>("member")
   const [email, setEmail] = useState("")
   const [maxUses, setMaxUses] = useState("1")
   const [expiresInHours, setExpiresInHours] = useState("24")
   const [loading, setLoading] = useState(false)
   const [orgsLoading, setOrgsLoading] = useState(true)
+  const [departmentsLoading, setDepartmentsLoading] = useState(false)
   const [orgsError, setOrgsError] = useState("")
   const [error, setError] = useState<InviteError | null>(null)
   const [success, setSuccess] = useState(false)
@@ -57,6 +69,7 @@ export function OrgInvitationForm({
   const [copied, setCopied] = useState(false)
 
   const isAdminRole = role === "admin"
+  const isMemberRole = role === "member"
   const isEmailFilled = email.trim().length > 0
   const shouldBeSingleUse = isAdminRole || isEmailFilled
   const selectedOrganization = fixedOrganization ?? selected
@@ -91,6 +104,24 @@ export function OrgInvitationForm({
     }
     fetchOrganizations()
   }, [fixedOrganization, initialOrganizationId])
+
+  useEffect(() => {
+    const organizationId = selectedOrganization?.id
+    setSelectedDepartmentId("")
+    setDepartments([])
+    if (!organizationId) return
+
+    const fetchDepartments = async () => {
+      setDepartmentsLoading(true)
+      try {
+        setDepartments(await listDepartments(organizationId))
+      } finally {
+        setDepartmentsLoading(false)
+      }
+    }
+
+    void fetchDepartments()
+  }, [selectedOrganization?.id])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -134,6 +165,10 @@ export function OrgInvitationForm({
         !fixedOrganization
           ? {
               organization_id: selectedOrganization.id,
+              department_id:
+                isMemberRole && selectedDepartmentId
+                  ? selectedDepartmentId
+                  : undefined,
               role,
               email: email.trim() || undefined,
               max_uses: shouldBeSingleUse ? 1 : maxUsesNum,
@@ -141,6 +176,10 @@ export function OrgInvitationForm({
             }
           : {
               role,
+              department_id:
+                isMemberRole && selectedDepartmentId
+                  ? selectedDepartmentId
+                  : undefined,
               email: email.trim() || undefined,
               max_uses: shouldBeSingleUse ? 1 : maxUsesNum,
               expires_in_hours: expiresInHoursNum,
@@ -164,6 +203,7 @@ export function OrgInvitationForm({
         setSelected(null)
       }
       setRole("member")
+      setSelectedDepartmentId("")
       setEmail("")
       setMaxUses("1")
       setExpiresInHours("24")
@@ -193,6 +233,7 @@ export function OrgInvitationForm({
       setSelected(null)
     }
     setRole("member")
+    setSelectedDepartmentId("")
     setEmail("")
     setMaxUses("1")
     setExpiresInHours("24")
@@ -373,6 +414,49 @@ export function OrgInvitationForm({
               </div>
             )}
           </div>
+
+          {isMemberRole && (
+            <div className="space-y-2">
+              <Label htmlFor="department">
+                Department{" "}
+                <span className="font-normal text-muted-foreground">
+                  (optional)
+                </span>
+              </Label>
+              <Select
+                value={selectedDepartmentId}
+                onValueChange={setSelectedDepartmentId}
+                disabled={
+                  loading ||
+                  departmentsLoading ||
+                  !selectedOrganization ||
+                  departments.length === 0
+                }
+              >
+                <SelectTrigger id="department">
+                  <SelectValue
+                    placeholder={
+                      departmentsLoading
+                        ? "Loading departments..."
+                        : "Select department"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((department) => (
+                    <SelectItem key={department.id} value={department.id}>
+                      {department.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!departmentsLoading && departments.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Members without a department will appear as Unassigned.
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="email">

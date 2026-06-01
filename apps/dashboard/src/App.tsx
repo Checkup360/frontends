@@ -9,6 +9,7 @@ import { DashboardShell } from "@/components/dashboard-shell"
 import { DashboardPage } from "@/pages/dashboard"
 import { EmployeesPage } from "@/pages/employees"
 import { InvitePeoplePage } from "@/pages/invite-people"
+import { OrganizationPage } from "@/pages/organization"
 import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
@@ -62,8 +63,6 @@ function NotFound() {
   )
 }
 
-
-
 export function App() {
   return (
     <ThemeProvider>
@@ -76,7 +75,7 @@ export function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/employees" element={<EmployeesPage />} />
               <Route path="/people/invite" element={<InvitePeoplePage />} />
-              <Route path="/organization" element={<NotFound />} />
+              <Route path="/organization" element={<OrganizationPage />} />
               <Route path="/settings" element={<NotFound />} />
               <Route path="*" element={<NotFound />} />
             </Route>
@@ -86,4 +85,3 @@ export function App() {
     </ThemeProvider>
   )
 }
-

@@ -30,6 +30,7 @@ export interface CreateSysadminInvitationPayload {
 
 export interface CreateOrgInvitationPayload {
   organization_id?: string
+  department_id?: string
   role: OrgRole
   email?: string
   max_uses?: number
@@ -59,8 +60,10 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
 
   if (maybeMembership !== null && typeof maybeMembership === "object") {
     membership = {
-      organization_id: (maybeMembership as { organization_id?: unknown }).organization_id as string,
-      organization_name: (maybeMembership as { organization_name?: unknown }).organization_name as string,
+      organization_id: (maybeMembership as { organization_id?: unknown })
+        .organization_id as string,
+      organization_name: (maybeMembership as { organization_name?: unknown })
+        .organization_name as string,
       roles: (maybeMembership as { roles?: unknown }).roles as string[],
     }
   }
@@ -73,10 +76,13 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
   }
 }
 
-export function parseOAuthAuthorizeResponse(payload: unknown): OAuthAuthorizeResponse | null {
+export function parseOAuthAuthorizeResponse(
+  payload: unknown
+): OAuthAuthorizeResponse | null {
   if (!payload || typeof payload !== "object") return null
 
-  const maybeUrl = (payload as { authorization_url?: unknown }).authorization_url
+  const maybeUrl = (payload as { authorization_url?: unknown })
+    .authorization_url
   if (typeof maybeUrl !== "string" || maybeUrl.length === 0) return null
 
   return { authorization_url: maybeUrl }
@@ -93,22 +99,29 @@ export type RedeemResponse = {
   ok: boolean
 }
 
-export function parseInviteCreateResponse(payload: unknown): InviteCreateResponse | null {
+export function parseInviteCreateResponse(
+  payload: unknown
+): InviteCreateResponse | null {
   if (!payload || typeof payload !== "object") return null
 
   const maybeToken = (payload as { token?: unknown }).token
   const maybeUrl = (payload as { invite_url?: unknown }).invite_url
 
-  if (typeof maybeToken !== "string" || typeof maybeUrl !== "string") return null
+  if (typeof maybeToken !== "string" || typeof maybeUrl !== "string")
+    return null
 
   return { token: maybeToken, invite_url: maybeUrl }
 }
 
-export function parseInviteMetadataResponse(payload: unknown): InviteMetadataResponse | null {
+export function parseInviteMetadataResponse(
+  payload: unknown
+): InviteMetadataResponse | null {
   if (!payload || typeof payload !== "object") return null
   const o = payload as Record<string, unknown>
-  if (typeof o.organization_id !== "string" && o.organization_id !== null) return null
-  if (typeof o.organization_name !== "string" && o.organization_name !== null) return null
+  if (typeof o.organization_id !== "string" && o.organization_id !== null)
+    return null
+  if (typeof o.organization_name !== "string" && o.organization_name !== null)
+    return null
   if (typeof o.role !== "string" && o.role !== null) return null
   if (typeof o.is_sysadmin !== "boolean") return null
   return {

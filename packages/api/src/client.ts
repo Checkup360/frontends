@@ -318,12 +318,20 @@ export interface OrganizationResponse {
   collaborators_count: number
 }
 
+export interface DepartmentResponse {
+  id: string
+  organization_id: string
+  name: string
+  slug: string
+}
+
 export type OrganizationEmployeeRole = "admin" | "member"
 
 export interface OrganizationEmployee {
   id: string
   email: string
   roles: OrganizationEmployeeRole[]
+  department: DepartmentResponse | null
 }
 
 export async function createInvite(
@@ -482,8 +490,174 @@ export async function listOrganizationEmployees(
   }
 }
 
+export async function listDepartments(
+  organizationId: string
+): Promise<DepartmentResponse[]> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationDepartments(organizationId)}`,
+      {
+        credentials: "include",
+      }
+    )
+
+    if (response.status === 401) return []
+    if (!response.ok) return []
+    return (await response.json()) as DepartmentResponse[]
+  } catch (error) {
+    console.error("Error listing departments:", error)
+    return []
+  }
+}
+
+export async function createDepartment(
+  organizationId: string,
+  payload: { name: string }
+): Promise<
+  | { success: DepartmentResponse; error?: never }
+  | { success?: never; error: { code: string; message: string } }
+> {
+  return mutateDepartment(
+    apiRoutes.organizationDepartments(organizationId),
+    "POST",
+    payload
+  )
+}
+
+export async function updateDepartment(
+  organizationId: string,
+  departmentId: string,
+  payload: { name: string }
+): Promise<
+  | { success: DepartmentResponse; error?: never }
+  | { success?: never; error: { code: string; message: string } }
+> {
+  return mutateDepartment(
+    apiRoutes.organizationDepartment(organizationId, departmentId),
+    "PATCH",
+    payload
+  )
+}
+
+export async function deleteDepartment(
+  organizationId: string,
+  departmentId: string
+): Promise<{ success: true } | { error: { code: string; message: string } }> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationDepartment(organizationId, departmentId)}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    )
+
+    if (response.ok) return { success: true }
+    const detail = await readErrorDetail(response)
+    return {
+      error: { code: detail, message: getDepartmentErrorMessage(detail) },
+    }
+  } catch (error) {
+    console.error("Error deleting department:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: getDepartmentErrorMessage("network_error"),
+      },
+    }
+  }
+}
+
+export async function assignEmployeeDepartment(
+  organizationId: string,
+  userId: string,
+  departmentId: string | null
+): Promise<OrganizationEmployee | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationEmployeeDepartment(organizationId, userId)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ department_id: departmentId }),
+      }
+    )
+
+    if (!response.ok) return null
+    return (await response.json()) as OrganizationEmployee
+  } catch (error) {
+    console.error("Error assigning employee department:", error)
+    return null
+  }
+}
+
+async function mutateDepartment(
+  path: string,
+  method: "POST" | "PATCH",
+  payload: { name: string }
+): Promise<
+  | { success: DepartmentResponse; error?: never }
+  | { success?: never; error: { code: string; message: string } }
+> {
+  try {
+    const response = await fetchWithAuth(`${resolveApiBaseUrl()}${path}`, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const detail = await readErrorDetail(response)
+      return {
+        error: {
+          code: detail,
+          message: getDepartmentErrorMessage(detail),
+        },
+      }
+    }
+
+    return { success: (await response.json()) as DepartmentResponse }
+  } catch (error) {
+    console.error("Error saving department:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: getDepartmentErrorMessage("network_error"),
+      },
+    }
+  }
+}
+
+async function readErrorDetail(response: Response): Promise<string> {
+  try {
+    const data = (await response.json()) as { detail?: string }
+    return data.detail || "unknown_error"
+  } catch {
+    return "unknown_error"
+  }
+}
+
+function getDepartmentErrorMessage(code: string): string {
+  const messages: Record<string, string> = {
+    department_slug_already_exists:
+      "A department with that name already exists.",
+    department_in_use: "This department still has assigned employees.",
+    department_not_found: "Department not found.",
+    forbidden: "You do not have permission to manage this organization.",
+    network_error: "Network error. Please try again.",
+    unknown_error: "Failed to save department. Please try again.",
+  }
+  return messages[code] || "An error occurred. Please try again."
+}
+
 function getInvitationErrorMessage(code: string): string {
   const messages: Record<string, string> = {
+    department_required: "Select a department for member invitations.",
+    department_not_allowed_for_admin:
+      "Admin invitations do not use departments.",
+    department_not_found: "Department not found.",
     organization_not_found: "Organization not found.",
     role_requires_organization: "Role requires an organization to be selected.",
     invalid_invite: "Invalid invitation link.",

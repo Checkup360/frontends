@@ -59,7 +59,7 @@ export function EmployeesTable({
         employees.map((employee) => ({
           id: employee.id,
           email: employee.email,
-          area: "Unassigned",
+          area: employee.department?.name ?? "Unassigned",
           score: "N/A",
           risk: "Pending",
           lastCheck: "Not assessed",
