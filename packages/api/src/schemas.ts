@@ -22,6 +22,20 @@ export type InviteCreateResponse = {
 
 export type OrgRole = "admin" | "member"
 
+export type OrganizationInvite = {
+  id: string
+  token: string
+  email: string | null
+  role: string | null
+  department_id: string | null
+  department_name: string | null
+  max_uses: number
+  uses: number
+  expires_at: string
+  invite_url: string
+}
+
+
 export interface CreateSysadminInvitationPayload {
   email?: string
   expires_in_hours?: number

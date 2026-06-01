@@ -10,6 +10,7 @@ import {
   type InviteError,
   type InviteCreateResponse,
   type InviteMetadataResponse,
+  type OrganizationInvite,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -856,3 +857,21 @@ export async function deleteOrganization(id: string): Promise<void> {
     throw new Error("Failed to delete organization")
   }
 }
+
+export async function listOrgInvitations(): Promise<OrganizationInvite[]> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.invites.organization}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    )
+    if (!response.ok) return []
+    return (await response.json()) as OrganizationInvite[]
+  } catch (error) {
+    console.error("Error listing organization invitations:", error)
+    return []
+  }
+}
+
