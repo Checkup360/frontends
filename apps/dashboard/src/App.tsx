@@ -7,6 +7,7 @@ import { Link, Outlet, Route, Routes } from "react-router-dom"
 import { DashboardLoadingSkeleton } from "@/components/dashboard-loading-skeleton"
 import { DashboardShell } from "@/components/dashboard-shell"
 import { DashboardPage } from "@/pages/dashboard"
+import { DepartmentsPage } from "@/pages/departments"
 import { EmployeesPage } from "@/pages/employees"
 import { InvitePeoplePage } from "@/pages/invite-people"
 import { OrganizationPage } from "@/pages/organization"
@@ -75,6 +76,7 @@ export function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/employees" element={<EmployeesPage />} />
               <Route path="/people/invite" element={<InvitePeoplePage />} />
+              <Route path="/departments" element={<DepartmentsPage />} />
               <Route path="/organization" element={<OrganizationPage />} />
               <Route path="/settings" element={<NotFound />} />
               <Route path="*" element={<NotFound />} />
