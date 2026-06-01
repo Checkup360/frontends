@@ -9,6 +9,7 @@ import { DashboardShell } from "@/components/dashboard-shell"
 import { DashboardPage } from "@/pages/dashboard"
 import { DepartmentsPage } from "@/pages/departments"
 import { EmployeesPage } from "@/pages/employees"
+import { EmployeeDetailPage } from "@/pages/employee-detail"
 import { InvitePeoplePage } from "@/pages/invite-people"
 import { OrganizationPage } from "@/pages/organization"
 import { ThemeProvider } from "./components/theme-provider"
@@ -75,6 +76,7 @@ export function App() {
             <Route element={<DashboardShell />}>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/employees" element={<EmployeesPage />} />
+              <Route path="/employees/:id" element={<EmployeeDetailPage />} />
               <Route path="/people/invite" element={<InvitePeoplePage />} />
               <Route path="/departments" element={<DepartmentsPage />} />
               <Route path="/organization" element={<OrganizationPage />} />

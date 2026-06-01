@@ -1,12 +1,8 @@
 import { listOrganizationEmployees } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
-import { Badge } from "@workspace/ui/components/badge"
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@workspace/ui/components/card"
 import { Activity, Building2, ShieldCheck, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
@@ -18,7 +14,6 @@ export function EmployeesPage() {
   const { user } = useCurrentUser()
   const organizationId = user?.membership?.organization_id
   const [totalEmployees, setTotalEmployees] = useState<string>("...")
-  const [totalAdmins, setTotalAdmins] = useState<string>("...")
 
   useEffect(() => {
     let active = true
@@ -26,16 +21,11 @@ export function EmployeesPage() {
     async function loadSummary() {
       if (!organizationId) {
         setTotalEmployees("0")
-        setTotalAdmins("0")
         return
       }
-      const [members, admins] = await Promise.all([
-        listOrganizationEmployees(organizationId, ["member"]),
-        listOrganizationEmployees(organizationId, ["admin"]),
-      ])
+      const members = await listOrganizationEmployees(organizationId, ["member"])
       if (!active) return
       setTotalEmployees(members.length.toString())
-      setTotalAdmins(admins.length.toString())
     }
 
     void loadSummary()
@@ -75,36 +65,8 @@ export function EmployeesPage() {
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_380px]">
+      <section>
         <EmployeesTable organizationId={organizationId} />
-        <Card>
-          <CardHeader>
-            <CardTitle>Employee access</CardTitle>
-            <CardDescription>
-              Front-end states for role assignment and rollout.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
-              <div>
-                <p className="text-sm font-medium">Org admins</p>
-                <p className="text-xs text-muted-foreground">
-                  Can invite and manage people
-                </p>
-              </div>
-              <Badge variant="secondary">{totalAdmins} users</Badge>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
-              <div>
-                <p className="text-sm font-medium">Employees</p>
-                <p className="text-xs text-muted-foreground">
-                  Can complete personal checkups
-                </p>
-              </div>
-              <Badge variant="secondary">{totalEmployees} users</Badge>
-            </div>
-          </CardContent>
-        </Card>
       </section>
 
       <AreaScores />

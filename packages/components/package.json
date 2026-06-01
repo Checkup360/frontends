@@ -11,7 +11,8 @@
     "@workspace/auth": "workspace:*",
     "@workspace/ui": "workspace:*",
     "lucide-react": "^1.11.0",
-    "react": "^19.2.4"
+    "react": "^19.2.4",
+    "recharts": "^2.10.3"
   },
   "devDependencies": {
     "@types/react": "^19.2.10",

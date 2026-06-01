@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table"
 import { useEffect, useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 type Worker = {
   id: string
@@ -39,6 +40,7 @@ export function EmployeesTable({
   organizationId,
   roles = MEMBER_ROLES,
 }: EmployeesTableProps) {
+  const navigate = useNavigate()
   const [q, setQ] = useState("")
   const [workers, setWorkers] = useState<Worker[]>([])
   const [loading, setLoading] = useState(true)
@@ -131,7 +133,11 @@ export function EmployeesTable({
               </TableRow>
             ) : (
               filtered.map((w) => (
-                <TableRow key={w.id}>
+                <TableRow
+                  key={w.id}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => navigate(`/employees/${w.id}`)}
+                >
                   <TableCell className="font-medium text-foreground">
                     {w.email}
                   </TableCell>
