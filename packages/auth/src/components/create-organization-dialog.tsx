@@ -6,6 +6,7 @@ import { Label } from "@workspace/ui/components/label"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog"
@@ -113,7 +114,10 @@ export function CreateOrganizationDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[450px]">
         <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl">Create new organization</DialogTitle>
+          <DialogTitle className="text-xl">Create organization</DialogTitle>
+          <DialogDescription>
+            Set up a new company environment and invite collaborators.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">

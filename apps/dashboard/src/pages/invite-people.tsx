@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
+import { CreateInvitationButton } from "@workspace/components/components/create-invitation-button"
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
@@ -28,7 +29,6 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  MailPlus,
   ArrowLeft,
   Copy,
   Check,
@@ -221,10 +221,7 @@ export function InvitePeoplePage() {
             </p>
           </div>
           <div>
-            <Button onClick={() => setShowCreateForm(true)} className="gap-2">
-              <MailPlus className="size-4" />
-              Create Invite
-            </Button>
+            <CreateInvitationButton onClick={() => setShowCreateForm(true)} />
           </div>
         </div>
 

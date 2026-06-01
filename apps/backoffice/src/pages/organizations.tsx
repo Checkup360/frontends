@@ -174,12 +174,8 @@ export function OrganizationsPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 animate-in fade-in duration-300">
       {/* Title section */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
         <h2 className="text-base font-semibold text-foreground">Overview</h2>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
-          <Plus className="size-4" />
-          Create new organization
-        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -202,13 +198,23 @@ export function OrganizationsPage() {
       {/* Main organizations Radix-style table card */}
       <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
         {/* Title */}
-        <div className="mb-6 flex flex-col gap-1">
-          <h3 className="text-lg font-semibold tracking-tight text-foreground">
-            Organizations
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Manage organization environments, slugs and collaborators.
-          </p>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">
+              Organizations
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Manage organization environments, slugs and collaborators.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            className="gap-2 rounded-xl bg-white text-black hover:bg-white/90 dark:bg-white dark:text-black"
+            onClick={() => setDialogOpen(true)}
+          >
+            <Plus className="size-4" />
+            New organization
+          </Button>
         </div>
 
         {/* Filters Toolbar */}

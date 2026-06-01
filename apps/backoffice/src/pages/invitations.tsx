@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { InvitationTypeCard } from "@/components/invitation-type-card"
 import { SysadminInvitationForm } from "@workspace/auth/components/sysadmin-invitation-form"
+import { CreateInvitationButton } from "@workspace/components/components/create-invitation-button"
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card"
 import { Stepper } from "@workspace/ui/components/stepper"
@@ -32,7 +33,6 @@ import {
   TableRow,
 } from "@workspace/ui/components/table"
 import {
-  Plus,
   X,
   ChevronLeft,
   ChevronRight,
@@ -295,7 +295,6 @@ export function InvitationsPage() {
   // 2. Listing Mode rendering
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 animate-in fade-in duration-300">
-      {/* Elegant Header with Simplified Segmentation Tabs and Create Action side-by-side */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-1">
         <div className="flex gap-6">
           <button
@@ -334,21 +333,19 @@ export function InvitationsPage() {
           </button>
         </div>
 
-        <Button size="sm" onClick={() => setIsCreating(true)} className="self-end sm:self-auto mb-2 sm:mb-0">
-          <Plus className="size-4" />
-          Create Invitation
-        </Button>
+        <CreateInvitationButton
+          size="sm"
+          onClick={() => setIsCreating(true)}
+          className="self-end sm:self-auto mb-2 sm:mb-0"
+        />
       </div>
 
       {/* Main Table Card */}
       <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
-        {/* Dynamic Filters Deck based on Active Tab */}
         <div className="mb-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            {/* ONLY Organization Tab exposes Organization and Role Dropdowns */}
             {activeTab === "organization" && (
               <>
-                {/* Organization Dropdown */}
                 <div className="w-[200px]">
                   <Select
                     value={selectedOrg}
@@ -370,7 +367,6 @@ export function InvitationsPage() {
                   </Select>
                 </div>
 
-                {/* Role Dropdown */}
                 <div className="w-[150px]">
                   <Select
                     value={selectedRole}
@@ -392,7 +388,6 @@ export function InvitationsPage() {
               </>
             )}
 
-            {/* Reset filters button */}
             {hasActiveFilters && (
               <Button
                 variant="ghost"
@@ -407,29 +402,29 @@ export function InvitationsPage() {
         </div>
 
         {activeTab === "organization" && !selectedOrg ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-300">
-            <div className="rounded-full bg-primary/10 p-4 mb-4">
-              <Building2 className="size-8 text-primary animate-pulse" />
+            <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-300">
+              <div className="rounded-full bg-primary/10 p-4 mb-4">
+                <Building2 className="size-8 text-primary animate-pulse" />
+              </div>
+              <h3 className="text-base font-semibold text-foreground">Select an Organization</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+                Please choose an organization from the dropdown list above to view and manage its invitations.
+              </p>
             </div>
-            <h3 className="text-base font-semibold text-foreground">Select an Organization</h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-              Please choose an organization from the dropdown list above to view and manage its invitations.
-            </p>
-          </div>
-        ) : !loading && (activeTab === "sysadmin" ? filteredSysadminInvites.length : filteredOrgInvites.length) === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-300">
-            <div className="rounded-full bg-primary/10 p-4 mb-4">
-              <Mail className="size-8 text-primary animate-pulse" />
+          ) : !loading && (activeTab === "sysadmin" ? filteredSysadminInvites.length : filteredOrgInvites.length) === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-300">
+              <div className="rounded-full bg-primary/10 p-4 mb-4">
+                <Mail className="size-8 text-primary animate-pulse" />
+              </div>
+              <h3 className="text-base font-semibold text-foreground">No invitations found</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+                {activeTab === "sysadmin"
+                  ? "Create your first system administrator invitation by clicking the button above."
+                  : "No active or expired invitation links exist for this organization. Click the button above to create one."}
+              </p>
             </div>
-            <h3 className="text-base font-semibold text-foreground">No invitations found</h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-              {activeTab === "sysadmin"
-                ? "Create your first system administrator invitation by clicking the button above."
-                : "No active or expired invitation links exist for this organization. Click the button above to create one."}
-            </p>
-          </div>
-        ) : (
-          <>
+          ) : (
+            <>
             {/* Table representation */}
             <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
               <Table>
@@ -651,8 +646,8 @@ export function InvitationsPage() {
                 </div>
               </div>
             </div>
-          </>
-        )}
+            </>
+          )}
       </Card>
     </div>
   )
