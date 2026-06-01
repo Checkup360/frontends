@@ -8,6 +8,7 @@
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck",
+    "precommit": "pnpm lint && pnpm typecheck && pnpm build",
     "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
