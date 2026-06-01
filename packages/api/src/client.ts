@@ -445,14 +445,20 @@ function getOrganizationErrorMessage(code: string): string {
   return messages[code] || "An error occurred. Please try again."
 }
 
-export async function listOrganizations(): Promise<OrganizationResponse[]> {
+export async function listOrganizations(filters?: {
+  status?: string
+}): Promise<OrganizationResponse[]> {
   try {
-    const response = await fetchWithAuth(
-      `${resolveApiBaseUrl()}${apiRoutes.organizations}`,
-      {
-        credentials: "include",
-      }
-    )
+    const queryParams = new URLSearchParams()
+    if (filters?.status && filters.status !== "all") {
+      queryParams.append("status", filters.status.toLowerCase())
+    }
+    const queryString = queryParams.toString()
+    const url = `${resolveApiBaseUrl()}${apiRoutes.organizations}${queryString ? `?${queryString}` : ""}`
+
+    const response = await fetchWithAuth(url, {
+      credentials: "include",
+    })
 
     if (response.status === 401) return []
     if (!response.ok) {
