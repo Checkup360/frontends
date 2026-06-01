@@ -11,6 +11,7 @@ import {
   type InviteCreateResponse,
   type InviteMetadataResponse,
   type OrganizationInvite,
+  type SysadminInvite,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -864,19 +865,46 @@ export async function deleteOrganization(id: string): Promise<void> {
   }
 }
 
-export async function listOrgInvitations(): Promise<OrganizationInvite[]> {
+export async function listOrgInvitations(filters?: {
+  organizationId?: string
+  role?: string
+}): Promise<OrganizationInvite[]> {
+  try {
+    const queryParams = new URLSearchParams()
+    if (filters?.organizationId && filters.organizationId !== "all") {
+      queryParams.append("organization_id", filters.organizationId)
+    }
+    if (filters?.role && filters.role !== "all") {
+      queryParams.append("role", filters.role.toLowerCase())
+    }
+    const queryString = queryParams.toString()
+    const url = `${resolveApiBaseUrl()}${apiRoutes.invites.organization}${queryString ? `?${queryString}` : ""}`
+
+    const response = await fetchWithAuth(url, {
+      method: "GET",
+      credentials: "include",
+    })
+    if (!response.ok) return []
+    return (await response.json()) as OrganizationInvite[]
+  } catch (error) {
+    console.error("Error listing organization invitations:", error)
+    return []
+  }
+}
+
+export async function listSysadminInvitations(): Promise<SysadminInvite[]> {
   try {
     const response = await fetchWithAuth(
-      `${resolveApiBaseUrl()}${apiRoutes.invites.organization}`,
+      `${resolveApiBaseUrl()}${apiRoutes.invites.admin}`,
       {
         method: "GET",
         credentials: "include",
       }
     )
     if (!response.ok) return []
-    return (await response.json()) as OrganizationInvite[]
+    return (await response.json()) as SysadminInvite[]
   } catch (error) {
-    console.error("Error listing organization invitations:", error)
+    console.error("Error listing sysadmin invitations:", error)
     return []
   }
 }

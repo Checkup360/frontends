@@ -27,8 +27,20 @@ export type OrganizationInvite = {
   token: string
   email: string | null
   role: string | null
+  organization_id: string | null
+  organization_name: string | null
   department_id: string | null
   department_name: string | null
+  max_uses: number
+  uses: number
+  expires_at: string
+  invite_url: string
+}
+
+export type SysadminInvite = {
+  id: string
+  token: string
+  email: string | null
   max_uses: number
   uses: number
   expires_at: string
