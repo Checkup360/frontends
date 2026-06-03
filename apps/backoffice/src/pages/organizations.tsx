@@ -72,7 +72,9 @@ const organizationTableSkeletonColumns = [
 export function OrganizationsPage() {
   const navigate = useNavigate()
   const [organizations, setOrganizations] = useState<Organization[]>([])
-  const [overviewOrganizations, setOverviewOrganizations] = useState<Organization[]>([])
+  const [overviewOrganizations, setOverviewOrganizations] = useState<
+    Organization[]
+  >([])
   const [totalItems, setTotalItems] = useState(0)
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -110,14 +112,18 @@ export function OrganizationsPage() {
       setOrganizations(
         pageResult.items.map((org) => ({
           ...org,
-          status: (org.collaborators_count > 0 ? "Active" : "Pending") as OrganizationStatus,
+          status: (org.collaborators_count > 0
+            ? "Active"
+            : "Pending") as OrganizationStatus,
           collaborators: org.collaborators_count,
         }))
       )
       setOverviewOrganizations(
         overviewOrgs.map((org) => ({
           ...org,
-          status: (org.collaborators_count > 0 ? "Active" : "Pending") as OrganizationStatus,
+          status: (org.collaborators_count > 0
+            ? "Active"
+            : "Pending") as OrganizationStatus,
           collaborators: org.collaborators_count,
         }))
       )
@@ -188,14 +194,14 @@ export function OrganizationsPage() {
   }, [overviewOrganizations])
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 animate-in fade-in duration-300">
+    <div className="mx-auto w-full max-w-7xl animate-in space-y-6 duration-300 fade-in">
       {/* Title section */}
       <div>
         <h2 className="text-base font-semibold text-foreground">Overview</h2>
       </div>
 
       {/* Stats Cards */}
-      <section className="grid gap-4 md:grid-cols-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs dark:*:data-[slot=card]:bg-card">
+      <section className="grid gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs md:grid-cols-3 dark:*:data-[slot=card]:bg-card">
         {loading
           ? Array.from({ length: 3 }).map((_, index) => (
               <OverviewStatCardSkeleton key={index} />
@@ -275,7 +281,7 @@ export function OrganizationsPage() {
               <Button
                 variant="ghost"
                 onClick={handleResetFilters}
-                className="h-9 gap-2 px-3 text-muted-foreground hover:text-foreground transition-colors"
+                className="h-9 gap-2 px-3 text-muted-foreground transition-colors hover:text-foreground"
               >
                 Reset
                 <X className="size-4" />
@@ -301,16 +307,14 @@ export function OrganizationsPage() {
                 <TableHead className="font-semibold text-foreground">
                   Status
                 </TableHead>
-                <TableHead className="w-24 font-semibold text-foreground text-right">
+                <TableHead className="w-24 text-right font-semibold text-foreground">
                   Actions
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRowsSkeleton
-                  columns={organizationTableSkeletonColumns}
-                />
+                <TableRowsSkeleton columns={organizationTableSkeletonColumns} />
               ) : organizations.length === 0 ? (
                 <TableRow>
                   <TableCell
@@ -324,12 +328,12 @@ export function OrganizationsPage() {
                 organizations.map((org) => (
                   <TableRow
                     key={org.id}
-                    className="group cursor-pointer hover:bg-muted/40 transition-colors"
+                    className="group cursor-pointer transition-colors hover:bg-muted/40"
                     onClick={() => navigate(`/organizations/${org.id}`)}
                   >
                     <TableCell>
                       <div>
-                        <p className="font-medium text-foreground group-hover:text-primary transition-colors">
+                        <p className="font-medium text-foreground transition-colors group-hover:text-primary">
                           {org.name}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -344,7 +348,10 @@ export function OrganizationsPage() {
                       {org.collaborators}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={statusClass[org.status]}>
+                      <Badge
+                        variant="outline"
+                        className={statusClass[org.status]}
+                      >
                         {org.status}
                       </Badge>
                     </TableCell>
@@ -397,8 +404,7 @@ export function OrganizationsPage() {
             <span className="font-medium text-foreground">
               {Math.min(currentPage * pageSize, totalItems)}
             </span>{" "}
-            of{" "}
-            <span className="font-medium text-foreground">{totalItems}</span>{" "}
+            of <span className="font-medium text-foreground">{totalItems}</span>{" "}
             organizations
           </p>
 
@@ -406,7 +412,9 @@ export function OrganizationsPage() {
           <div className="flex items-center gap-6">
             {/* Rows per page selector */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <span className="text-sm text-muted-foreground">
+                Rows per page:
+              </span>
               <Select
                 value={pageSize.toString()}
                 onValueChange={(val) => {
@@ -428,8 +436,10 @@ export function OrganizationsPage() {
 
             {/* Page numbers */}
             <span className="text-sm text-muted-foreground">
-              Page <span className="font-medium text-foreground">{currentPage}</span>{" "}
-              of <span className="font-medium text-foreground">{totalPages}</span>
+              Page{" "}
+              <span className="font-medium text-foreground">{currentPage}</span>{" "}
+              of{" "}
+              <span className="font-medium text-foreground">{totalPages}</span>
             </span>
 
             {/* Navigation Buttons */}
@@ -447,7 +457,9 @@ export function OrganizationsPage() {
                 variant="outline"
                 size="icon"
                 className="size-8 bg-background"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage === totalPages || loading}
               >
                 <ChevronRight className="size-4" />
@@ -484,10 +496,7 @@ export function OrganizationsPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteConfirmOrg(null)}
-            >
+            <Button variant="outline" onClick={() => setDeleteConfirmOrg(null)}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteConfirm}>

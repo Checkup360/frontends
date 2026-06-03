@@ -19,7 +19,6 @@ type LoginProps = {
 }
 
 export default function Login({ googleAuthorizeUrl }: LoginProps) {
-  
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [formError, setFormError] = useState<string | null>(null)

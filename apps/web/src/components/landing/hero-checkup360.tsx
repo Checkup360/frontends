@@ -76,9 +76,9 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
           aria-label="Toggle color theme"
         >
           {theme === "dark" ? (
-            <Sun className="size-5 animate-in spin-in-45 duration-300" />
+            <Sun className="size-5 animate-in duration-300 spin-in-45" />
           ) : (
-            <Moon className="size-5 animate-in spin-in-45 duration-300" />
+            <Moon className="size-5 animate-in duration-300 spin-in-45" />
           )}
         </button>
       </div>

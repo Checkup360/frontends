@@ -64,8 +64,6 @@ function NotFound() {
   )
 }
 
-
-
 export function App() {
   return (
     <ThemeProvider>

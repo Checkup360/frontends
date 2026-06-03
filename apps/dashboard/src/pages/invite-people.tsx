@@ -159,7 +159,9 @@ export function InvitePeoplePage() {
 
   const toggleInviteSelection = (id: string, checked: boolean) => {
     setSelectedInviteIds((prev) =>
-      checked ? Array.from(new Set([...prev, id])) : prev.filter((x) => x !== id)
+      checked
+        ? Array.from(new Set([...prev, id]))
+        : prev.filter((x) => x !== id)
     )
   }
 
@@ -221,7 +223,7 @@ export function InvitePeoplePage() {
 
   if (showCreateForm) {
     return (
-      <div className="mx-auto w-full max-w-3xl space-y-4 animate-in fade-in duration-300">
+      <div className="mx-auto w-full max-w-3xl animate-in space-y-4 duration-300 fade-in">
         <div className="flex items-center">
           <Button
             variant="ghost"
@@ -254,7 +256,7 @@ export function InvitePeoplePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 animate-in fade-in duration-300">
+    <div className="mx-auto w-full max-w-5xl animate-in space-y-6 duration-300 fade-in">
       {/* Table Header Card */}
       <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -293,7 +295,6 @@ export function InvitePeoplePage() {
         {/* Filters Toolbar */}
         <div className="mb-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-
             {/* Role Select Dropdown */}
             <div className="w-[180px]">
               <Select
@@ -319,7 +320,7 @@ export function InvitePeoplePage() {
               <Button
                 variant="ghost"
                 onClick={handleResetFilters}
-                className="h-9 gap-2 px-3 text-muted-foreground hover:text-foreground transition-colors"
+                className="h-9 gap-2 px-3 text-muted-foreground transition-colors hover:text-foreground"
               >
                 Reset
                 <X className="size-4" />
@@ -329,13 +330,16 @@ export function InvitePeoplePage() {
         </div>
 
         {!loading && invites.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-300">
-            <div className="rounded-full bg-primary/10 p-4 mb-4">
-              <Mail className="size-8 text-primary animate-pulse" />
+          <div className="flex animate-in flex-col items-center justify-center py-16 text-center duration-300 fade-in">
+            <div className="mb-4 rounded-full bg-primary/10 p-4">
+              <Mail className="size-8 animate-pulse text-primary" />
             </div>
-            <h3 className="text-base font-semibold text-foreground">No invitations found</h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-              Create your first organization invitation link by clicking the "Create Invite" button above.
+            <h3 className="text-base font-semibold text-foreground">
+              No invitations found
+            </h3>
+            <p className="mx-auto mt-1 max-w-xs text-sm text-muted-foreground">
+              Create your first organization invitation link by clicking the
+              "Create Invite" button above.
             </p>
           </div>
         ) : (
@@ -348,147 +352,178 @@ export function InvitePeoplePage() {
                     <TableHead className="w-10">
                       <Checkbox
                         aria-label="Select page invitations"
-                        checked={allPageSelected || (somePageSelected && "indeterminate")}
+                        checked={
+                          allPageSelected ||
+                          (somePageSelected && "indeterminate")
+                        }
                         onCheckedChange={(checked) =>
                           togglePageSelection(checked === true)
                         }
                       />
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground">Email</TableHead>
-                    <TableHead className="font-semibold text-foreground">Role</TableHead>
-                    <TableHead className="font-semibold text-foreground">Department</TableHead>
-                    <TableHead className="font-semibold text-foreground">Uses</TableHead>
-                    <TableHead className="font-semibold text-foreground">Status / Time</TableHead>
-                    <TableHead className="w-16 font-semibold text-foreground text-center">Action</TableHead>
+                    <TableHead className="font-semibold text-foreground">
+                      Email
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground">
+                      Role
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground">
+                      Department
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground">
+                      Uses
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground">
+                      Status / Time
+                    </TableHead>
+                    <TableHead className="w-16 text-center font-semibold text-foreground">
+                      Action
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i} className="animate-pulse">
-                        <TableCell>
-                          <div className="size-4 rounded bg-muted" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-4 bg-muted rounded w-2/3" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-5 bg-muted rounded-full w-16" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-4 bg-muted rounded w-1/3" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-4 bg-muted rounded w-8" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-5 bg-muted rounded-full w-24" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-center">
-                            <div className="h-8 bg-muted rounded-md w-8" />
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    paginatedInvites.map((inv) => {
-                      const rem = formatRemainingTime(
-                        inv.expires_at,
-                        inv.uses,
-                        inv.max_uses
-                      )
-                      return (
-                        <TableRow
-                          key={inv.id}
-                          className="group hover:bg-muted/40 transition-colors"
-                        >
+                  {loading
+                    ? Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={i} className="animate-pulse">
                           <TableCell>
-                            <Checkbox
-                              aria-label={`Select invitation ${inv.email ?? inv.id}`}
-                              checked={selectedInviteIds.includes(inv.id)}
-                              onCheckedChange={(checked) =>
-                                toggleInviteSelection(inv.id, checked === true)
-                              }
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium text-foreground">
-                            {inv.email || <span className="text-muted-foreground/60">—</span>}
+                            <div className="size-4 rounded bg-muted" />
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant={inv.role === "admin" ? "default" : "secondary"}
-                              className="capitalize"
-                            >
-                              {inv.role || "member"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {inv.department_name || (
-                              <span className="text-muted-foreground/60">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-foreground tabular-nums">
-                            {inv.uses} <span className="text-muted-foreground">/</span> {inv.max_uses}
+                            <div className="h-4 w-2/3 rounded bg-muted" />
                           </TableCell>
                           <TableCell>
-                            {rem.status === "active" ? (
-                              <Badge
-                                variant="outline"
-                                className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                              >
-                                {rem.text}
-                              </Badge>
-                            ) : rem.status === "expired" ? (
-                              <Badge
-                                variant="outline"
-                                className="bg-destructive/10 text-destructive border-destructive/20"
-                              >
-                                Expired
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
-                              >
-                                Used
-                              </Badge>
-                            )}
+                            <div className="h-5 w-16 rounded-full bg-muted" />
                           </TableCell>
                           <TableCell>
-                            <div className="flex justify-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-8"
-                                onClick={() => handleCopy(inv.id, inv.invite_url)}
-                                disabled={rem.status === "expired" || rem.status === "used"}
-                                title="Copy invitation link"
-                              >
-                                {copiedId === inv.id ? (
-                                  <Check className="size-4 text-emerald-500" />
-                                ) : (
-                                  <Copy className="size-4 text-muted-foreground hover:text-foreground" />
-                                )}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-8"
-                                title="Delete invitation"
-                                onClick={() => {
-                                  setSelectedInviteIds([inv.id])
-                                  setDeleteDialogOpen(true)
-                                }}
-                              >
-                                <Trash2 className="size-4 text-destructive" />
-                              </Button>
+                            <div className="h-4 w-1/3 rounded bg-muted" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="h-4 w-8 rounded bg-muted" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="h-5 w-24 rounded-full bg-muted" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex justify-center">
+                              <div className="h-8 w-8 rounded-md bg-muted" />
                             </div>
                           </TableCell>
                         </TableRow>
-                      )
-                    })
-                  )}
+                      ))
+                    : paginatedInvites.map((inv) => {
+                        const rem = formatRemainingTime(
+                          inv.expires_at,
+                          inv.uses,
+                          inv.max_uses
+                        )
+                        return (
+                          <TableRow
+                            key={inv.id}
+                            className="group transition-colors hover:bg-muted/40"
+                          >
+                            <TableCell>
+                              <Checkbox
+                                aria-label={`Select invitation ${inv.email ?? inv.id}`}
+                                checked={selectedInviteIds.includes(inv.id)}
+                                onCheckedChange={(checked) =>
+                                  toggleInviteSelection(
+                                    inv.id,
+                                    checked === true
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium text-foreground">
+                              {inv.email || (
+                                <span className="text-muted-foreground/60">
+                                  —
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  inv.role === "admin" ? "default" : "secondary"
+                                }
+                                className="capitalize"
+                              >
+                                {inv.role || "member"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {inv.department_name || (
+                                <span className="text-muted-foreground/60">
+                                  —
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-foreground tabular-nums">
+                              {inv.uses}{" "}
+                              <span className="text-muted-foreground">/</span>{" "}
+                              {inv.max_uses}
+                            </TableCell>
+                            <TableCell>
+                              {rem.status === "active" ? (
+                                <Badge
+                                  variant="outline"
+                                  className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                >
+                                  {rem.text}
+                                </Badge>
+                              ) : rem.status === "expired" ? (
+                                <Badge
+                                  variant="outline"
+                                  className="border-destructive/20 bg-destructive/10 text-destructive"
+                                >
+                                  Expired
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                >
+                                  Used
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex justify-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="size-8"
+                                  onClick={() =>
+                                    handleCopy(inv.id, inv.invite_url)
+                                  }
+                                  disabled={
+                                    rem.status === "expired" ||
+                                    rem.status === "used"
+                                  }
+                                  title="Copy invitation link"
+                                >
+                                  {copiedId === inv.id ? (
+                                    <Check className="size-4 text-emerald-500" />
+                                  ) : (
+                                    <Copy className="size-4 text-muted-foreground hover:text-foreground" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="size-8"
+                                  title="Delete invitation"
+                                  onClick={() => {
+                                    setSelectedInviteIds([inv.id])
+                                    setDeleteDialogOpen(true)
+                                  }}
+                                >
+                                  <Trash2 className="size-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
                 </TableBody>
               </Table>
             </div>
@@ -506,7 +541,9 @@ export function InvitePeoplePage() {
                   {Math.min(currentPage * pageSize, totalItems)}
                 </span>{" "}
                 of{" "}
-                <span className="font-medium text-foreground">{totalItems}</span>{" "}
+                <span className="font-medium text-foreground">
+                  {totalItems}
+                </span>{" "}
                 invites
               </p>
 
@@ -514,7 +551,9 @@ export function InvitePeoplePage() {
               <div className="flex items-center gap-6">
                 {/* Rows per page selector */}
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Rows per page:</span>
+                  <span className="text-sm text-muted-foreground">
+                    Rows per page:
+                  </span>
                   <Select
                     value={pageSize.toString()}
                     onValueChange={(val) => {
@@ -536,8 +575,14 @@ export function InvitePeoplePage() {
 
                 {/* Page numbers */}
                 <span className="text-sm text-muted-foreground">
-                  Page <span className="font-medium text-foreground">{currentPage}</span>{" "}
-                  of <span className="font-medium text-foreground">{totalPages}</span>
+                  Page{" "}
+                  <span className="font-medium text-foreground">
+                    {currentPage}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-medium text-foreground">
+                    {totalPages}
+                  </span>
                 </span>
 
                 {/* Navigation Buttons */}
@@ -555,7 +600,9 @@ export function InvitePeoplePage() {
                     variant="outline"
                     size="icon"
                     className="size-8 bg-background"
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
                     disabled={currentPage === totalPages || loading}
                   >
                     <ChevronRight className="size-4" />

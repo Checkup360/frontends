@@ -91,9 +91,7 @@ export function InvitationTypeCard({
                   <Icon className="size-6" />
                 </div>
                 <div className="flex-1 text-center sm:text-left">
-                  <p className="font-semibold text-foreground">
-                    {type.title}
-                  </p>
+                  <p className="font-semibold text-foreground">{type.title}</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {type.description}
                   </p>

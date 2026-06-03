@@ -1,7 +1,4 @@
-import {
-  logout,
-  resolveWebUrl,
-} from "@workspace/api"
+import { logout, resolveWebUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   WorkspaceShell,

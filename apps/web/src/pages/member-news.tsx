@@ -1,7 +1,4 @@
-import {
-  memberNewsArticles,
-  NewsCard,
-} from "@/components/member/news"
+import { memberNewsArticles, NewsCard } from "@/components/member/news"
 
 export function MemberNewsPage() {
   return (

@@ -14,9 +14,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { AuthOAuthDivider } from "./auth-oauth-divider"
 import { AuthShell } from "./auth-shell"
 import { EmailPasswordFields } from "./email-password-fields"
-import {
-  formatAuthFormError,
-} from "./format-auth-detail"
+import { formatAuthFormError } from "./format-auth-detail"
 import { readFastApiErrorDetail } from "./read-fastapi-detail"
 import { GoogleSignInButton } from "./google-sign-in-button"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
@@ -172,7 +170,9 @@ export default function Invite() {
   if (metadata && user && navigating) {
     return (
       <div className="flex min-h-dvh items-center justify-center px-4">
-        <p className="text-center text-sm text-muted-foreground">Redirecting…</p>
+        <p className="text-center text-sm text-muted-foreground">
+          Redirecting…
+        </p>
       </div>
     )
   }
@@ -200,7 +200,8 @@ export default function Invite() {
         ) : null}
 
         <p className="mb-4 text-sm text-muted-foreground">
-          Logged in as <span className="font-medium text-foreground">{user.email}</span>
+          Logged in as{" "}
+          <span className="font-medium text-foreground">{user.email}</span>
         </p>
 
         <Button
@@ -215,7 +216,7 @@ export default function Invite() {
           Not {user.email}?{" "}
           <button
             onClick={handleSignInWithDifferentAccount}
-            className="font-medium text-primary underline underline-offset-4 cursor-pointer bg-none border-none p-0"
+            className="cursor-pointer border-none bg-none p-0 font-medium text-primary underline underline-offset-4"
           >
             Sign in with a different account
           </button>
@@ -247,10 +248,7 @@ export default function Invite() {
             : "Enter your email and password to continue. If you already have an account, you'll be signed in."
       }
     >
-      <form
-        onSubmit={(e) => void handleRedeem(e)}
-        className="space-y-4"
-      >
+      <form onSubmit={(e) => void handleRedeem(e)} className="space-y-4">
         {formError ? (
           <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             {formError}

@@ -107,7 +107,7 @@ export function HealthScoreHero({
             <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-4 text-left">
               <Sparkles className="mt-0.5 size-5 shrink-0 text-primary" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium leading-relaxed">
+                <p className="text-sm leading-relaxed font-medium">
                   Preventive analysis
                 </p>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
@@ -121,9 +121,7 @@ export function HealthScoreHero({
                 <p className="text-xs text-muted-foreground">Excellent</p>
               </div>
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-[color:var(--warning)]">
-                  60-84
-                </p>
+                <p className="font-medium text-[color:var(--warning)]">60-84</p>
                 <p className="text-xs text-muted-foreground">Moderate</p>
               </div>
               <div className="rounded-lg bg-muted/30 p-3">

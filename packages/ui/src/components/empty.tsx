@@ -45,10 +45,7 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<"h3">) {
   )
 }
 
-function EmptyDescription({
-  className,
-  ...props
-}: React.ComponentProps<"p">) {
+function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       data-slot="empty-description"

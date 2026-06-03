@@ -101,7 +101,10 @@ export function ThemeProvider({
     if (isTheme(cookieTheme)) {
       return cookieTheme
     }
-    const storedTheme = typeof localStorage !== "undefined" ? localStorage.getItem(storageKey) : null
+    const storedTheme =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem(storageKey)
+        : null
     if (isTheme(storedTheme)) {
       return storedTheme
     }

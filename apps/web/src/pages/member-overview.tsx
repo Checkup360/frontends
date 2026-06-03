@@ -1,5 +1,8 @@
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
-import { MemberOverview, MemberOverviewSkeleton } from "@workspace/components/components/member-overview"
+import {
+  MemberOverview,
+  MemberOverviewSkeleton,
+} from "@workspace/components/components/member-overview"
 
 export function MemberOverviewPage() {
   const { user, isLoading } = useCurrentUser()

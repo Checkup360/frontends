@@ -140,11 +140,11 @@ function SidebarStep({
   const isCurrent = currentStep === step.id
 
   return (
-    <div className="relative flex items-center gap-2 lg:gap-4 py-2 lg:py-4">
+    <div className="relative flex items-center gap-2 py-2 lg:gap-4 lg:py-4">
       {step.id !== steps[steps.length - 1].id ? (
         <>
           {/* Vertical line for desktop */}
-          <div className="absolute top-10 left-6 h-full w-px bg-border/40 hidden lg:block">
+          <div className="absolute top-10 left-6 hidden h-full w-px bg-border/40 lg:block">
             <div
               className={cn(
                 "w-full bg-primary transition-all duration-500",
@@ -153,7 +153,7 @@ function SidebarStep({
             />
           </div>
           {/* Horizontal line for mobile */}
-          <div className="absolute left-12 top-1/2 -translate-y-1/2 h-px w-8 bg-border/40 lg:hidden">
+          <div className="absolute top-1/2 left-12 h-px w-8 -translate-y-1/2 bg-border/40 lg:hidden">
             <div
               className={cn(
                 "h-full bg-primary transition-all duration-500",
@@ -181,7 +181,7 @@ function SidebarStep({
         )}
       </div>
 
-      <div className="min-w-0 hidden lg:block">
+      <div className="hidden min-w-0 lg:block">
         <p
           className={cn(
             "text-sm font-semibold transition-colors",
@@ -206,7 +206,9 @@ export function MemberOnboardingPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const maxDate = useMemo(() => todayIsoDate(), [])
-  const memberOrganization = user?.membership?.roles?.includes("member") ? user.membership : undefined
+  const memberOrganization = user?.membership?.roles?.includes("member")
+    ? user.membership
+    : undefined
   const organizationName =
     memberOrganization?.organization_name ?? "Your organization"
   const activeStep = steps.find((step) => step.id === currentStep) ?? steps[0]
@@ -351,7 +353,7 @@ export function MemberOnboardingPage() {
               className="relative grid lg:grid-cols-[320px_1fr]"
             >
               <div className="border-b border-border/40 bg-background/30 p-6 lg:border-r lg:border-b-0 lg:p-8">
-                <div className="flex flex-row items-center justify-center gap-8 lg:flex-col lg:items-stretch lg:space-y-1 lg:gap-0">
+                <div className="flex flex-row items-center justify-center gap-8 lg:flex-col lg:items-stretch lg:gap-0 lg:space-y-1">
                   {steps.map((step) => (
                     <SidebarStep
                       key={step.id}

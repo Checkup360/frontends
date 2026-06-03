@@ -26,9 +26,7 @@ export function NewsCard({ articles }: NewsCardProps) {
     <Card>
       <CardHeader>
         <CardTitle>Health content</CardTitle>
-        <CardDescription>
-          Articles and tips for your wellbeing
-        </CardDescription>
+        <CardDescription>Articles and tips for your wellbeing</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {articles.map((article) => (

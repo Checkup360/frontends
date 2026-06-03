@@ -73,7 +73,7 @@ export function RecommendationCard({
           </div>
         </div>
 
-        <CarouselContent className="-ml-4 mt-4 px-px pb-1">
+        <CarouselContent className="mt-4 -ml-4 px-px pb-1">
           {recommendations.map((recommendation) => {
             const Icon = recommendation.icon
             const config = priorityConfig[recommendation.priority]

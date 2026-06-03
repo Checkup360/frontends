@@ -21,7 +21,14 @@ function nameToSlug(name: string): string {
 }
 
 function toResourceItem(org: OrganizationResponse): ResourceItem {
-  return { id: org.id, name: org.name, hint: org.slug }
+  return {
+    id: org.id,
+    name: org.name,
+    hint: org.slug,
+    badgeLabel: "Organization",
+    valueCaption: "Members",
+    valueLabel: org.collaborators_count.toString(),
+  }
 }
 
 export function ManageOrganizationsPage() {
@@ -80,11 +87,12 @@ export function ManageOrganizationsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6">
       <ResourceList
         title="Organizations"
+        description="Search, create and maintain company environments."
         resourceLabel="organization"
-        createPlaceholder="e.g. Acme Corp, Social Trip…"
+        createPlaceholder="e.g. Acme Corp, Social Trip..."
         disableRename
         items={organizations.map(toResourceItem)}
         loading={loading}

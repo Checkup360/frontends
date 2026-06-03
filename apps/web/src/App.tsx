@@ -64,13 +64,19 @@ function NoOrganizationError() {
         No Organization Found
       </h1>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-        You don't belong to any active organization. Please ask an administrator for a new invitation link.
+        You don't belong to any active organization. Please ask an administrator
+        for a new invitation link.
       </p>
       <div className="mt-8 flex flex-col gap-3">
         <Button asChild variant="outline" className="w-full sm:w-auto">
           <a href={loginUrl}>Sign in with different account</a>
         </Button>
-        <Button variant="ghost" onClick={handleLogout} disabled={loggingOut} className="w-full sm:w-auto">
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="w-full sm:w-auto"
+        >
           {loggingOut ? "Logging out..." : "Log out"}
         </Button>
       </div>
@@ -152,8 +158,6 @@ function RequireMemberRole({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-
-
 export function App() {
   return (
     <ThemeProvider>
@@ -186,4 +190,3 @@ export function App() {
     </ThemeProvider>
   )
 }
-

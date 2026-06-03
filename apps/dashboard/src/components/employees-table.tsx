@@ -30,8 +30,10 @@ import { useNavigate } from "react-router-dom"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
 
 const statusClasses: Record<string, string> = {
-  active: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 capitalize",
-  onboarding: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 capitalize",
+  active:
+    "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 capitalize",
+  onboarding:
+    "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 capitalize",
 }
 
 const MEMBER_ROLES: OrganizationEmployeeRole[] = ["member"]
@@ -101,7 +103,11 @@ export function EmployeesTable({
         if (selectedStatus !== "all") apiFilters.status = selectedStatus
         if (search.trim()) apiFilters.search = search.trim()
 
-        const data = await listOrganizationEmployeesPage(organizationId, roles, apiFilters)
+        const data = await listOrganizationEmployeesPage(
+          organizationId,
+          roles,
+          apiFilters
+        )
         if (!active) return
         setEmployees(data.items)
         setTotalItems(data.total)
@@ -117,12 +123,21 @@ export function EmployeesTable({
     return () => {
       active = false
     }
-  }, [organizationId, roles, selectedDept, selectedStatus, search, currentPage, pageSize])
+  }, [
+    organizationId,
+    roles,
+    selectedDept,
+    selectedStatus,
+    search,
+    currentPage,
+    pageSize,
+  ])
 
   // Computed Pagination values
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
 
-  const hasActiveFilters = search !== "" || selectedDept !== "all" || selectedStatus !== "all"
+  const hasActiveFilters =
+    search !== "" || selectedDept !== "all" || selectedStatus !== "all"
 
   const handleResetFilters = () => {
     setSearch("")
@@ -132,10 +147,12 @@ export function EmployeesTable({
   }
 
   return (
-    <Card className="border-border/60 p-6 shadow-[var(--shadow-card)] animate-in fade-in duration-300">
+    <Card className="animate-in border-border/60 p-6 shadow-[var(--shadow-card)] duration-300 fade-in">
       {/* Title & Desc */}
       <div className="mb-6 flex flex-col gap-1">
-        <h3 className="text-lg font-semibold tracking-tight text-foreground">Employees</h3>
+        <h3 className="text-lg font-semibold tracking-tight text-foreground">
+          Employees
+        </h3>
         <p className="text-sm text-muted-foreground">
           Individual data and status level
         </p>
@@ -206,7 +223,7 @@ export function EmployeesTable({
             <Button
               variant="ghost"
               onClick={handleResetFilters}
-              className="h-9 gap-2 px-3 text-muted-foreground hover:text-foreground transition-colors"
+              className="h-9 gap-2 px-3 text-muted-foreground transition-colors hover:text-foreground"
             >
               Reset
               <X className="size-4" />
@@ -220,11 +237,21 @@ export function EmployeesTable({
         <Table>
           <TableHeader className="bg-muted/30">
             <TableRow>
-              <TableHead className="font-semibold text-foreground">Employee</TableHead>
-              <TableHead className="font-semibold text-foreground">Area</TableHead>
-              <TableHead className="font-semibold text-foreground">Score</TableHead>
-              <TableHead className="font-semibold text-foreground">Status</TableHead>
-              <TableHead className="font-semibold text-foreground">Last assessment</TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Employee
+              </TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Area
+              </TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Score
+              </TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Status
+              </TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Last assessment
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -232,7 +259,10 @@ export function EmployeesTable({
               <TableRowsSkeleton columns={employeeTableSkeletonColumns} />
             ) : employees.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={5}
+                  className="h-32 text-center text-muted-foreground"
+                >
                   No employees found matching the active criteria.
                 </TableCell>
               </TableRow>
@@ -240,10 +270,10 @@ export function EmployeesTable({
               employees.map((w) => (
                 <TableRow
                   key={w.id}
-                  className="group cursor-pointer hover:bg-muted/40 transition-colors"
+                  className="group cursor-pointer transition-colors hover:bg-muted/40"
                   onClick={() => navigate(`/employees/${w.id}`)}
                 >
-                  <TableCell className="font-medium text-foreground group-hover:text-primary transition-colors">
+                  <TableCell className="font-medium text-foreground transition-colors group-hover:text-primary">
                     {w.email}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
@@ -253,7 +283,12 @@ export function EmployeesTable({
                     N/A
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={statusClasses[w.status] || statusClasses.pending}>
+                    <Badge
+                      variant="outline"
+                      className={
+                        statusClasses[w.status] || statusClasses.pending
+                      }
+                    >
                       {w.status}
                     </Badge>
                   </TableCell>
@@ -271,16 +306,25 @@ export function EmployeesTable({
       <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
         {/* Count Indicator */}
         <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium text-foreground">{totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> to{" "}
-          <span className="font-medium text-foreground">{Math.min(currentPage * pageSize, totalItems)}</span> of{" "}
-          <span className="font-medium text-foreground">{totalItems}</span> employees
+          Showing{" "}
+          <span className="font-medium text-foreground">
+            {totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0}
+          </span>{" "}
+          to{" "}
+          <span className="font-medium text-foreground">
+            {Math.min(currentPage * pageSize, totalItems)}
+          </span>{" "}
+          of <span className="font-medium text-foreground">{totalItems}</span>{" "}
+          employees
         </p>
 
         {/* Controls */}
         <div className="flex items-center gap-6">
           {/* Rows per page selector */}
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Rows per page:</span>
+            <span className="text-sm text-muted-foreground">
+              Rows per page:
+            </span>
             <Select
               value={pageSize.toString()}
               onValueChange={(val) => {
@@ -302,8 +346,9 @@ export function EmployeesTable({
 
           {/* Page numbers */}
           <span className="text-sm text-muted-foreground">
-            Page <span className="font-medium text-foreground">{currentPage}</span> of{" "}
-            <span className="font-medium text-foreground">{totalPages}</span>
+            Page{" "}
+            <span className="font-medium text-foreground">{currentPage}</span>{" "}
+            of <span className="font-medium text-foreground">{totalPages}</span>
           </span>
 
           {/* Navigation Buttons */}

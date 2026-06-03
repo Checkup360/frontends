@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react"
-import { getOrganizationSummary, type OrganizationSummaryResponse } from "@workspace/api"
+import {
+  getOrganizationSummary,
+  type OrganizationSummaryResponse,
+} from "@workspace/api"
 import {
   Avatar,
   AvatarGroup,
@@ -181,7 +184,7 @@ export function OrganizationDetailPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 animate-in fade-in duration-300">
+    <div className="mx-auto w-full max-w-7xl animate-in space-y-6 duration-300 fade-in">
       <Button asChild variant="ghost" size="sm" className="gap-2">
         <Link to="/">
           <ArrowLeft className="size-4" />
@@ -218,10 +221,7 @@ export function OrganizationDetailPage() {
       </section>
 
       <section className="flex justify-center">
-        <InviteMemberCard
-          organizationId={id}
-          organizationName={summary.name}
-        />
+        <InviteMemberCard organizationId={id} organizationName={summary.name} />
       </section>
     </div>
   )
