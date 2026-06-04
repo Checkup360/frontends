@@ -4,11 +4,16 @@ import { CreateInvitationButton } from "@workspace/components/components/create-
 import { DeleteInvitationsDialog } from "@workspace/components/components/delete-invitations-dialog"
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent } from "@workspace/ui/components/card"
+import {
+  OverviewStatCard,
+  OverviewStatCardSkeleton,
+} from "@workspace/components/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { toast } from "@workspace/ui/components/sonner"
+import { Input } from "@workspace/ui/components/input"
 import {
   Select,
   SelectContent,
@@ -16,6 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select"
+import {
+  deleteOrgInvitations,
+  listOrgInvitationsPage,
+  type OrganizationInvite,
+} from "@workspace/api"
 import {
   Table,
   TableBody,
@@ -25,19 +35,16 @@ import {
   TableRow,
 } from "@workspace/ui/components/table"
 import {
-  deleteOrgInvitations,
-  listOrgInvitationsPage,
-  type OrganizationInvite,
-} from "@workspace/api"
-import {
   X,
   ChevronLeft,
   ChevronRight,
   ArrowLeft,
-  Copy,
+  Clipboard,
   Check,
   Mail,
   Trash2,
+  Search,
+  Clock,
 } from "lucide-react"
 
 // Formatting helper for remaining time
@@ -73,7 +80,6 @@ function formatRemainingTime(
 export function InvitePeoplePage() {
   const { user, isLoading: userLoading } = useCurrentUser()
   const [invites, setInvites] = useState<OrganizationInvite[]>([])
-  const [totalItems, setTotalItems] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -83,6 +89,7 @@ export function InvitePeoplePage() {
 
   // Filters State
   const [selectedRole, setSelectedRole] = useState("all")
+  const [searchQuery, setSearchQuery] = useState("")
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
@@ -102,17 +109,32 @@ export function InvitePeoplePage() {
     }
   }, [user])
 
-  // Load invitations
+  // Count metrics computed on the whole dataset
+  const metrics = useMemo(() => {
+    const total = invites.length
+    let active = 0
+    let used = 0
+    let expired = 0
+
+    invites.forEach((invite) => {
+      const rem = formatRemainingTime(invite.expires_at, invite.uses, invite.max_uses)
+      if (rem.status === "active") active++
+      else if (rem.status === "used") used++
+      else if (rem.status === "expired") expired++
+    })
+
+    return { total, active, used, expired }
+  }, [invites])
+
+  // Load all invitations for client-side filtering/analytics
   const loadInvites = async () => {
     setLoading(true)
     try {
       const data = await listOrgInvitationsPage({
-        role: selectedRole,
-        page: currentPage,
-        pageSize,
+        page: 1,
+        pageSize: 1000,
       })
       setInvites(data.items)
-      setTotalItems(data.total)
       setSelectedInviteIds([])
     } catch (err) {
       console.error("Failed to load invitations:", err)
@@ -126,18 +148,41 @@ export function InvitePeoplePage() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       void loadInvites()
     }
-  }, [organization, selectedRole, currentPage, pageSize])
+  }, [organization, showCreateForm])
 
   // Copy handler
   const handleCopy = (id: string, url: string) => {
     void navigator.clipboard.writeText(url)
     setCopiedId(id)
+    toast.success("Invitation link copied to clipboard!")
     setTimeout(() => setCopiedId(null), 2000)
   }
 
+  // Client-side filtering by role and email
+  const filteredInvites = useMemo(() => {
+    return invites.filter((invite) => {
+      // 1. Role filter
+      if (selectedRole && selectedRole !== "all" && invite.role !== selectedRole) {
+        return false
+      }
+      // 2. Email search
+      if (searchQuery) {
+        if (!invite.email) return false
+        if (!invite.email.toLowerCase().includes(searchQuery.toLowerCase())) {
+          return false
+        }
+      }
+      return true
+    })
+  }, [invites, selectedRole, searchQuery])
+
   // Pagination values
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const paginatedInvites = invites
+  const totalPages = Math.max(1, Math.ceil(filteredInvites.length / pageSize))
+  const paginatedInvites = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredInvites.slice(start, start + pageSize)
+  }, [filteredInvites, currentPage, pageSize])
+
   const paginatedInviteIds = useMemo(
     () => paginatedInvites.map((invite) => invite.id),
     [paginatedInvites]
@@ -150,10 +195,11 @@ export function InvitePeoplePage() {
     paginatedInviteIds.some((id) => selectedInviteIds.includes(id)) &&
     !allPageSelected
 
-  const hasActiveFilters = selectedRole !== "all"
+  const hasActiveFilters = selectedRole !== "all" || searchQuery !== ""
 
   const handleResetFilters = () => {
     setSelectedRole("all")
+    setSearchQuery("")
     setCurrentPage(1)
   }
 
@@ -256,9 +302,59 @@ export function InvitePeoplePage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl animate-in space-y-6 duration-300 fade-in">
-      {/* Table Header Card */}
+      {/* Title section */}
+      <div>
+        <h2 className="text-base font-semibold text-foreground">Overview</h2>
+      </div>
+
+      {/* KPI Cards on Top */}
+      <section className="grid gap-4 md:grid-cols-4">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <OverviewStatCardSkeleton key={index} />
+          ))
+        ) : (
+          <>
+            <OverviewStatCard
+              label="Total Invitations"
+              value={metrics.total}
+              hint="total organization invitations"
+              icon={Mail}
+              iconVariant="icon"
+              tone="primary"
+            />
+            <OverviewStatCard
+              label="Active Pending"
+              value={metrics.active}
+              hint="active pending invites"
+              icon={Clock}
+              iconVariant="icon"
+              tone="success"
+            />
+            <OverviewStatCard
+              label="Used Accepted"
+              value={metrics.used}
+              hint="accepted invitation links"
+              icon={Check}
+              iconVariant="icon"
+              tone="primary"
+            />
+            <OverviewStatCard
+              label="Expired Outdated"
+              value={metrics.expired}
+              hint="expired/outdated invites"
+              icon={X}
+              iconVariant="icon"
+              tone="destructive"
+            />
+          </>
+        )}
+      </section>
+
+      {/* Main Table Card */}
       <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
-        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        {/* Header section with Create Invitation button */}
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div className="flex flex-col gap-1">
             <h3 className="text-lg font-semibold tracking-tight text-foreground">
               Invites
@@ -271,7 +367,6 @@ export function InvitePeoplePage() {
             <CreateInvitationButton onClick={() => setShowCreateForm(true)} />
           </div>
         </div>
-
         {selectedCount > 0 && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
             <p className="text-sm text-muted-foreground">
@@ -314,6 +409,16 @@ export function InvitePeoplePage() {
               </Select>
             </div>
 
+            <div className="relative w-[250px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+
             {/* Reset Filters button */}
             {hasActiveFilters && (
               <Button
@@ -328,288 +433,251 @@ export function InvitePeoplePage() {
           </div>
         </div>
 
-        {!loading && invites.length === 0 ? (
-          <div className="flex animate-in flex-col items-center justify-center py-16 text-center duration-300 fade-in">
-            <div className="mb-4 rounded-full bg-primary/10 p-4">
-              <Mail className="size-8 animate-pulse text-primary" />
-            </div>
-            <h3 className="text-base font-semibold text-foreground">
-              No invitations found
-            </h3>
-            <p className="mx-auto mt-1 max-w-xs text-sm text-muted-foreground">
-              Create your first organization invitation link by clicking the
-              "Create Invite" button above.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Main Table */}
-            <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
-              <Table>
-                <TableHeader className="bg-muted/30">
-                  <TableRow>
-                    <TableHead className="w-10">
-                      <Checkbox
-                        aria-label="Select page invitations"
-                        checked={
-                          allPageSelected ||
-                          (somePageSelected && "indeterminate")
-                        }
-                        onCheckedChange={(checked) =>
-                          togglePageSelection(checked === true)
-                        }
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground">
-                      Email
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground">
-                      Role
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground">
-                      Department
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground">
-                      Uses
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground">
-                      Status / Time
-                    </TableHead>
-                    <TableHead className="w-16 text-center font-semibold text-foreground">
-                      Action
-                    </TableHead>
+        {/* Table representation */}
+        <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    aria-label="Select page invitations"
+                    checked={
+                      allPageSelected ||
+                      (somePageSelected && "indeterminate")
+                    }
+                    onCheckedChange={(checked) =>
+                      togglePageSelection(checked === true)
+                    }
+                  />
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Email
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Role / Dept
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Uses
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Status / Time Left
+                </TableHead>
+                <TableHead className="w-24 text-right font-semibold text-foreground">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i} className="animate-pulse">
+                    <TableCell>
+                      <div className="size-4 rounded bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-2/3 rounded bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-1/3 rounded bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-8 rounded bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-5 w-24 rounded-full bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
+                        <div className="h-8 w-8 rounded-md bg-muted" />
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading
-                    ? Array.from({ length: 5 }).map((_, i) => (
-                        <TableRow key={i} className="animate-pulse">
-                          <TableCell>
-                            <div className="size-4 rounded bg-muted" />
-                          </TableCell>
-                          <TableCell>
-                            <div className="h-4 w-2/3 rounded bg-muted" />
-                          </TableCell>
-                          <TableCell>
-                            <div className="h-5 w-16 rounded-full bg-muted" />
-                          </TableCell>
-                          <TableCell>
-                            <div className="h-4 w-1/3 rounded bg-muted" />
-                          </TableCell>
-                          <TableCell>
-                            <div className="h-4 w-8 rounded bg-muted" />
-                          </TableCell>
-                          <TableCell>
-                            <div className="h-5 w-24 rounded-full bg-muted" />
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex justify-center">
-                              <div className="h-8 w-8 rounded-md bg-muted" />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    : paginatedInvites.map((inv) => {
-                        const rem = formatRemainingTime(
-                          inv.expires_at,
-                          inv.uses,
-                          inv.max_uses
-                        )
-                        return (
-                          <TableRow
-                            key={inv.id}
-                            className="group transition-colors hover:bg-muted/40"
-                          >
-                            <TableCell>
-                              <Checkbox
-                                aria-label={`Select invitation ${inv.email ?? inv.id}`}
-                                checked={selectedInviteIds.includes(inv.id)}
-                                onCheckedChange={(checked) =>
-                                  toggleInviteSelection(
-                                    inv.id,
-                                    checked === true
-                                  )
-                                }
-                              />
-                            </TableCell>
-                            <TableCell className="font-medium text-foreground">
-                              {inv.email || (
-                                <span className="text-muted-foreground/60">
-                                  —
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={
-                                  inv.role === "admin" ? "default" : "secondary"
-                                }
-                                className="capitalize"
-                              >
-                                {inv.role || "member"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">
-                              {inv.department_name || (
-                                <span className="text-muted-foreground/60">
-                                  —
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-foreground tabular-nums">
-                              {inv.uses}{" "}
-                              <span className="text-muted-foreground">/</span>{" "}
-                              {inv.max_uses}
-                            </TableCell>
-                            <TableCell>
-                              {rem.status === "active" ? (
-                                <Badge
-                                  variant="outline"
-                                  className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                >
-                                  {rem.text}
-                                </Badge>
-                              ) : rem.status === "expired" ? (
-                                <Badge
-                                  variant="outline"
-                                  className="border-destructive/20 bg-destructive/10 text-destructive"
-                                >
-                                  Expired
-                                </Badge>
-                              ) : (
-                                <Badge
-                                  variant="outline"
-                                  className="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                                >
-                                  Used
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex justify-center gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="size-8"
-                                  onClick={() =>
-                                    handleCopy(inv.id, inv.invite_url)
-                                  }
-                                  disabled={
-                                    rem.status === "expired" ||
-                                    rem.status === "used"
-                                  }
-                                  title="Copy invitation link"
-                                >
-                                  {copiedId === inv.id ? (
-                                    <Check className="size-4 text-emerald-500" />
-                                  ) : (
-                                    <Copy className="size-4 text-muted-foreground hover:text-foreground" />
-                                  )}
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="size-8"
-                                  title="Delete invitation"
-                                  onClick={() => {
-                                    setSelectedInviteIds([inv.id])
-                                    setDeleteDialogOpen(true)
-                                  }}
-                                >
-                                  <Trash2 className="size-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                </TableBody>
-              </Table>
-            </div>
+                ))
+              ) : filteredInvites.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center py-4">
+                      <Mail className="size-8 text-muted-foreground/60 mb-2" />
+                      <p className="font-medium text-foreground">No invitations found</p>
+                      <p className="text-xs mt-1">No active or expired invitation links match your filters.</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedInvites.map((inv) => {
+                  const rem = formatRemainingTime(
+                    inv.expires_at,
+                    inv.uses,
+                    inv.max_uses
+                  )
+                  const statusClass =
+                    rem.status === "active"
+                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold"
+                      : rem.status === "expired"
+                        ? "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold"
+                        : "border-muted-foreground/20 bg-muted text-muted-foreground font-semibold"
 
-            {/* Pagination Controls */}
-            <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-              {/* Count Indicator */}
-              <p className="text-sm text-muted-foreground">
-                Showing{" "}
+                  return (
+                    <TableRow
+                      key={inv.id}
+                      className="group transition-colors hover:bg-muted/40"
+                    >
+                      <TableCell>
+                        <Checkbox
+                          aria-label={`Select invitation ${inv.email ?? inv.id}`}
+                          checked={selectedInviteIds.includes(inv.id)}
+                          onCheckedChange={(checked) =>
+                            toggleInviteSelection(inv.id, checked === true)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium text-foreground">
+                        {inv.email ?? (
+                          <span className="text-muted-foreground/60 italic">
+                            Any email
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium text-muted-foreground">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="capitalize text-foreground font-semibold">
+                            {inv.role ?? "Member"}
+                          </span>
+                          {inv.department_name && (
+                            <span className="text-xs text-muted-foreground">
+                              {inv.department_name}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium text-muted-foreground tabular-nums">
+                        {inv.uses} / {inv.max_uses}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={statusClass}>
+                          {rem.text}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-1 opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Copy invitation link"
+                            onClick={() => handleCopy(inv.id, inv.invite_url)}
+                          >
+                            {copiedId === inv.id ? (
+                              <Check className="h-4 w-4 text-emerald-500" />
+                            ) : (
+                              <Clipboard className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            title="Delete invitation"
+                            onClick={() => {
+                              setSelectedInviteIds([inv.id])
+                              setDeleteDialogOpen(true)
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination Controls */}
+        {!loading && filteredInvites.length > 0 && (
+          <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
+            {/* Count Indicator */}
+            <p className="text-sm text-muted-foreground">
+              Showing{" "}
+              <span className="font-medium text-foreground">
+                {(currentPage - 1) * pageSize + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium text-foreground">
+                {Math.min(currentPage * pageSize, filteredInvites.length)}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium text-foreground">
+                {filteredInvites.length}
+              </span>{" "}
+              invites
+            </p>
+
+            {/* Controls */}
+            <div className="flex items-center gap-6">
+              {/* Rows per page selector */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Rows per page:
+                </span>
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={(val) => {
+                    setPageSize(Number(val))
+                    setCurrentPage(1)
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[70px] bg-background">
+                    <SelectValue placeholder="10" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Page numbers */}
+              <span className="text-sm text-muted-foreground">
+                Page{" "}
                 <span className="font-medium text-foreground">
-                  {totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium text-foreground">
-                  {Math.min(currentPage * pageSize, totalItems)}
+                  {currentPage}
                 </span>{" "}
                 of{" "}
                 <span className="font-medium text-foreground">
-                  {totalItems}
-                </span>{" "}
-                invites
-              </p>
-
-              {/* Controls */}
-              <div className="flex items-center gap-6">
-                {/* Rows per page selector */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Rows per page:
-                  </span>
-                  <Select
-                    value={pageSize.toString()}
-                    onValueChange={(val) => {
-                      setPageSize(Number(val))
-                      setCurrentPage(1)
-                    }}
-                  >
-                    <SelectTrigger className="h-8 w-[70px] bg-background">
-                      <SelectValue placeholder="10" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Page numbers */}
-                <span className="text-sm text-muted-foreground">
-                  Page{" "}
-                  <span className="font-medium text-foreground">
-                    {currentPage}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-medium text-foreground">
-                    {totalPages}
-                  </span>
+                  {totalPages}
                 </span>
+              </span>
 
-                {/* Navigation Buttons */}
-                <div className="flex gap-1.5">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-8 bg-background"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1 || loading}
-                  >
-                    <ChevronLeft className="size-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-8 bg-background"
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages || loading}
-                  >
-                    <ChevronRight className="size-4" />
-                  </Button>
-                </div>
+              {/* Navigation Buttons */}
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 bg-background"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || loading}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 bg-background"
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages || loading}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
               </div>
             </div>
-          </>
+          </div>
         )}
       </Card>
       <DeleteInvitationsDialog

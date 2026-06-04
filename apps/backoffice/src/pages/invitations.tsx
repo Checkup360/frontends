@@ -6,6 +6,10 @@ import { DeleteInvitationsDialog } from "@workspace/components/components/delete
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card"
 import { Stepper } from "@workspace/ui/components/stepper"
+import {
+  OverviewStatCard,
+  OverviewStatCardSkeleton,
+} from "@workspace/components/components/card"
 import { Link, useSearchParams } from "react-router-dom"
 import {
   deleteOrgInvitations,
@@ -21,13 +25,7 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { toast } from "@workspace/ui/components/sonner"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select"
+import { Input } from "@workspace/ui/components/input"
 import {
   Table,
   TableBody,
@@ -36,6 +34,13 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import {
   X,
   ChevronLeft,
@@ -47,6 +52,7 @@ import {
   ArrowLeft,
   Mail,
   Trash2,
+  Search,
 } from "lucide-react"
 
 type SelectedType = null | "sysadmin" | "organization"
@@ -92,6 +98,21 @@ const remainingBadgeClass: Record<"expired" | "active" | "used", string> = {
     "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 capitalize",
 }
 
+interface CombinedInvite {
+  isSysadmin: boolean
+  id: string
+  token: string
+  email: string | null
+  max_uses: number
+  uses: number
+  expires_at: string
+  invite_url: string
+  organization_id?: string | null
+  organization_name?: string | null
+  role?: string | null
+  department_name?: string | null
+}
+
 export function InvitationsPage() {
   const [searchParams] = useSearchParams()
   const initialType = useMemo<"sysadmin" | "organization">(() => {
@@ -115,9 +136,7 @@ export function InvitationsPage() {
   const currentStep = completed ? 3 : selectedType ? 2 : 1
 
   // --- Listing Filters and Data State ---
-  const [activeTab, setActiveTab] = useState<"sysadmin" | "organization">(
-    initialType
-  )
+  const [filterType, setFilterType] = useState<"all" | "sysadmin" | "organization">("all")
   const [selectedOrg, setSelectedOrg] = useState(
     searchParams.get("organizationId") ?? ""
   )
@@ -127,12 +146,74 @@ export function InvitationsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
+  const [searchQuery, setSearchQuery] = useState("")
+
   // Data arrays
   const [sysadminInvites, setSysadminInvites] = useState<SysadminInvite[]>([])
   const [orgInvites, setOrgInvites] = useState<OrganizationInvite[]>([])
   const [organizations, setOrganizations] = useState<OrganizationResponse[]>([])
-  const [totalItems, setTotalItems] = useState(0)
   const [loading, setLoading] = useState(true)
+
+  // Combined invitations with helper tag for sysadmin status
+  const combinedInvites = useMemo<CombinedInvite[]>(() => {
+    const sys: CombinedInvite[] = sysadminInvites.map((item) => ({ ...item, isSysadmin: true }))
+    const org: CombinedInvite[] = orgInvites.map((item) => ({ ...item, isSysadmin: false }))
+    return [...sys, ...org]
+  }, [sysadminInvites, orgInvites])
+
+  // Count metrics computed on the whole dataset
+  const metrics = useMemo(() => {
+    const total = combinedInvites.length
+    const sysadminActive = sysadminInvites.filter((invite) => {
+      const rem = formatRemainingTime(invite.expires_at, invite.uses, invite.max_uses)
+      return rem.status === "active"
+    }).length
+    const orgActive = orgInvites.filter((invite) => {
+      const rem = formatRemainingTime(invite.expires_at, invite.uses, invite.max_uses)
+      return rem.status === "active"
+    }).length
+
+    return { total, sysadminActive, orgActive }
+  }, [combinedInvites, sysadminInvites, orgInvites])
+
+  // Client-side filtering by all criteria
+  const filteredInvites = useMemo(() => {
+    return combinedInvites.filter((invite) => {
+      // 1. Filter by Type
+      if (filterType === "sysadmin" && !invite.isSysadmin) return false
+      if (filterType === "organization" && invite.isSysadmin) return false
+
+      // 2. Filter by Organization
+      if (
+        !invite.isSysadmin &&
+        selectedOrg &&
+        selectedOrg !== "all" &&
+        invite.organization_id !== selectedOrg
+      ) {
+        return false
+      }
+
+      // 3. Filter by Role
+      if (
+        !invite.isSysadmin &&
+        selectedRole &&
+        selectedRole !== "all" &&
+        invite.role !== selectedRole
+      ) {
+        return false
+      }
+
+      // 4. Filter by Email Search
+      if (searchQuery) {
+        if (!invite.email) return false
+        if (!invite.email.toLowerCase().includes(searchQuery.toLowerCase())) {
+          return false
+        }
+      }
+
+      return true
+    })
+  }, [combinedInvites, filterType, selectedOrg, selectedRole, searchQuery])
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -143,6 +224,7 @@ export function InvitationsPage() {
     setCompleted(false)
     setSelectedType(null)
     setIsCreating(false)
+    setSearchQuery("")
   }
 
   // Copy Link function
@@ -169,39 +251,17 @@ export function InvitationsPage() {
     void fetchOrgs()
   }, [])
 
-  // Refetch invites when activeTab or filter states change (Hitting backend filtering!)
+  // Fetch all invites from both endpoints
   const loadInvites = async () => {
-    if (
-      activeTab === "organization" &&
-      (!selectedOrg || selectedOrg === "none")
-    ) {
-      setOrgInvites([])
-      setTotalItems(0)
-      setSelectedInviteIds([])
-      setLoading(false)
-      return
-    }
     setLoading(true)
     try {
-      if (activeTab === "sysadmin") {
-        const data = await listSysadminInvitationsPage({
-          page: currentPage,
-          pageSize,
-        })
-        setSysadminInvites(data.items)
-        setTotalItems(data.total)
-        setSelectedInviteIds([])
-      } else {
-        const data = await listOrgInvitationsPage({
-          organizationId: selectedOrg,
-          role: selectedRole,
-          page: currentPage,
-          pageSize,
-        })
-        setOrgInvites(data.items)
-        setTotalItems(data.total)
-        setSelectedInviteIds([])
-      }
+      const [sysadminData, orgData] = await Promise.all([
+        listSysadminInvitationsPage({ page: 1, pageSize: 1000 }),
+        listOrgInvitationsPage({ page: 1, pageSize: 1000 })
+      ])
+      setSysadminInvites(sysadminData.items)
+      setOrgInvites(orgData.items)
+      setSelectedInviteIds([])
     } catch (err) {
       console.error("Failed to load invitations list:", err)
       toast.error("Failed to load invitations.")
@@ -213,18 +273,19 @@ export function InvitationsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadInvites()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedOrg, selectedRole, currentPage, pageSize, isCreating])
+  }, [isCreating])
 
   // Pagination computations
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const paginatedSysadminInvites = sysadminInvites
-  const paginatedOrgInvites = orgInvites
+  const totalPages = Math.max(1, Math.ceil(filteredInvites.length / pageSize))
+  const paginatedInvites = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredInvites.slice(start, start + pageSize)
+  }, [filteredInvites, currentPage, pageSize])
+
   const paginatedInviteIds = useMemo(() => {
-    return activeTab === "sysadmin"
-      ? paginatedSysadminInvites.map((invite) => invite.id)
-      : paginatedOrgInvites.map((invite) => invite.id)
-  }, [activeTab, paginatedOrgInvites, paginatedSysadminInvites])
+    return paginatedInvites.map((invite) => invite.id)
+  }, [paginatedInvites])
+
   const selectedCount = selectedInviteIds.length
   const allPageSelected =
     paginatedInviteIds.length > 0 &&
@@ -233,11 +294,17 @@ export function InvitationsPage() {
     paginatedInviteIds.some((id) => selectedInviteIds.includes(id)) &&
     !allPageSelected
 
-  const hasActiveFilters = selectedOrg !== "" || selectedRole !== "all"
+  const hasActiveFilters =
+    filterType !== "all" ||
+    selectedOrg !== "" ||
+    selectedRole !== "all" ||
+    searchQuery !== ""
 
   const handleResetFilters = () => {
+    setFilterType("all")
     setSelectedOrg("")
     setSelectedRole("all")
+    setSearchQuery("")
     setCurrentPage(1)
     setSelectedInviteIds([])
   }
@@ -264,12 +331,25 @@ export function InvitationsPage() {
 
     setDeleteLoading(true)
     try {
-      const deleted =
-        activeTab === "sysadmin"
-          ? await deleteSysadminInvitations(selectedInviteIds)
-          : await deleteOrgInvitations(selectedInviteIds)
+      const sysIds = selectedInviteIds.filter((id) =>
+        sysadminInvites.some((item) => item.id === id)
+      )
+      const orgIds = selectedInviteIds.filter((id) =>
+        orgInvites.some((item) => item.id === id)
+      )
+
+      let deletedCount = 0
+      if (sysIds.length > 0) {
+        const d = await deleteSysadminInvitations(sysIds)
+        deletedCount += d
+      }
+      if (orgIds.length > 0) {
+        const d = await deleteOrgInvitations(orgIds)
+        deletedCount += d
+      }
+
       toast.success(
-        deleted === 1 ? "Invitation deleted" : `${deleted} invitations deleted`
+        deletedCount === 1 ? "Invitation deleted" : `${deletedCount} invitations deleted`
       )
       setDeleteDialogOpen(false)
       await loadInvites()
@@ -350,58 +430,65 @@ export function InvitationsPage() {
     )
   }
 
-  // 2. Listing Mode rendering
   return (
     <div className="mx-auto w-full max-w-7xl animate-in space-y-6 duration-300 fade-in">
-      <div className="flex flex-col gap-4 border-b border-border/60 pb-1 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-6">
-          <button
-            onClick={() => {
-              setActiveTab("sysadmin")
-              setCurrentPage(1)
-              setSelectedInviteIds([])
-              handleResetFilters()
-            }}
-            className={`relative pb-3 text-sm font-semibold transition-all ${
-              activeTab === "sysadmin"
-                ? "-mb-[5px] border-b-2 border-primary text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <div className="flex items-center gap-2 px-1">
-              <Shield className="size-4" />
-              Sysadmin
-            </div>
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("organization")
-              setCurrentPage(1)
-              setSelectedInviteIds([])
-              handleResetFilters()
-            }}
-            className={`relative pb-3 text-sm font-semibold transition-all ${
-              activeTab === "organization"
-                ? "-mb-[5px] border-b-2 border-primary text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <div className="flex items-center gap-2 px-1">
-              <Building2 className="size-4" />
-              Organizations
-            </div>
-          </button>
-        </div>
-
-        <CreateInvitationButton
-          size="sm"
-          onClick={() => setIsCreating(true)}
-          className="mb-2 self-end sm:mb-0 sm:self-auto"
-        />
+      {/* Title section */}
+      <div>
+        <h2 className="text-base font-semibold text-foreground">Overview</h2>
       </div>
+
+      {/* KPI Cards on Top */}
+      <section className="grid gap-4 md:grid-cols-3">
+        {loading ? (
+          Array.from({ length: 3 }).map((_, index) => (
+            <OverviewStatCardSkeleton key={index} />
+          ))
+        ) : (
+          <>
+            <OverviewStatCard
+              label="Total Invitations"
+              value={metrics.total}
+              hint="total system & organization invitations"
+              icon={Mail}
+              iconVariant="icon"
+              tone="primary"
+            />
+            <OverviewStatCard
+              label="Active Sysadmin"
+              value={metrics.sysadminActive}
+              hint="active system administrator invitations"
+              icon={Shield}
+              iconVariant="icon"
+              tone="destructive"
+            />
+            <OverviewStatCard
+              label="Active Organization"
+              value={metrics.orgActive}
+              hint="active organization invitations"
+              icon={Building2}
+              iconVariant="icon"
+              tone="success"
+            />
+          </>
+        )}
+      </section>
 
       {/* Main Table Card */}
       <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
+        {/* Title / Header */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">
+              Invitations
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Manage your system and organization invitations, view usage status and time remaining.
+            </p>
+          </div>
+          <CreateInvitationButton
+            onClick={() => setIsCreating(true)}
+          />
+        </div>
         {selectedCount > 0 && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
             <p className="text-sm text-muted-foreground">
@@ -423,20 +510,42 @@ export function InvitationsPage() {
 
         <div className="mb-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            {activeTab === "organization" && (
+            {/* Invitation Type Filter */}
+            <div className="w-[180px]">
+              <Select
+                value={filterType}
+                onValueChange={(val: "all" | "sysadmin" | "organization") => {
+                  setFilterType(val)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="h-9 bg-background">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="sysadmin">Sysadmin</SelectItem>
+                  <SelectItem value="organization">Organization</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {filterType !== "sysadmin" && (
               <>
+                {/* Organization selector */}
                 <div className="w-[200px]">
                   <Select
-                    value={selectedOrg}
+                    value={selectedOrg || "all"}
                     onValueChange={(val) => {
-                      setSelectedOrg(val)
+                      setSelectedOrg(val === "all" ? "" : val)
                       setCurrentPage(1)
                     }}
                   >
                     <SelectTrigger className="h-9 bg-background">
-                      <SelectValue placeholder="Select organization..." />
+                      <SelectValue placeholder="All Organizations" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="all">All Organizations</SelectItem>
                       {organizations.map((org) => (
                         <SelectItem key={org.id} value={org.id}>
                           {org.name}
@@ -446,6 +555,7 @@ export function InvitationsPage() {
                   </Select>
                 </div>
 
+                {/* Role selector */}
                 <div className="w-[150px]">
                   <Select
                     value={selectedRole}
@@ -467,6 +577,17 @@ export function InvitationsPage() {
               </>
             )}
 
+            {/* Email Search input */}
+            <div className="relative w-[250px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+
             {hasActiveFilters && (
               <Button
                 variant="ghost"
@@ -480,398 +601,289 @@ export function InvitationsPage() {
           </div>
         </div>
 
-        {activeTab === "organization" && !selectedOrg ? (
-          <div className="flex animate-in flex-col items-center justify-center py-16 text-center duration-300 fade-in">
-            <div className="mb-4 rounded-full bg-primary/10 p-4">
-              <Building2 className="size-8 animate-pulse text-primary" />
-            </div>
-            <h3 className="text-base font-semibold text-foreground">
-              Select an Organization
-            </h3>
-            <p className="mx-auto mt-1 max-w-xs text-sm text-muted-foreground">
-              Please choose an organization from the dropdown list above to view
-              and manage its invitations.
-            </p>
-          </div>
-        ) : !loading &&
-          (activeTab === "sysadmin"
-            ? sysadminInvites.length
-            : orgInvites.length) === 0 ? (
-          <div className="flex animate-in flex-col items-center justify-center py-16 text-center duration-300 fade-in">
-            <div className="mb-4 rounded-full bg-primary/10 p-4">
-              <Mail className="size-8 animate-pulse text-primary" />
-            </div>
-            <h3 className="text-base font-semibold text-foreground">
-              No invitations found
-            </h3>
-            <p className="mx-auto mt-1 max-w-xs text-sm text-muted-foreground">
-              {activeTab === "sysadmin"
-                ? "Create your first system administrator invitation by clicking the button above."
-                : "No active or expired invitation links exist for this organization. Click the button above to create one."}
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Table representation */}
-            <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
-              <Table>
-                <TableHeader className="bg-muted/30">
-                  <TableRow>
-                    <TableHead className="w-10">
-                      <Checkbox
-                        aria-label="Select page invitations"
-                        checked={
-                          allPageSelected ||
-                          (somePageSelected && "indeterminate")
-                        }
-                        onCheckedChange={(checked) =>
-                          togglePageSelection(checked === true)
-                        }
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground">
-                      Email
-                    </TableHead>
-                    {activeTab === "organization" && (
-                      <TableHead className="font-semibold text-foreground">
-                        Organization
-                      </TableHead>
-                    )}
-                    <TableHead className="font-semibold text-foreground">
-                      Role
-                    </TableHead>
-                    {activeTab === "organization" && (
-                      <TableHead className="font-semibold text-foreground">
-                        Department
-                      </TableHead>
-                    )}
-                    <TableHead className="font-semibold text-foreground">
-                      Uses
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground">
-                      Status / Time Left
-                    </TableHead>
-                    <TableHead className="w-24 text-right font-semibold text-foreground">
-                      Actions
-                    </TableHead>
+        {/* Table representation */}
+        <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    aria-label="Select page invitations"
+                    checked={
+                      allPageSelected ||
+                      (somePageSelected && "indeterminate")
+                    }
+                    onCheckedChange={(checked) =>
+                      togglePageSelection(checked === true)
+                    }
+                  />
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Email
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Type
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Organization
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Role / Dept
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Uses
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Status / Time Left
+                </TableHead>
+                <TableHead className="w-24 text-right font-semibold text-foreground">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i} className="animate-pulse">
+                    <TableCell>
+                      <div className="size-4 rounded bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-2/3 rounded bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-5 w-16 rounded-full bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-1/2 rounded bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-1/3 rounded bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-8 rounded bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-5 w-24 rounded-full bg-muted" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
+                        <div className="h-8 w-8 rounded-md bg-muted" />
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading
-                    ? Array.from({ length: 5 }).map((_, i) => (
-                        <TableRow key={i} className="animate-pulse">
-                          <TableCell>
-                            <div className="size-4 rounded bg-muted" />
-                          </TableCell>
-                          <TableCell>
-                            <div className="h-4 w-2/3 rounded bg-muted" />
-                          </TableCell>
-                          {activeTab === "organization" && (
-                            <TableCell>
-                              <div className="h-4 w-1/2 rounded bg-muted" />
-                            </TableCell>
-                          )}
-                          <TableCell>
-                            <div className="h-5 w-16 rounded-full bg-muted" />
-                          </TableCell>
-                          {activeTab === "organization" && (
-                            <TableCell>
-                              <div className="h-4 w-1/3 rounded bg-muted" />
-                            </TableCell>
-                          )}
-                          <TableCell>
-                            <div className="h-4 w-8 rounded bg-muted" />
-                          </TableCell>
-                          <TableCell>
-                            <div className="h-5 w-24 rounded-full bg-muted" />
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex justify-end">
-                              <div className="h-8 w-8 rounded-md bg-muted" />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    : activeTab === "sysadmin"
-                      ? paginatedSysadminInvites.map((invite) => {
-                          const rem = formatRemainingTime(
-                            invite.expires_at,
-                            invite.uses,
-                            invite.max_uses
-                          )
-                          return (
-                            <TableRow
-                              key={invite.id}
-                              className="group transition-colors hover:bg-muted/40"
-                            >
-                              <TableCell>
-                                <Checkbox
-                                  aria-label={`Select invitation ${invite.email ?? invite.id}`}
-                                  checked={selectedInviteIds.includes(
-                                    invite.id
-                                  )}
-                                  onCheckedChange={(checked) =>
-                                    toggleInviteSelection(
-                                      invite.id,
-                                      checked === true
-                                    )
-                                  }
-                                />
-                              </TableCell>
-                              <TableCell className="font-medium text-foreground">
-                                {invite.email ?? (
-                                  <span className="text-muted-foreground/60">
-                                    —
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className="border-rose-500/20 bg-rose-500/10 font-medium text-rose-600 capitalize dark:text-rose-400"
-                                >
-                                  Sysadmin
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="font-medium text-muted-foreground tabular-nums">
-                                {invite.uses} / {invite.max_uses}
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className={remainingBadgeClass[rem.status]}
-                                >
-                                  {rem.text}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex justify-end gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    title="Copy Invitation Link"
-                                    onClick={() =>
-                                      handleCopyLink(
-                                        invite.id,
-                                        invite.invite_url
-                                      )
-                                    }
-                                  >
-                                    {copiedId === invite.id ? (
-                                      <Check className="size-4 text-emerald-500" />
-                                    ) : (
-                                      <Clipboard className="size-4" />
-                                    )}
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    title="Delete invitation"
-                                    onClick={() => {
-                                      setSelectedInviteIds([invite.id])
-                                      setDeleteDialogOpen(true)
-                                    }}
-                                  >
-                                    <Trash2 className="size-4 text-destructive" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          )
-                        })
-                      : paginatedOrgInvites.map((invite) => {
-                          const rem = formatRemainingTime(
-                            invite.expires_at,
-                            invite.uses,
-                            invite.max_uses
-                          )
-                          return (
-                            <TableRow
-                              key={invite.id}
-                              className="group transition-colors hover:bg-muted/40"
-                            >
-                              <TableCell>
-                                <Checkbox
-                                  aria-label={`Select invitation ${invite.email ?? invite.id}`}
-                                  checked={selectedInviteIds.includes(
-                                    invite.id
-                                  )}
-                                  onCheckedChange={(checked) =>
-                                    toggleInviteSelection(
-                                      invite.id,
-                                      checked === true
-                                    )
-                                  }
-                                />
-                              </TableCell>
-                              <TableCell className="font-medium text-foreground">
-                                {invite.email ?? (
-                                  <span className="text-muted-foreground/60">
-                                    —
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell className="font-medium text-muted-foreground">
-                                {invite.organization_id ? (
-                                  <Link
-                                    to={`/organizations/${invite.organization_id}`}
-                                    className="text-foreground transition-colors hover:text-primary"
-                                  >
-                                    {invite.organization_name ??
-                                      "General Workspace"}
-                                  </Link>
-                                ) : (
-                                  (invite.organization_name ??
-                                  "General Workspace")
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className={
-                                    invite.role === "admin"
-                                      ? "border-violet-500/20 bg-violet-500/10 text-violet-600 capitalize dark:text-violet-400"
-                                      : "border-blue-500/20 bg-blue-500/10 text-blue-600 capitalize dark:text-blue-400"
-                                  }
-                                >
-                                  {invite.role ?? "Collaborator"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="font-medium text-muted-foreground">
-                                {invite.department_name ?? (
-                                  <span className="text-muted-foreground/40">
-                                    —
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell className="font-medium text-muted-foreground tabular-nums">
-                                {invite.uses} / {invite.max_uses}
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className={remainingBadgeClass[rem.status]}
-                                >
-                                  {rem.text}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex justify-end gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    title="Copy Invitation Link"
-                                    onClick={() =>
-                                      handleCopyLink(
-                                        invite.id,
-                                        invite.invite_url
-                                      )
-                                    }
-                                  >
-                                    {copiedId === invite.id ? (
-                                      <Check className="size-4 text-emerald-500" />
-                                    ) : (
-                                      <Clipboard className="size-4" />
-                                    )}
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    title="Delete invitation"
-                                    onClick={() => {
-                                      setSelectedInviteIds([invite.id])
-                                      setDeleteDialogOpen(true)
-                                    }}
-                                  >
-                                    <Trash2 className="size-4 text-destructive" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          )
-                        })}
-                </TableBody>
-              </Table>
-            </div>
+                ))
+              ) : filteredInvites.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center py-4">
+                      <Mail className="size-8 text-muted-foreground/60 mb-2" />
+                      <p className="font-medium text-foreground">No invitations found</p>
+                      <p className="text-xs mt-1">No active or expired invitation links match your filters.</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedInvites.map((invite) => {
+                  const rem = formatRemainingTime(
+                    invite.expires_at,
+                    invite.uses,
+                    invite.max_uses
+                  )
+                  return (
+                    <TableRow
+                      key={invite.id}
+                      className="group transition-colors hover:bg-muted/40"
+                    >
+                      <TableCell>
+                        <Checkbox
+                          aria-label={`Select invitation ${invite.email ?? invite.id}`}
+                          checked={selectedInviteIds.includes(invite.id)}
+                          onCheckedChange={(checked) =>
+                            toggleInviteSelection(invite.id, checked === true)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium text-foreground">
+                        {invite.email ?? (
+                          <span className="text-muted-foreground/60 italic">
+                            Any email
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {invite.isSysadmin ? (
+                          <Badge
+                            variant="outline"
+                            className="border-rose-500/20 bg-rose-500/10 font-semibold text-rose-600 dark:text-rose-400"
+                          >
+                            Sysadmin
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="border-blue-500/20 bg-blue-500/10 font-semibold text-blue-600 dark:text-blue-400"
+                          >
+                            Organization
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium text-foreground">
+                        {invite.isSysadmin ? (
+                          <span className="text-muted-foreground/60 italic">System</span>
+                        ) : invite.organization_id ? (
+                          <Link
+                            to={`/organizations/${invite.organization_id}`}
+                            className="text-foreground transition-colors hover:text-primary font-medium"
+                          >
+                            {invite.organization_name ?? "General Workspace"}
+                          </Link>
+                        ) : (
+                          invite.organization_name ?? "General Workspace"
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium text-muted-foreground">
+                        {invite.isSysadmin ? (
+                          <span className="text-muted-foreground/60">—</span>
+                        ) : (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="capitalize text-foreground font-semibold">
+                              {invite.role ?? "Member"}
+                            </span>
+                            {invite.department_name && (
+                              <span className="text-xs text-muted-foreground">
+                                {invite.department_name}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium text-muted-foreground tabular-nums">
+                        {invite.uses} / {invite.max_uses}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={remainingBadgeClass[rem.status]}
+                        >
+                          {rem.text}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-1 opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Copy Invitation Link"
+                            onClick={() => handleCopyLink(invite.id, invite.invite_url)}
+                          >
+                            {copiedId === invite.id ? (
+                              <Check className="h-4 w-4 text-emerald-500" />
+                            ) : (
+                              <Clipboard className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            title="Delete invitation"
+                            onClick={() => {
+                              setSelectedInviteIds([invite.id])
+                              setDeleteDialogOpen(true)
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-            {/* Pagination deck */}
-            <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-              <p className="text-sm text-muted-foreground">
-                Showing{" "}
+        {/* Pagination deck */}
+        {!loading && filteredInvites.length > 0 && (
+          <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <p className="text-sm text-muted-foreground">
+              Showing{" "}
+              <span className="font-medium text-foreground">
+                {(currentPage - 1) * pageSize + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium text-foreground">
+                {Math.min(currentPage * pageSize, filteredInvites.length)}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium text-foreground">
+                {filteredInvites.length}
+              </span>{" "}
+              invitations
+            </p>
+
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Rows per page:
+                </span>
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={(val) => {
+                    setPageSize(Number(val))
+                    setCurrentPage(1)
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[70px] bg-background">
+                    <SelectValue placeholder="10" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <span className="text-sm text-muted-foreground">
+                Page{" "}
                 <span className="font-medium text-foreground">
-                  {totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium text-foreground">
-                  {Math.min(currentPage * pageSize, totalItems)}
+                  {currentPage}
                 </span>{" "}
                 of{" "}
                 <span className="font-medium text-foreground">
-                  {totalItems}
-                </span>{" "}
-                invitations
-              </p>
-
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Rows per page:
-                  </span>
-                  <Select
-                    value={pageSize.toString()}
-                    onValueChange={(val) => {
-                      setPageSize(Number(val))
-                      setCurrentPage(1)
-                    }}
-                  >
-                    <SelectTrigger className="h-8 w-[70px] bg-background">
-                      <SelectValue placeholder="10" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <span className="text-sm text-muted-foreground">
-                  Page{" "}
-                  <span className="font-medium text-foreground">
-                    {currentPage}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-medium text-foreground">
-                    {totalPages}
-                  </span>
+                  {totalPages}
                 </span>
+              </span>
 
-                <div className="flex gap-1.5">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-8 bg-background"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1 || loading}
-                  >
-                    <ChevronLeft className="size-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-8 bg-background"
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages || loading}
-                  >
-                    <ChevronRight className="size-4" />
-                  </Button>
-                </div>
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 bg-background"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || loading}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 bg-background"
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages || loading}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
               </div>
             </div>
-          </>
+          </div>
         )}
       </Card>
       <DeleteInvitationsDialog
