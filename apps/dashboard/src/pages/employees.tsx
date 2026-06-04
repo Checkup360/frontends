@@ -1,11 +1,13 @@
 import { listOrganizationEmployees, listDepartments } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
-import { Card, CardContent } from "@workspace/ui/components/card"
 import { Activity, Building2, ShieldCheck, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-import { AreaScores } from "@/components/area-scores"
 import { EmployeesTable } from "@/components/employees-table"
+import {
+  OverviewStatCard,
+  OverviewStatCardSkeleton,
+} from "@workspace/components/components/card"
 
 export function EmployeesPage() {
   const { user } = useCurrentUser()
@@ -51,28 +53,25 @@ export function EmployeesPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {peopleStats.map((stat) => (
-          <Card key={stat.label} size="sm">
-            <CardContent className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="mt-2 text-2xl font-semibold tracking-tight">
-                  {stat.value}
-                </p>
-              </div>
-              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <stat.icon className="size-5" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {totalEmployees === "..." || totalDepartments === "..."
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <OverviewStatCardSkeleton key={index} />
+            ))
+          : peopleStats.map((stat) => (
+              <OverviewStatCard
+                key={stat.label}
+                label={stat.label}
+                value={stat.value}
+                icon={stat.icon}
+                iconVariant="icon"
+                tone="primary"
+              />
+            ))}
       </section>
 
       <section>
         <EmployeesTable organizationId={organizationId} />
       </section>
-
-      <AreaScores />
     </div>
   )
 }

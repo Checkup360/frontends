@@ -77,7 +77,7 @@ export function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/employees" element={<EmployeesPage />} />
               <Route path="/employees/:id" element={<EmployeeDetailPage />} />
-              <Route path="/people/invite" element={<InvitePeoplePage />} />
+              <Route path="/invitations" element={<InvitePeoplePage />} />
               <Route path="/departments" element={<DepartmentsPage />} />
               <Route path="/organization" element={<OrganizationPage />} />
               <Route path="/settings" element={<NotFound />} />

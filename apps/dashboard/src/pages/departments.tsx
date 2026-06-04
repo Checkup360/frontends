@@ -13,6 +13,11 @@ import { Card } from "@workspace/ui/components/card"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { ActionButton } from "@workspace/components/components/action-button"
+import {
+  OverviewStatCard,
+  OverviewStatCardSkeleton,
+} from "@workspace/components/components/card"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import {
@@ -298,26 +303,42 @@ export function DepartmentsPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <section className="grid gap-3 md:grid-cols-3">
-        <DepartmentMetricCard
-          icon={Users}
-          label="Assigned members"
-          value={loading ? null : assignedMembers.toString()}
-          hint={`${unassignedMembers} unassigned`}
-        />
-        <DepartmentMetricCard
-          icon={AlertTriangle}
-          label="Highest onboarding risk"
-          value={loading ? null : highestRisk ? `${highestRisk.risk}%` : "0%"}
-          hint={highestRisk?.name ?? "No members assigned"}
-          tone="warning"
-        />
-        <DepartmentMetricCard
-          icon={ShieldCheck}
-          label="Average department risk"
-          value={loading ? null : `${averageRisk}%`}
-          hint="Based on onboarding members"
-          tone="success"
-        />
+        {loading ? (
+          <OverviewStatCardSkeleton />
+        ) : (
+          <OverviewStatCard
+            icon={Users}
+            iconVariant="icon"
+            tone="primary"
+            label="Assigned members"
+            value={assignedMembers.toString()}
+            hint={`${unassignedMembers} unassigned`}
+          />
+        )}
+        {loading ? (
+          <OverviewStatCardSkeleton />
+        ) : (
+          <OverviewStatCard
+            icon={AlertTriangle}
+            iconVariant="icon"
+            tone="warning"
+            label="Highest onboarding risk"
+            value={highestRisk ? `${highestRisk.risk}%` : "0%"}
+            hint={highestRisk?.name ?? "No members assigned"}
+          />
+        )}
+        {loading ? (
+          <OverviewStatCardSkeleton />
+        ) : (
+          <OverviewStatCard
+            icon={ShieldCheck}
+            iconVariant="icon"
+            tone="success"
+            label="Average department risk"
+            value={`${averageRisk}%`}
+            hint="Based on onboarding members"
+          />
+        )}
       </section>
 
       <div className="w-full">
@@ -331,14 +352,14 @@ export function DepartmentsPage() {
                 Search, create and maintain department ownership.
               </p>
             </div>
-            <Button
+            <ActionButton
               size="sm"
               className="self-start"
+              icon={Plus}
               onClick={() => setCreateOpen(true)}
             >
-              <Plus className="size-4" />
               New department
-            </Button>
+            </ActionButton>
           </div>
 
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -409,7 +430,7 @@ export function DepartmentsPage() {
                   <Item
                     key={dept.id}
                     variant="outline"
-                    className="group cursor-default rounded-2xl border-border/85 bg-card/45 shadow-xs transition-all duration-300 ease-out hover:-translate-y-1 hover:border-primary/20 hover:bg-muted/10 hover:shadow-md active:translate-y-0 active:scale-[0.985]"
+                    className="group cursor-default rounded-2xl border-border/85 bg-card/45 shadow-xs transition-all duration-200 ease-out hover:border-primary/40 hover:bg-muted/20"
                   >
                     <ItemHeader>
                       <div className="flex items-center gap-2">
@@ -666,44 +687,4 @@ export function DepartmentsPage() {
   )
 }
 
-function DepartmentMetricCard({
-  icon: Icon,
-  label,
-  value,
-  hint,
-  tone = "default",
-}: {
-  icon: typeof Users
-  label: string
-  value: string | null
-  hint: string
-  tone?: "default" | "warning" | "success"
-}) {
-  const toneClass =
-    tone === "warning"
-      ? "bg-[color:var(--warning)]/15 text-[color:var(--warning)]"
-      : tone === "success"
-        ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
-        : "bg-muted text-muted-foreground"
 
-  return (
-    <Card className="rounded-3xl border-border/70 bg-card/80 p-5">
-      <div className="flex items-center gap-3">
-        <span
-          className={`inline-flex size-10 items-center justify-center rounded-full ${toneClass}`}
-        >
-          <Icon className="size-5" />
-        </span>
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          {value === null ? (
-            <Skeleton className="mt-1 h-6 w-14" />
-          ) : (
-            <p className="text-xl font-semibold text-foreground">{value}</p>
-          )}
-          <p className="text-xs text-muted-foreground">{hint}</p>
-        </div>
-      </div>
-    </Card>
-  )
-}

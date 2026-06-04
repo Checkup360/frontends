@@ -11,6 +11,7 @@ import {
   OverviewStatCard,
   OverviewStatCardSkeleton,
 } from "@workspace/components/components/card"
+import { ActionButton } from "@workspace/components/components/action-button"
 
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -200,8 +201,7 @@ export function OrganizationsPage() {
         <h2 className="text-base font-semibold text-foreground">Overview</h2>
       </div>
 
-      {/* Stats Cards */}
-      <section className="grid gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs md:grid-cols-3 dark:*:data-[slot=card]:bg-card">
+      <section className="grid gap-4 md:grid-cols-3">
         {loading
           ? Array.from({ length: 3 }).map((_, index) => (
               <OverviewStatCardSkeleton key={index} />
@@ -229,14 +229,13 @@ export function OrganizationsPage() {
               Manage organization environments, slugs and collaborators.
             </p>
           </div>
-          <Button
+          <ActionButton
             size="sm"
-            className="gap-2 rounded-xl bg-white text-black hover:bg-white/90 dark:bg-white dark:text-black"
+            icon={Plus}
             onClick={() => setDialogOpen(true)}
           >
-            <Plus className="size-4" />
             New organization
-          </Button>
+          </ActionButton>
         </div>
 
         {/* Filters Toolbar */}

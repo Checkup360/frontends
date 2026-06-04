@@ -17,10 +17,10 @@ const navigation: WorkspaceShellNavItem[] = [
   { title: "Overview", url: "/", icon: LayoutDashboard, to: "/", end: true },
   { title: "Employees", url: "/employees", icon: Users, to: "/employees" },
   {
-    title: "Invite",
-    url: "/people/invite",
+    title: "Invitations",
+    url: "/invitations",
     icon: MailPlus,
-    to: "/people/invite",
+    to: "/invitations",
   },
   {
     title: "Departments",
@@ -63,8 +63,8 @@ export function DashboardShell() {
         return "Dashboard"
       case "/employees":
         return "Employees"
-      case "/people/invite":
-        return "Invite"
+      case "/invitations":
+        return "Invitations"
       case "/departments":
         return "Departments"
       case "/settings":

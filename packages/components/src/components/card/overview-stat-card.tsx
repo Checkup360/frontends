@@ -60,7 +60,7 @@ export function OverviewStatCard({
   const TrendIcon = positive ? TrendingUp : TrendingDown
 
   return (
-    <Card className="@container/card">
+    <Card className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs dark:bg-card">
       <CardHeader>
         <CardDescription>{label}</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
@@ -108,7 +108,7 @@ export function OverviewStatCard({
 
 export function OverviewStatCardSkeleton() {
   return (
-    <Card className="@container/card">
+    <Card className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs dark:bg-card">
       <CardHeader className="relative min-h-[124px]">
         <Skeleton className="h-3.5 w-24" />
         <Skeleton className="h-9 w-20" />

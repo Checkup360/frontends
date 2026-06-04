@@ -8,7 +8,6 @@ import { Link, Outlet, Route, Routes } from "react-router-dom"
 import { BackofficeLoadingSkeleton } from "@/components/backoffice-loading-skeleton"
 import { BackofficeShell } from "@/components/backoffice-shell"
 import { InvitationsPage } from "@/pages/invitations"
-import { ManageOrganizationsPage } from "@/pages/manage-organizations"
 import { OrganizationDetailPage } from "@/pages/organization-detail"
 import { OrganizationsPage } from "@/pages/organizations"
 import { ThemeProvider } from "./components/theme-provider"
@@ -78,7 +77,6 @@ export function App() {
                 path="organizations/:id"
                 element={<OrganizationDetailPage />}
               />
-              <Route path="/manage" element={<ManageOrganizationsPage />} />
               <Route path="/invitations" element={<InvitationsPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>

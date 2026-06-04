@@ -1,9 +1,9 @@
 import type * as React from "react"
 import { MailPlus } from "lucide-react"
 
-import { Button } from "@workspace/ui/components/button"
+import { ActionButton } from "./action-button"
 
-type CreateInvitationButtonProps = React.ComponentProps<typeof Button>
+type CreateInvitationButtonProps = React.ComponentProps<typeof ActionButton>
 
 export function CreateInvitationButton({
   children = "Create Invitation",
@@ -11,9 +11,12 @@ export function CreateInvitationButton({
   ...props
 }: CreateInvitationButtonProps) {
   return (
-    <Button className={className} {...props}>
-      <MailPlus className="size-4" />
+    <ActionButton
+      icon={MailPlus}
+      className={className}
+      {...props}
+    >
       {children}
-    </Button>
+    </ActionButton>
   )
 }
