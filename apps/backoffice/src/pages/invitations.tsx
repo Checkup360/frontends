@@ -324,11 +324,6 @@ export function InvitationsPage() {
                     setCompleted(val)
                     if (val) {
                       toast.success("Sysadmin invitation created successfully!")
-                      setTimeout(() => {
-                        setIsCreating(false)
-                        setCompleted(false)
-                        setSelectedType(null)
-                      }, 1500)
                     }
                   }}
                 />
@@ -343,11 +338,6 @@ export function InvitationsPage() {
                       toast.success(
                         "Organization invitation created successfully!"
                       )
-                      setTimeout(() => {
-                        setIsCreating(false)
-                        setCompleted(false)
-                        setSelectedType(null)
-                      }, 1500)
                     }
                   }}
                   initialOrganizationId={initialOrganizationId}

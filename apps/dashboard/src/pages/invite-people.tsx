@@ -223,7 +223,7 @@ export function InvitePeoplePage() {
 
   if (showCreateForm) {
     return (
-      <div className="mx-auto w-full max-w-3xl animate-in space-y-4 duration-300 fade-in">
+      <div className="mx-auto w-full max-w-5xl animate-in space-y-6 duration-300 fade-in">
         <div className="flex items-center">
           <Button
             variant="ghost"
@@ -234,7 +234,7 @@ export function InvitePeoplePage() {
             Back to Invites
           </Button>
         </div>
-        <Card>
+        <Card className="border-border/60 shadow-[var(--shadow-card)]">
           <CardContent className="py-6 md:px-8">
             <OrgInvitationForm
               fixedOrganization={organization}
@@ -243,9 +243,8 @@ export function InvitePeoplePage() {
               onBack={() => setShowCreateForm(false)}
               onSuccessChange={(success) => {
                 if (success) {
-                  // After successful creation, refresh the list and return to table view
+                  // After successful creation, refresh the list in the background
                   void loadInvites()
-                  setShowCreateForm(false)
                 }
               }}
             />
