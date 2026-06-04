@@ -23,7 +23,7 @@ import {
 } from "@workspace/ui/components/select"
 import {
   deleteOrgInvitations,
-  listOrgInvitationsPage,
+  listOrgInvitations,
   type OrganizationInvite,
 } from "@workspace/api"
 import {
@@ -130,11 +130,8 @@ export function InvitePeoplePage() {
   const loadInvites = async () => {
     setLoading(true)
     try {
-      const data = await listOrgInvitationsPage({
-        page: 1,
-        pageSize: 1000,
-      })
-      setInvites(data.items)
+      const data = await listOrgInvitations()
+      setInvites(data)
       setSelectedInviteIds([])
     } catch (err) {
       console.error("Failed to load invitations:", err)

@@ -14,8 +14,8 @@ import { Link, useSearchParams } from "react-router-dom"
 import {
   deleteOrgInvitations,
   deleteSysadminInvitations,
-  listOrgInvitationsPage,
-  listSysadminInvitationsPage,
+  listOrgInvitations,
+  listSysadminInvitations,
   listOrganizations,
   type OrganizationInvite,
   type SysadminInvite,
@@ -256,11 +256,11 @@ export function InvitationsPage() {
     setLoading(true)
     try {
       const [sysadminData, orgData] = await Promise.all([
-        listSysadminInvitationsPage({ page: 1, pageSize: 1000 }),
-        listOrgInvitationsPage({ page: 1, pageSize: 1000 })
+        listSysadminInvitations(),
+        listOrgInvitations(),
       ])
-      setSysadminInvites(sysadminData.items)
-      setOrgInvites(orgData.items)
+      setSysadminInvites(sysadminData)
+      setOrgInvites(orgData)
       setSelectedInviteIds([])
     } catch (err) {
       console.error("Failed to load invitations list:", err)
