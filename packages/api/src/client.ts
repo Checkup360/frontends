@@ -680,6 +680,41 @@ export async function listDepartments(
   }
 }
 
+export async function listDepartmentsPage(
+  organizationId: string,
+  filters: {
+    search?: string
+    page: number
+    pageSize: number
+  }
+): Promise<PaginatedResponse<DepartmentResponse>> {
+  try {
+    const url = new URL(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationDepartments(organizationId)}`
+    )
+    if (filters.search?.trim()) {
+      url.searchParams.append("search", filters.search.trim())
+    }
+    url.searchParams.append("page", filters.page.toString())
+    url.searchParams.append("page_size", filters.pageSize.toString())
+
+    const response = await fetchWithAuth(url.toString(), {
+      credentials: "include",
+    })
+
+    if (response.status === 401 || !response.ok) {
+      return { items: [], total: 0, page: filters.page, page_size: filters.pageSize }
+    }
+
+    const items = (await response.json()) as DepartmentResponse[]
+    return paginatedFromHeaders(response, items, filters.page, filters.pageSize)
+  } catch (error) {
+    console.error("Error listing paginated departments:", error)
+    return { items: [], total: 0, page: filters.page, page_size: filters.pageSize }
+  }
+}
+
+
 export async function createDepartment(
   organizationId: string,
   payload: { name: string }

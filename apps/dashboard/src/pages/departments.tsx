@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   createDepartment,
   updateDepartment,
   deleteDepartment,
   listDepartments,
+  listDepartmentsPage,
   listOrganizationEmployees,
   type DepartmentResponse,
   type OrganizationEmployee,
@@ -61,9 +63,13 @@ import {
   Check,
   X,
   MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { DepartmentTrendsChart } from "@workspace/components/components/department-trends-chart"
+import { useIsMobile } from "@workspace/ui/hooks/use-mobile"
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface DepartmentRiskInsight {
   id: string
@@ -96,17 +102,32 @@ function riskTone(risk: number) {
   }
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function DepartmentsPage() {
   const { user } = useCurrentUser()
+  const navigate = useNavigate()
   const organizationId = user?.membership?.organization_id ?? null
 
-  const [departments, setDepartments] = useState<DepartmentResponse[]>([])
+  const isMobile = useIsMobile()
+  const PAGE_SIZE = isMobile ? 3 : 6
+
+  // ── All departments (for KPIs + trends chart) ──
+  const [allDepartments, setAllDepartments] = useState<DepartmentResponse[]>([])
   const [employees, setEmployees] = useState<OrganizationEmployee[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loadingMeta, setLoadingMeta] = useState(true)
+
+  // ── Paginated grid ──
+  const [departments, setDepartments] = useState<DepartmentResponse[]>([])
+  const [totalItems, setTotalItems] = useState(0)
+  const [loadingGrid, setLoadingGrid] = useState(true)
   const [error, setError] = useState("")
 
-  // Search, creation, rename and delete states
+  // ── Filters & pagination ──
   const [search, setSearch] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+
+  // ── CRUD dialogs ──
   const [createOpen, setCreateOpen] = useState(false)
   const [newName, setNewName] = useState("")
   const [creating, setCreating] = useState(false)
@@ -117,46 +138,70 @@ export function DepartmentsPage() {
   const [saving, setSaving] = useState(false)
   const [editError, setEditError] = useState("")
 
-  const [deleteTarget, setDeleteTarget] = useState<DepartmentResponse | null>(
-    null
-  )
+  const [deleteTarget, setDeleteTarget] = useState<DepartmentResponse | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
 
+  // ── Load all depts + employees once (for KPIs & trends) ──
+  useEffect(() => {
+    let active = true
+    async function load() {
+      if (!organizationId) {
+        setAllDepartments([])
+        setEmployees([])
+        setLoadingMeta(false)
+        return
+      }
+      setLoadingMeta(true)
+      const [depts, emps] = await Promise.all([
+        listDepartments(organizationId),
+        listOrganizationEmployees(organizationId, ["member"]),
+      ])
+      if (!active) return
+      setAllDepartments(depts)
+      setEmployees(emps)
+      setLoadingMeta(false)
+    }
+    void load()
+    return () => { active = false }
+  }, [organizationId])
+
+  // ── Load paginated grid (reacts to search + page) ──
   useEffect(() => {
     let active = true
     async function load() {
       if (!organizationId) {
         setDepartments([])
-        setEmployees([])
-        setLoading(false)
+        setTotalItems(0)
+        setLoadingGrid(false)
         return
       }
-      setLoading(true)
+      setLoadingGrid(true)
       setError("")
       try {
-        const [departmentsData, employeesData] = await Promise.all([
-          listDepartments(organizationId),
-          listOrganizationEmployees(organizationId, ["member"]),
-        ])
-        if (active) {
-          setDepartments(departmentsData)
-          setEmployees(employeesData)
-        }
+        const data = await listDepartmentsPage(organizationId, {
+          search: search.trim() || undefined,
+          page: currentPage,
+          pageSize: PAGE_SIZE,
+        })
+        if (!active) return
+        setDepartments(data.items)
+        setTotalItems(data.total)
       } catch {
         if (active) setError("Failed to load departments.")
       } finally {
-        if (active) setLoading(false)
+        if (active) setLoadingGrid(false)
       }
     }
     void load()
-    return () => {
-      active = false
-    }
-  }, [organizationId])
+    return () => { active = false }
+  }, [organizationId, search, currentPage, PAGE_SIZE])
 
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE))
+
+  // ── Insights derived from ALL departments ──
   const insights = useMemo<DepartmentRiskInsight[]>(() => {
-    return departments.map((department) => {
+    return allDepartments.map((department) => {
       const members = employees.filter(
         (employee) => employee.department?.id === department.id
       )
@@ -175,11 +220,11 @@ export function DepartmentsPage() {
             : Math.round((onboarding / members.length) * 100),
       }
     })
-  }, [departments, employees])
+  }, [allDepartments, employees])
 
   const highestRisk = useMemo(() => {
     return insights
-      .filter((department) => department.total > 0)
+      .filter((d) => d.total > 0)
       .sort((a, b) => b.risk - a.risk)[0]
   }, [insights])
 
@@ -187,20 +232,32 @@ export function DepartmentsPage() {
     insights.length === 0
       ? 0
       : Math.round(
-          insights.reduce((total, department) => total + department.risk, 0) /
-            insights.length
+          insights.reduce((total, d) => total + d.risk, 0) / insights.length
         )
-  const filteredDepartments = useMemo(() => {
-    return departments.filter((dept) => {
-      const term = search.trim().toLowerCase()
-      if (!term) return true
-      return (
-        dept.name.toLowerCase().includes(term) ||
-        dept.slug.toLowerCase().includes(term)
-      )
-    })
-  }, [departments, search])
 
+  // ── Refresh helpers ──
+  const refreshAll = async () => {
+    if (!organizationId) return
+    const [depts, emps] = await Promise.all([
+      listDepartments(organizationId),
+      listOrganizationEmployees(organizationId, ["member"]),
+    ])
+    setAllDepartments(depts)
+    setEmployees(emps)
+  }
+
+  const refreshGrid = async () => {
+    if (!organizationId) return
+    const data = await listDepartmentsPage(organizationId, {
+      search: search.trim() || undefined,
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+    })
+    setDepartments(data.items)
+    setTotalItems(data.total)
+  }
+
+  // ── CRUD handlers ──
   const handleCreateLocal = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newName.trim()) return
@@ -211,9 +268,7 @@ export function DepartmentsPage() {
       setCreating(false)
       return
     }
-    const result = await createDepartment(organizationId, {
-      name: newName.trim(),
-    })
+    const result = await createDepartment(organizationId, { name: newName.trim() })
     setCreating(false)
     if (result.error) {
       setCreateError(
@@ -223,9 +278,9 @@ export function DepartmentsPage() {
       )
       return
     }
-    setDepartments((prev) => [...prev, result.success])
     setNewName("")
     setCreateOpen(false)
+    await Promise.all([refreshAll(), refreshGrid()])
   }
 
   const handleSaveRenameLocal = async (dept: DepartmentResponse) => {
@@ -249,10 +304,8 @@ export function DepartmentsPage() {
       )
       return
     }
-    setDepartments((prev) =>
-      prev.map((d) => (d.id === dept.id ? result.success : d))
-    )
     setEditingId(null)
+    await Promise.all([refreshAll(), refreshGrid()])
   }
 
   const handleDeleteLocal = async () => {
@@ -269,8 +322,13 @@ export function DepartmentsPage() {
       )
       return
     }
-    setDepartments((prev) => prev.filter((d) => d.id !== deleteTarget.id))
     setDeleteTarget(null)
+    // Go back a page if we just deleted the last item on this page
+    if (departments.length === 1 && currentPage > 1) {
+      setCurrentPage((p) => p - 1)
+    } else {
+      await Promise.all([refreshAll(), refreshGrid()])
+    }
   }
 
   const startEdit = (dept: DepartmentResponse) => {
@@ -278,7 +336,6 @@ export function DepartmentsPage() {
     setEditName(dept.name)
     setEditError("")
   }
-
   const cancelEdit = () => {
     setEditingId(null)
     setEditName("")
@@ -296,8 +353,11 @@ export function DepartmentsPage() {
   const getInitials = (email: string) =>
     email.split("@")[0]?.slice(0, 2).toUpperCase() || "??"
 
+  const loading = loadingMeta && loadingGrid
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
+      {/* ── KPIs ── */}
       <section className="grid gap-3 md:grid-cols-3">
         {loading ? (
           <OverviewStatCardSkeleton />
@@ -307,8 +367,8 @@ export function DepartmentsPage() {
             iconVariant="icon"
             tone="primary"
             label="Total departments"
-            value={departments.length.toString()}
-            hint={`${filteredDepartments.length} visible after filters`}
+            value={allDepartments.length.toString()}
+            hint={`${totalItems} visible after filters`}
           />
         )}
         {loading ? (
@@ -337,8 +397,10 @@ export function DepartmentsPage() {
         )}
       </section>
 
+      {/* ── Grid card ── */}
       <div className="w-full">
         <Card className="flex h-full min-h-[400px] flex-col rounded-3xl border-border/70 bg-card/80 p-5 shadow-sm">
+          {/* Header */}
           <div className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h3 className="text-lg font-semibold tracking-tight text-foreground">
@@ -358,12 +420,16 @@ export function DepartmentsPage() {
             </ActionButton>
           </div>
 
+          {/* Search + total */}
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative sm:max-w-xs sm:flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setCurrentPage(1)
+                }}
                 placeholder="Search departments..."
                 className="h-9 rounded-full border-transparent bg-muted/60 pl-9 shadow-none"
               />
@@ -371,19 +437,14 @@ export function DepartmentsPage() {
             <div className="flex items-center gap-2">
               <Badge
                 variant="outline"
-                className="h-8 rounded-full border-border/70 px-3"
-              >
-                All
-              </Badge>
-              <Badge
-                variant="outline"
                 className="h-8 rounded-full border-border/70 px-3 text-muted-foreground"
               >
-                {loading ? "..." : departments.length} total
+                {loadingGrid ? "..." : totalItems} total
               </Badge>
             </div>
           </div>
 
+          {/* Error */}
           {error && (
             <div className="mb-4 flex items-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               <AlertCircle className="size-4 shrink-0" />
@@ -391,31 +452,27 @@ export function DepartmentsPage() {
             </div>
           )}
 
-          {loading ? (
+          {/* Grid */}
+          {loadingGrid ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
+              {Array.from({ length: PAGE_SIZE }).map((_, index) => (
                 <Skeleton key={index} className="h-44 rounded-2xl" />
               ))}
             </div>
-          ) : departments.length === 0 && !error ? (
+          ) : totalItems === 0 && !error ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/80 bg-muted/20 py-10 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-foreground">
               <span className="inline-flex size-10 items-center justify-center rounded-full bg-muted">
                 <FolderIcon className="size-5" />
               </span>
               <span className="text-sm font-medium">
-                No departments yet. Use the button above to create one.
+                {search
+                  ? "No departments match your search."
+                  : "No departments yet. Use the button above to create one."}
               </span>
-            </div>
-          ) : filteredDepartments.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center rounded-2xl bg-muted/20 py-10 text-center">
-              <FolderIcon className="mb-2 size-6 text-muted-foreground/60" />
-              <p className="text-sm font-medium text-foreground">
-                No departments match your search.
-              </p>
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredDepartments.map((dept) => {
+              {departments.map((dept) => {
                 const insight = insights.find((item) => item.id === dept.id)
                 const tone = riskTone(insight?.risk ?? 0)
                 const deptMembers = employees.filter(
@@ -426,7 +483,11 @@ export function DepartmentsPage() {
                   <Item
                     key={dept.id}
                     variant="outline"
-                    className="group cursor-default rounded-2xl border-border/85 bg-card/45 shadow-xs transition-all duration-200 ease-out hover:border-primary/40 hover:bg-muted/20"
+                    className="group cursor-pointer rounded-2xl border-border/85 bg-card/45 shadow-xs transition-all duration-200 ease-out hover:border-primary/40 hover:bg-muted/20"
+                    onClick={() => {
+                      if (editingId) return
+                      navigate(`/departments/${dept.slug}`)
+                    }}
                   >
                     <ItemHeader>
                       <div className="flex items-center gap-2">
@@ -566,17 +627,55 @@ export function DepartmentsPage() {
               })}
             </div>
           )}
+
+          {/* ── Pagination ── */}
+          {totalPages > 1 && (
+            <div className="mt-5 flex items-center justify-between border-t border-border/40 pt-4">
+              <p className="text-sm text-muted-foreground">
+                Page{" "}
+                <span className="font-medium text-foreground">{currentPage}</span>{" "}
+                of{" "}
+                <span className="font-medium text-foreground">{totalPages}</span>
+                {" "}·{" "}
+                <span className="font-medium text-foreground">{totalItems}</span>{" "}
+                total
+              </p>
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 bg-background"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || loadingGrid}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 bg-background"
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages || loadingGrid}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
       </div>
 
-      {/* Department risk trends chart */}
-      {!loading && departments.length > 0 && (
+      {/* ── Trends chart ── */}
+      {!loadingMeta && allDepartments.length > 0 && (
         <DepartmentTrendsChart
-          departments={departments}
+          departments={allDepartments}
           employees={employees}
         />
       )}
 
+      {/* ── Create dialog ── */}
       <Dialog
         open={createOpen}
         onOpenChange={(open) => {
@@ -643,6 +742,7 @@ export function DepartmentsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* ── Delete dialog ── */}
       <Dialog
         open={!!deleteTarget}
         onOpenChange={(open) => {
@@ -690,5 +790,3 @@ export function DepartmentsPage() {
     </div>
   )
 }
-
-
