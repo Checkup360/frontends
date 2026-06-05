@@ -52,7 +52,6 @@ import { Progress } from "@workspace/ui/components/progress"
 import {
   AlertTriangle,
   ShieldCheck,
-  Users,
   Folder as FolderIcon,
   Plus,
   Search,
@@ -63,6 +62,7 @@ import {
   X,
   MoreHorizontal,
 } from "lucide-react"
+import { DepartmentTrendsChart } from "@workspace/components/components/department-trends-chart"
 
 
 interface DepartmentRiskInsight {
@@ -183,10 +183,6 @@ export function DepartmentsPage() {
       .sort((a, b) => b.risk - a.risk)[0]
   }, [insights])
 
-  const assignedMembers = employees.filter(
-    (employee) => employee.department
-  ).length
-  const unassignedMembers = employees.length - assignedMembers
   const averageRisk =
     insights.length === 0
       ? 0
@@ -307,12 +303,12 @@ export function DepartmentsPage() {
           <OverviewStatCardSkeleton />
         ) : (
           <OverviewStatCard
-            icon={Users}
+            icon={FolderIcon}
             iconVariant="icon"
             tone="primary"
-            label="Assigned members"
-            value={assignedMembers.toString()}
-            hint={`${unassignedMembers} unassigned`}
+            label="Total departments"
+            value={departments.length.toString()}
+            hint={`${filteredDepartments.length} visible after filters`}
           />
         )}
         {loading ? (
@@ -572,6 +568,14 @@ export function DepartmentsPage() {
           )}
         </Card>
       </div>
+
+      {/* Department risk trends chart */}
+      {!loading && departments.length > 0 && (
+        <DepartmentTrendsChart
+          departments={departments}
+          employees={employees}
+        />
+      )}
 
       <Dialog
         open={createOpen}
