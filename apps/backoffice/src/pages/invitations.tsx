@@ -137,6 +137,7 @@ export function InvitationsPage() {
 
   // --- Listing Filters and Data State ---
   const [filterType, setFilterType] = useState<"all" | "sysadmin" | "organization">("all")
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "used" | "expired">("all")
   const [selectedOrg, setSelectedOrg] = useState(
     searchParams.get("organizationId") ?? ""
   )
@@ -183,27 +184,7 @@ export function InvitationsPage() {
       if (filterType === "sysadmin" && !invite.isSysadmin) return false
       if (filterType === "organization" && invite.isSysadmin) return false
 
-      // 2. Filter by Organization
-      if (
-        !invite.isSysadmin &&
-        selectedOrg &&
-        selectedOrg !== "all" &&
-        invite.organization_id !== selectedOrg
-      ) {
-        return false
-      }
-
-      // 3. Filter by Role
-      if (
-        !invite.isSysadmin &&
-        selectedRole &&
-        selectedRole !== "all" &&
-        invite.role !== selectedRole
-      ) {
-        return false
-      }
-
-      // 4. Filter by Email Search
+      // 2. Filter by Email Search (client-side only)
       if (searchQuery) {
         if (!invite.email) return false
         if (!invite.email.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -213,7 +194,7 @@ export function InvitationsPage() {
 
       return true
     })
-  }, [combinedInvites, filterType, selectedOrg, selectedRole, searchQuery])
+  }, [combinedInvites, filterType, searchQuery])
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -251,14 +232,23 @@ export function InvitationsPage() {
     void fetchOrgs()
   }, [])
 
-  // Fetch all invites from both endpoints
+  // Fetch all invites from both endpoints with backend filters
   const loadInvites = async () => {
     setLoading(true)
     try {
-      const [sysadminData, orgData] = await Promise.all([
-        listSysadminInvitations(),
-        listOrgInvitations(),
-      ])
+      const sysPromise = (filterType === "all" || filterType === "sysadmin")
+        ? listSysadminInvitations({ status: filterStatus })
+        : Promise.resolve([]);
+      
+      const orgPromise = (filterType === "all" || filterType === "organization")
+        ? listOrgInvitations({
+            status: filterStatus,
+            organizationId: selectedOrg || undefined,
+            role: selectedRole || undefined,
+          })
+        : Promise.resolve([]);
+
+      const [sysadminData, orgData] = await Promise.all([sysPromise, orgPromise])
       setSysadminInvites(sysadminData)
       setOrgInvites(orgData)
       setSelectedInviteIds([])
@@ -273,7 +263,7 @@ export function InvitationsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadInvites()
-  }, [isCreating])
+  }, [isCreating, filterType, filterStatus, selectedOrg, selectedRole])
 
   // Pagination computations
   const totalPages = Math.max(1, Math.ceil(filteredInvites.length / pageSize))
@@ -296,12 +286,14 @@ export function InvitationsPage() {
 
   const hasActiveFilters =
     filterType !== "all" ||
+    filterStatus !== "all" ||
     selectedOrg !== "" ||
     selectedRole !== "all" ||
     searchQuery !== ""
 
   const handleResetFilters = () => {
     setFilterType("all")
+    setFilterStatus("all")
     setSelectedOrg("")
     setSelectedRole("all")
     setSearchQuery("")
@@ -526,6 +518,27 @@ export function InvitationsPage() {
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="sysadmin">Sysadmin</SelectItem>
                   <SelectItem value="organization">Organization</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="w-[150px]">
+              <Select
+                value={filterStatus}
+                onValueChange={(val: "all" | "active" | "used" | "expired") => {
+                  setFilterStatus(val)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="h-9 bg-background">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="used">Used</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
                 </SelectContent>
               </Select>
             </div>

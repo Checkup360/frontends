@@ -89,6 +89,7 @@ export function InvitePeoplePage() {
 
   // Filters State
   const [selectedRole, setSelectedRole] = useState("all")
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "used" | "expired">("all")
   const [searchQuery, setSearchQuery] = useState("")
 
   // Pagination State
@@ -130,7 +131,11 @@ export function InvitePeoplePage() {
   const loadInvites = async () => {
     setLoading(true)
     try {
-      const data = await listOrgInvitations()
+      const data = await listOrgInvitations({
+        organizationId: organization?.id || undefined,
+        role: selectedRole || undefined,
+        status: filterStatus || undefined,
+      })
       setInvites(data)
       setSelectedInviteIds([])
     } catch (err) {
@@ -140,12 +145,13 @@ export function InvitePeoplePage() {
     }
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (organization) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       void loadInvites()
     }
-  }, [organization, showCreateForm])
+  }, [organization, showCreateForm, selectedRole, filterStatus])
 
   // Copy handler
   const handleCopy = (id: string, url: string) => {
@@ -155,14 +161,10 @@ export function InvitePeoplePage() {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  // Client-side filtering by role and email
+  // Client-side filtering by email (other filters handled by backend)
   const filteredInvites = useMemo(() => {
     return invites.filter((invite) => {
-      // 1. Role filter
-      if (selectedRole && selectedRole !== "all" && invite.role !== selectedRole) {
-        return false
-      }
-      // 2. Email search
+      // Email search
       if (searchQuery) {
         if (!invite.email) return false
         if (!invite.email.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -171,7 +173,7 @@ export function InvitePeoplePage() {
       }
       return true
     })
-  }, [invites, selectedRole, searchQuery])
+  }, [invites, searchQuery])
 
   // Pagination values
   const totalPages = Math.max(1, Math.ceil(filteredInvites.length / pageSize))
@@ -192,10 +194,11 @@ export function InvitePeoplePage() {
     paginatedInviteIds.some((id) => selectedInviteIds.includes(id)) &&
     !allPageSelected
 
-  const hasActiveFilters = selectedRole !== "all" || searchQuery !== ""
+  const hasActiveFilters = selectedRole !== "all" || filterStatus !== "all" || searchQuery !== ""
 
   const handleResetFilters = () => {
     setSelectedRole("all")
+    setFilterStatus("all")
     setSearchQuery("")
     setCurrentPage(1)
   }
@@ -402,6 +405,27 @@ export function InvitePeoplePage() {
                   <SelectItem value="all">All Roles</SelectItem>
                   <SelectItem value="member">Member</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="w-[150px]">
+              <Select
+                value={filterStatus}
+                onValueChange={(val: "all" | "active" | "used" | "expired") => {
+                  setFilterStatus(val)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="h-9 bg-background">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="used">Used</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
                 </SelectContent>
               </Select>
             </div>

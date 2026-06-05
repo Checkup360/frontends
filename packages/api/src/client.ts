@@ -1054,6 +1054,7 @@ export async function deleteOrganization(id: string): Promise<void> {
 export async function listOrgInvitations(filters?: {
   organizationId?: string
   role?: string
+  status?: string
 }): Promise<OrganizationInvite[]> {
   try {
     const queryParams = new URLSearchParams()
@@ -1062,6 +1063,9 @@ export async function listOrgInvitations(filters?: {
     }
     if (filters?.role && filters.role !== "all") {
       queryParams.append("role", filters.role.toLowerCase())
+    }
+    if (filters?.status && filters.status !== "all") {
+      queryParams.append("status", filters.status.toLowerCase())
     }
     const queryString = queryParams.toString()
     const url = `${resolveApiBaseUrl()}${apiRoutes.invites.organization}${queryString ? `?${queryString}` : ""}`
@@ -1081,6 +1085,7 @@ export async function listOrgInvitations(filters?: {
 export async function listOrgInvitationsPage(filters: {
   organizationId?: string
   role?: string
+  status?: string
   page: number
   pageSize: number
 }): Promise<PaginatedResponse<OrganizationInvite>> {
@@ -1091,6 +1096,9 @@ export async function listOrgInvitationsPage(filters: {
     }
     if (filters.role && filters.role !== "all") {
       queryParams.append("role", filters.role.toLowerCase())
+    }
+    if (filters.status && filters.status !== "all") {
+      queryParams.append("status", filters.status.toLowerCase())
     }
     queryParams.append("page", filters.page.toString())
     queryParams.append("page_size", filters.pageSize.toString())
@@ -1141,15 +1149,21 @@ export async function deleteOrgInvitations(ids: string[]): Promise<number> {
   return payload.deleted_count ?? 0
 }
 
-export async function listSysadminInvitations(): Promise<SysadminInvite[]> {
+export async function listSysadminInvitations(filters?: {
+  status?: string
+}): Promise<SysadminInvite[]> {
   try {
-    const response = await fetchWithAuth(
-      `${resolveApiBaseUrl()}${apiRoutes.invites.admin}`,
-      {
-        method: "GET",
-        credentials: "include",
-      }
-    )
+    const queryParams = new URLSearchParams()
+    if (filters?.status && filters.status !== "all") {
+      queryParams.append("status", filters.status.toLowerCase())
+    }
+    const queryString = queryParams.toString()
+    const url = `${resolveApiBaseUrl()}${apiRoutes.invites.admin}${queryString ? `?${queryString}` : ""}`
+
+    const response = await fetchWithAuth(url, {
+      method: "GET",
+      credentials: "include",
+    })
     if (!response.ok) return []
     return (await response.json()) as SysadminInvite[]
   } catch (error) {
@@ -1159,11 +1173,15 @@ export async function listSysadminInvitations(): Promise<SysadminInvite[]> {
 }
 
 export async function listSysadminInvitationsPage(filters: {
+  status?: string
   page: number
   pageSize: number
 }): Promise<PaginatedResponse<SysadminInvite>> {
   try {
     const queryParams = new URLSearchParams()
+    if (filters.status && filters.status !== "all") {
+      queryParams.append("status", filters.status.toLowerCase())
+    }
     queryParams.append("page", filters.page.toString())
     queryParams.append("page_size", filters.pageSize.toString())
 
