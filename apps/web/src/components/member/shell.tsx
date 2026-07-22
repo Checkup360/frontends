@@ -4,7 +4,7 @@ import {
   WorkspaceShell,
   type WorkspaceShellNavItem,
 } from "@workspace/components/components/workspace-shell"
-import { LayoutDashboard, Newspaper, FileText, Settings } from "lucide-react"
+import { FileText, LayoutDashboard, Newspaper, Settings } from "lucide-react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
 
 const navigation: WorkspaceShellNavItem[] = [

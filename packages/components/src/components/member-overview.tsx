@@ -20,7 +20,6 @@ import {
   Apple,
   ArrowLeft,
   ArrowRight,
-  Clock,
   Dumbbell,
   Moon,
   Sparkles,
@@ -99,48 +98,6 @@ const evolutionData = [
   { month: "Jun", score: 87 },
 ]
 
-export interface NewsArticle {
-  id: string
-  title: string
-  category: string
-  readTime: number
-  image: string
-  excerpt: string
-}
-
-export const memberNewsArticles: NewsArticle[] = [
-  {
-    id: "1",
-    title: "The benefits of regular exercise for cardiovascular health",
-    category: "Prevention",
-    readTime: 5,
-    image:
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop",
-    excerpt:
-      "Regular physical activity can significantly reduce the risk of heart disease.",
-  },
-  {
-    id: "2",
-    title: "Smart nutrition for a balanced diet",
-    category: "Nutrition",
-    readTime: 7,
-    image:
-      "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&h=300&fit=crop",
-    excerpt:
-      "Learn how to build a meal plan that fits your lifestyle and nutritional needs.",
-  },
-  {
-    id: "3",
-    title: "The role of rest in recovery and wellbeing",
-    category: "Wellbeing",
-    readTime: 4,
-    image:
-      "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=400&h=300&fit=crop",
-    excerpt:
-      "Quality sleep is essential for cellular recovery and mental balance.",
-  },
-]
-
 const priorityConfig = {
   high: {
     label: "High priority",
@@ -195,7 +152,11 @@ interface MemberOverviewProps {
   onBack?: () => void
 }
 
-export function MemberOverview({ email, showBack = false, onBack }: MemberOverviewProps) {
+export function MemberOverview({
+  email,
+  showBack = false,
+  onBack,
+}: MemberOverviewProps) {
   const memberName = email.split("@")[0] || "Member"
   const initials = getInitials(memberName) || "M"
 
@@ -216,7 +177,7 @@ export function MemberOverview({ email, showBack = false, onBack }: MemberOvervi
                 size="icon"
                 onClick={onBack}
                 aria-label="Back"
-                className="shrink-0 animate-in fade-in slide-in-from-left-2 duration-200"
+                className="shrink-0 animate-in duration-200 fade-in slide-in-from-left-2"
               >
                 <ArrowLeft className="size-5" />
               </Button>
@@ -293,7 +254,9 @@ export function MemberOverview({ email, showBack = false, onBack }: MemberOvervi
                 >
                   {score}
                 </span>
-                <span className="text-sm text-muted-foreground">out of 100</span>
+                <span className="text-sm text-muted-foreground">
+                  out of 100
+                </span>
               </div>
             </div>
 
@@ -301,11 +264,13 @@ export function MemberOverview({ email, showBack = false, onBack }: MemberOvervi
               <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-4 text-left">
                 <Sparkles className="mt-0.5 size-5 shrink-0 text-primary" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium leading-relaxed">
+                  <p className="text-sm leading-relaxed font-medium">
                     Preventive analysis
                   </p>
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                    The profile shows low cardiovascular risk. Keep current exercise and nutrition habits, and maintain regular follow-up.
+                    The profile shows low cardiovascular risk. Keep current
+                    exercise and nutrition habits, and maintain regular
+                    follow-up.
                   </p>
                 </div>
               </div>
@@ -354,7 +319,7 @@ export function MemberOverview({ email, showBack = false, onBack }: MemberOvervi
               </div>
             </div>
 
-            <CarouselContent className="-ml-4 mt-4 px-px pb-1">
+            <CarouselContent className="mt-4 -ml-4 px-px pb-1">
               {recommendations.map((recommendation) => {
                 const Icon = recommendation.icon
                 const pConfig = priorityConfig[recommendation.priority]
@@ -496,71 +461,21 @@ export function MemberOverview({ email, showBack = false, onBack }: MemberOvervi
           </div>
         </Card>
       </div>
-
-      {/* News Card (Only for members) */}
-      {!showBack && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Health content</CardTitle>
-            <CardDescription>
-              Articles and tips for wellbeing
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {memberNewsArticles.map((article) => (
-              <article
-                key={article.id}
-                className="group overflow-hidden rounded-lg border border-border/60 bg-card transition-all hover:border-primary/25 hover:shadow-sm"
-              >
-                <div className="flex gap-4 p-4">
-                  <div className="relative size-24 shrink-0 overflow-hidden rounded-lg bg-muted">
-                    <img
-                      src={article.image}
-                      alt=""
-                      className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {article.category}
-                        </Badge>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="size-3" />
-                          {article.readTime} min
-                        </span>
-                      </div>
-                      <h4 className="line-clamp-2 leading-snug font-medium group-hover:text-primary">
-                        {article.title}
-                      </h4>
-                      <p className="line-clamp-2 text-sm text-muted-foreground">
-                        {article.excerpt}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                      Read article
-                      <ArrowRight className="size-3" />
-                    </div>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }
 
-export function MemberOverviewSkeleton({ showBack = false }: { showBack?: boolean }) {
+export function MemberOverviewSkeleton({
+  showBack = false,
+}: {
+  showBack?: boolean
+}) {
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8 animate-in fade-in duration-300">
+    <div className="mx-auto w-full max-w-7xl animate-in space-y-8 duration-300 fade-in">
       <header className="space-y-6">
         <div className="flex items-center gap-4">
-          {showBack && <Skeleton className="size-10 rounded-lg shrink-0" />}
-          <Skeleton className="size-14 rounded-full shrink-0" />
+          {showBack && <Skeleton className="size-10 shrink-0 rounded-lg" />}
+          <Skeleton className="size-14 shrink-0 rounded-full" />
           <div className="space-y-2">
             <Skeleton className="h-8 w-44" />
             <Skeleton className="h-4 w-72 max-w-full" />
@@ -622,7 +537,7 @@ export function MemberOverviewSkeleton({ showBack = false }: { showBack?: boolea
           <Skeleton className="h-4 w-64 max-w-full" />
         </CardHeader>
         <CardContent>
-          <Skeleton className="h-[280px] w-full rounded-lg animate-pulse" />
+          <Skeleton className="h-[280px] w-full animate-pulse rounded-lg" />
         </CardContent>
       </Card>
 

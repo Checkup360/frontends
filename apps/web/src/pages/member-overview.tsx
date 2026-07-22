@@ -3,6 +3,8 @@ import {
   MemberOverview,
   MemberOverviewSkeleton,
 } from "@workspace/components/components/member-overview"
+import { HealthContentGrid } from "@workspace/components/components/health-content-grid"
+import { memberNewsArticles } from "@/components/member/news"
 
 export function MemberOverviewPage() {
   const { user, isLoading } = useCurrentUser()
@@ -15,7 +17,12 @@ export function MemberOverviewPage() {
     return null
   }
 
-  return <MemberOverview email={user.email} />
+  return (
+    <div className="space-y-10">
+      <MemberOverview email={user.email} />
+      <HealthContentGrid articles={memberNewsArticles} />
+    </div>
+  )
 }
 
 export default MemberOverviewPage
