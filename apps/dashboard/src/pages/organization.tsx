@@ -2,11 +2,20 @@ import {
   createDepartment,
   deleteDepartment,
   listDepartments,
-  updateDepartment,
   type DepartmentResponse,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog"
 import {
   Card,
   CardContent,
@@ -16,16 +25,19 @@ import {
 } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
-import { Pencil, Plus, Trash2, X } from "lucide-react"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 import { useEffect, useState, type FormEvent } from "react"
+import { useNavigate } from "react-router-dom"
 
 export function OrganizationPage() {
   const { user } = useCurrentUser()
+  const navigate = useNavigate()
   const organizationId = user?.membership?.organization_id
   const [departments, setDepartments] = useState<DepartmentResponse[]>([])
   const [name, setName] = useState("")
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState("")
+  const [deleteTarget, setDeleteTarget] = useState<DepartmentResponse | null>(
+    null
+  )
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -73,32 +85,18 @@ export function OrganizationPage() {
     setSaving(false)
   }
 
-  async function handleRename(departmentId: string) {
-    if (!organizationId || !editingName.trim()) return
+  async function handleDelete() {
+    if (!organizationId || !deleteTarget) return
     setSaving(true)
     setError("")
-    const result = await updateDepartment(organizationId, departmentId, {
-      name: editingName.trim(),
-    })
-    if ("error" in result) {
-      setError(result.error?.message ?? "Unknown error")
-    } else {
-      setEditingId(null)
-      setEditingName("")
-      await refreshDepartments()
-    }
-    setSaving(false)
-  }
-
-  async function handleDelete(departmentId: string) {
-    if (!organizationId) return
-    setSaving(true)
-    setError("")
-    const result = await deleteDepartment(organizationId, departmentId)
+    const result = await deleteDepartment(organizationId, deleteTarget.id)
     if ("error" in result) {
       setError(result.error.message)
     } else {
-      await refreshDepartments()
+      setDepartments((current) =>
+        current.filter((department) => department.id !== deleteTarget.id)
+      )
+      setDeleteTarget(null)
     }
     setSaving(false)
   }
@@ -150,72 +148,39 @@ export function OrganizationPage() {
                   key={department.id}
                   className="flex flex-col gap-3 rounded-lg border border-border/60 p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  {editingId === department.id ? (
-                    <Input
-                      value={editingName}
-                      onChange={(event) => setEditingName(event.target.value)}
-                      disabled={saving}
-                    />
-                  ) : (
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {department.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {department.slug}
-                      </p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {department.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {department.slug}
+                    </p>
+                  </div>
 
                   <div className="flex gap-2">
-                    {editingId === department.id ? (
-                      <>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => handleRename(department.id)}
-                          disabled={saving}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingId(null)
-                            setEditingName("")
-                          }}
-                          disabled={saving}
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingId(department.id)
-                            setEditingName(department.name)
-                          }}
-                          disabled={saving}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="outline"
-                          onClick={() => handleDelete(department.id)}
-                          disabled={saving}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </>
-                    )}
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      onClick={() =>
+                        navigate(`/departments/${department.slug}/edit`)
+                      }
+                      disabled={saving}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      onClick={() => {
+                        setError("")
+                        setDeleteTarget(department)
+                      }}
+                      disabled={saving}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
                   </div>
                 </div>
               ))
@@ -223,6 +188,39 @@ export function OrganizationPage() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !saving) {
+            setDeleteTarget(null)
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete department?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{deleteTarget?.name}". This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={saving}
+              onClick={(event) => {
+                event.preventDefault()
+                void handleDelete()
+              }}
+            >
+              {saving ? "Deleting..." : "Delete department"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

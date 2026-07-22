@@ -8,6 +8,7 @@ import { DashboardLoadingSkeleton } from "@/components/dashboard-loading-skeleto
 import { DashboardShell } from "@/components/dashboard-shell"
 import { DashboardPage } from "@/pages/dashboard"
 import { DepartmentDetailPage } from "@/pages/department-detail"
+import { DepartmentEditPage } from "@/pages/department-edit"
 import { DepartmentsPage } from "@/pages/departments"
 import { EmployeesPage } from "@/pages/employees"
 import { EmployeeDetailPage } from "@/pages/employee-detail"
@@ -81,7 +82,14 @@ export function App() {
               <Route path="/employees/:id" element={<EmployeeDetailPage />} />
               <Route path="/invitations" element={<InvitePeoplePage />} />
               <Route path="/departments" element={<DepartmentsPage />} />
-              <Route path="/departments/:slug" element={<DepartmentDetailPage />} />
+              <Route
+                path="/departments/:slug/edit"
+                element={<DepartmentEditPage />}
+              />
+              <Route
+                path="/departments/:slug"
+                element={<DepartmentDetailPage />}
+              />
               <Route path="/organization" element={<OrganizationPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFound />} />

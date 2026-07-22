@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   createDepartment,
-  updateDepartment,
   deleteDepartment,
   listDepartments,
   listDepartmentsPage,
@@ -30,6 +29,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -60,8 +69,6 @@ import {
   AlertCircle,
   Pencil,
   Trash2,
-  Check,
-  X,
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
@@ -133,12 +140,9 @@ export function DepartmentsPage() {
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState("")
 
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editName, setEditName] = useState("")
-  const [saving, setSaving] = useState(false)
-  const [editError, setEditError] = useState("")
-
-  const [deleteTarget, setDeleteTarget] = useState<DepartmentResponse | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<DepartmentResponse | null>(
+    null
+  )
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
 
@@ -163,7 +167,9 @@ export function DepartmentsPage() {
       setLoadingMeta(false)
     }
     void load()
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [organizationId])
 
   // ── Load paginated grid (reacts to search + page) ──
@@ -194,7 +200,9 @@ export function DepartmentsPage() {
       }
     }
     void load()
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [organizationId, search, currentPage, PAGE_SIZE])
 
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE))
@@ -268,7 +276,9 @@ export function DepartmentsPage() {
       setCreating(false)
       return
     }
-    const result = await createDepartment(organizationId, { name: newName.trim() })
+    const result = await createDepartment(organizationId, {
+      name: newName.trim(),
+    })
     setCreating(false)
     if (result.error) {
       setCreateError(
@@ -280,31 +290,6 @@ export function DepartmentsPage() {
     }
     setNewName("")
     setCreateOpen(false)
-    await Promise.all([refreshAll(), refreshGrid()])
-  }
-
-  const handleSaveRenameLocal = async (dept: DepartmentResponse) => {
-    if (!editName.trim()) return
-    setSaving(true)
-    setEditError("")
-    if (!organizationId) {
-      setEditError("No organization found.")
-      setSaving(false)
-      return
-    }
-    const result = await updateDepartment(organizationId, dept.id, {
-      name: editName.trim(),
-    })
-    setSaving(false)
-    if (result.error) {
-      setEditError(
-        result.error.code === "department_slug_already_exists"
-          ? "A department with that name already exists."
-          : result.error.message
-      )
-      return
-    }
-    setEditingId(null)
     await Promise.all([refreshAll(), refreshGrid()])
   }
 
@@ -329,17 +314,6 @@ export function DepartmentsPage() {
     } else {
       await Promise.all([refreshAll(), refreshGrid()])
     }
-  }
-
-  const startEdit = (dept: DepartmentResponse) => {
-    setEditingId(dept.id)
-    setEditName(dept.name)
-    setEditError("")
-  }
-  const cancelEdit = () => {
-    setEditingId(null)
-    setEditName("")
-    setEditError("")
   }
 
   const makeSlugPreview = (value: string) =>
@@ -484,10 +458,7 @@ export function DepartmentsPage() {
                     key={dept.id}
                     variant="outline"
                     className="group cursor-pointer rounded-2xl border-border/85 bg-card/45 shadow-xs transition-all duration-200 ease-out hover:border-primary/40 hover:bg-muted/20"
-                    onClick={() => {
-                      if (editingId) return
-                      navigate(`/departments/${dept.slug}`)
-                    }}
+                    onClick={() => navigate(`/departments/${dept.slug}`)}
                   >
                     <ItemHeader>
                       <div className="flex items-center gap-2">
@@ -506,86 +477,46 @@ export function DepartmentsPage() {
                     </ItemHeader>
 
                     <ItemContent>
-                      {editingId === dept.id ? (
-                        <div className="w-full space-y-2 py-0.5">
-                          <Input
-                            value={editName}
-                            onChange={(e) => {
-                              setEditName(e.target.value)
-                              setEditError("")
-                            }}
-                            disabled={saving}
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === "Escape") cancelEdit()
-                              if (e.key === "Enter")
-                                void handleSaveRenameLocal(dept)
-                            }}
-                            className="h-8 w-full"
-                          />
-                          {editError && (
-                            <p className="flex items-center gap-1.5 text-[10px] text-destructive">
-                              <AlertCircle className="size-3 shrink-0" />
-                              {editError}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-1.5 pt-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-xs"
-                              onClick={() => void handleSaveRenameLocal(dept)}
-                              disabled={saving || !editName.trim()}
-                            >
-                              <Check className="mr-1 size-3.5" /> Save
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-xs text-muted-foreground"
-                              onClick={cancelEdit}
-                              disabled={saving}
-                            >
-                              <X className="mr-1 size-3.5" /> Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <ItemTitle className="text-base font-semibold text-foreground">
-                          {dept.name}
-                        </ItemTitle>
-                      )}
+                      <ItemTitle className="text-base font-semibold text-foreground">
+                        {dept.name}
+                      </ItemTitle>
                     </ItemContent>
 
-                    <ItemActions>
-                      {editingId !== dept.id && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon-xs"
-                              className="h-8 w-8 rounded-lg"
-                              disabled={!!editingId}
-                            >
-                              <MoreHorizontal className="size-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => startEdit(dept)}>
-                              <Pencil className="mr-2 size-3.5" />
-                              Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                              onClick={() => setDeleteTarget(dept)}
-                            >
-                              <Trash2 className="mr-2 size-3.5" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                    <ItemActions onClick={(event) => event.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            className="h-8 w-8 rounded-lg"
+                          >
+                            <MoreHorizontal className="size-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              navigate(`/departments/${dept.slug}/edit`)
+                            }}
+                          >
+                            <Pencil className="mr-2 size-3.5" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setDeleteError("")
+                              setDeleteTarget(dept)
+                            }}
+                          >
+                            <Trash2 className="mr-2 size-3.5" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </ItemActions>
 
                     <ItemFooter className="mt-1 border-t border-border/40 pt-2">
@@ -633,11 +564,17 @@ export function DepartmentsPage() {
             <div className="mt-5 flex items-center justify-between border-t border-border/40 pt-4">
               <p className="text-sm text-muted-foreground">
                 Page{" "}
-                <span className="font-medium text-foreground">{currentPage}</span>{" "}
+                <span className="font-medium text-foreground">
+                  {currentPage}
+                </span>{" "}
                 of{" "}
-                <span className="font-medium text-foreground">{totalPages}</span>
-                {" "}·{" "}
-                <span className="font-medium text-foreground">{totalItems}</span>{" "}
+                <span className="font-medium text-foreground">
+                  {totalPages}
+                </span>{" "}
+                ·{" "}
+                <span className="font-medium text-foreground">
+                  {totalItems}
+                </span>{" "}
                 total
               </p>
               <div className="flex gap-1.5">
@@ -743,7 +680,7 @@ export function DepartmentsPage() {
       </Dialog>
 
       {/* ── Delete dialog ── */}
-      <Dialog
+      <AlertDialog
         open={!!deleteTarget}
         onOpenChange={(open) => {
           if (!open && !deleting) {
@@ -752,23 +689,22 @@ export function DepartmentsPage() {
           }
         }}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
-            <DialogDescription>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete department?</AlertDialogTitle>
+            <AlertDialogDescription>
               This will permanently delete "{deleteTarget?.name}". This action
               cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           {deleteError && (
             <p className="flex items-center gap-1.5 text-sm text-destructive">
               <AlertCircle className="size-4 shrink-0" />
               {deleteError}
             </p>
           )}
-          <DialogFooter>
-            <Button
-              variant="outline"
+          <AlertDialogFooter>
+            <AlertDialogCancel
               onClick={() => {
                 setDeleteTarget(null)
                 setDeleteError("")
@@ -776,17 +712,20 @@ export function DepartmentsPage() {
               disabled={deleting}
             >
               Cancel
-            </Button>
-            <Button
+            </AlertDialogCancel>
+            <AlertDialogAction
               variant="destructive"
-              onClick={() => void handleDeleteLocal()}
+              onClick={(event) => {
+                event.preventDefault()
+                void handleDeleteLocal()
+              }}
               disabled={deleting}
             >
               {deleting ? "Deleting..." : "Delete department"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
