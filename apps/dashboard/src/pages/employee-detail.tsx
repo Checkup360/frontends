@@ -6,19 +6,12 @@ import {
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { AssignDepartmentForm } from "@workspace/components/components/assign-department-form"
+import { EmployeeProfileCard } from "@workspace/components/components/employee-profile-card"
 import {
   HealthScoreCard,
   type HealthScoreRow,
 } from "@workspace/components/components/health-score-card"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardAction,
-  CardContent,
-} from "@workspace/ui/components/card"
-import { Badge } from "@workspace/ui/components/badge"
+import { Card, CardContent } from "@workspace/ui/components/card"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
   Dialog,
@@ -62,11 +55,10 @@ function EmployeeDetailSkeleton() {
         </div>
       </div>
       <div className="grid gap-6 md:grid-cols-3">
-        <div className="space-y-6 md:col-span-2">
-          <Skeleton className="h-48 rounded-xl" />
-          <Skeleton className="h-36 rounded-xl" />
-        </div>
         <div className="md:col-span-1">
+          <Skeleton className="h-96 rounded-xl" />
+        </div>
+        <div className="md:col-span-2">
           <Skeleton className="h-96 rounded-xl" />
         </div>
       </div>
@@ -177,151 +169,46 @@ export function EmployeeDetailPage() {
         >
           <ArrowLeft className="size-4 text-muted-foreground" />
         </Button>
-        <div className="flex flex-col">
-          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-            Employees
-          </span>
-          <h2 className="text-lg font-bold tracking-tight text-foreground">
-            {employee.email}
-          </h2>
-        </div>
+        <h2 className="text-lg font-bold tracking-tight text-foreground">
+          Employee details
+        </h2>
       </div>
 
       <div className="grid animate-in gap-6 duration-300 fade-in md:grid-cols-3">
-        {/* Left Side: Profile & Department Assignment Cards */}
-        <div className="space-y-6 md:col-span-2">
-          {/* Card 1: Profile Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Employee Profile</CardTitle>
-              <CardDescription>
-                Basic account credentials and active status.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 border-t border-border/40 pt-4 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <span className="block text-xs font-semibold text-muted-foreground">
-                    Email Address
-                  </span>
-                  <p className="text-sm font-medium text-foreground">
-                    {employee.email}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <span className="block text-xs font-semibold text-muted-foreground">
-                    Status
-                  </span>
-                  <div>
-                    <Badge
-                      variant="outline"
-                      className={
-                        employee.status === "active"
-                          ? "border-emerald-500/20 bg-emerald-500/10 font-medium text-emerald-600 capitalize dark:text-emerald-400"
-                          : "border-amber-500/20 bg-amber-500/10 font-medium text-amber-600 capitalize dark:text-amber-400"
-                      }
-                    >
-                      {employee.status}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
+        <aside className="md:col-span-1">
+          <EmployeeProfileCard
+            email={employee.email}
+            status={employee.status}
+            roles={employee.roles}
+            departmentName={employee.department?.name}
+            action={
+              organizationId ? (
+                <Button
+                  className="w-full"
+                  onClick={() => setIsDialogOpen(true)}
+                >
+                  {employee.department
+                    ? "Change department"
+                    : "Assign department"}
+                </Button>
+              ) : undefined
+            }
+          />
+        </aside>
 
-              <div className="grid gap-4 border-t border-border/40 pt-4 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <span className="block text-xs font-semibold text-muted-foreground">
-                    System Roles
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {employee.roles.map((role) => (
-                      <Badge
-                        key={role}
-                        variant="secondary"
-                        className="text-xs font-medium capitalize"
-                      >
-                        {role}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <span className="block text-xs font-semibold text-muted-foreground">
-                    Access Level
-                  </span>
-                  <p className="text-sm font-medium text-foreground">
-                    {employee.roles.includes("admin")
-                      ? "Administrator"
-                      : "Standard Member"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card 2: Department Assignment */}
-          {organizationId && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Department Assignment</CardTitle>
-                <CardDescription>
-                  Define the organizational group for this employee.
-                </CardDescription>
-                <CardAction>
-                  <Button
-                    onClick={() => setIsDialogOpen(true)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    {employee.department ? "Change" : "Assign"}
-                  </Button>
-                </CardAction>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1 border-t border-border/40 pt-4">
-                  <span className="block text-xs font-semibold text-muted-foreground">
-                    Current Department
-                  </span>
-                  <div>
-                    {employee.department ? (
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="rounded-full border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400"
-                        >
-                          {employee.department.name}
-                        </Badge>
-                        <span className="font-mono text-xs text-muted-foreground/60">
-                          /{employee.department.slug}
-                        </span>
-                      </div>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="rounded-full border-border/80 bg-muted/20 px-3 py-1 text-xs font-medium text-muted-foreground"
-                      >
-                        Unassigned
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Right Side: Health Score Card or Pending Onboarding */}
-        <div className="md:col-span-1">
+        <div className="md:col-span-2">
           {employee.status === "onboarding" ? (
-            <Empty className="h-full min-h-[380px] border border-dashed border-border/60 bg-card/60 rounded-2xl flex flex-col items-center justify-center p-6 text-center shadow-xs">
+            <Empty className="flex h-full min-h-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center shadow-xs">
               <EmptyHeader className="flex flex-col items-center justify-center text-center">
-                <EmptyMedia className="mb-4 rounded-full bg-foreground/10 p-4 text-foreground animate-none">
+                <EmptyMedia className="mb-4 animate-none rounded-full bg-foreground/10 p-4 text-foreground">
                   <Clock className="size-8 animate-pulse" />
                 </EmptyMedia>
                 <EmptyTitle className="text-base font-semibold text-foreground">
                   Pending Onboarding
                 </EmptyTitle>
                 <EmptyDescription className="mx-auto mt-1 max-w-xs text-sm text-muted-foreground">
-                  Health score information is not available yet. This member is still in the onboarding process.
+                  Health score information is not available yet. This member is
+                  still in the onboarding process.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
