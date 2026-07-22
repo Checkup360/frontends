@@ -212,6 +212,19 @@ export class AuthRequestError extends Error {
   }
 }
 
+async function readResponseErrorDetail(response: Response): Promise<unknown> {
+  const text = await response.text()
+  const trimmed = text.trim()
+  if (!trimmed) return response.statusText
+
+  try {
+    const json = JSON.parse(trimmed) as { detail?: unknown }
+    return json.detail ?? json
+  } catch {
+    return trimmed
+  }
+}
+
 export function tryFollowAuthRedirectResponse(response: Response): boolean {
   const fallback = `${window.location.origin}/login/complete`
 
@@ -270,18 +283,39 @@ export async function loginWithPassword(
     return
   }
 
-  const text = await response.text()
-  const trimmed = text.trim()
-  let detail: unknown = response.statusText
-  if (trimmed) {
-    try {
-      const json = JSON.parse(trimmed) as { detail?: unknown }
-      detail = json.detail ?? json
-    } catch {
-      detail = trimmed
-    }
-  }
-  throw new AuthRequestError(detail)
+  throw new AuthRequestError(await readResponseErrorDetail(response))
+}
+
+async function postPasswordResetRequest(
+  route: string,
+  payload: Record<string, string>
+): Promise<void> {
+  const response = await fetch(`${resolveApiBaseUrl()}${route}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+
+  if (response.ok) return
+
+  throw new AuthRequestError(await readResponseErrorDetail(response))
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await postPasswordResetRequest(apiRoutes.auth.forgotPassword, {
+    email: email.trim(),
+  })
+}
+
+export async function resetPassword(
+  token: string,
+  password: string
+): Promise<void> {
+  await postPasswordResetRequest(apiRoutes.auth.resetPassword, {
+    token,
+    password,
+  })
 }
 
 export async function fetchGoogleAuthorizationUrl(): Promise<OAuthAuthorizeResponse> {
@@ -703,17 +737,26 @@ export async function listDepartmentsPage(
     })
 
     if (response.status === 401 || !response.ok) {
-      return { items: [], total: 0, page: filters.page, page_size: filters.pageSize }
+      return {
+        items: [],
+        total: 0,
+        page: filters.page,
+        page_size: filters.pageSize,
+      }
     }
 
     const items = (await response.json()) as DepartmentResponse[]
     return paginatedFromHeaders(response, items, filters.page, filters.pageSize)
   } catch (error) {
     console.error("Error listing paginated departments:", error)
-    return { items: [], total: 0, page: filters.page, page_size: filters.pageSize }
+    return {
+      items: [],
+      total: 0,
+      page: filters.page,
+      page_size: filters.pageSize,
+    }
   }
 }
-
 
 export async function createDepartment(
   organizationId: string,
@@ -1213,7 +1256,9 @@ export async function listSysadminInvitationsPage(filters: {
   }
 }
 
-export async function deleteSysadminInvitations(ids: string[]): Promise<number> {
+export async function deleteSysadminInvitations(
+  ids: string[]
+): Promise<number> {
   const response = await fetchWithAuth(
     `${resolveApiBaseUrl()}${apiRoutes.invites.admin}`,
     {

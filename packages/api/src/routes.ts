@@ -3,6 +3,8 @@ export const apiRoutes = {
     me: "/auth/me",
     logout: "/auth/logout",
     login: "/auth/login",
+    forgotPassword: "/auth/forgot-password",
+    resetPassword: "/auth/reset-password",
     googleAuthorize: "/auth/google/authorize",
   },
   invites: {

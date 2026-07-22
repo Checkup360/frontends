@@ -15,6 +15,8 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom"
 import AuthError from "./components/auth/auth-error"
 import Invite from "./components/auth/invite"
 import Login from "./components/auth/login"
+import ForgotPassword from "./components/auth/forgot-password"
+import ResetPassword from "./components/auth/reset-password"
 import { HeroCheckup360 } from "./components/landing/hero-checkup360"
 import { MemberLoadingSkeleton } from "./components/member/loading-skeleton"
 import { MemberShell } from "./components/member/shell"
@@ -167,6 +169,8 @@ export function App() {
           <Route element={<RootLayout />}>
             <Route path="/login" element={<Login />} />
             <Route path="/login/complete" element={<LoginComplete />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<MemberOnboardingPage />} />
             <Route path="/auth/error" element={<AuthError />} />
             <Route path="/invite/:token" element={<Invite />} />

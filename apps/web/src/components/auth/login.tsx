@@ -107,6 +107,15 @@ export default function Login({ googleAuthorizeUrl }: LoginProps) {
           passwordAutocomplete="current-password"
         />
 
+        <div className="text-right">
+          <Link
+            to="/forgot-password"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Forgot your password?
+          </Link>
+        </div>
+
         <Button type="submit" className="w-full" disabled={formLoading}>
           {formLoading ? "Signing in…" : "Sign in"}
         </Button>
