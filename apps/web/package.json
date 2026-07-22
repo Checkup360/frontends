@@ -19,7 +19,7 @@
     "lucide-react": "^1.11.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^7.9.4",
+    "react-router-dom": "^7.15.1",
     "recharts": "^2.10.3"
   },
   "devDependencies": {

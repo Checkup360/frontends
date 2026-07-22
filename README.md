@@ -51,8 +51,20 @@ export * from "./components/ui/card"
 Y usarlos en cualquier app:
 
 ```tsx
-import { Button, Card } from "@repo/ui"
+import { Button } from "@workspace/ui/components/button"
+import { Card } from "@workspace/ui/components/card"
 ```
+
+### Dónde ubicar cada componente
+
+- `packages/ui/src/components/`: primitives de shadcn, instalados con su CLI y sin lógica de negocio.
+- `packages/components/src/components/`: composiciones reutilizables entre varias aplicaciones.
+- `apps/<app>/src/features/`: componentes propios de una funcionalidad de una aplicación.
+- `apps/<app>/src/pages/`: páginas que conectan rutas y funcionalidades.
+
+No copies componentes de aplicación dentro de `packages/ui`. Si un componente de
+shadcn necesita personalización, revisá el diff generado por la CLI y mantenelo
+como primitive genérico, accesible y sin dependencias de una aplicación.
 
 ## Agregar una nueva app
 

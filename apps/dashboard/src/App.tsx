@@ -13,6 +13,7 @@ import { EmployeesPage } from "@/pages/employees"
 import { EmployeeDetailPage } from "@/pages/employee-detail"
 import { InvitePeoplePage } from "@/pages/invite-people"
 import { OrganizationPage } from "@/pages/organization"
+import { SettingsPage } from "@/pages/settings"
 import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
@@ -82,7 +83,7 @@ export function App() {
               <Route path="/departments" element={<DepartmentsPage />} />
               <Route path="/departments/:slug" element={<DepartmentDetailPage />} />
               <Route path="/organization" element={<OrganizationPage />} />
-              <Route path="/settings" element={<NotFound />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Route>
