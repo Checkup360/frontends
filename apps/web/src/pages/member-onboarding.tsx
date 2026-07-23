@@ -1,4 +1,4 @@
-import { submitMemberDetails } from "@workspace/api"
+import { logout, resolveWebUrl, submitMemberDetails } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -24,6 +24,7 @@ import {
   Cigarette,
   Droplet,
   HeartPulse,
+  LogOut,
   Ruler,
   ShieldCheck,
   Sparkles,
@@ -34,6 +35,8 @@ import {
 } from "lucide-react"
 import { useMemo, useState } from "react"
 import { Navigate } from "react-router-dom"
+import { usePwaInstall } from "../components/pwa/pwa-install-context"
+import { PwaInstallDrawer } from "../components/pwa/pwa-install-drawer"
 
 type OnboardingData = {
   firstName: string
@@ -199,12 +202,15 @@ function SidebarStep({
 }
 
 export function MemberOnboardingPage() {
-  const { user, isLoading, refresh } = useCurrentUser()
+  const { user, isLoading, refresh, clear } = useCurrentUser()
+  const { canInstall } = usePwaInstall()
   const [currentStep, setCurrentStep] = useState(0)
   const [data, setData] = useState<OnboardingData>(initialData)
   const [error, setError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [installDrawerOpen, setInstallDrawerOpen] = useState(false)
   const maxDate = useMemo(() => todayIsoDate(), [])
   const memberOrganization = user?.membership?.roles?.includes("member")
     ? user.membership
@@ -291,6 +297,11 @@ export function MemberOnboardingPage() {
     setCurrentStep((step) => Math.max(step - 1, 0))
   }
 
+  const continueToApp = async () => {
+    await refresh()
+    window.location.replace("/")
+  }
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const invalidField = validateStep()
@@ -313,10 +324,28 @@ export function MemberOnboardingPage() {
         return
       }
 
-      await refresh()
-      window.location.replace("/")
+      if (canInstall) {
+        setInstallDrawerOpen(true)
+        return
+      }
+
+      await continueToApp()
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    setFormError(null)
+
+    try {
+      await logout()
+      clear()
+      window.location.replace(resolveWebUrl())
+    } catch {
+      setFormError("Unable to log out. Please try again.")
+      setIsLoggingOut(false)
     }
   }
 
@@ -324,6 +353,20 @@ export function MemberOnboardingPage() {
     <div className="relative min-h-dvh overflow-hidden bg-background px-4 py-8 sm:px-6 lg:px-12">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--border))_1px,transparent_0)] bg-[length:28px_28px] opacity-35" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-muted/60 blur-3xl" />
+
+      <div className="relative z-10 mx-auto mb-4 flex w-full max-w-6xl items-center justify-end">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => void handleLogout()}
+          disabled={isLoggingOut}
+          className="gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <LogOut className="size-4" />
+          {isLoggingOut ? "Logging out..." : "Log out"}
+        </Button>
+      </div>
 
       <div className="relative mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-6xl items-center">
         <div className="w-full">
@@ -778,6 +821,11 @@ export function MemberOnboardingPage() {
           </div>
         </div>
       </div>
+      <PwaInstallDrawer
+        open={installDrawerOpen}
+        onOpenChange={setInstallDrawerOpen}
+        onContinue={continueToApp}
+      />
     </div>
   )
 }

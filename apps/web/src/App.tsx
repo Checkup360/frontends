@@ -20,6 +20,7 @@ import ResetPassword from "./components/auth/reset-password"
 import { HeroCheckup360 } from "./components/landing/hero-checkup360"
 import { MemberLoadingSkeleton } from "./components/member/loading-skeleton"
 import { MemberShell } from "./components/member/shell"
+import { PwaInstallProvider } from "./components/pwa/pwa-install-provider"
 import NotFound from "./components/shared/not-found"
 import { DashboardPage } from "./pages/dashboard"
 import { MemberOverviewPage } from "./pages/member-overview"
@@ -164,32 +165,34 @@ export function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Toaster />
-        <Routes>
-          <Route element={<RootLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/login/complete" element={<LoginComplete />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/onboarding" element={<MemberOnboardingPage />} />
-            <Route path="/auth/error" element={<AuthError />} />
-            <Route path="/invite/:token" element={<Invite />} />
-            <Route
-              element={
-                <RequireMemberRole>
-                  <MemberShell />
-                </RequireMemberRole>
-              }
-            >
-              <Route path="/" element={<MemberOverviewPage />} />
-              <Route path="/news" element={<MemberNewsPage />} />
-              <Route path="/forms" element={<MemberFormsPage />} />
-              <Route path="/settings" element={<MemberSettingsPage />} />
+        <PwaInstallProvider>
+          <Toaster />
+          <Routes>
+            <Route element={<RootLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/login/complete" element={<LoginComplete />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/onboarding" element={<MemberOnboardingPage />} />
+              <Route path="/auth/error" element={<AuthError />} />
+              <Route path="/invite/:token" element={<Invite />} />
+              <Route
+                element={
+                  <RequireMemberRole>
+                    <MemberShell />
+                  </RequireMemberRole>
+                }
+              >
+                <Route path="/" element={<MemberOverviewPage />} />
+                <Route path="/news" element={<MemberNewsPage />} />
+                <Route path="/forms" element={<MemberFormsPage />} />
+                <Route path="/settings" element={<MemberSettingsPage />} />
+              </Route>
+              <Route path="/" element={<HomePage />} />
+              <Route path="*" element={<NotFound />} />
             </Route>
-            <Route path="/" element={<HomePage />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
+          </Routes>
+        </PwaInstallProvider>
       </AuthProvider>
     </ThemeProvider>
   )

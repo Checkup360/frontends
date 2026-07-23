@@ -32,6 +32,7 @@ type WorkspaceShellProps = {
   title: string
   navigation: WorkspaceShellNavItem[]
   secondaryNavigation?: WorkspaceShellNavItem[]
+  secondaryAction?: ReactNode
   documents?: NavDocumentsItem[]
   user?: NavUserProps["user"]
   onLogout?: () => void
@@ -45,6 +46,7 @@ export function WorkspaceShell({
   title,
   navigation,
   secondaryNavigation,
+  secondaryAction,
   documents,
   user,
   onLogout,
@@ -57,14 +59,22 @@ export function WorkspaceShell({
         appLabel={appLabel}
         appName={appName}
         navMain={<NavMain items={navigation} linkComponent={linkComponent} />}
-        navDocuments={documents && <NavDocuments items={documents} linkComponent={linkComponent} />}
+        navDocuments={
+          documents && (
+            <NavDocuments items={documents} linkComponent={linkComponent} />
+          )
+        }
         navSecondary={
-          secondaryNavigation && (
-            <NavSecondary 
-              items={secondaryNavigation} 
-              linkComponent={linkComponent}
-              className="mt-auto"
-            />
+          (secondaryNavigation || secondaryAction) && (
+            <div className="mt-auto">
+              {secondaryAction}
+              {secondaryNavigation && (
+                <NavSecondary
+                  items={secondaryNavigation}
+                  linkComponent={linkComponent}
+                />
+              )}
+            </div>
           )
         }
         navUser={user && <NavUser user={user} onLogout={onLogout} />}
@@ -73,9 +83,7 @@ export function WorkspaceShell({
       <div className="flex w-full flex-col">
         <SiteHeader title={title} />
 
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          {children}
-        </main>
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </SidebarProvider>
   )

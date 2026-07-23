@@ -5,7 +5,10 @@ import {
   type WorkspaceShellNavItem,
 } from "@workspace/components/components/workspace-shell"
 import { FileText, LayoutDashboard, Newspaper, Settings } from "lucide-react"
+import { useState } from "react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
+import { PwaInstallDrawer } from "../pwa/pwa-install-drawer"
+import { PwaInstallMenuItem } from "../pwa/pwa-install-menu-item"
 
 const navigation: WorkspaceShellNavItem[] = [
   { title: "Overview", url: "/", icon: LayoutDashboard, to: "/", end: true },
@@ -20,6 +23,7 @@ const secondaryNavigation: WorkspaceShellNavItem[] = [
 export function MemberShell() {
   const { pathname } = useLocation()
   const { user, clear } = useCurrentUser()
+  const [installDrawerOpen, setInstallDrawerOpen] = useState(false)
 
   const handleLogout = async () => {
     try {
@@ -55,16 +59,25 @@ export function MemberShell() {
   }
 
   return (
-    <WorkspaceShell
-      appLabel="Member dashboard"
-      title={getTitleForPath()}
-      navigation={navigation}
-      secondaryNavigation={secondaryNavigation}
-      user={userData}
-      onLogout={handleLogout}
-      linkComponent={NavLink}
-    >
-      <Outlet />
-    </WorkspaceShell>
+    <>
+      <WorkspaceShell
+        appLabel="Member dashboard"
+        title={getTitleForPath()}
+        navigation={navigation}
+        secondaryNavigation={secondaryNavigation}
+        secondaryAction={
+          <PwaInstallMenuItem onSelect={() => setInstallDrawerOpen(true)} />
+        }
+        user={userData}
+        onLogout={handleLogout}
+        linkComponent={NavLink}
+      >
+        <Outlet />
+      </WorkspaceShell>
+      <PwaInstallDrawer
+        open={installDrawerOpen}
+        onOpenChange={setInstallDrawerOpen}
+      />
+    </>
   )
 }

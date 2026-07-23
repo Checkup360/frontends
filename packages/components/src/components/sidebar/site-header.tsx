@@ -25,7 +25,7 @@ export function SiteHeader({ title }: SiteHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/75 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 transition-[width,height,background-color] ease-linear">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/75 backdrop-blur-xl transition-[width,height,background-color] ease-linear supports-[backdrop-filter]:bg-background/60">
       <div className="flex w-full items-center justify-between gap-1 px-4 lg:gap-2 lg:px-6">
         <div className="flex items-center gap-1 lg:gap-2">
           <SidebarTrigger className="-ml-1 bg-background/70 shadow-xs hover:bg-background/90" />
@@ -33,16 +33,15 @@ export function SiteHeader({ title }: SiteHeaderProps) {
           <h1 className="text-base font-semibold">{title}</h1>
         </div>
 
-        {/* Premium Theme Toggle button */}
         <button
           onClick={toggleTheme}
           className="flex size-9 items-center justify-center rounded-lg border border-border/40 bg-background/70 text-muted-foreground shadow-xs transition-all hover:bg-muted hover:text-foreground"
           aria-label="Toggle color theme"
         >
           {theme === "dark" ? (
-            <Sun className="size-4 animate-in spin-in-45 duration-300" />
+            <Sun className="size-4 animate-in duration-300 spin-in-45" />
           ) : (
-            <Moon className="size-4 animate-in spin-in-45 duration-300" />
+            <Moon className="size-4 animate-in duration-300 spin-in-45" />
           )}
         </button>
       </div>
