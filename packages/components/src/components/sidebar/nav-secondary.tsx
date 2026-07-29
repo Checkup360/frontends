@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@workspace/ui/components/sidebar"
 
 export interface NavSecondaryItem {
@@ -22,11 +23,19 @@ interface NavSecondaryProps {
   className?: string
 }
 
-export function NavSecondary({ 
-  items, 
+export function NavSecondary({
+  items,
   linkComponent: Link = "a" as any,
-  className 
+  className,
 }: NavSecondaryProps) {
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const closeMobileNavigation = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
+
   return (
     <SidebarGroup className={className}>
       <SidebarGroupContent>
@@ -34,7 +43,11 @@ export function NavSecondary({
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
-                <Link href={item.url} to={item.url}>
+                <Link
+                  href={item.url}
+                  to={item.url}
+                  onClick={closeMobileNavigation}
+                >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                 </Link>

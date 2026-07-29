@@ -30,8 +30,17 @@ interface NavDocumentsProps {
   linkComponent?: React.ComponentType<any>
 }
 
-export function NavDocuments({ items, linkComponent: Link = "a" as any }: NavDocumentsProps) {
-  const { isMobile } = useSidebar()
+export function NavDocuments({
+  items,
+  linkComponent: Link = "a" as any,
+}: NavDocumentsProps) {
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const closeMobileNavigation = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -40,14 +49,21 @@ export function NavDocuments({ items, linkComponent: Link = "a" as any }: NavDoc
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <Link href={item.url} to={item.url}>
+              <Link
+                href={item.url}
+                to={item.url}
+                onClick={closeMobileNavigation}
+              >
                 <item.icon />
                 <span>{item.name}</span>
               </Link>
             </SidebarMenuButton>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuAction showOnHover className="rounded-sm data-[state=open]:bg-accent">
+                <SidebarMenuAction
+                  showOnHover
+                  className="rounded-sm data-[state=open]:bg-accent"
+                >
                   <MoreVertical />
                   <span className="sr-only">More</span>
                 </SidebarMenuAction>

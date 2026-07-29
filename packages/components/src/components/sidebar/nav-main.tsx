@@ -7,6 +7,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@workspace/ui/components/sidebar"
 
 export interface NavMainItem {
@@ -20,7 +21,18 @@ interface NavMainProps {
   linkComponent?: React.ComponentType<any>
 }
 
-export function NavMain({ items, linkComponent: Link = "a" as any }: NavMainProps) {
+export function NavMain({
+  items,
+  linkComponent: Link = "a" as any,
+}: NavMainProps) {
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const closeMobileNavigation = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
+
   return (
     <SidebarGroup>
       <SidebarGroupContent>
@@ -28,7 +40,11 @@ export function NavMain({ items, linkComponent: Link = "a" as any }: NavMainProp
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
-                <Link href={item.url} to={item.url}>
+                <Link
+                  href={item.url}
+                  to={item.url}
+                  onClick={closeMobileNavigation}
+                >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                 </Link>
