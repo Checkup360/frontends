@@ -28,5 +28,6 @@ export const apiRoutes = {
     `/organizations/${encodeURIComponent(organizationId)}/employees`,
   members: {
     myDetails: "/members/me/details",
+    myProfile: "/members/me/profile",
   },
 } as const

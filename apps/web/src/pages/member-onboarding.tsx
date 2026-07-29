@@ -41,6 +41,7 @@ import { PwaInstallDrawer } from "../components/pwa/pwa-install-drawer"
 type OnboardingData = {
   firstName: string
   lastName: string
+  phoneNumber: string
   dateOfBirth: string
   gender: string
   weight: string
@@ -62,6 +63,7 @@ type WizardStep = {
 const initialData: OnboardingData = {
   firstName: "",
   lastName: "",
+  phoneNumber: "",
   dateOfBirth: "",
   gender: "",
   weight: "",
@@ -261,6 +263,9 @@ export function MemberOnboardingPage() {
     if (currentStep === 1) {
       if (!data.firstName.trim()) return "firstName"
       if (!data.lastName.trim()) return "lastName"
+      if (!data.phoneNumber.trim()) return "phoneNumber"
+      if (!/^\+[\d\s\-(). ]{7,19}$/.test(data.phoneNumber.trim()))
+        return "phoneNumber"
       if (!data.dateOfBirth) return "dateOfBirth"
       if (!data.gender) return "gender"
     }
@@ -317,6 +322,9 @@ export function MemberOnboardingPage() {
     try {
       const result = await submitMemberDetails({
         date_of_birth: data.dateOfBirth,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        phone_number: data.phoneNumber.trim(),
       })
 
       if (result.error) {
@@ -505,6 +513,24 @@ export function MemberOnboardingPage() {
                             className="rounded-lg border-border/40 bg-background/40 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60"
                           />
                           {fieldError(error, "lastName")}
+                        </div>
+
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor="phone-number">Phone number</Label>
+                          <Input
+                            id="phone-number"
+                            type="tel"
+                            value={data.phoneNumber}
+                            onChange={(event) =>
+                              updateField("phoneNumber", event.target.value)
+                            }
+                            disabled={isSubmitting}
+                            placeholder="+54 11 1234-5678"
+                            className="rounded-lg border-border/40 bg-background/40 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60"
+                          />
+                          {error === "phoneNumber" ? (
+                            <p className="text-sm text-destructive">Must start with + and country code (e.g. +54 11 1234-5678)</p>
+                          ) : null}
                         </div>
 
                         <div className="space-y-2">

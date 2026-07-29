@@ -12,6 +12,7 @@ import {
   type InviteMetadataResponse,
   type OrganizationInvite,
   type SysadminInvite,
+  type MemberProfileResponse,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -139,6 +140,9 @@ export interface SubmitMemberDetailsError {
 
 export async function submitMemberDetails(payload: {
   date_of_birth: string
+  first_name?: string
+  last_name?: string
+  phone_number: string
 }): Promise<
   | { success: true; error?: never }
   | { success?: never; error: SubmitMemberDetailsError }
@@ -186,6 +190,64 @@ export async function submitMemberDetails(payload: {
         message: "Network error. Please try again.",
       },
     }
+  }
+}
+
+export async function fetchMemberProfile(): Promise<MemberProfileResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.myProfile}`,
+      { credentials: "include" }
+    )
+    if (!response.ok) return null
+    return (await response.json()) as MemberProfileResponse
+  } catch (error) {
+    console.error("Error fetching member profile:", error)
+    return null
+  }
+}
+
+export interface UpdateProfileError {
+  code: string
+  message: string
+}
+
+export async function updateMemberProfile(payload: {
+  first_name: string
+  last_name: string
+  phone_number: string | null
+}): Promise<
+  | { success: MemberProfileResponse; error?: never }
+  | { success?: never; error: UpdateProfileError }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.myProfile}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }
+    )
+
+    if (response.status === 401) {
+      return { error: { code: "unauthorized", message: "Session expired. Please log in again." } }
+    }
+    if (response.status === 404) {
+      return { error: { code: "profile_not_found", message: "Complete onboarding first." } }
+    }
+    if (response.status === 422) {
+      return { error: { code: "invalid_phone_number", message: "Phone number must start with + and country code (e.g. +54 11 1234-5678)." } }
+    }
+    if (!response.ok) {
+      return { error: { code: "unknown_error", message: "Failed to save changes. Please try again." } }
+    }
+
+    return { success: (await response.json()) as MemberProfileResponse }
+  } catch (error) {
+    console.error("Error updating member profile:", error)
+    return { error: { code: "network_error", message: "Network error. Please try again." } }
   }
 }
 

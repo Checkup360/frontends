@@ -15,6 +15,13 @@ export type OAuthAuthorizeResponse = {
   authorization_url: string
 }
 
+export type MemberProfileResponse = {
+  first_name: string
+  last_name: string
+  phone_number: string | null
+  date_of_birth: string
+}
+
 export type InviteCreateResponse = {
   token: string
   invite_url: string
