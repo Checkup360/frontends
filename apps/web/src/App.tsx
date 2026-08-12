@@ -1,6 +1,6 @@
 import {
   buildLoginUrl,
-  clearPostLoginRedirectUrl,
+  consumePostLoginRedirectUrl,
   fetchCurrentUser,
   getRedirectUrlByUserRole,
   logout,
@@ -117,17 +117,13 @@ function LoginComplete() {
     const performRedirect = async () => {
       // Siempre hacer fetch del usuario para determinar a dónde redirigir
       const user = await fetchCurrentUser()
-      const finalRedirectUrl = getRedirectUrlByUserRole(user)
+      const fallbackRedirectUrl = getRedirectUrlByUserRole(user)
+      const finalRedirectUrl = consumePostLoginRedirectUrl(fallbackRedirectUrl)
 
-      clearPostLoginRedirectUrl()
       window.location.replace(finalRedirectUrl)
     }
 
-    const timer = setTimeout(() => {
-      void performRedirect()
-    }, 100)
-
-    return () => clearTimeout(timer)
+    void performRedirect()
   }, [])
 
   return (
