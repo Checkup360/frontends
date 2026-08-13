@@ -28,9 +28,9 @@ export function SettingsPage(props: SettingsPageProps) {
   return (
     <div className="mx-auto w-full max-w-6xl">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Configuración</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground">
-          Administrá tu cuenta y las preferencias del dashboard.
+          Manage your account and dashboard preferences.
         </p>
       </header>
       <Separator className="my-6" />

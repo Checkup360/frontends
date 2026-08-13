@@ -84,9 +84,9 @@ export function MemberSettingsPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Perfil Personal</CardTitle>
+              <CardTitle>Personal Profile</CardTitle>
               <CardDescription>
-                Tus datos personales y de contacto
+                Your personal and contact information
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -101,22 +101,22 @@ export function MemberSettingsPage() {
                   <>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="first-name">Nombre</Label>
+                        <Label htmlFor="first-name">First Name</Label>
                         <Input
                           id="first-name"
                           type="text"
-                          placeholder="Juan"
+                          placeholder="John"
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
                           disabled={isSaving}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="last-name">Apellido</Label>
+                        <Label htmlFor="last-name">Last Name</Label>
                         <Input
                           id="last-name"
                           type="text"
-                          placeholder="Pérez"
+                          placeholder="Doe"
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
                           disabled={isSaving}
@@ -125,7 +125,7 @@ export function MemberSettingsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Teléfono</Label>
+                      <Label htmlFor="phone">Phone Number</Label>
                       <Input
                         id="phone"
                         type="tel"
@@ -146,12 +146,12 @@ export function MemberSettingsPage() {
 
                 {saveSuccess && (
                   <p className="rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-600 dark:text-green-400">
-                    Cambios guardados con éxito.
+                    Changes saved successfully.
                   </p>
                 )}
 
                 <Button type="submit" disabled={isSaving || profileLoading}>
-                  {isSaving ? "Guardando..." : "Guardar Cambios"}
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
               </form>
             </CardContent>

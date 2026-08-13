@@ -33,23 +33,23 @@ export function AccountSettings({
 }: AccountSettingsProps) {
   return (
     <SettingsContent
-      title="Cuenta"
-      description="Información asociada a tu acceso a Checkup360."
+      title="Account"
+      description="Information associated with your Checkup360 access."
     >
       <div className="space-y-6">
         <ReadOnlyField
           id="settings-email"
-          label="Correo electrónico"
+          label="Email address"
           value={email}
         />
         <ReadOnlyField
           id="settings-organization"
-          label="Organización"
-          value={organizationName ?? "Sin organización"}
+          label="Organization"
+          value={organizationName ?? "No organization"}
         />
         <p className="text-sm text-muted-foreground">
-          Estos datos provienen de tu cuenta y no se pueden modificar desde esta
-          pantalla.
+          This information comes from your account and cannot be modified from this
+          screen.
         </p>
         {action}
       </div>

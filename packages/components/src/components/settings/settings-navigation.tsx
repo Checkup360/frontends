@@ -15,9 +15,9 @@ const navigationItems: Array<{
   label: string
   icon: LucideIcon
 }> = [
-  { value: "account", label: "Cuenta", icon: UserRound },
-  { value: "appearance", label: "Apariencia", icon: Palette },
-  { value: "notifications", label: "Notificaciones", icon: Bell },
+  { value: "account", label: "Account", icon: UserRound },
+  { value: "appearance", label: "Appearance", icon: Palette },
+  { value: "notifications", label: "Notifications", icon: Bell },
 ]
 
 type SettingsNavigationProps = {
@@ -30,11 +30,11 @@ export function SettingsNavigation({
   onValueChange,
 }: SettingsNavigationProps) {
   return (
-    <aside className="w-full shrink-0 lg:w-56" aria-label="Configuración">
+    <aside className="w-full shrink-0 lg:w-56" aria-label="Settings">
       <Select value={value} onValueChange={onValueChange}>
         <SelectTrigger
           className="md:hidden"
-          aria-label="Sección de configuración"
+          aria-label="Settings section"
         >
           <SelectValue />
         </SelectTrigger>

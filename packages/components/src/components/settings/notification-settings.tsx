@@ -12,18 +12,18 @@ const preferenceItems: Array<{
 }> = [
   {
     id: "risk",
-    title: "Alertas de riesgo",
-    description: "Avisos sobre indicadores que requieren atención.",
+    title: "Risk alerts",
+    description: "Notifications about indicators that require attention.",
   },
   {
     id: "reminders",
-    title: "Recordatorios",
-    description: "Seguimiento de evaluaciones y tareas pendientes.",
+    title: "Reminders",
+    description: "Follow-up on evaluations and pending tasks.",
   },
   {
     id: "summary",
-    title: "Resumen semanal",
-    description: "Un repaso de la actividad de la organización.",
+    title: "Weekly summary",
+    description: "An overview of organization activity.",
   },
 ]
 
@@ -66,8 +66,8 @@ export function NotificationSettings() {
   const [preferences, setPreferences] = useState(defaultPreferences)
   return (
     <SettingsContent
-      title="Notificaciones"
-      description="Elegí qué comunicaciones querés recibir."
+      title="Notifications"
+      description="Choose which communications you want to receive."
     >
       <div className="space-y-4">
         {preferenceItems.map((item) => (
@@ -81,11 +81,10 @@ export function NotificationSettings() {
           />
         ))}
         <p className="text-sm text-muted-foreground">
-          La sincronización con el servidor todavía no está disponible; estos
-          cambios no se guardarán.
+          Server synchronization is not yet available; these changes will not be saved.
         </p>
         <Button type="button" disabled>
-          Guardar preferencias
+          Save preferences
         </Button>
       </div>
     </SettingsContent>

@@ -13,12 +13,12 @@ const themeOptions: Array<{
   description: string
   icon: LucideIcon
 }> = [
-  { value: "light", label: "Claro", description: "Siempre claro", icon: Sun },
-  { value: "dark", label: "Oscuro", description: "Siempre oscuro", icon: Moon },
+  { value: "light", label: "Light", description: "Always light", icon: Sun },
+  { value: "dark", label: "Dark", description: "Always dark", icon: Moon },
   {
     value: "system",
-    label: "Sistema",
-    description: "Usar el dispositivo",
+    label: "System",
+    description: "Use device settings",
     icon: Monitor,
   },
 ]
@@ -54,14 +54,14 @@ export function AppearanceSettings() {
   const { theme, setTheme } = useTheme()
   return (
     <SettingsContent
-      title="Apariencia"
-      description="Personalizá cómo se muestra Checkup360 en este dispositivo."
+      title="Appearance"
+      description="Customize how Checkup360 looks on this device."
     >
       <div className="space-y-3">
         <div>
-          <h3 className="text-sm font-medium">Tema</h3>
+          <h3 className="text-sm font-medium">Theme</h3>
           <p className="text-sm text-muted-foreground">
-            El cambio se guarda automáticamente.
+            Changes are saved automatically.
           </p>
         </div>
         <RadioGroup

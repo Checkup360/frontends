@@ -14,7 +14,7 @@ export function SettingsPage() {
       accountAction={
         <Button asChild variant="outline">
           <Link to="/organization">
-            Administrar organización
+            Manage organization
             <ExternalLink />
           </Link>
         </Button>
