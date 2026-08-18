@@ -1,1 +1,0 @@
-export { memberNewsArticles } from "./articles"

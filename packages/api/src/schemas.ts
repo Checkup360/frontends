@@ -20,6 +20,7 @@ export type MemberProfileResponse = {
   last_name: string
   phone_number: string | null
   date_of_birth: string
+  priority_topics?: string[]
 }
 
 export type InviteCreateResponse = {

@@ -4,12 +4,13 @@ import {
   MemberOverviewSkeleton,
 } from "@workspace/components/components/member-overview"
 import { HealthContentGrid } from "@workspace/components/components/health-content-grid"
-import { memberNewsArticles } from "@/components/member/news"
+import { useMemberArticles } from "@/hooks/use-member-articles"
 
 export function MemberOverviewPage() {
-  const { user, isLoading } = useCurrentUser()
+  const { user, isLoading: isUserLoading } = useCurrentUser()
+  const { articles, isLoading: isArticlesLoading } = useMemberArticles()
 
-  if (isLoading) {
+  if (isUserLoading || isArticlesLoading) {
     return <MemberOverviewSkeleton />
   }
 
@@ -20,7 +21,11 @@ export function MemberOverviewPage() {
   return (
     <div className="space-y-10">
       <MemberOverview email={user.email} />
-      <HealthContentGrid articles={memberNewsArticles} />
+      <HealthContentGrid
+        articles={articles}
+        title="Health content"
+        description="Personalized articles and wellness recommendations."
+      />
     </div>
   )
 }
