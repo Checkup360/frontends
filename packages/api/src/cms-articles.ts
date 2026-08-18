@@ -9,12 +9,24 @@ export type PayloadMedia = {
   height?: number
 }
 
+export type PayloadAuthorDoc = {
+  id: string | number
+  name: string
+  image?: string | number | PayloadMedia | null
+  website?: string | null
+  websiteName?: string | null
+  organization?: string | null
+  createdAt?: string
+  updatedAt?: string
+}
+
 export type PayloadPageDoc = {
   id: string | number
   title: string
   content?: unknown
   diseaseTypes?: string[] | null
   coverImage?: string | number | PayloadMedia | null
+  author?: string | number | PayloadAuthorDoc | null
   organization?: string | null
   createdAt?: string
   updatedAt?: string
@@ -33,6 +45,13 @@ export type PayloadPagesResponse = {
   nextPage: number | null
 }
 
+export type HealthContentAuthor = {
+  name: string
+  website?: string
+  websiteName?: string
+  image?: string
+}
+
 export type HealthContentArticle = {
   id: string
   title: string
@@ -43,6 +62,9 @@ export type HealthContentArticle = {
   excerpt: string
   href?: string
   diseaseTypes?: string[]
+  author?: HealthContentAuthor
+  pubDate?: Date
+  content?: unknown
 }
 
 const DEFAULT_FALLBACK_IMAGE =
@@ -136,6 +158,30 @@ export function mapPayloadPageToArticle(
     }
   }
 
+  let authorObj: HealthContentAuthor | undefined = undefined
+  if (doc.author && typeof doc.author === "object") {
+    const authorDoc = doc.author as PayloadAuthorDoc
+    let authorImageUrl: string | undefined = undefined
+
+    if (authorDoc.image && typeof authorDoc.image === "object") {
+      const authorMedia = authorDoc.image as PayloadMedia
+      if (authorMedia.url) {
+        authorImageUrl = authorMedia.url.startsWith("http")
+          ? authorMedia.url
+          : `${cmsOrigin.replace(/\/$/, "")}${authorMedia.url.startsWith("/") ? "" : "/"}${authorMedia.url}`
+      }
+    }
+
+    authorObj = {
+      name: authorDoc.name,
+      website: authorDoc.website ?? undefined,
+      websiteName: authorDoc.websiteName ?? undefined,
+      image: authorImageUrl,
+    }
+  }
+
+  const pubDate = doc.createdAt ? new Date(doc.createdAt) : new Date()
+
   return {
     id: String(doc.id),
     title: doc.title,
@@ -144,8 +190,11 @@ export function mapPayloadPageToArticle(
     image: imageUrl,
     imageAlt,
     excerpt: extractExcerptFromLexical(doc.content),
-    href: undefined,
+    href: `/news/${doc.id}`,
     diseaseTypes: diseaseTypes.map((t) => t.toLowerCase()),
+    author: authorObj,
+    pubDate,
+    content: doc.content,
   }
 }
 
@@ -200,7 +249,7 @@ export async function fetchCmsPages(options?: {
   ).replace(/\/$/, "")
 
   const limit = options?.limit ?? 50
-  const url = `${cmsOrigin}/api/pages?depth=1&limit=${limit}`
+  const url = `${cmsOrigin}/api/pages?depth=2&limit=${limit}`
 
   const response = await fetch(url, {
     method: "GET",
@@ -216,4 +265,39 @@ export async function fetchCmsPages(options?: {
 
   const data = (await response.json()) as PayloadPagesResponse
   return data.docs || []
+}
+
+/**
+ * Consulta un artículo/página individual por su ID desde Payload CMS
+ */
+export async function fetchCmsPageById(
+  id: string | number,
+  options?: { cmsOrigin?: string }
+): Promise<PayloadPageDoc | null> {
+  const cmsOrigin = (
+    options?.cmsOrigin ||
+    (typeof window !== "undefined" && (window as unknown as { __CMS_ORIGIN__?: string }).__CMS_ORIGIN__) ||
+    "http://localhost:3000"
+  ).replace(/\/$/, "")
+
+  const url = `${cmsOrigin}/api/pages/${id}?depth=2`
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  })
+
+  if (response.status === 404) {
+    return null
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch CMS page ${id}: HTTP ${response.status}`)
+  }
+
+  const data = (await response.json()) as PayloadPageDoc
+  return data
 }

@@ -25,6 +25,7 @@ import NotFound from "./components/shared/not-found"
 import { DashboardPage } from "./pages/dashboard"
 import { MemberOverviewPage } from "./pages/member-overview"
 import { MemberNewsPage } from "./pages/member-news"
+import { MemberNewsDetailPage } from "./pages/member-news-detail"
 import { MemberFormsPage } from "./pages/member-forms"
 import { MemberSettingsPage } from "./pages/member-settings"
 import { MemberOnboardingPage } from "./pages/member-onboarding"
@@ -181,6 +182,7 @@ export function App() {
               >
                 <Route path="/" element={<MemberOverviewPage />} />
                 <Route path="/news" element={<MemberNewsPage />} />
+                <Route path="/news/:id" element={<MemberNewsDetailPage />} />
                 <Route path="/forms" element={<MemberFormsPage />} />
                 <Route path="/settings" element={<MemberSettingsPage />} />
               </Route>

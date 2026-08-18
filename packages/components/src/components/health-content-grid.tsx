@@ -5,17 +5,7 @@ import { Input } from "@workspace/ui/components/input"
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 import { ArrowRight, Clock, Search } from "lucide-react"
 import { useMemo, useState } from "react"
-
-export type HealthContentArticle = {
-  id: string
-  title: string
-  category: string
-  readTime: number
-  image: string
-  imageAlt?: string
-  excerpt: string
-  href?: string
-}
+import type { HealthContentArticle } from "@workspace/api"
 
 type HealthContentGridProps = {
   articles: HealthContentArticle[]
@@ -24,16 +14,22 @@ type HealthContentGridProps = {
 }
 
 function ArticleCard({ article }: { article: HealthContentArticle }) {
+  const targetHref = article.href || `/news/${article.id}`
+
   return (
-    <Card className="group h-full gap-0 p-0 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
-      <div className="overflow-hidden rounded-t-xl bg-muted">
+    <Card className="group h-full gap-0 p-0 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md relative overflow-hidden flex flex-col">
+      <a
+        href={targetHref}
+        className="block overflow-hidden bg-muted aspect-video w-full focus:outline-none"
+        tabIndex={-1}
+      >
         <img
           src={article.image}
-          alt={article.imageAlt ?? ""}
+          alt={article.imageAlt ?? article.title}
           className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
         />
-      </div>
+      </a>
       <CardContent className="flex flex-1 flex-col space-y-3 p-4">
         <div className="flex items-center justify-between gap-3">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -43,22 +39,30 @@ function ArticleCard({ article }: { article: HealthContentArticle }) {
           <Badge variant="secondary">{article.category}</Badge>
         </div>
         <div className="space-y-2">
-          <h3 className="line-clamp-2 text-base leading-snug font-medium">
-            {article.title}
+          <h3 className="line-clamp-2 text-base leading-snug font-semibold text-foreground group-hover:text-primary transition-colors">
+            <a href={targetHref} className="focus:outline-none focus:underline">
+              {article.title}
+            </a>
           </h3>
           <p className="line-clamp-2 text-sm text-muted-foreground">
             {article.excerpt}
           </p>
         </div>
-        {article.href && (
-          <div className="mt-auto flex justify-end pt-1">
-            <Button variant="outline" size="icon" asChild>
-              <a href={article.href} aria-label={`Read ${article.title}`}>
-                <ArrowRight className="-rotate-45" />
-              </a>
-            </Button>
-          </div>
-        )}
+        <div className="mt-auto flex items-center justify-between pt-2">
+          {article.author ? (
+            <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+              By {article.author.name}
+            </span>
+          ) : (
+            <span />
+          )}
+          <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-primary font-medium" asChild>
+            <a href={targetHref} aria-label={`Read ${article.title}`}>
+              Read article
+              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+            </a>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
