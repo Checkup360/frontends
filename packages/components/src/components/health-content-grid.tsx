@@ -18,25 +18,31 @@ function ArticleCard({ article }: { article: HealthContentArticle }) {
 
   return (
     <Card className="group h-full gap-0 p-0 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md relative overflow-hidden flex flex-col">
-      <a
-        href={targetHref}
-        className="block overflow-hidden bg-muted aspect-video w-full focus:outline-none"
-        tabIndex={-1}
-      >
-        <img
-          src={article.image}
-          alt={article.imageAlt ?? article.title}
-          className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="lazy"
-        />
-      </a>
-      <CardContent className="flex flex-1 flex-col space-y-3 p-4">
+      {article.image && (
+        <a
+          href={targetHref}
+          className="block overflow-hidden bg-muted aspect-video w-full focus:outline-none"
+          tabIndex={-1}
+        >
+          <img
+            src={article.image}
+            alt={article.imageAlt ?? article.title}
+            className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
+        </a>
+      )}
+      <CardContent className="flex flex-1 flex-col space-y-3 p-5">
         <div className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="size-3.5" />
-            {article.readTime} min read
-          </span>
-          <Badge variant="secondary">{article.category}</Badge>
+          {article.readTime ? (
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="size-3.5" />
+              {article.readTime} min read
+            </span>
+          ) : (
+            <span />
+          )}
+          {article.category && <Badge variant="secondary">{article.category}</Badge>}
         </div>
         <div className="space-y-2">
           <h3 className="line-clamp-2 text-base leading-snug font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -44,11 +50,13 @@ function ArticleCard({ article }: { article: HealthContentArticle }) {
               {article.title}
             </a>
           </h3>
-          <p className="line-clamp-2 text-sm text-muted-foreground">
-            {article.excerpt}
-          </p>
+          {article.excerpt && (
+            <p className="line-clamp-2 text-sm text-muted-foreground">
+              {article.excerpt}
+            </p>
+          )}
         </div>
-        <div className="mt-auto flex items-center justify-between pt-2">
+        <div className="mt-auto flex items-center justify-between pt-3">
           {article.author ? (
             <span className="text-xs text-muted-foreground truncate max-w-[150px]">
               By {article.author.name}
@@ -76,7 +84,7 @@ export function HealthContentGrid({
   const [category, setCategory] = useState("All")
   const [search, setSearch] = useState("")
   const categories = useMemo(
-    () => ["All", ...new Set(articles.map((article) => article.category))],
+    () => ["All", ...new Set(articles.map((article) => article.category).filter(Boolean))],
     [articles]
   )
   const visibleArticles = useMemo(() => {
@@ -87,7 +95,7 @@ export function HealthContentGrid({
       const matchesSearch =
         !query ||
         article.title.toLowerCase().includes(query) ||
-        article.excerpt.toLowerCase().includes(query)
+        (article.excerpt && article.excerpt.toLowerCase().includes(query))
       return matchesCategory && matchesSearch
     })
   }, [articles, category, search])

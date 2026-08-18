@@ -23,10 +23,13 @@ export type PayloadAuthorDoc = {
 export type PayloadPageDoc = {
   id: string | number
   title: string
+  summary?: string | null
   content?: unknown
   diseaseTypes?: string[] | null
   coverImage?: string | number | PayloadMedia | null
   author?: string | number | PayloadAuthorDoc | null
+  publishedAt?: string | null
+  readTime?: number | null
   organization?: string | null
   createdAt?: string
   updatedAt?: string
@@ -56,8 +59,8 @@ export type HealthContentArticle = {
   id: string
   title: string
   category: string
-  readTime: number
-  image: string
+  readTime?: number
+  image?: string
   imageAlt?: string
   excerpt: string
   href?: string
@@ -66,9 +69,6 @@ export type HealthContentArticle = {
   pubDate?: Date
   content?: unknown
 }
-
-const DEFAULT_FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop&q=80"
 
 /**
  * Extrae texto plano de la estructura JSON AST de Lexical RichText
@@ -107,7 +107,7 @@ export function extractExcerptFromLexical(
 ): string {
   const fullText = extractTextFromLexical(content)
   if (!fullText) {
-    return "Read article for details."
+    return ""
   }
   if (fullText.length <= maxLength) {
     return fullText
@@ -118,12 +118,14 @@ export function extractExcerptFromLexical(
 }
 
 /**
- * Calcula el tiempo estimado de lectura en minutos
+ * Calcula el tiempo estimado de lectura en minutos a partir del texto real.
+ * Si no hay contenido, devuelve undefined (sin valor hardcodeado).
  */
-export function calculateReadTime(content: unknown, wordsPerMinute = 200): number {
+export function calculateReadTime(content: unknown, wordsPerMinute = 200): number | undefined {
   const text = extractTextFromLexical(content)
-  if (!text) return 3
+  if (!text) return undefined
   const words = text.split(/\s+/).filter(Boolean).length
+  if (words === 0) return undefined
   return Math.max(1, Math.ceil(words / wordsPerMinute))
 }
 
@@ -143,7 +145,7 @@ export function mapPayloadPageToArticle(
   const primaryDisease = diseaseTypes[0]
   const category = formatCategoryName(primaryDisease)
 
-  let imageUrl = DEFAULT_FALLBACK_IMAGE
+  let imageUrl: string | undefined = undefined
   let imageAlt = doc.title
 
   if (doc.coverImage && typeof doc.coverImage === "object") {
@@ -180,16 +182,27 @@ export function mapPayloadPageToArticle(
     }
   }
 
-  const pubDate = doc.createdAt ? new Date(doc.createdAt) : new Date()
+  const explicitReadTime =
+    doc.readTime !== null && doc.readTime !== undefined ? Number(doc.readTime) : undefined
+  const finalReadTime = explicitReadTime ?? calculateReadTime(doc.content)
+
+  const rawExcerpt = doc.summary?.trim() || extractExcerptFromLexical(doc.content)
+  const excerpt = rawExcerpt || ""
+
+  const pubDate = doc.publishedAt
+    ? new Date(doc.publishedAt)
+    : doc.createdAt
+      ? new Date(doc.createdAt)
+      : undefined
 
   return {
     id: String(doc.id),
     title: doc.title,
     category,
-    readTime: calculateReadTime(doc.content),
+    readTime: finalReadTime,
     image: imageUrl,
     imageAlt,
-    excerpt: extractExcerptFromLexical(doc.content),
+    excerpt,
     href: `/news/${doc.id}`,
     diseaseTypes: diseaseTypes.map((t) => t.toLowerCase()),
     author: authorObj,
