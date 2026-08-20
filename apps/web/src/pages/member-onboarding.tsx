@@ -529,7 +529,10 @@ export function MemberOnboardingPage() {
                             className="rounded-lg border-border/40 bg-background/40 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60"
                           />
                           {error === "phoneNumber" ? (
-                            <p className="text-sm text-destructive">Must start with + and country code (e.g. +54 11 1234-5678)</p>
+                            <p className="text-sm text-destructive">
+                              Must start with + and country code (e.g. +54 11
+                              1234-5678)
+                            </p>
                           ) : null}
                         </div>
 

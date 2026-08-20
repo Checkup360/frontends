@@ -38,7 +38,9 @@ export function MemberSettingsPage() {
       if (!cancelled) setProfileLoading(false)
     }
     void loadProfile()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const handleSaveProfile = async (event: React.FormEvent) => {
@@ -48,7 +50,9 @@ export function MemberSettingsPage() {
 
     const trimmedPhone = phone.trim()
     if (trimmedPhone && !/^\+[\d\s\-(). ]{7,19}$/.test(trimmedPhone)) {
-      setSaveError("Phone number must start with + and country code (e.g. +54 11 1234-5678).")
+      setSaveError(
+        "Phone number must start with + and country code (e.g. +54 11 1234-5678)."
+      )
       return
     }
 
@@ -90,9 +94,12 @@ export function MemberSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={(e) => void handleSaveProfile(e)} className="space-y-6">
+              <form
+                onSubmit={(e) => void handleSaveProfile(e)}
+                className="space-y-6"
+              >
                 {profileLoading ? (
-                  <div className="space-y-4 animate-pulse">
+                  <div className="animate-pulse space-y-4">
                     <div className="h-10 rounded-md bg-muted" />
                     <div className="h-10 rounded-md bg-muted" />
                     <div className="h-10 rounded-md bg-muted" />

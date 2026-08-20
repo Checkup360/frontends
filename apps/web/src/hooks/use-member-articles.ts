@@ -29,12 +29,14 @@ export function useMemberArticles() {
 
       const priorityTopics =
         profileResult.status === "fulfilled"
-          ? profileResult.value?.priority_topics ?? []
+          ? (profileResult.value?.priority_topics ?? [])
           : []
 
       if (docsResult.status === "fulfilled") {
         const docs = docsResult.value || []
-        const mapped = docs.map((doc) => mapPayloadPageToArticle(doc, cmsOrigin))
+        const mapped = docs.map((doc) =>
+          mapPayloadPageToArticle(doc, cmsOrigin)
+        )
         const sorted = sortArticlesByTopics(mapped, priorityTopics)
         setArticles(sorted)
       } else {

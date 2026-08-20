@@ -7,17 +7,19 @@ import {
 } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
 import { CheckCircle2, Clock, FileText } from "lucide-react"
+import { Link } from "react-router-dom"
 
 export function MemberFormsPage() {
   const forms = [
     {
       id: 1,
-      title: "Annual Health Checkup 2026",
+      title: "Stop-Bang Assessment",
       description:
-        "Complete your annual health assessment for occupational health monitoring.",
+        "Complete your sleep apnea risk assessment based on the STOP-BANG questionnaire.",
       status: "pending",
       dueDate: "2026-05-15",
       priority: "high",
+      href: "/forms/stop-bang",
     },
     {
       id: 2,
@@ -75,8 +77,8 @@ export function MemberFormsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <Button size="sm" className="w-full">
-                    Complete Form
+                  <Button size="sm" className="w-full" asChild>
+                    <Link to={form.href || "#"}>Complete Form</Link>
                   </Button>
                 </CardContent>
               </Card>

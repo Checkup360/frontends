@@ -37,10 +37,10 @@ export function MemberShell() {
 
   const userData = user
     ? {
-      name: user.email.split("@")[0],
-      email: user.email,
-      avatar: "",
-    }
+        name: user.email.split("@")[0],
+        email: user.email,
+        avatar: "",
+      }
     : undefined
 
   const getTitleForPath = () => {
