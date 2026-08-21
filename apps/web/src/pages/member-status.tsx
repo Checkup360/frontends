@@ -64,7 +64,12 @@ export function MemberStatusPage() {
                   <CardTitle className="text-lg">{result.score_name}</CardTitle>
                   {getRiskIcon(result.risk_level)}
                 </div>
-                <CardDescription className="flex flex-col gap-1">
+                {result.evaluated_at && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Evaluated on {new Date(result.evaluated_at).toLocaleDateString()}
+                  </div>
+                )}
+                <CardDescription className="flex flex-col gap-1 mt-2">
                   <div>
                     Risk Level: <span className="font-semibold text-foreground">{result.risk_level || "Unknown"}</span>
                   </div>
