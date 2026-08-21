@@ -13,6 +13,8 @@ import {
   type OrganizationInvite,
   type SysadminInvite,
   type MemberProfileResponse,
+  type StopBangAssessmentRequest,
+  type AssessmentsResponse,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -1340,3 +1342,58 @@ export async function deleteSysadminInvitations(
   const payload = (await response.json()) as { deleted_count?: number }
   return payload.deleted_count ?? 0
 }
+
+export async function submitStopBangAssessment(
+  payload: StopBangAssessmentRequest
+): Promise<{ success: AssessmentsResponse; error?: never } | { success?: never; error: { code: string; message: string } }> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.assessments.stopBang}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }
+    )
+
+    if (response.status === 401) {
+      return { error: { code: "unauthorized", message: "Session expired. Please log in again." } }
+    }
+    if (response.status === 403) {
+      return { error: { code: "forbidden", message: "Only members can submit assessments." } }
+    }
+    if (response.status === 422) {
+      const data = await response.json()
+      return { error: { code: "invalid_input", message: typeof data.detail === 'string' ? data.detail : "Invalid input data." } }
+    }
+    if (!response.ok) {
+      return { error: { code: "unknown_error", message: "Failed to submit assessment. Please try again." } }
+    }
+
+    return { success: (await response.json()) as AssessmentsResponse }
+  } catch (error) {
+    console.error("Error submitting Stop-Bang assessment:", error)
+    return { error: { code: "network_error", message: "Network error. Please try again." } }
+  }
+}
+
+export async function listAssessments(): Promise<AssessmentsResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}/members/me/assessments`,
+      {
+        credentials: "include",
+      }
+    )
+
+    if (response.status === 401) return null
+    if (!response.ok) return null
+
+    return (await response.json()) as AssessmentsResponse
+  } catch (error) {
+    console.error("Error listing assessments:", error)
+    return null
+  }
+}
+

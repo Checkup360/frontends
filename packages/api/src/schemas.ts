@@ -172,3 +172,28 @@ export function parseRedeemResponse(payload: unknown): RedeemResponse | null {
   if (typeof o.ok !== "boolean") return null
   return { ok: o.ok }
 }
+
+export type AssessmentResultResponse = {
+  score_id: string
+  score_name: string
+  risk_level: string | null
+  raw_value: number | null
+  normalized_value: number | null
+  explanation: string | null
+  contributing_factors: Record<string, unknown>
+}
+
+export type AssessmentsResponse = {
+  results: AssessmentResultResponse[]
+}
+
+export type StopBangAssessmentRequest = {
+  height: number
+  weight: number
+  neck_circumference: number
+  sex: string
+  snoring: boolean
+  tired: boolean
+  observed_apnea: boolean
+  hypertension_medication: boolean
+}

@@ -45,6 +45,7 @@ export function useMemberArticleDetail(articleId: string | undefined) {
   }, [articleId])
 
   useEffect(() => {
+    // eslint-disable-next-line
     void loadArticle()
   }, [loadArticle])
 

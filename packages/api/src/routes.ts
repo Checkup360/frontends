@@ -30,4 +30,7 @@ export const apiRoutes = {
     myDetails: "/members/me/details",
     myProfile: "/members/me/profile",
   },
+  assessments: {
+    stopBang: "/members/me/assessments/stop-bang",
+  }
 } as const

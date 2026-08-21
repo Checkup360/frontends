@@ -12,6 +12,7 @@ import { PwaInstallMenuItem } from "../pwa/pwa-install-menu-item"
 
 const navigation: WorkspaceShellNavItem[] = [
   { title: "Overview", url: "/", icon: LayoutDashboard, to: "/", end: true },
+  { title: "Status", url: "/status", icon: LayoutDashboard, to: "/status" },
   { title: "News", url: "/news", icon: Newspaper, to: "/news" },
   { title: "Forms", url: "/forms", icon: FileText, to: "/forms" },
 ]
@@ -49,6 +50,8 @@ export function MemberShell() {
         return "Overview"
       case "/news":
         return "News"
+      case "/status":
+        return "Status"
       case "/forms":
         return "Forms"
       case "/settings":

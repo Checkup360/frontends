@@ -28,6 +28,7 @@ import { MemberNewsPage } from "./pages/member-news"
 import { MemberNewsDetailPage } from "./pages/member-news-detail"
 import { MemberFormsPage } from "./pages/member-forms"
 import { MemberFormsStopBangPage } from "./pages/member-forms-stop-bang"
+import { MemberStatusPage } from "./pages/member-status"
 import { MemberSettingsPage } from "./pages/member-settings"
 import { MemberOnboardingPage } from "./pages/member-onboarding"
 import { ThemeProvider } from "./components/shared/theme-provider"
@@ -184,6 +185,7 @@ export function App() {
                 <Route path="/" element={<MemberOverviewPage />} />
                 <Route path="/news" element={<MemberNewsPage />} />
                 <Route path="/news/:id" element={<MemberNewsDetailPage />} />
+                <Route path="/status" element={<MemberStatusPage />} />
                 <Route path="/forms" element={<MemberFormsPage />} />
                 <Route
                   path="/forms/stop-bang"

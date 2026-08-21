@@ -59,6 +59,7 @@ export function useMemberArticles() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line
     void loadArticles()
   }, [loadArticles])
 

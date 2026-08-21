@@ -24,6 +24,7 @@ import { Separator } from "@workspace/ui/components/separator"
 import { ArrowLeft, CheckCircle2, FileText } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
+import { submitStopBangAssessment } from "@workspace/api"
 
 type StopBangData = {
   snoring: string
@@ -93,18 +94,31 @@ export function MemberFormsStopBangPage() {
 
     setIsSubmitting(true)
 
-    // TODO: Connect this to the actual backend endpoint later
-    // For now, just simulate a submission delay
-    setTimeout(() => {
-      setIsSubmitting(false)
-      // Mock result
-      setResult({
-        score_name: "Stop-Bang",
-        risk_level: "Moderate Risk",
-        explanation:
-          "Based on your responses, you have a moderate risk of Obstructive Sleep Apnea.",
-      })
-    }, 1000)
+    const payload = {
+      height: Number(data.height),
+      weight: Number(data.weight),
+      neck_circumference: Number(data.neck_circumference),
+      sex: data.sex,
+      snoring: data.snoring === "true",
+      tired: data.tired === "true",
+      observed_apnea: data.observed_apnea === "true",
+      hypertension_medication: data.hypertension_medication === "true",
+    }
+
+    const response = await submitStopBangAssessment(payload)
+    setIsSubmitting(false)
+
+    if (response.error) {
+      setError(response.error.message || "An error occurred")
+      return
+    }
+
+    const scoreResult = response.success.results[0]
+    setResult({
+      score_name: scoreResult.score_name,
+      risk_level: scoreResult.risk_level || "Unknown",
+      explanation: scoreResult.explanation || "No explanation provided.",
+    })
   }
 
   const fieldError = (fieldError: string | null, field: string) => {
