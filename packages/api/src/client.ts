@@ -13,7 +13,7 @@ import {
   type OrganizationInvite,
   type SysadminInvite,
   type MemberProfileResponse,
-  type StopBangAssessmentRequest,
+  type ClinicalAssessmentRequest,
   type AssessmentsResponse,
 } from "./schemas"
 import { apiRoutes } from "./routes"
@@ -1343,12 +1343,12 @@ export async function deleteSysadminInvitations(
   return payload.deleted_count ?? 0
 }
 
-export async function submitStopBangAssessment(
-  payload: StopBangAssessmentRequest
+export async function submitClinicalAssessment(
+  payload: ClinicalAssessmentRequest
 ): Promise<{ success: AssessmentsResponse; error?: never } | { success?: never; error: { code: string; message: string } }> {
   try {
     const response = await fetchWithAuth(
-      `${resolveApiBaseUrl()}${apiRoutes.assessments.stopBang}`,
+      `${resolveApiBaseUrl()}${apiRoutes.assessments.evaluate}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1373,7 +1373,7 @@ export async function submitStopBangAssessment(
 
     return { success: (await response.json()) as AssessmentsResponse }
   } catch (error) {
-    console.error("Error submitting Stop-Bang assessment:", error)
+    console.error("Error submitting clinical assessment:", error)
     return { error: { code: "network_error", message: "Network error. Please try again." } }
   }
 }

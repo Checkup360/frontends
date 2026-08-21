@@ -187,13 +187,19 @@ export type AssessmentsResponse = {
   results: AssessmentResultResponse[]
 }
 
-export type StopBangAssessmentRequest = {
-  height: number
-  weight: number
-  neck_circumference: number
-  sex: string
-  snoring: boolean
-  tired: boolean
-  observed_apnea: boolean
-  hypertension_medication: boolean
+export type ClinicalAssessmentRequest = {
+  age?: number
+  height?: number
+  weight?: number
+  waist_circumference?: number
+  neck_circumference?: number
+  sex?: string
+  snoring?: boolean
+  tired?: boolean
+  observed_apnea?: boolean
+  hypertension_medication?: boolean
+  daily_physical_activity?: boolean
+  fruits_vegetables?: boolean
+  previous_high_glucose?: boolean
+  family_diabetes?: string
 }
