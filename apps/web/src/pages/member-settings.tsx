@@ -11,7 +11,14 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
-import { fetchMemberProfile, updateMemberProfile } from "@workspace/api"
+import { fetchMemberProfile, updateMemberProfile, fetchMemberBiometrics, updateMemberBiometrics } from "@workspace/api"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import { useEffect, useState } from "react"
 
 export function MemberSettingsPage() {
@@ -26,18 +33,42 @@ export function MemberSettingsPage() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
 
+  const [biologicalSex, setBiologicalSex] = useState<string>("")
+  const [height, setHeight] = useState<string>("")
+  const [weight, setWeight] = useState<string>("")
+  const [biometricsLoading, setBiometricsLoading] = useState(true)
+  const [isSavingBiometrics, setIsSavingBiometrics] = useState(false)
+  const [saveBiometricsError, setSaveBiometricsError] = useState<string | null>(null)
+  const [saveBiometricsSuccess, setSaveBiometricsSuccess] = useState(false)
+
   useEffect(() => {
     let cancelled = false
     async function loadProfile() {
       setProfileLoading(true)
-      const profile = await fetchMemberProfile()
+      setBiometricsLoading(true)
+      
+      const [profile, biometrics] = await Promise.all([
+        fetchMemberProfile(),
+        fetchMemberBiometrics()
+      ])
+      
       if (!cancelled && profile) {
         setFirstName(profile.first_name)
         setLastName(profile.last_name)
         setPhone(profile.phone_number ?? "")
         setDateOfBirth(profile.date_of_birth)
       }
-      if (!cancelled) setProfileLoading(false)
+      
+      if (!cancelled && biometrics) {
+        setBiologicalSex(biometrics.biological_sex ?? "")
+        setHeight(biometrics.height ? String(biometrics.height) : "")
+        setWeight(biometrics.weight ? String(biometrics.weight) : "")
+      }
+      
+      if (!cancelled) {
+        setProfileLoading(false)
+        setBiometricsLoading(false)
+      }
     }
     void loadProfile()
     return () => {
@@ -76,6 +107,30 @@ export function MemberSettingsPage() {
       }
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleSaveBiometrics = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setSaveBiometricsError(null)
+    setSaveBiometricsSuccess(false)
+    setIsSavingBiometrics(true)
+
+    try {
+      const result = await updateMemberBiometrics({
+        biological_sex: biologicalSex || null,
+        height: height ? parseFloat(height) : null,
+        weight: weight ? parseFloat(weight) : null,
+      })
+
+      if (result.error) {
+        setSaveBiometricsError(result.error.message)
+      } else {
+        setSaveBiometricsSuccess(true)
+        setTimeout(() => setSaveBiometricsSuccess(false), 3000)
+      }
+    } finally {
+      setIsSavingBiometrics(false)
     }
   }
 
@@ -175,6 +230,87 @@ export function MemberSettingsPage() {
 
                 <Button type="submit" disabled={isSaving || profileLoading}>
                   {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Biometrics</CardTitle>
+              <CardDescription>
+                Your basic physical attributes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form
+                onSubmit={(e) => void handleSaveBiometrics(e)}
+                className="space-y-6"
+              >
+                {biometricsLoading ? (
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-10 rounded-md bg-muted" />
+                    <div className="h-10 rounded-md bg-muted" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="biological-sex">Biological Sex</Label>
+                      <Select
+                        value={biologicalSex}
+                        onValueChange={setBiologicalSex}
+                        disabled={isSavingBiometrics}
+                      >
+                        <SelectTrigger id="biological-sex">
+                          <SelectValue placeholder="Select sex" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="height">Height (cm)</Label>
+                        <Input
+                          id="height"
+                          type="number"
+                          placeholder="170"
+                          value={height}
+                          onChange={(e) => setHeight(e.target.value)}
+                          disabled={isSavingBiometrics}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="weight">Weight (kg)</Label>
+                        <Input
+                          id="weight"
+                          type="number"
+                          placeholder="70"
+                          value={weight}
+                          onChange={(e) => setWeight(e.target.value)}
+                          disabled={isSavingBiometrics}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {saveBiometricsError && (
+                  <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    {saveBiometricsError}
+                  </p>
+                )}
+
+                {saveBiometricsSuccess && (
+                  <p className="rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-600 dark:text-green-400">
+                    Changes saved successfully.
+                  </p>
+                )}
+
+                <Button type="submit" disabled={isSavingBiometrics || biometricsLoading}>
+                  {isSavingBiometrics ? "Saving..." : "Save Changes"}
                 </Button>
               </form>
             </CardContent>

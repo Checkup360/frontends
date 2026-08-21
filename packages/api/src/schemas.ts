@@ -23,6 +23,14 @@ export type MemberProfileResponse = {
   priority_topics?: string[]
 }
 
+export type MemberBiometricsResponse = {
+  biological_sex: string | null
+  height: number | null
+  weight: number | null
+  waist_circumference: number | null
+  neck_circumference: number | null
+}
+
 export type InviteCreateResponse = {
   token: string
   invite_url: string

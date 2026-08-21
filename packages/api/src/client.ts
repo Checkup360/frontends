@@ -13,6 +13,7 @@ import {
   type OrganizationInvite,
   type SysadminInvite,
   type MemberProfileResponse,
+  type MemberBiometricsResponse,
   type ClinicalAssessmentRequest,
   type AssessmentsResponse,
 } from "./schemas"
@@ -253,6 +254,58 @@ export async function updateMemberProfile(payload: {
     return { success: (await response.json()) as MemberProfileResponse }
   } catch (error) {
     console.error("Error updating member profile:", error)
+    return { error: { code: "network_error", message: "Network error. Please try again." } }
+  }
+}
+
+export async function fetchMemberBiometrics(): Promise<MemberBiometricsResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.myBiometrics}`,
+      { credentials: "include" }
+    )
+    if (!response.ok) return null
+    return (await response.json()) as MemberBiometricsResponse
+  } catch (error) {
+    console.error("Error fetching member biometrics:", error)
+    return null
+  }
+}
+
+export interface UpdateBiometricsError {
+  code: string
+  message: string
+}
+
+export async function updateMemberBiometrics(payload: {
+  biological_sex?: string | null
+  height?: number | null
+  weight?: number | null
+}): Promise<
+  | { success: MemberBiometricsResponse; error?: never }
+  | { success?: never; error: UpdateBiometricsError }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.myBiometrics}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }
+    )
+
+    if (response.status === 401) {
+      return { error: { code: "unauthorized", message: "Session expired. Please log in again." } }
+    }
+    if (!response.ok) {
+      return { error: { code: "unknown_error", message: "Failed to save health profile. Please try again." } }
+    }
+
+    return { success: (await response.json()) as MemberBiometricsResponse }
+  } catch (error) {
+    console.error("Error updating member biometrics:", error)
     return { error: { code: "network_error", message: "Network error. Please try again." } }
   }
 }

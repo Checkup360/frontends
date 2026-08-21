@@ -29,6 +29,7 @@ export const apiRoutes = {
   members: {
     myDetails: "/members/me/details",
     myProfile: "/members/me/profile",
+    myBiometrics: "/members/me/biometrics",
   },
   assessments: {
     evaluate: "/members/me/assessments/evaluate",
