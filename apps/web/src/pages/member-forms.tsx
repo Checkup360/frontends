@@ -35,13 +35,13 @@ export function MemberFormsPage() {
   const forms: FormItem[] = [
     {
       id: 1,
-      title: "Annual Health Checkup 2026",
+      title: "Clinical Studies Upload",
       description:
-        "Complete your annual health assessment for occupational health monitoring.",
+        "Please provide your physiological data for your health risk assessment.",
       status: "pending",
       dueDate: "2026-05-14",
       priority: "high",
-      href: "/forms/stop-bang",
+      href: "/forms/studies",
     },
     {
       id: 2,
@@ -50,7 +50,7 @@ export function MemberFormsPage() {
       status: "pending",
       dueDate: "2026-05-31",
       priority: "standard",
-      href: "/forms/stop-bang",
+      href: "#",
     },
     {
       id: 3,
@@ -134,7 +134,7 @@ export function MemberFormsPage() {
                   <div className="flex justify-end">
                     <Button
                       size="sm"
-                      variant={isHighPriority ? "default" : "outline"}
+                      variant="default"
                       asChild
                     >
                       <Link to={form.href || "#"}>Complete Form</Link>

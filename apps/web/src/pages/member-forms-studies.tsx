@@ -26,7 +26,7 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { submitStopBangAssessment } from "@workspace/api"
 
-type StopBangData = {
+type StudiesData = {
   snoring: string
   tired: string
   observed_apnea: string
@@ -43,7 +43,7 @@ type AssessmentResult = {
   explanation: string
 }
 
-const initialData: StopBangData = {
+const initialData: StudiesData = {
   snoring: "",
   tired: "",
   observed_apnea: "",
@@ -54,15 +54,15 @@ const initialData: StopBangData = {
   sex: "",
 }
 
-export function MemberFormsStopBangPage() {
-  const [data, setData] = useState<StopBangData>(initialData)
+export function MemberFormsStudiesPage() {
+  const [data, setData] = useState<StudiesData>(initialData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<AssessmentResult | null>(null)
 
-  const updateField = <K extends keyof StopBangData>(
+  const updateField = <K extends keyof StudiesData>(
     field: K,
-    value: StopBangData[K]
+    value: StudiesData[K]
   ) => {
     setData((current) => ({ ...current, [field]: value }))
     if (error === field) {
@@ -148,7 +148,7 @@ export function MemberFormsStopBangPage() {
             </div>
             <CardTitle>Results Saved Successfully</CardTitle>
             <CardDescription>
-              Your Stop-Bang risk score has been evaluated.
+              Your health assessment has been evaluated.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4 text-center">
@@ -184,11 +184,10 @@ export function MemberFormsStopBangPage() {
         </Button>
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Stop-Bang Assessment
+            Clinical Studies Form
           </h2>
           <p className="text-sm text-muted-foreground">
-            Please answer the following questions to assess your risk for sleep
-            apnea.
+            Please answer the following questions to assess your health risk factors.
           </p>
         </div>
       </div>

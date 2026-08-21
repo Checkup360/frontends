@@ -27,7 +27,7 @@ import { MemberOverviewPage } from "./pages/member-overview"
 import { MemberNewsPage } from "./pages/member-news"
 import { MemberNewsDetailPage } from "./pages/member-news-detail"
 import { MemberFormsPage } from "./pages/member-forms"
-import { MemberFormsStopBangPage } from "./pages/member-forms-stop-bang"
+import { MemberFormsStudiesPage } from "./pages/member-forms-studies"
 import { MemberStatusPage } from "./pages/member-status"
 import { MemberSettingsPage } from "./pages/member-settings"
 import { MemberOnboardingPage } from "./pages/member-onboarding"
@@ -188,8 +188,8 @@ export function App() {
                 <Route path="/status" element={<MemberStatusPage />} />
                 <Route path="/forms" element={<MemberFormsPage />} />
                 <Route
-                  path="/forms/stop-bang"
-                  element={<MemberFormsStopBangPage />}
+                  path="/forms/studies"
+                  element={<MemberFormsStudiesPage />}
                 />
                 <Route path="/settings" element={<MemberSettingsPage />} />
               </Route>
