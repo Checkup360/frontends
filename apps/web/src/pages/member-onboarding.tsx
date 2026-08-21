@@ -325,6 +325,9 @@ export function MemberOnboardingPage() {
         first_name: data.firstName,
         last_name: data.lastName,
         phone_number: data.phoneNumber.trim(),
+        height: parseFloat(data.height),
+        weight: parseFloat(data.weight),
+        biological_sex: data.gender,
       })
 
       if (result.error) {

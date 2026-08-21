@@ -20,6 +20,7 @@ export function MemberSettingsPage() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [phone, setPhone] = useState("")
+  const [dateOfBirth, setDateOfBirth] = useState("")
   const [profileLoading, setProfileLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -34,6 +35,7 @@ export function MemberSettingsPage() {
         setFirstName(profile.first_name)
         setLastName(profile.last_name)
         setPhone(profile.phone_number ?? "")
+        setDateOfBirth(profile.date_of_birth)
       }
       if (!cancelled) setProfileLoading(false)
     }
@@ -63,6 +65,7 @@ export function MemberSettingsPage() {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         phone_number: trimmedPhone || null,
+        date_of_birth: dateOfBirth,
       })
 
       if (result.error) {
@@ -131,16 +134,29 @@ export function MemberSettingsPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+54 11 1234-5678"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        disabled={isSaving}
-                      />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="+54 11 1234-5678"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          disabled={isSaving}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="date-of-birth">Date of birth</Label>
+                        <Input
+                          id="date-of-birth"
+                          type="date"
+                          max={new Date().toISOString().slice(0, 10)}
+                          value={dateOfBirth}
+                          onChange={(e) => setDateOfBirth(e.target.value)}
+                          disabled={isSaving}
+                        />
+                      </div>
                     </div>
                   </>
                 )}

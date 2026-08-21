@@ -142,9 +142,12 @@ export interface SubmitMemberDetailsError {
 
 export async function submitMemberDetails(payload: {
   date_of_birth: string
-  first_name?: string
-  last_name?: string
+  first_name: string
+  last_name: string
   phone_number: string
+  height: number
+  weight: number
+  biological_sex: string
 }): Promise<
   | { success: true; error?: never }
   | { success?: never; error: SubmitMemberDetailsError }
@@ -218,6 +221,7 @@ export async function updateMemberProfile(payload: {
   first_name: string
   last_name: string
   phone_number: string | null
+  date_of_birth: string
 }): Promise<
   | { success: MemberProfileResponse; error?: never }
   | { success?: never; error: UpdateProfileError }
