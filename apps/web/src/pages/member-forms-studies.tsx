@@ -13,18 +13,13 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@workspace/ui/components/radio-group"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select"
+
+import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
 import { Separator } from "@workspace/ui/components/separator"
-import { ArrowLeft, CheckCircle2, FileText } from "lucide-react"
-import { useState } from "react"
+import { ArrowLeft, CheckCircle2, FileText, Info } from "lucide-react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { submitClinicalAssessment } from "@workspace/api"
+import { submitClinicalAssessment, fetchMemberProfile, fetchMemberBiometrics } from "@workspace/api"
 
 type StudiesData = {
   snoring: string
@@ -69,8 +64,47 @@ const initialData: StudiesData = {
 export function MemberFormsStudiesPage() {
   const [data, setData] = useState<StudiesData>(initialData)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<AssessmentResult[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadData() {
+      setIsLoadingData(true)
+      const [profile, biometrics] = await Promise.all([
+        fetchMemberProfile(),
+        fetchMemberBiometrics()
+      ])
+
+      if (!cancelled) {
+        if (profile) {
+          const birthDate = new Date(profile.date_of_birth)
+          const today = new Date()
+          let calculatedAge = today.getFullYear() - birthDate.getFullYear()
+          const m = today.getMonth() - birthDate.getMonth()
+          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            calculatedAge--
+          }
+          setData(d => ({ ...d, age: calculatedAge.toString() }))
+        }
+        
+        if (biometrics) {
+          setData(d => ({
+            ...d,
+            sex: biometrics.biological_sex || "",
+            height: biometrics.height ? biometrics.height.toString() : "",
+            weight: biometrics.weight ? biometrics.weight.toString() : ""
+          }))
+        }
+        setIsLoadingData(false)
+      }
+    }
+    void loadData()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const updateField = <K extends keyof StudiesData>(
     field: K,
@@ -216,7 +250,7 @@ export function MemberFormsStudiesPage() {
             Clinical Studies Form
           </h2>
           <p className="text-sm text-muted-foreground">
-            Please answer the following questions to assess your health risk factors.
+            Please complete the following information.
           </p>
         </div>
       </div>
@@ -229,69 +263,30 @@ export function MemberFormsStudiesPage() {
               <CardTitle className="text-lg">Health Information</CardTitle>
             </div>
             <CardDescription>
-              Your physiological data is required to calculate the score
-              accurately.
+              Please complete the following information.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="age">Age (years)</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  placeholder="e.g. 45"
-                  value={data.age}
-                  onChange={(e) => updateField("age", e.target.value)}
-                  disabled={isSubmitting}
-                />
-                {fieldError(error, "age")}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sex">Biological Sex</Label>
-                <Select
-                  value={data.sex}
-                  onValueChange={(val) => updateField("sex", val)}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger id="sex">
-                    <SelectValue placeholder="Select sex" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-                {fieldError(error, "sex")}
-              </div>
-            </div>
+            <Alert variant="info" className="mb-6">
+              <Info className="h-4 w-4" />
+              <AlertTitle>Using your profile biometrics</AlertTitle>
+              <AlertDescription>
+                <p>
+                  We're securely auto-filling this assessment using the biological data (like height and weight) from your health profile. If any information is out of date, please visit the{" "}
+                  <Link to="/settings" className="font-semibold underline">Settings</Link>{" "}
+                  to update it before submitting.
+                </p>
+              </AlertDescription>
+            </Alert>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="height">Height (cm)</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  placeholder="e.g. 175"
-                  value={data.height}
-                  onChange={(e) => updateField("height", e.target.value)}
-                  disabled={isSubmitting}
-                />
-                {fieldError(error, "height")}
+            {isLoadingData ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-10 rounded-md bg-muted" />
+                <div className="h-10 rounded-md bg-muted" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="weight">Weight (kg)</Label>
-                <Input
-                  id="weight"
-                  type="number"
-                  placeholder="e.g. 70"
-                  value={data.weight}
-                  onChange={(e) => updateField("weight", e.target.value)}
-                  disabled={isSubmitting}
-                />
-                {fieldError(error, "weight")}
-              </div>
-            </div>
+            ) : (
+              <>
+
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
@@ -600,11 +595,13 @@ export function MemberFormsStudiesPage() {
                 {fieldError(error, "family_diabetes")}
               </div>
             </div>
+            </>
+            )}
           </CardContent>
           <CardFooter className="bg-muted/30 pt-6">
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoadingData}
               className="ml-auto w-full sm:w-auto"
             >
               {isSubmitting ? "Submitting..." : "Submit Assessment"}
