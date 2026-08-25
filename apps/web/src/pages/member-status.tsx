@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { listAssessments, type AssessmentsResponse } from "@workspace/api"
+import { useEffect, useState, useMemo } from "react"
+import { listAssessments, type AssessmentsResponse, type AssessmentResultResponse } from "@workspace/api"
 import {
   Card,
   CardContent,
@@ -7,7 +7,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
-import { ClipboardList, ShieldAlert, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react"
+import { Button } from "@workspace/ui/components/button"
+import { Badge } from "@workspace/ui/components/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog"
+import {
+  ClipboardList,
+  ShieldAlert,
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+  History,
+  Calendar,
+  Check,
+  RotateCcw,
+} from "lucide-react"
 
 function getRiskIcon(riskLevel: string | null) {
   if (!riskLevel) return <ClipboardList className="h-6 w-6 text-muted-foreground" />
@@ -18,9 +37,72 @@ function getRiskIcon(riskLevel: string | null) {
   return <ShieldAlert className="h-6 w-6 text-muted-foreground" />
 }
 
+export interface AssessmentSession {
+  id: string
+  evaluatedAt: Date | null
+  formattedDate: string
+  isLatest: boolean
+  results: AssessmentResultResponse[]
+}
+
+export function formatSessionDate(dateString?: string | null): string {
+  if (!dateString) return "Date unavailable"
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return dateString
+
+  const day = String(date.getDate()).padStart(2, "0")
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const year = date.getFullYear()
+  const hours = String(date.getHours()).padStart(2, "0")
+  const minutes = String(date.getMinutes()).padStart(2, "0")
+
+  return `${day}/${month}/${year} ${hours}:${minutes}`
+}
+
+export function groupResultsIntoSessions(results: AssessmentResultResponse[]): AssessmentSession[] {
+  if (!results || results.length === 0) return []
+
+  // Group scores by timestamp window (within 5 seconds)
+  const sessionGroups: { [key: string]: { timestamp: number; dateStr: string; results: AssessmentResultResponse[] } } = {}
+
+  for (const item of results) {
+    const rawTime = item.evaluated_at ? new Date(item.evaluated_at).getTime() : 0
+    // Round timestamp to nearest 5-second window so near-simultaneous scores belong to same session
+    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 5000) * 5000 : 0
+    const key = `session_${bucketTime}`
+
+    if (!sessionGroups[key]) {
+      sessionGroups[key] = {
+        timestamp: rawTime,
+        dateStr: item.evaluated_at || "",
+        results: [],
+      }
+    }
+    sessionGroups[key].results.push(item)
+  }
+
+  // Convert map to array and sort descending by timestamp
+  const sortedSessions = Object.values(sessionGroups)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .map((group, index) => {
+      const dateObj = group.timestamp > 0 ? new Date(group.timestamp) : null
+      return {
+        id: `session_${group.timestamp}_${index}`,
+        evaluatedAt: dateObj,
+        formattedDate: formatSessionDate(group.dateStr),
+        isLatest: index === 0,
+        results: group.results,
+      }
+    })
+
+  return sortedSessions
+}
+
 export function MemberStatusPage() {
   const [assessments, setAssessments] = useState<AssessmentsResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -32,20 +114,60 @@ export function MemberStatusPage() {
     void load()
   }, [])
 
+  const sessions = useMemo(() => {
+    return groupResultsIntoSessions(assessments?.results || [])
+  }, [assessments])
+
+  // Select active session (defaults to latest session)
+  const activeSession = useMemo(() => {
+    if (!sessions.length) return null
+    return sessions.find((s) => s.id === selectedSessionId) || sessions[0]
+  }, [sessions, selectedSessionId])
+
+  const isViewingLatest = activeSession?.isLatest ?? true
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Health Status</h2>
-        <p className="text-sm text-muted-foreground">
-          View your latest health assessment results and risk scores.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Health Status</h2>
+          <p className="text-sm text-muted-foreground">
+            View your latest health assessment results and risk scores.
+          </p>
+        </div>
+
+        {sessions.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {!isViewingLatest && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedSessionId(sessions[0]?.id || null)}
+                className="gap-1 text-xs"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                View latest
+              </Button>
+            )}
+
+            <Button
+              variant={isViewingLatest ? "outline" : "default"}
+              size="sm"
+              onClick={() => setIsHistoryOpen(true)}
+              className="gap-2"
+            >
+              <History className="h-4 w-4" />
+              Assessment history
+            </Button>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
         <div className="flex justify-center p-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
         </div>
-      ) : !assessments?.results?.length ? (
+      ) : !sessions.length ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center p-12 text-center">
             <ClipboardList className="mb-4 h-12 w-12 text-muted-foreground/50" />
@@ -56,39 +178,122 @@ export function MemberStatusPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {assessments.results.map((result) => (
-            <Card key={result.score_id} className="overflow-hidden transition-all hover:shadow-md">
-              <CardHeader className="bg-muted/30 pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{result.score_name}</CardTitle>
-                  {getRiskIcon(result.risk_level)}
-                </div>
-                {result.evaluated_at && (
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Evaluated on {new Date(result.evaluated_at).toLocaleDateString()}
+        <div className="space-y-4">
+          {/* Active Session Info Banner */}
+          <div className="flex items-center justify-between rounded-lg border bg-card p-3 px-4 text-sm shadow-xs">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              <span className="font-medium text-foreground">
+                Assessment from {activeSession?.formattedDate}
+              </span>
+              {isViewingLatest ? (
+                <Badge variant="success-light" size="sm">
+                  Latest
+                </Badge>
+              ) : (
+                <Badge variant="warning-light" size="sm">
+                  History
+                </Badge>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              {activeSession?.results.length} evaluation(s)
+            </span>
+          </div>
+
+          {/* Cards for active session */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {activeSession?.results.map((result) => (
+              <Card key={result.score_id} className="overflow-hidden transition-all hover:shadow-md">
+                <CardHeader className="bg-muted/30 pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{result.score_name}</CardTitle>
+                    {getRiskIcon(result.risk_level)}
                   </div>
-                )}
-                <CardDescription className="flex flex-col gap-1 mt-2">
-                  <div>
-                    Risk Level: <span className="font-semibold text-foreground">{result.risk_level || "Unknown"}</span>
-                  </div>
-                  {result.raw_value !== null && result.raw_value !== undefined && (
+                  <CardDescription className="flex flex-col gap-1 mt-2">
                     <div>
-                      Score: <span className="font-semibold text-foreground">{result.raw_value}</span>
+                      Risk Level: <span className="font-semibold text-foreground">{result.risk_level || "Unknown"}</span>
                     </div>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <p className="text-sm text-muted-foreground">
-                  {result.explanation || "No explanation provided."}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+                    {result.raw_value !== null && result.raw_value !== undefined && (
+                      <div>
+                        Score: <span className="font-semibold text-foreground">{result.raw_value}</span>
+                      </div>
+                    )}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    {result.explanation || "No explanation provided."}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
+
+      {/* History Dialog */}
+      <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+        <DialogContent className="max-w-md sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" />
+              Medical Assessment History
+            </DialogTitle>
+            <DialogDescription>
+              Select a date and time to view the risk results from that specific evaluation session.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-2 max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+            {sessions.map((session) => {
+              const isSelected = activeSession?.id === session.id
+              return (
+                <button
+                  key={session.id}
+                  onClick={() => {
+                    setSelectedSessionId(session.id)
+                    setIsHistoryOpen(false)
+                  }}
+                  className={`flex w-full items-center justify-between rounded-lg border p-3 text-left transition-all hover:border-primary/50 ${
+                    isSelected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                      : "bg-card hover:bg-muted/40"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-9 w-9 items-center justify-center rounded-full ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {isSelected ? <Check className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
+                    </div>
+                    <div>
+                      <div className="font-medium text-foreground text-sm flex items-center gap-2">
+                        {session.formattedDate}
+                        {session.isLatest && (
+                          <Badge variant="success-light" size="xs">
+                            Latest
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {session.results.length} score(s) evaluated
+                      </div>
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <span className="text-xs font-semibold text-primary">Selected</span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
