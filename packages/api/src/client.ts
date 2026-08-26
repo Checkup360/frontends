@@ -1454,3 +1454,26 @@ export async function listAssessments(): Promise<AssessmentsResponse | null> {
   }
 }
 
+export async function listEmployeeAssessments(
+  organizationId: string,
+  userId: string
+): Promise<AssessmentsResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}/organizations/${organizationId}/employees/${userId}/assessments`,
+      {
+        credentials: "include",
+      }
+    )
+
+    if (response.status === 401 || response.status === 403) return null
+    if (!response.ok) return null
+
+    return (await response.json()) as AssessmentsResponse
+  } catch (error) {
+    console.error("Error listing employee assessments:", error)
+    return null
+  }
+}
+
+

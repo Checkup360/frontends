@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import {
   listOrganizationEmployees,
+  listEmployeeAssessments,
   type OrganizationEmployee,
+  type AssessmentsResponse,
+  type AssessmentResultResponse,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { AssignDepartmentForm } from "@workspace/components/components/assign-department-form"
@@ -11,7 +14,8 @@ import {
   HealthScoreCard,
   type HealthScoreRow,
 } from "@workspace/components/components/health-score-card"
-import { Card, CardContent } from "@workspace/ui/components/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
+import { Badge } from "@workspace/ui/components/badge"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
   Dialog,
@@ -34,6 +38,16 @@ import {
   Stethoscope,
   Apple,
   Clock,
+  History,
+  Calendar,
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+  ShieldAlert,
+  ClipboardList,
+  Check,
+  RotateCcw,
+  FileText,
 } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 
@@ -43,6 +57,68 @@ const healthIndicators: HealthScoreRow[] = [
   { label: "Preventive Care", value: 90, icon: Stethoscope, tone: "blue" },
   { label: "Nutrition Profile", value: 80, icon: Apple, tone: "green" },
 ]
+
+export interface AssessmentSession {
+  id: string
+  evaluatedAt: Date | null
+  formattedDate: string
+  isLatest: boolean
+  results: AssessmentResultResponse[]
+}
+
+function formatSessionDate(dateString?: string | null): string {
+  if (!dateString) return "Date unavailable"
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return dateString
+
+  const day = String(date.getDate()).padStart(2, "0")
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const year = date.getFullYear()
+  const hours = String(date.getHours()).padStart(2, "0")
+  const minutes = String(date.getMinutes()).padStart(2, "0")
+
+  return `${day}/${month}/${year} ${hours}:${minutes}`
+}
+
+function groupResultsIntoSessions(results: AssessmentResultResponse[]): AssessmentSession[] {
+  if (!results || results.length === 0) return []
+
+  const sessionGroups: { [key: string]: { timestamp: number; dateStr: string; results: AssessmentResultResponse[] } } = {}
+
+  for (const item of results) {
+    const rawTime = item.evaluated_at ? new Date(item.evaluated_at).getTime() : 0
+    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 5000) * 5000 : 0
+    const key = `session_${bucketTime}`
+
+    if (!sessionGroups[key]) {
+      sessionGroups[key] = {
+        timestamp: rawTime,
+        dateStr: item.evaluated_at || "",
+        results: [],
+      }
+    }
+    sessionGroups[key].results.push(item)
+  }
+
+  return Object.values(sessionGroups)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .map((group, index) => ({
+      id: `session_${group.timestamp}_${index}`,
+      evaluatedAt: group.timestamp > 0 ? new Date(group.timestamp) : null,
+      formattedDate: formatSessionDate(group.dateStr),
+      isLatest: index === 0,
+      results: group.results,
+    }))
+}
+
+function getRiskIcon(riskLevel: string | null) {
+  if (!riskLevel) return <ClipboardList className="h-5 w-5 text-muted-foreground" />
+  const lowerRisk = riskLevel.toLowerCase()
+  if (lowerRisk.includes("high")) return <AlertCircle className="h-5 w-5 text-destructive" />
+  if (lowerRisk.includes("moderate")) return <AlertTriangle className="h-5 w-5 text-yellow-500" />
+  if (lowerRisk.includes("low")) return <CheckCircle2 className="h-5 w-5 text-green-500" />
+  return <ShieldAlert className="h-5 w-5 text-muted-foreground" />
+}
 
 function EmployeeDetailSkeleton() {
   return (
@@ -76,6 +152,12 @@ export function EmployeeDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  // Assessments state
+  const [assessments, setAssessments] = useState<AssessmentsResponse | null>(null)
+  const [loadingAssessments, setLoadingAssessments] = useState(true)
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
 
   const loadEmployee = async () => {
     if (!organizationId || !id) return
@@ -123,6 +205,34 @@ export function EmployeeDetailPage() {
       active = false
     }
   }, [organizationId, id])
+
+  useEffect(() => {
+    let active = true
+    const loadAssessmentsData = async () => {
+      if (!organizationId || !id) return
+      setLoadingAssessments(true)
+      const data = await listEmployeeAssessments(organizationId, id)
+      if (active) {
+        setAssessments(data)
+        setLoadingAssessments(false)
+      }
+    }
+    void loadAssessmentsData()
+    return () => {
+      active = false
+    }
+  }, [organizationId, id])
+
+  const sessions = useMemo(() => {
+    return groupResultsIntoSessions(assessments?.results || [])
+  }, [assessments])
+
+  const activeSession = useMemo(() => {
+    if (!sessions.length) return null
+    return sessions.find((s) => s.id === selectedSessionId) || sessions[0]
+  }, [sessions, selectedSessionId])
+
+  const isViewingLatest = activeSession?.isLatest ?? true
 
   if (loading) {
     return <EmployeeDetailSkeleton />
@@ -174,6 +284,7 @@ export function EmployeeDetailPage() {
         </h2>
       </div>
 
+      {/* Grid: 2 existing cards */}
       <div className="grid animate-in gap-6 duration-300 fade-in md:grid-cols-3">
         <aside className="md:col-span-1">
           <EmployeeProfileCard
@@ -223,6 +334,179 @@ export function EmployeeDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Card 3: Clinical Study Assessment Preview & History */}
+      <Card className="border-2">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle className="text-xl">Clinical Study Assessments</CardTitle>
+              <CardDescription>
+                Medical study risk scores evaluated by engine
+              </CardDescription>
+            </div>
+          </div>
+
+          {sessions.length > 0 && (
+            <div className="flex items-center gap-2">
+              {!isViewingLatest && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedSessionId(sessions[0]?.id || null)}
+                  className="gap-1 text-xs"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  View latest
+                </Button>
+              )}
+              <Button
+                variant={isViewingLatest ? "outline" : "default"}
+                size="sm"
+                onClick={() => setIsHistoryOpen(true)}
+                className="gap-2 text-xs"
+              >
+                <History className="h-4 w-4" />
+                Assessment history
+              </Button>
+            </div>
+          )}
+        </CardHeader>
+
+        <CardContent className="space-y-4 pt-2">
+          {loadingAssessments ? (
+            <div className="flex justify-center p-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+            </div>
+          ) : !sessions.length ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-8 text-center">
+              <ClipboardList className="mb-3 h-10 w-10 text-muted-foreground/40" />
+              <h4 className="text-base font-semibold">No Clinical Assessments Submitted</h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                This employee has not loaded any medical study forms yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Active Session Info Banner */}
+              <div className="flex items-center justify-between rounded-lg border bg-muted/40 p-3 px-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <span className="font-medium text-foreground">
+                    Assessment from {activeSession?.formattedDate}
+                  </span>
+                  {isViewingLatest ? (
+                    <Badge variant="success-light" size="sm">
+                      Latest
+                    </Badge>
+                  ) : (
+                    <Badge variant="warning-light" size="sm">
+                      History
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {activeSession?.results.length} score(s) evaluated
+                </span>
+              </div>
+
+              {/* Assessment Preview Grid */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {activeSession?.results.map((result) => (
+                  <div
+                    key={result.score_id}
+                    className="flex flex-col justify-between rounded-xl border bg-card p-4 transition-all hover:shadow-xs"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="font-semibold text-foreground text-sm">
+                          {result.score_name}
+                        </span>
+                        {getRiskIcon(result.risk_level)}
+                      </div>
+                      <div className="text-xs text-muted-foreground mb-2">
+                        Risk Level:{" "}
+                        <span className="font-semibold text-foreground">
+                          {result.risk_level || "Unknown"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-3">
+                        {result.explanation || "No explanation provided."}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* History Dialog */}
+      <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+        <DialogContent className="max-w-md sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" />
+              Medical Assessment History
+            </DialogTitle>
+            <DialogDescription>
+              Select an assessment date and time for {employee.email} to inspect past evaluation results.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-2 max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+            {sessions.map((session) => {
+              const isSelected = activeSession?.id === session.id
+              return (
+                <button
+                  key={session.id}
+                  onClick={() => {
+                    setSelectedSessionId(session.id)
+                    setIsHistoryOpen(false)
+                  }}
+                  className={`flex w-full items-center justify-between rounded-lg border p-3 text-left transition-all hover:border-primary/50 ${
+                    isSelected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                      : "bg-card hover:bg-muted/40"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-9 w-9 items-center justify-center rounded-full ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {isSelected ? <Check className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
+                    </div>
+                    <div>
+                      <div className="font-medium text-foreground text-sm flex items-center gap-2">
+                        {session.formattedDate}
+                        {session.isLatest && (
+                          <Badge variant="success-light" size="xs">
+                            Latest
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {session.results.length} score(s) evaluated
+                      </div>
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <span className="text-xs font-semibold text-primary">Selected</span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog for assigning department */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

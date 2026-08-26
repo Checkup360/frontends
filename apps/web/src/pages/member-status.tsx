@@ -37,7 +37,7 @@ function getRiskIcon(riskLevel: string | null) {
   return <ShieldAlert className="h-6 w-6 text-muted-foreground" />
 }
 
-export interface AssessmentSession {
+interface AssessmentSession {
   id: string
   evaluatedAt: Date | null
   formattedDate: string
@@ -45,7 +45,7 @@ export interface AssessmentSession {
   results: AssessmentResultResponse[]
 }
 
-export function formatSessionDate(dateString?: string | null): string {
+function formatSessionDate(dateString?: string | null): string {
   if (!dateString) return "Date unavailable"
   const date = new Date(dateString)
   if (isNaN(date.getTime())) return dateString
@@ -59,7 +59,7 @@ export function formatSessionDate(dateString?: string | null): string {
   return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 
-export function groupResultsIntoSessions(results: AssessmentResultResponse[]): AssessmentSession[] {
+function groupResultsIntoSessions(results: AssessmentResultResponse[]): AssessmentSession[] {
   if (!results || results.length === 0) return []
 
   // Group scores by timestamp window (within 5 seconds)
