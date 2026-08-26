@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react"
-import { listAssessments, type AssessmentsResponse, type AssessmentResultResponse } from "@workspace/api"
+import { listAssessments, type AssessmentsResponse } from "@workspace/api"
 import {
   Card,
   CardContent,
@@ -10,93 +10,16 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { Badge } from "@workspace/ui/components/badge"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@workspace/ui/components/dialog"
+  groupResultsIntoSessions,
+  getRiskIcon,
+  AssessmentHistoryDialog,
+} from "@workspace/components/components/assessment-utils"
 import {
   ClipboardList,
-  ShieldAlert,
-  CheckCircle2,
-  AlertTriangle,
-  AlertCircle,
   History,
   Calendar,
-  Check,
   RotateCcw,
 } from "lucide-react"
-
-function getRiskIcon(riskLevel: string | null) {
-  if (!riskLevel) return <ClipboardList className="h-6 w-6 text-muted-foreground" />
-  const lowerRisk = riskLevel.toLowerCase()
-  if (lowerRisk.includes("high")) return <AlertCircle className="h-6 w-6 text-destructive" />
-  if (lowerRisk.includes("moderate")) return <AlertTriangle className="h-6 w-6 text-yellow-500" />
-  if (lowerRisk.includes("low")) return <CheckCircle2 className="h-6 w-6 text-green-500" />
-  return <ShieldAlert className="h-6 w-6 text-muted-foreground" />
-}
-
-interface AssessmentSession {
-  id: string
-  evaluatedAt: Date | null
-  formattedDate: string
-  isLatest: boolean
-  results: AssessmentResultResponse[]
-}
-
-function formatSessionDate(dateString?: string | null): string {
-  if (!dateString) return "Date unavailable"
-  const date = new Date(dateString)
-  if (isNaN(date.getTime())) return dateString
-
-  const day = String(date.getDate()).padStart(2, "0")
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const year = date.getFullYear()
-  const hours = String(date.getHours()).padStart(2, "0")
-  const minutes = String(date.getMinutes()).padStart(2, "0")
-
-  return `${day}/${month}/${year} ${hours}:${minutes}`
-}
-
-function groupResultsIntoSessions(results: AssessmentResultResponse[]): AssessmentSession[] {
-  if (!results || results.length === 0) return []
-
-  // Group scores by timestamp window (within 5 seconds)
-  const sessionGroups: { [key: string]: { timestamp: number; dateStr: string; results: AssessmentResultResponse[] } } = {}
-
-  for (const item of results) {
-    const rawTime = item.evaluated_at ? new Date(item.evaluated_at).getTime() : 0
-    // Round timestamp to nearest 5-second window so near-simultaneous scores belong to same session
-    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 5000) * 5000 : 0
-    const key = `session_${bucketTime}`
-
-    if (!sessionGroups[key]) {
-      sessionGroups[key] = {
-        timestamp: rawTime,
-        dateStr: item.evaluated_at || "",
-        results: [],
-      }
-    }
-    sessionGroups[key].results.push(item)
-  }
-
-  // Convert map to array and sort descending by timestamp
-  const sortedSessions = Object.values(sessionGroups)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .map((group, index) => {
-      const dateObj = group.timestamp > 0 ? new Date(group.timestamp) : null
-      return {
-        id: `session_${group.timestamp}_${index}`,
-        evaluatedAt: dateObj,
-        formattedDate: formatSessionDate(group.dateStr),
-        isLatest: index === 0,
-        results: group.results,
-      }
-    })
-
-  return sortedSessions
-}
 
 export function MemberStatusPage() {
   const [assessments, setAssessments] = useState<AssessmentsResponse | null>(null)
@@ -118,7 +41,6 @@ export function MemberStatusPage() {
     return groupResultsIntoSessions(assessments?.results || [])
   }, [assessments])
 
-  // Select active session (defaults to latest session)
   const activeSession = useMemo(() => {
     if (!sessions.length) return null
     return sessions.find((s) => s.id === selectedSessionId) || sessions[0]
@@ -179,7 +101,6 @@ export function MemberStatusPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {/* Active Session Info Banner */}
           <div className="flex items-center justify-between rounded-lg border bg-card p-3 px-4 text-sm shadow-xs">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-primary" />
@@ -201,7 +122,6 @@ export function MemberStatusPage() {
             </span>
           </div>
 
-          {/* Cards for active session */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {activeSession?.results.map((result) => (
               <Card key={result.score_id} className="overflow-hidden transition-all hover:shadow-md">
@@ -232,68 +152,13 @@ export function MemberStatusPage() {
         </div>
       )}
 
-      {/* History Dialog */}
-      <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
-        <DialogContent className="max-w-md sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <History className="h-5 w-5 text-primary" />
-              Medical Assessment History
-            </DialogTitle>
-            <DialogDescription>
-              Select a date and time to view the risk results from that specific evaluation session.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="mt-2 max-h-[60vh] space-y-2 overflow-y-auto pr-1">
-            {sessions.map((session) => {
-              const isSelected = activeSession?.id === session.id
-              return (
-                <button
-                  key={session.id}
-                  onClick={() => {
-                    setSelectedSessionId(session.id)
-                    setIsHistoryOpen(false)
-                  }}
-                  className={`flex w-full items-center justify-between rounded-lg border p-3 text-left transition-all hover:border-primary/50 ${
-                    isSelected
-                      ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                      : "bg-card hover:bg-muted/40"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {isSelected ? <Check className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                    </div>
-                    <div>
-                      <div className="font-medium text-foreground text-sm flex items-center gap-2">
-                        {session.formattedDate}
-                        {session.isLatest && (
-                          <Badge variant="success-light" size="xs">
-                            Latest
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {session.results.length} score(s) evaluated
-                      </div>
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <span className="text-xs font-semibold text-primary">Selected</span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AssessmentHistoryDialog
+        open={isHistoryOpen}
+        onOpenChange={setIsHistoryOpen}
+        sessions={sessions}
+        activeSessionId={activeSession?.id || null}
+        onSelectSession={setSelectedSessionId}
+      />
     </div>
   )
 }

@@ -20,6 +20,8 @@ interface HealthScoreCardProps {
   deltaLabel?: string
   rows: HealthScoreRow[]
   loading?: boolean
+  className?: string
+  compact?: boolean
 }
 
 const toneClasses = {
@@ -44,12 +46,14 @@ export function HealthScoreCard({
   deltaLabel,
   rows,
   loading = false,
+  className,
+  compact = false,
 }: HealthScoreCardProps) {
   const safeScore = Math.min(Math.max(score, 0), 100)
   const gaugeDegrees = Math.round((safeScore / 100) * 180)
 
   return (
-    <Card className="relative overflow-visible rounded-3xl border-border/80 bg-card/85 p-6 shadow-sm">
+    <Card className={cn("relative overflow-visible rounded-3xl border-border/80 bg-card/85 p-6 shadow-sm flex flex-col justify-between", compact && "p-5", className)}>
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <Badge
           variant="outline"
@@ -60,7 +64,7 @@ export function HealthScoreCard({
         </Badge>
       </div>
 
-      <div className="flex items-start justify-between gap-4 pt-2">
+      <div className="flex items-start justify-between gap-4 pt-1">
         <div className="flex items-center gap-2">
           <Activity className="size-4 text-muted-foreground" />
           <h3 className="text-lg font-semibold text-foreground">{title}</h3>
@@ -72,7 +76,7 @@ export function HealthScoreCard({
         )}
       </div>
 
-      <div className="mx-auto mt-7 flex w-56 flex-col items-center">
+      <div className={cn("mx-auto mt-7 flex w-56 flex-col items-center", compact && "mt-3")}>
         {loading ? (
           <Skeleton className="h-28 w-56 rounded-t-full" />
         ) : (
@@ -103,7 +107,7 @@ export function HealthScoreCard({
         )}
       </div>
 
-      <div className="mt-8 space-y-5">
+      <div className={cn("mt-8 space-y-5", compact && "mt-4 space-y-3")}>
         {loading
           ? Array.from({ length: 5 }).map((_, index) => (
               <div key={index} className="flex items-center gap-3">

@@ -16,6 +16,7 @@ export type EmployeeProfileCardProps = {
   departmentName?: string | null
   avatarUrl?: string
   action?: ReactNode
+  className?: string
 }
 
 const statusClasses: Record<string, string> = {
@@ -51,13 +52,14 @@ export function EmployeeProfileCard({
   departmentName,
   avatarUrl,
   action,
+  className,
 }: EmployeeProfileCardProps) {
   const normalizedStatus = status.toLowerCase()
   const roleLabel = roles.includes("admin") ? "Administrator" : "Member"
 
   return (
-    <Card className="p-0">
-      <CardContent className="p-6">
+    <Card className={cn("p-0 flex flex-col justify-between", className)}>
+      <CardContent className="flex flex-1 flex-col justify-between p-6">
         <div className="flex flex-col items-center text-center">
           <Avatar className="size-20">
             {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}

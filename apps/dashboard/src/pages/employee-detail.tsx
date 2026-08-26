@@ -5,7 +5,6 @@ import {
   listEmployeeAssessments,
   type OrganizationEmployee,
   type AssessmentsResponse,
-  type AssessmentResultResponse,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { AssignDepartmentForm } from "@workspace/components/components/assign-department-form"
@@ -14,6 +13,11 @@ import {
   HealthScoreCard,
   type HealthScoreRow,
 } from "@workspace/components/components/health-score-card"
+import {
+  groupResultsIntoSessions,
+  getRiskIcon,
+  AssessmentHistoryDialog,
+} from "@workspace/components/components/assessment-utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { Skeleton } from "@workspace/ui/components/skeleton"
@@ -40,12 +44,7 @@ import {
   Clock,
   History,
   Calendar,
-  CheckCircle2,
-  AlertTriangle,
-  AlertCircle,
-  ShieldAlert,
   ClipboardList,
-  Check,
   RotateCcw,
   FileText,
 } from "lucide-react"
@@ -57,68 +56,6 @@ const healthIndicators: HealthScoreRow[] = [
   { label: "Preventive Care", value: 90, icon: Stethoscope, tone: "blue" },
   { label: "Nutrition Profile", value: 80, icon: Apple, tone: "green" },
 ]
-
-export interface AssessmentSession {
-  id: string
-  evaluatedAt: Date | null
-  formattedDate: string
-  isLatest: boolean
-  results: AssessmentResultResponse[]
-}
-
-function formatSessionDate(dateString?: string | null): string {
-  if (!dateString) return "Date unavailable"
-  const date = new Date(dateString)
-  if (isNaN(date.getTime())) return dateString
-
-  const day = String(date.getDate()).padStart(2, "0")
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const year = date.getFullYear()
-  const hours = String(date.getHours()).padStart(2, "0")
-  const minutes = String(date.getMinutes()).padStart(2, "0")
-
-  return `${day}/${month}/${year} ${hours}:${minutes}`
-}
-
-function groupResultsIntoSessions(results: AssessmentResultResponse[]): AssessmentSession[] {
-  if (!results || results.length === 0) return []
-
-  const sessionGroups: { [key: string]: { timestamp: number; dateStr: string; results: AssessmentResultResponse[] } } = {}
-
-  for (const item of results) {
-    const rawTime = item.evaluated_at ? new Date(item.evaluated_at).getTime() : 0
-    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 5000) * 5000 : 0
-    const key = `session_${bucketTime}`
-
-    if (!sessionGroups[key]) {
-      sessionGroups[key] = {
-        timestamp: rawTime,
-        dateStr: item.evaluated_at || "",
-        results: [],
-      }
-    }
-    sessionGroups[key].results.push(item)
-  }
-
-  return Object.values(sessionGroups)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .map((group, index) => ({
-      id: `session_${group.timestamp}_${index}`,
-      evaluatedAt: group.timestamp > 0 ? new Date(group.timestamp) : null,
-      formattedDate: formatSessionDate(group.dateStr),
-      isLatest: index === 0,
-      results: group.results,
-    }))
-}
-
-function getRiskIcon(riskLevel: string | null) {
-  if (!riskLevel) return <ClipboardList className="h-5 w-5 text-muted-foreground" />
-  const lowerRisk = riskLevel.toLowerCase()
-  if (lowerRisk.includes("high")) return <AlertCircle className="h-5 w-5 text-destructive" />
-  if (lowerRisk.includes("moderate")) return <AlertTriangle className="h-5 w-5 text-yellow-500" />
-  if (lowerRisk.includes("low")) return <CheckCircle2 className="h-5 w-5 text-green-500" />
-  return <ShieldAlert className="h-5 w-5 text-muted-foreground" />
-}
 
 function EmployeeDetailSkeleton() {
   return (
@@ -285,13 +222,14 @@ export function EmployeeDetailPage() {
       </div>
 
       {/* Grid: 2 existing cards */}
-      <div className="grid animate-in gap-6 duration-300 fade-in md:grid-cols-3">
-        <aside className="md:col-span-1">
+      <div className="grid animate-in gap-6 duration-300 fade-in md:grid-cols-3 items-stretch">
+        <aside className="md:col-span-1 flex flex-col">
           <EmployeeProfileCard
             email={employee.email}
             status={employee.status}
             roles={employee.roles}
             departmentName={employee.department?.name}
+            className="h-full"
             action={
               organizationId ? (
                 <Button
@@ -307,7 +245,7 @@ export function EmployeeDetailPage() {
           />
         </aside>
 
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 flex flex-col">
           {employee.status === "onboarding" ? (
             <Empty className="flex h-full min-h-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center shadow-xs">
               <EmptyHeader className="flex flex-col items-center justify-center text-center">
@@ -330,6 +268,8 @@ export function EmployeeDetailPage() {
               scoreLabel="Stable"
               rows={healthIndicators}
               loading={loading}
+              compact
+              className="h-full"
             />
           )}
         </div>
@@ -445,68 +385,15 @@ export function EmployeeDetailPage() {
         </CardContent>
       </Card>
 
-      {/* History Dialog */}
-      <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
-        <DialogContent className="max-w-md sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <History className="h-5 w-5 text-primary" />
-              Medical Assessment History
-            </DialogTitle>
-            <DialogDescription>
-              Select an assessment date and time for {employee.email} to inspect past evaluation results.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="mt-2 max-h-[60vh] space-y-2 overflow-y-auto pr-1">
-            {sessions.map((session) => {
-              const isSelected = activeSession?.id === session.id
-              return (
-                <button
-                  key={session.id}
-                  onClick={() => {
-                    setSelectedSessionId(session.id)
-                    setIsHistoryOpen(false)
-                  }}
-                  className={`flex w-full items-center justify-between rounded-lg border p-3 text-left transition-all hover:border-primary/50 ${
-                    isSelected
-                      ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                      : "bg-card hover:bg-muted/40"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {isSelected ? <Check className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                    </div>
-                    <div>
-                      <div className="font-medium text-foreground text-sm flex items-center gap-2">
-                        {session.formattedDate}
-                        {session.isLatest && (
-                          <Badge variant="success-light" size="xs">
-                            Latest
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {session.results.length} score(s) evaluated
-                      </div>
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <span className="text-xs font-semibold text-primary">Selected</span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Shared Assessment History Dialog */}
+      <AssessmentHistoryDialog
+        open={isHistoryOpen}
+        onOpenChange={setIsHistoryOpen}
+        sessions={sessions}
+        activeSessionId={activeSession?.id || null}
+        onSelectSession={setSelectedSessionId}
+        userDescription={`Select an assessment date and time for ${employee.email} to inspect past evaluation results.`}
+      />
 
       {/* Dialog for assigning department */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
