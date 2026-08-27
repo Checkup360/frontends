@@ -139,7 +139,7 @@ export function MemberFormsPage() {
           <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
             <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
                   <Activity className="size-5" />
                 </div>
                 {biometricsFilled ? (
@@ -173,7 +173,7 @@ export function MemberFormsPage() {
           <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
             <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
                   <Moon className="size-5" />
                 </div>
                 {sleepFilled ? (
@@ -207,7 +207,7 @@ export function MemberFormsPage() {
           <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
             <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
                   <HeartPulse className="size-5" />
                 </div>
                 {habitsFilled ? (
