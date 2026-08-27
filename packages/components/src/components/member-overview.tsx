@@ -1,3 +1,5 @@
+import { useEffect, useState, useMemo } from "react"
+import { listAssessments, type AssessmentsResponse } from "@workspace/api"
 import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -17,14 +19,10 @@ import {
 } from "@workspace/ui/components/carousel"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
-  Apple,
   ArrowLeft,
   ArrowRight,
-  Dumbbell,
-  Moon,
+  ClipboardList,
   Sparkles,
-  Stethoscope,
-  type LucideIcon,
 } from "lucide-react"
 import {
   Area,
@@ -35,68 +33,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-
-export interface Recommendation {
-  id: string
-  title: string
-  description: string
-  priority: "high" | "medium" | "low"
-  category: string
-  icon: LucideIcon
-  action?: string
-}
-
-const recommendations: Recommendation[] = [
-  {
-    id: "1",
-    title: "Increase cardiovascular activity",
-    description:
-      "Add 30 minutes of aerobic exercise at least 3 times a week to strengthen your cardiovascular system.",
-    priority: "high",
-    category: "Physical activity",
-    icon: Dumbbell,
-    action: "View routines",
-  },
-  {
-    id: "2",
-    title: "Improve sleep quality",
-    description:
-      "Your sleep average is below the recommended range. A consistent nighttime routine can help.",
-    priority: "medium",
-    category: "Sleep",
-    icon: Moon,
-    action: "View tips",
-  },
-  {
-    id: "3",
-    title: "Annual preventive checkup",
-    description:
-      "It has been 10 months since your last checkup. Schedule your annual review to keep your profile updated.",
-    priority: "medium",
-    category: "Preventive care",
-    icon: Stethoscope,
-    action: "Schedule visit",
-  },
-  {
-    id: "4",
-    title: "Add more vegetables",
-    description:
-      "Based on your nutrition profile, you may benefit from increasing your vegetable and fiber intake.",
-    priority: "low",
-    category: "Nutrition",
-    icon: Apple,
-    action: "View recipes",
-  },
-]
-
-const evolutionData = [
-  { month: "Jan", score: 78 },
-  { month: "Feb", score: 80 },
-  { month: "Mar", score: 79 },
-  { month: "Apr", score: 82 },
-  { month: "May", score: 85 },
-  { month: "Jun", score: 87 },
-]
+import {
+  groupResultsIntoSessions,
+  computeOverallHealthScore,
+  type Recommendation,
+} from "./assessment-utils"
 
 const priorityConfig = {
   high: {
@@ -148,23 +89,89 @@ function getInitials(name: string) {
 
 interface MemberOverviewProps {
   email: string
+  assessments?: AssessmentsResponse | null
   showBack?: boolean
   onBack?: () => void
 }
 
 export function MemberOverview({
   email,
+  assessments: initialAssessments,
   showBack = false,
   onBack,
 }: MemberOverviewProps) {
+  const [assessmentsData, setAssessmentsData] = useState<AssessmentsResponse | null>(
+    initialAssessments || null
+  )
+  const [isLoading, setIsLoading] = useState(!initialAssessments)
+
+  useEffect(() => {
+    if (initialAssessments !== undefined) {
+      setAssessmentsData(initialAssessments)
+      setIsLoading(false)
+      return
+    }
+
+    let active = true
+    async function loadData() {
+      setIsLoading(true)
+      const res = await listAssessments()
+      if (active) {
+        setAssessmentsData(res)
+        setIsLoading(false)
+      }
+    }
+    void loadData()
+    return () => {
+      active = false
+    }
+  }, [initialAssessments])
+
   const memberName = email.split("@")[0] || "Member"
   const initials = getInitials(memberName) || "M"
 
+  const sessions = useMemo(() => {
+    return groupResultsIntoSessions(assessmentsData?.results || [])
+  }, [assessmentsData])
+
+  const latestSession = sessions[0]
+
+  const computedHealth = useMemo(() => {
+    if (!latestSession || !latestSession.results.length) return null
+    return computeOverallHealthScore(
+      latestSession.results,
+      assessmentsData?.overall_score,
+      assessmentsData?.overall_risk_level
+    )
+  }, [latestSession, assessmentsData])
+
+  const score = computedHealth?.score ?? 100
+  const config = levelConfig[computedHealth?.riskLevel || "low"]
+
   const radius = 70
   const circumference = 2 * Math.PI * radius
-  const score = 87
   const offset = circumference - (score / 100) * circumference
-  const config = levelConfig.low
+
+  // Dynamic evolution chart from session history
+  const evolutionData = useMemo(() => {
+    if (!sessions.length) return []
+    return [...sessions]
+      .reverse()
+      .map((session, idx, arr) => {
+        // For latest session in array (which is the actual latest session), use overall_score from backend if present
+        const isLatestInArray = idx === arr.length - 1
+        const sessionScore = isLatestInArray && typeof assessmentsData?.overall_score === "number"
+          ? Math.round(assessmentsData.overall_score)
+          : computeOverallHealthScore(session.results).score
+
+        return {
+          month: session.formattedDate.split(" ")[0] || "Evaluation",
+          score: sessionScore,
+        }
+      })
+  }, [sessions, assessmentsData])
+
+  const recommendationsList: Recommendation[] = computedHealth?.recommendations || []
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
@@ -191,8 +198,8 @@ export function MemberOverview({
               </h1>
               <p className="text-sm text-muted-foreground md:text-base">
                 Current health status is{" "}
-                <span className="font-medium text-[color:var(--success)]">
-                  stable
+                <span className={`font-medium ${config.color}`}>
+                  {config.label.toLowerCase()}
                 </span>
               </p>
             </div>
@@ -200,267 +207,273 @@ export function MemberOverview({
         </div>
       </header>
 
-      {/* Health Score Hero */}
-      <Card className="border-2">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <CardTitle className="text-xl">Health score</CardTitle>
-              <CardDescription>
-                Personalized preventive assessment
-              </CardDescription>
-            </div>
-            <Badge
-              variant="outline"
-              className={`${config.bg} ${config.color} border-transparent`}
-            >
-              {config.label}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex flex-col items-center justify-center gap-6 py-4 md:flex-row md:justify-between">
-            <div className="relative flex items-center justify-center">
-              <svg
-                className="size-40 -rotate-90 transform md:size-48"
-                viewBox="0 0 160 160"
-                aria-hidden="true"
-              >
-                <circle
-                  cx="80"
-                  cy="80"
-                  r={radius}
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  fill="none"
-                  className="text-muted"
-                />
-                <circle
-                  cx="80"
-                  cy="80"
-                  r={radius}
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  fill="none"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={offset}
-                  strokeLinecap="round"
-                  className={`${config.ringColor} transition-all duration-1000 ease-out`}
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span
-                  className={`text-5xl font-bold tabular-nums ${config.color}`}
-                >
-                  {score}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  out of 100
-                </span>
-              </div>
-            </div>
-
-            <div className="w-full max-w-md space-y-3 text-center md:text-left">
-              <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-4 text-left">
-                <Sparkles className="mt-0.5 size-5 shrink-0 text-primary" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm leading-relaxed font-medium">
-                    Preventive analysis
-                  </p>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                    The profile shows low cardiovascular risk. Keep current
-                    exercise and nutrition habits, and maintain regular
-                    follow-up.
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <div className="rounded-lg bg-muted/30 p-3">
-                  <p className="font-medium text-[color:var(--success)]">85+</p>
-                  <p className="text-xs text-muted-foreground">Excellent</p>
-                </div>
-                <div className="rounded-lg bg-muted/30 p-3">
-                  <p className="font-medium text-[color:var(--warning)]">
-                    60-84
-                  </p>
-                  <p className="text-xs text-muted-foreground">Moderate</p>
-                </div>
-                <div className="rounded-lg bg-muted/30 p-3">
-                  <p className="font-medium text-destructive">&lt;60</p>
-                  <p className="text-xs text-muted-foreground">Attention</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recommendation Card (Only for members) */}
-      {!showBack && (
-        <section className="space-y-4">
-          <Carousel
-            opts={{
-              align: "start",
-            }}
-            className="w-full"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold">
-                  Personalized recommendations
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Suggested actions to improve wellbeing
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <CarouselPrevious className="static translate-x-0 translate-y-0" />
-                <CarouselNext className="static translate-x-0 translate-y-0" />
-              </div>
-            </div>
-
-            <CarouselContent className="mt-4 -ml-4 px-px pb-1">
-              {recommendations.map((recommendation) => {
-                const Icon = recommendation.icon
-                const pConfig = priorityConfig[recommendation.priority]
-
-                return (
-                  <CarouselItem
-                    key={recommendation.id}
-                    className="pl-4 md:basis-1/2 lg:basis-1/3"
-                  >
-                    <Card className="group h-full min-h-[240px] border-border/60 transition-all hover:border-primary/25 hover:shadow-sm">
-                      <CardHeader className="gap-3 px-5">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                            <Icon className="size-5" />
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className={`${pConfig.bg} ${pConfig.color} text-xs`}
-                          >
-                            {pConfig.label}
-                          </Badge>
-                        </div>
-                        <div className="space-y-2">
-                          <CardTitle className="text-base leading-tight">
-                            {recommendation.title}
-                          </CardTitle>
-                          <p className="text-sm leading-5 text-muted-foreground">
-                            {recommendation.description}
-                          </p>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="mt-auto flex items-center justify-between gap-3 px-5">
-                        <Badge variant="secondary" className="text-xs">
-                          {recommendation.category}
-                        </Badge>
-                        {recommendation.action && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 gap-2 px-2 text-xs opacity-80 transition-opacity group-hover:opacity-100"
-                          >
-                            {recommendation.action}
-                            <ArrowRight className="size-3" />
-                          </Button>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                )
-              })}
-            </CarouselContent>
-          </Carousel>
-        </section>
-      )}
-
-      {/* Health Evolution Chart */}
-      <div className="pt-2">
-        <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
-          <div>
-            <h3 className="text-base font-semibold text-foreground">
-              Health score trend
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Monthly evolution of preventive health score
-            </p>
-          </div>
-          <div className="mt-4 h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={evolutionData}
-                margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient
-                    id="memberHealthScoreGradientShared"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor="oklch(0.55 0.16 35)"
-                      stopOpacity={0.35}
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor="oklch(0.55 0.16 35)"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="oklch(0.92 0.015 210)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="month"
-                  stroke="oklch(0.5 0.03 220)"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="oklch(0.5 0.03 220)"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  domain={[0, 100]}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="score"
-                  name="Health score"
-                  stroke="oklch(0.55 0.16 35)"
-                  fill="url(#memberHealthScoreGradientShared)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: "oklch(0.55 0.16 35)" }}
-              />
-              Health score
-            </span>
+      {/* If loading */}
+      {isLoading ? (
+        <Card className="border-2 p-8">
+          <div className="flex justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
           </div>
         </Card>
-      </div>
+      ) : !latestSession ? (
+        /* Empty State: Prompt user to fill forms */
+        <Card className="relative overflow-hidden border-dashed border-2 bg-card/60 p-8 shadow-sm">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <ClipboardList className="size-7" />
+            </div>
+            <div className="space-y-1 max-w-md">
+              <h3 className="text-xl font-bold tracking-tight">No Health Assessments Yet</h3>
+              <p className="text-sm text-muted-foreground">
+                Complete your biometrics, sleep, and lifestyle forms to unlock your personalized health score, evaluated risk metrics, and recommendations.
+              </p>
+            </div>
+            <Button asChild className="gap-2">
+              <a href="/forms">
+                Go to Health Forms
+                <ArrowRight className="size-4" />
+              </a>
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <>
+          {/* Health Score Hero */}
+          <Card className="border-2">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle className="text-xl">Health Score</CardTitle>
+                  <CardDescription>
+                    Evaluated from your latest clinical studies & health forms
+                  </CardDescription>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={`${config.bg} ${config.color} border-transparent`}
+                >
+                  {config.label}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col items-center justify-center gap-6 py-4 md:flex-row md:justify-between">
+                <div className="relative flex items-center justify-center">
+                  <svg
+                    className="size-40 -rotate-90 transform md:size-48"
+                    viewBox="0 0 160 160"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r={radius}
+                      stroke="currentColor"
+                      strokeWidth="12"
+                      fill="none"
+                      className="text-muted"
+                    />
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r={radius}
+                      stroke="currentColor"
+                      strokeWidth="12"
+                      fill="none"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={offset}
+                      strokeLinecap="round"
+                      className={`${config.ringColor} transition-all duration-1000 ease-out`}
+                    />
+                  </svg>
+                  <div className="absolute flex flex-col items-center">
+                    <span
+                      className={`text-5xl font-bold tabular-nums ${config.color}`}
+                    >
+                      {score}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      out of 100
+                    </span>
+                  </div>
+                </div>
+
+                <div className="w-full max-w-md space-y-3 text-center md:text-left">
+                  <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-4 text-left">
+                    <Sparkles className="mt-0.5 size-5 shrink-0 text-primary" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm leading-relaxed font-medium">
+                        Evaluated Status Summary
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                        {computedHealth?.explanation}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div className="rounded-lg bg-muted/30 p-3">
+                      <p className="font-medium text-[color:var(--success)]">85-100</p>
+                      <p className="text-xs text-muted-foreground">Low Risk</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/30 p-3">
+                      <p className="font-medium text-[color:var(--warning)]">
+                        60-84
+                      </p>
+                      <p className="text-xs text-muted-foreground">Moderate Risk</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/30 p-3">
+                      <p className="font-medium text-destructive">&lt;60</p>
+                      <p className="text-xs text-muted-foreground">Attention Needed</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recommendation Card Carousel */}
+          {!showBack && recommendationsList.length > 0 && (
+            <section className="space-y-4">
+              <Carousel
+                opts={{
+                  align: "start",
+                }}
+                className="w-full"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold">
+                      Personalized recommendations
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Suggested actions based on evaluated health risk scores
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <CarouselPrevious className="static translate-x-0 translate-y-0" />
+                    <CarouselNext className="static translate-x-0 translate-y-0" />
+                  </div>
+                </div>
+
+                <CarouselContent className="mt-4 -ml-4 px-px pb-1">
+                  {recommendationsList.map((recommendation) => {
+                    const Icon = recommendation.icon
+                    const pConfig = priorityConfig[recommendation.priority]
+
+                    return (
+                      <CarouselItem
+                        key={recommendation.id}
+                        className="pl-4 md:basis-1/2 lg:basis-1/3"
+                      >
+                        <Card className="group h-full border-border/60 p-5 space-y-3 transition-all hover:border-primary/25 hover:shadow-sm">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                              <Icon className="size-5" />
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className={`${pConfig.bg} ${pConfig.color} text-xs`}
+                            >
+                              {pConfig.label}
+                            </Badge>
+                          </div>
+                          <div className="space-y-1.5">
+                            <h3 className="font-semibold text-base leading-snug">
+                              {recommendation.title}
+                            </h3>
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                              {recommendation.description}
+                            </p>
+                          </div>
+                        </Card>
+                      </CarouselItem>
+                    )
+                  })}
+                </CarouselContent>
+              </Carousel>
+            </section>
+          )}
+
+          {/* Health Evolution Chart */}
+          {evolutionData.length > 0 && (
+            <div className="pt-2">
+              <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">
+                    Health score trend
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Evolution across assessment sessions
+                  </p>
+                </div>
+                <div className="mt-4 h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={evolutionData}
+                      margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient
+                          id="memberHealthScoreGradientShared"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor="oklch(0.55 0.16 35)"
+                            stopOpacity={0.35}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor="oklch(0.55 0.16 35)"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="oklch(0.92 0.015 210)"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="month"
+                        stroke="oklch(0.5 0.03 220)"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke="oklch(0.5 0.03 220)"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        domain={[0, 100]}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: "var(--card)",
+                          border: "1px solid var(--border)",
+                          borderRadius: 12,
+                          fontSize: 12,
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="score"
+                        name="Health Score"
+                        stroke="oklch(0.55 0.16 35)"
+                        fill="url(#memberHealthScoreGradientShared)"
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
@@ -502,60 +515,6 @@ export function MemberOverviewSkeleton({
           </div>
         </CardContent>
       </Card>
-
-      {!showBack && (
-        <section className="space-y-4">
-          <div>
-            <Skeleton className="h-6 w-64" />
-            <Skeleton className="mt-2 h-4 w-72 max-w-full" />
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Card key={index} className="min-h-[250px]">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-4">
-                    <Skeleton className="size-11 rounded-lg" />
-                    <Skeleton className="h-5 w-24 rounded-full" />
-                  </div>
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-16 w-full" />
-                </CardHeader>
-                <CardContent className="mt-auto flex items-center justify-between gap-3">
-                  <Skeleton className="h-5 w-24 rounded-full" />
-                  <Skeleton className="h-8 w-28" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Chart Skeleton */}
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-44" />
-          <Skeleton className="h-4 w-64 max-w-full" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[280px] w-full animate-pulse rounded-lg" />
-        </CardContent>
-      </Card>
-
-      {!showBack && (
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-4 w-64 max-w-full" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton key={index} className="h-32 w-full rounded-lg" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

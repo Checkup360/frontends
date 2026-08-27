@@ -17,6 +17,7 @@ import {
   groupResultsIntoSessions,
   getRiskIcon,
   AssessmentHistoryDialog,
+  computeOverallHealthScore,
 } from "@workspace/components/components/assessment-utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
@@ -171,6 +172,43 @@ export function EmployeeDetailPage() {
 
   const isViewingLatest = activeSession?.isLatest ?? true
 
+  const computedHealth = useMemo(() => {
+    return computeOverallHealthScore(
+      activeSession?.results || [],
+      assessments?.overall_score,
+      assessments?.overall_risk_level
+    )
+  }, [activeSession, assessments])
+
+  const dynamicIndicators: HealthScoreRow[] = useMemo(() => {
+    if (!activeSession?.results.length) return healthIndicators
+    return activeSession.results.map((r) => {
+      const risk = (r.risk_level || "").toLowerCase()
+      let tone: "green" | "amber" | "blue" = "green"
+      let val = 90
+      if (risk.includes("high")) {
+        tone = "amber"
+        val = 40
+      } else if (risk.includes("moderate") || risk.includes("elevated")) {
+        tone = "amber"
+        val = 70
+      }
+      const name = r.score_name || r.score_id || "Score"
+      const icon = name.toLowerCase().includes("sleep")
+        ? Moon
+        : name.toLowerCase().includes("diabet")
+        ? Apple
+        : Stethoscope
+
+      return {
+        label: name,
+        value: r.normalized_value !== null && r.normalized_value !== undefined ? Math.round(r.normalized_value) : val,
+        icon,
+        tone,
+      }
+    })
+  }, [activeSession])
+
   if (loading) {
     return <EmployeeDetailSkeleton />
   }
@@ -264,10 +302,10 @@ export function EmployeeDetailPage() {
           ) : (
             <HealthScoreCard
               title="Health score"
-              score={87}
-              scoreLabel="Stable"
-              rows={healthIndicators}
-              loading={loading}
+              score={computedHealth.score}
+              scoreLabel={computedHealth.label}
+              rows={dynamicIndicators}
+              loading={loading || loadingAssessments}
               compact
               className="h-full"
             />

@@ -16,7 +16,146 @@ import {
   History,
   Calendar,
   Check,
+  Dumbbell,
+  Moon,
+  Stethoscope,
+  Apple,
+  Activity,
+  Sparkles,
+  type LucideIcon,
 } from "lucide-react"
+
+export interface Recommendation {
+  id: string
+  title: string
+  description: string
+  priority: "high" | "medium" | "low"
+  category: string
+  icon: LucideIcon
+  action?: string
+}
+
+export interface ComputedHealthScore {
+  score: number
+  label: "Low risk" | "Moderate risk" | "Needs attention"
+  riskLevel: "low" | "moderate" | "high"
+  explanation: string
+  recommendations: Recommendation[]
+}
+
+export function computeOverallHealthScore(
+  results: AssessmentResultResponse[],
+  backendOverallScore?: number | null,
+  _backendOverallRiskLevel?: string | null
+): ComputedHealthScore {
+  if (!results || results.length === 0) {
+    return {
+      score: 100,
+      label: "Low risk",
+      riskLevel: "low",
+      explanation: "Complete your health forms to get your personalized risk evaluation.",
+      recommendations: [],
+    }
+  }
+
+  let score = 100
+  if (typeof backendOverallScore === "number") {
+    score = Math.round(backendOverallScore)
+  } else {
+    const validNorms = results
+      .map((r) => r.normalized_value)
+      .filter((v): v is number => typeof v === "number")
+    if (validNorms.length > 0) {
+      score = Math.round(validNorms.reduce((a, b) => a + b, 0) / validNorms.length)
+    }
+  }
+
+  const recommendations: Recommendation[] = []
+
+  for (const r of results) {
+    const risk = (r.risk_level || "").toLowerCase()
+    const name = r.score_name || r.score_id || "Assessment"
+
+    if (risk.includes("high")) {
+      recommendations.push({
+        id: `rec_${r.score_id}_high`,
+        title: `High Risk Attention: ${name}`,
+        description:
+          r.explanation ||
+          `Your ${name} score indicates high risk factors. We recommend consulting a healthcare provider.`,
+        priority: "high",
+        category: name.toLowerCase().includes("sleep")
+          ? "Sleep"
+          : name.toLowerCase().includes("diabet")
+          ? "Nutrition & Lifestyle"
+          : "Preventive care",
+        icon: name.toLowerCase().includes("sleep")
+          ? Moon
+          : name.toLowerCase().includes("diabet")
+          ? Apple
+          : Stethoscope,
+        action: "View details",
+      })
+    } else if (risk.includes("moderate") || risk.includes("elevated")) {
+      recommendations.push({
+        id: `rec_${r.score_id}_mod`,
+        title: `Moderate Risk Monitoring: ${name}`,
+        description:
+          r.explanation ||
+          `Your ${name} score shows moderate risk factors. Consider lifestyle adjustments.`,
+        priority: "medium",
+        category: name.toLowerCase().includes("sleep")
+          ? "Sleep"
+          : name.toLowerCase().includes("diabet")
+          ? "Nutrition & Activity"
+          : "Preventive care",
+        icon: name.toLowerCase().includes("sleep")
+          ? Moon
+          : name.toLowerCase().includes("diabet")
+          ? Dumbbell
+          : Activity,
+        action: "View recommendations",
+      })
+    } else {
+      recommendations.push({
+        id: `rec_${r.score_id}_low`,
+        title: `Good Standing: ${name}`,
+        description:
+          r.explanation ||
+          `Your ${name} evaluation shows low risk. Maintain your healthy habits!`,
+        priority: "low",
+        category: "Lifestyle",
+        icon: Sparkles,
+        action: "Keep it up",
+      })
+    }
+  }
+
+  let label: "Low risk" | "Moderate risk" | "Needs attention" = "Low risk"
+  let riskLevel: "low" | "moderate" | "high" = "low"
+  let explanation =
+    "Your preventive health indicators show a favorable status. Keep up your active lifestyle!"
+
+  if (score < 60) {
+    label = "Needs attention"
+    riskLevel = "high"
+    explanation =
+      "One or more evaluations show elevated risk parameters requiring preventive care and lifestyle modifications."
+  } else if (score < 85) {
+    label = "Moderate risk"
+    riskLevel = "moderate"
+    explanation =
+      "Your health profile shows moderate risk indicators. Review the recommendations below to improve your parameters."
+  }
+
+  return {
+    score,
+    label,
+    riskLevel,
+    explanation,
+    recommendations,
+  }
+}
 
 export interface AssessmentSession {
   id: string
@@ -47,7 +186,7 @@ export function groupResultsIntoSessions(results: AssessmentResultResponse[]): A
 
   for (const item of results) {
     const rawTime = item.evaluated_at ? new Date(item.evaluated_at).getTime() : 0
-    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 5000) * 5000 : 0
+    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 60000) * 60000 : 0
     const key = `session_${bucketTime}`
 
     if (!sessionGroups[key]) {

@@ -185,6 +185,8 @@ export type AssessmentResultResponse = {
 }
 
 export type AssessmentsResponse = {
+  overall_score?: number | null
+  overall_risk_level?: string | null
   results: AssessmentResultResponse[]
 }
 
