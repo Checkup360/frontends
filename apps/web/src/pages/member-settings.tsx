@@ -67,8 +67,7 @@ export function MemberSettingsPage() {
       if (!cancelled && biometricsForm?.data) {
         const d = biometricsForm.data
         setBiologicalSex((d.biological_sex as string) ?? "")
-        const h = d.height ? Number(d.height) : null
-        setHeight(h ? String(h <= 3 ? Math.round(h * 100) : h) : "")
+        setHeight(d.height ? String(d.height) : "")
         setWeight(d.weight ? String(d.weight) : "")
       }
 
@@ -281,11 +280,12 @@ export function MemberSettingsPage() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="height">Height (cm)</Label>
+                        <Label htmlFor="height">Height (m)</Label>
                         <Input
                           id="height"
                           type="number"
-                          placeholder="170"
+                          step="0.01"
+                          placeholder="1.75"
                           value={height}
                           onChange={(e) => setHeight(e.target.value)}
                           disabled={isSavingBiometrics}

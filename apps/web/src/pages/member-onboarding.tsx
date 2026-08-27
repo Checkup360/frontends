@@ -610,19 +610,20 @@ export function MemberOnboardingPage() {
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="height">Height (cm)</Label>
+                            <Label htmlFor="height">Height (m)</Label>
                             <div className="relative">
                               <Ruler className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                               <Input
                                 id="height"
                                 type="number"
-                                min="1"
+                                step="0.01"
+                                min="0.5"
                                 value={data.height}
                                 onChange={(event) =>
                                   updateField("height", event.target.value)
                                 }
                                 disabled={isSubmitting}
-                                placeholder="175"
+                                placeholder="1.75"
                                 className="rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60"
                               />
                             </div>
