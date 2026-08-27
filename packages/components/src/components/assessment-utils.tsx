@@ -182,21 +182,32 @@ export function formatSessionDate(dateString?: string | null): string {
 export function groupResultsIntoSessions(results: AssessmentResultResponse[]): AssessmentSession[] {
   if (!results || results.length === 0) return []
 
-  const sessionGroups: { [key: string]: { timestamp: number; dateStr: string; results: AssessmentResultResponse[] } } = {}
+  const sessionGroups: {
+    [key: string]: {
+      timestamp: number
+      dateStr: string
+      resultsMap: Map<string, AssessmentResultResponse>
+    }
+  } = {}
 
   for (const item of results) {
     const rawTime = item.evaluated_at ? new Date(item.evaluated_at).getTime() : 0
-    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 60000) * 60000 : 0
+    // Group evaluations generated within a 2-second window (a single calculation run)
+    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 2000) * 2000 : 0
     const key = `session_${bucketTime}`
 
     if (!sessionGroups[key]) {
       sessionGroups[key] = {
         timestamp: rawTime,
         dateStr: item.evaluated_at || "",
-        results: [],
+        resultsMap: new Map(),
       }
     }
-    sessionGroups[key].results.push(item)
+
+    const scoreKey = item.score_name.toLowerCase()
+    if (!sessionGroups[key].resultsMap.has(scoreKey)) {
+      sessionGroups[key].resultsMap.set(scoreKey, item)
+    }
   }
 
   return Object.values(sessionGroups)
@@ -206,7 +217,7 @@ export function groupResultsIntoSessions(results: AssessmentResultResponse[]): A
       evaluatedAt: group.timestamp > 0 ? new Date(group.timestamp) : null,
       formattedDate: formatSessionDate(group.dateStr),
       isLatest: index === 0,
-      results: group.results,
+      results: Array.from(group.resultsMap.values()),
     }))
 }
 
