@@ -333,7 +333,7 @@ export function MemberFormsStudiesPage() {
   const TitleIcon = currentTitle.icon
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-8 pb-12">
       {/* Top Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>

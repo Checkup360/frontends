@@ -118,14 +118,14 @@ export function HealthContentGrid({
 
   return (
     <section className="space-y-8" aria-labelledby="health-content-title">
-      <header className="max-w-3xl space-y-2">
-        <h2
+      <header className="space-y-1">
+        <h1
           id="health-content-title"
-          className="text-2xl font-semibold tracking-tight"
+          className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
         >
           {title}
-        </h2>
-        <p className="text-muted-foreground">{description}</p>
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </header>
 
       <Tabs value={category} onValueChange={setCategory} className="gap-6">

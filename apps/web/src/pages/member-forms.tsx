@@ -71,13 +71,13 @@ export function MemberFormsPage() {
   const allCompleted = completedCount === 3
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto w-full max-w-7xl space-y-8 pb-12">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           Health Forms
-        </h2>
-        <p className="text-sm text-muted-foreground">
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Keep your physical, sleep, and lifestyle information up to date.
         </p>
       </div>

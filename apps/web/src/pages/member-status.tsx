@@ -1,37 +1,200 @@
 import { useEffect, useState, useMemo } from "react"
-import { listAssessments, type AssessmentsResponse } from "@workspace/api"
-import { Card } from "@workspace/ui/components/card"
+import { listAssessments, type AssessmentsResponse, type AssessmentResultResponse } from "@workspace/api"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
+import { Card, CardContent } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
 import { Badge } from "@workspace/ui/components/badge"
 import {
   groupResultsIntoSessions,
+  computeOverallHealthScore,
   AssessmentHistoryDialog,
 } from "@workspace/components/components/assessment-utils"
+import { HealthScoreHeroCard } from "@workspace/components/components/health-score-hero-card"
+import { cn } from "@workspace/ui/lib/utils"
 import {
-  ClipboardList,
-  History,
-  Calendar,
-  RotateCcw,
   Activity,
+  ChevronRight,
+  ClipboardList,
+  HeartPulse,
+  History,
+  Moon,
+  RotateCcw,
+  Sparkles,
 } from "lucide-react"
+import { Link } from "react-router-dom"
 
-function getRiskBadgeVariant(riskLevel: string | null) {
-  if (!riskLevel) return "outline"
-  const lower = riskLevel.toLowerCase()
-  if (lower.includes("high")) return "destructive"
-  if (lower.includes("moderate") || lower.includes("elevated")) return "warning-light"
-  return "success-light"
+/** Helper to determine theme tone and labels for risk levels (Health Score: 100 = best/optimal, 0 = highest risk) */
+function getRiskLevelConfig(riskLevel: string | null, healthScore: number) {
+  const lower = (riskLevel || "").toLowerCase()
+
+  // 1. High / Very high risk (red/destructive)
+  if (lower.includes("high") || (!lower && healthScore < 50)) {
+    return {
+      label: riskLevel || "High Risk",
+      color: "text-destructive",
+      badgeVariant: "destructive" as const,
+      badgeClass: "bg-destructive/15 text-destructive border-transparent font-medium",
+      ringColor: "stroke-destructive text-destructive",
+      barColor: "bg-destructive",
+      description: "Needs attention and proactive medical follow-up.",
+    }
+  }
+
+  // 2. Moderate / Intermediate risk (amber/orange)
+  if (lower.includes("moderate") || lower.includes("intermediate") || (!lower && healthScore < 70)) {
+    return {
+      label: riskLevel || "Moderate Risk",
+      color: "text-amber-600 dark:text-amber-400",
+      badgeVariant: "outline" as const,
+      badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-medium",
+      ringColor: "stroke-amber-500 text-amber-500",
+      barColor: "bg-amber-500",
+      description: "Moderate risk detected. Preventive lifestyle habits advised.",
+    }
+  }
+
+  // 3. Slightly elevated risk (yellow/gold tone)
+  if (lower.includes("elevated") || (!lower && healthScore < 85)) {
+    return {
+      label: riskLevel || "Slightly Elevated",
+      color: "text-yellow-600 dark:text-yellow-400",
+      badgeVariant: "outline" as const,
+      badgeClass: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 font-medium",
+      ringColor: "stroke-yellow-500 text-yellow-500",
+      barColor: "bg-yellow-500",
+      description: "Slightly elevated indicators. Minor lifestyle adjustments recommended.",
+    }
+  }
+
+  // 4. Low risk / Optimal (emerald green)
+  return {
+    label: riskLevel || "Low Risk",
+    color: "text-emerald-600 dark:text-emerald-400",
+    badgeVariant: "outline" as const,
+    badgeClass: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-medium",
+    ringColor: "stroke-emerald-500 text-emerald-500",
+    barColor: "bg-emerald-500",
+    description: "Evaluations within optimal and healthy parameters.",
+  }
 }
 
-function getProgressColor(riskLevel: string | null) {
-  if (!riskLevel) return "bg-primary"
-  const lower = riskLevel.toLowerCase()
-  if (lower.includes("high")) return "bg-destructive"
-  if (lower.includes("moderate") || lower.includes("elevated")) return "bg-amber-500"
-  return "bg-emerald-500"
+/** Computes a normalized score (0-100) for a given calculator */
+function getNormalizedScore(result: AssessmentResultResponse): number {
+  if (result.normalized_value !== null && result.normalized_value !== undefined) {
+    return Math.min(100, Math.max(0, Math.round(result.normalized_value)))
+  }
+
+  const raw = result.raw_value ?? 0
+  const id = result.score_id.toLowerCase()
+
+  if (id.includes("findrisc")) {
+    return Math.min(100, Math.round((raw / 26) * 100))
+  }
+  if (id.includes("stop_bang") || id.includes("stopbang")) {
+    return Math.min(100, Math.round((raw / 8) * 100))
+  }
+
+  return Math.min(100, Math.max(0, Math.round(raw)))
+}
+
+/** Maps distinct icon per score category */
+function getScoreIcon(scoreId: string, scoreName?: string) {
+  const text = `${scoreId} ${scoreName || ""}`.toLowerCase()
+  if (text.includes("sleep") || text.includes("stop") || text.includes("apnea")) return Moon
+  if (text.includes("diabetes") || text.includes("findrisc") || text.includes("glucose")) return Activity
+  return HeartPulse
+}
+
+/** Formats technical score names for clean user-facing view */
+function formatUserScoreName(result: AssessmentResultResponse) {
+  const text = `${result.score_id} ${result.score_name}`.toLowerCase()
+  if (text.includes("findrisc") || text.includes("diabetes")) {
+    return "Diabetes"
+  }
+  if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
+    return "Sleep Apnea"
+  }
+  return result.score_name
+}
+
+/** Circular Radial Progress Component for Individual Scores */
+function RadialScore({
+  value,
+  size = 66,
+  strokeWidth = 5.5,
+  ringColor = "stroke-primary text-primary",
+  trackClass = "text-muted/50",
+  sublabel = "/ 100",
+}: {
+  value: number
+  size?: number
+  strokeWidth?: number
+  ringColor?: string
+  trackClass?: string
+  sublabel?: string
+}) {
+  const radius = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const safeVal = Math.min(Math.max(value, 0), 100)
+  const offset = circumference - (safeVal / 100) * circumference
+
+  return (
+    <div
+      className="relative flex shrink-0 items-center justify-center"
+      style={{ width: size, height: size }}
+    >
+      <svg
+        className="size-full -rotate-90"
+        viewBox={`0 0 ${size} ${size}`}
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          fill="none"
+          className={trackClass}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          fill="none"
+          className={cn("transition-all duration-700 ease-out", ringColor)}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <span
+          className={cn(
+            size < 90 ? "text-lg font-bold" : "text-3xl font-extrabold",
+            "tabular-nums text-foreground leading-none"
+          )}
+        >
+          {safeVal}
+        </span>
+        {sublabel && (
+          <span
+            className={cn(
+              size < 90 ? "text-[9px] mt-0.5" : "text-xs mt-1",
+              "font-medium text-muted-foreground"
+            )}
+          >
+            {sublabel}
+          </span>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export function MemberStatusPage() {
+  const { user } = useCurrentUser()
   const [assessments, setAssessments] = useState<AssessmentsResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
@@ -58,13 +221,28 @@ export function MemberStatusPage() {
 
   const isViewingLatest = activeSession?.isLatest ?? true
 
+  // Compute Overall Health Score using the shared assessment logic
+  const computedHealth = useMemo(() => {
+    if (!activeSession || !activeSession.results.length) return null
+    return computeOverallHealthScore(
+      activeSession.results,
+      isViewingLatest ? assessments?.overall_score : null,
+      isViewingLatest ? assessments?.overall_risk_level : null
+    )
+  }, [activeSession, isViewingLatest, assessments])
+
+  const memberName = user?.email?.split("@")[0] || "Member"
+
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-8 pb-12">
+      {/* Header & Session Controls */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Health Status</h2>
-          <p className="text-sm text-muted-foreground">
-            View your evaluated clinical risk scores, normalized parameters (0–100), and explanations.
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Assessment Results
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {memberName} · {activeSession ? `Evaluated on ${activeSession.formattedDate}` : "Health status profile"}
           </p>
         </div>
 
@@ -75,9 +253,9 @@ export function MemberStatusPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedSessionId(sessions[0]?.id || null)}
-                className="gap-1 text-xs"
+                className="h-8 gap-1.5 text-xs border-border/60"
               >
-                <RotateCcw className="h-3.5 w-3.5" />
+                <RotateCcw className="size-3.5" />
                 View latest
               </Button>
             )}
@@ -86,9 +264,9 @@ export function MemberStatusPage() {
               variant={isViewingLatest ? "outline" : "default"}
               size="sm"
               onClick={() => setIsHistoryOpen(true)}
-              className="gap-2"
+              className="h-8 gap-1.5 text-xs border-border/60"
             >
-              <History className="h-4 w-4" />
+              <History className="size-3.5" />
               Assessment history
             </Button>
           </div>
@@ -96,104 +274,112 @@ export function MemberStatusPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center p-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <div className="size-8 animate-spin rounded-full border-3 border-primary border-t-transparent" />
+          <p className="text-xs text-muted-foreground">Loading your health status...</p>
         </div>
       ) : !sessions.length ? (
-        <Card className="border-dashed">
-          <div className="flex flex-col items-center justify-center p-12 text-center space-y-3">
-            <ClipboardList className="h-12 w-12 text-muted-foreground/50" />
-            <h3 className="text-lg font-semibold">No Assessments Found</h3>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              You haven't completed any health assessments yet. Go to the Forms tab to get started.
+        /* Empty State */
+        <Card className="border-dashed border-border/80 bg-muted/10">
+          <CardContent className="flex flex-col items-center justify-center p-10 text-center">
+            <div className="flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground mb-3">
+              <ClipboardList className="size-6" />
+            </div>
+            <h3 className="text-base font-semibold text-foreground">No Assessments Yet</h3>
+            <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+              You haven't completed any clinical or health forms yet. Fill out your health studies to generate your risk evaluations.
             </p>
-          </div>
+            <Button asChild size="sm" className="mt-5 gap-2 rounded-full px-5">
+              <Link to="/forms/studies">
+                <Sparkles className="size-3.5" />
+                Go to Health Forms
+              </Link>
+            </Button>
+          </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between rounded-xl border bg-card/80 p-3.5 px-4 text-sm shadow-xs backdrop-blur-xs">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary" />
-              <span className="font-medium text-foreground">
-                Assessment session: {activeSession?.formattedDate}
+        <div className="space-y-8">
+          {/* Reused Health Score Hero Card (Exact component from Overview) */}
+          <HealthScoreHeroCard
+            score={computedHealth?.score ?? 100}
+            riskLevel={computedHealth?.riskLevel}
+            explanation={computedHealth?.explanation}
+          />
+
+          {/* Individual Scores Section (Horizontal Row Cards) */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">
+                  Individual Scores
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Risk scores evaluated per domain category
+                </p>
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">
+                {activeSession?.results.length} category evaluation(s)
               </span>
-              {isViewingLatest ? (
-                <Badge variant="success-light" size="sm">
-                  Latest
-                </Badge>
-              ) : (
-                <Badge variant="warning-light" size="sm">
-                  History
-                </Badge>
-              )}
             </div>
-            <span className="text-xs text-muted-foreground hidden sm:inline">
-              {activeSession?.results.length} score(s) evaluated
-            </span>
-          </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {activeSession?.results.map((result) => {
-              const normScore =
-                result.normalized_value !== null && result.normalized_value !== undefined
-                  ? Math.round(result.normalized_value)
-                  : null
+            {/* Horizontal Layout Cards */}
+            <div className="space-y-3">
+              {activeSession?.results.map((result) => {
+                const normScore = getNormalizedScore(result)
+                const config = getRiskLevelConfig(result.risk_level, normScore)
+                const Icon = getScoreIcon(result.score_id, result.score_name)
+                const displayName = formatUserScoreName(result)
 
-              const barColor = getProgressColor(result.risk_level)
-
-              return (
-                <Card
-                  key={result.score_id}
-                  className="flex flex-col justify-between overflow-hidden border-border/60 bg-card/90 p-6 shadow-xs transition-all hover:border-primary/30 hover:shadow-md"
-                >
-                  <div className="space-y-4">
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Activity className="size-4 text-muted-foreground" />
-                          <h3 className="font-bold text-lg text-foreground tracking-tight">
-                            {result.score_name}
-                          </h3>
+                return (
+                  <Card
+                    key={result.score_id}
+                    className="overflow-hidden rounded-xl border border-border/60 bg-gradient-to-r from-muted/20 via-card to-card p-4 sm:p-5 shadow-xs transition-all hover:border-border/90 hover:shadow-sm"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      {/* Left: Icon, Topic Name, Badge, Description & View details */}
+                      <div className="flex items-start gap-3.5">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/80">
+                          <Icon className="size-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-sm sm:text-base font-semibold text-foreground">
+                              {displayName}
+                            </h3>
+                            <Badge variant={config.badgeVariant} className={cn(config.badgeClass, "text-[11px] px-2 py-0 h-5")}>
+                              {config.label}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {config.description}
+                          </p>
+                          <div className="pt-1 flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer w-fit">
+                            <span>View details</span>
+                            <ChevronRight className="size-3 text-muted-foreground" />
+                          </div>
                         </div>
                       </div>
-                      <Badge variant={getRiskBadgeVariant(result.risk_level)} className="capitalize">
-                        {result.risk_level || "Evaluated"}
-                      </Badge>
+
+                      {/* Right: Radial gauge only */}
+                      <div className="shrink-0">
+                        <RadialScore
+                          value={normScore}
+                          size={66}
+                          strokeWidth={5.5}
+                          ringColor={config.ringColor}
+                          sublabel="/ 100"
+                        />
+                      </div>
                     </div>
-
-                    {/* Normalized Score Indicator (0-100) */}
-                    {normScore !== null && (
-                      <div className="rounded-xl bg-muted/40 p-4 space-y-2">
-                        <div className="flex items-center justify-between text-xs font-semibold">
-                          <span className="text-muted-foreground">Normalized Health Score</span>
-                          <span className="text-foreground text-sm font-bold">{normScore} / 100</span>
-                        </div>
-                        <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
-                          <div
-                            className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                            style={{ width: `${normScore}%` }}
-                          />
-                        </div>
-                        <div className="flex justify-between text-[11px] text-muted-foreground pt-0.5">
-                          <span>0 (High Risk)</span>
-                          <span>100 (Optimal)</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Explanation */}
-                    <p className="text-sm leading-relaxed text-muted-foreground pt-1">
-                      {result.explanation || "No specific observations reported for this evaluation."}
-                    </p>
-                  </div>
-                </Card>
-              )
-            })}
+                  </Card>
+                )
+              })}
+            </div>
           </div>
         </div>
       )}
 
+      {/* History Dialog */}
       <AssessmentHistoryDialog
         open={isHistoryOpen}
         onOpenChange={setIsHistoryOpen}
@@ -204,5 +390,3 @@ export function MemberStatusPage() {
     </div>
   )
 }
-
-export default MemberStatusPage

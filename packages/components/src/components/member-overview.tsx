@@ -3,13 +3,7 @@ import { listAssessments, type AssessmentsResponse } from "@workspace/api"
 import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
+import { Card } from "@workspace/ui/components/card"
 import {
   Carousel,
   CarouselContent,
@@ -22,7 +16,6 @@ import {
   ArrowLeft,
   ArrowRight,
   ClipboardList,
-  Sparkles,
 } from "lucide-react"
 import {
   Area,
@@ -38,6 +31,7 @@ import {
   computeOverallHealthScore,
   type Recommendation,
 } from "./assessment-utils"
+import { HealthScoreHeroCard, heroLevelConfig } from "./health-score-hero-card"
 
 const priorityConfig = {
   high: {
@@ -54,27 +48,6 @@ const priorityConfig = {
     label: "Suggestion",
     color: "text-primary",
     bg: "bg-primary/10 border-primary/20",
-  },
-} as const
-
-const levelConfig = {
-  low: {
-    color: "text-[color:var(--success)]",
-    bg: "bg-[color:var(--success)]/10",
-    label: "Low risk",
-    ringColor: "stroke-[color:var(--success)]",
-  },
-  moderate: {
-    color: "text-[color:var(--warning)]",
-    bg: "bg-[color:var(--warning)]/10",
-    label: "Moderate risk",
-    ringColor: "stroke-[color:var(--warning)]",
-  },
-  high: {
-    color: "text-destructive",
-    bg: "bg-destructive/10",
-    label: "Needs attention",
-    ringColor: "stroke-destructive",
   },
 } as const
 
@@ -146,11 +119,14 @@ export function MemberOverview({
   }, [latestSession, assessmentsData])
 
   const score = computedHealth?.score ?? 100
-  const config = levelConfig[computedHealth?.riskLevel || "low"]
-
-  const radius = 70
-  const circumference = 2 * Math.PI * radius
-  const offset = circumference - (score / 100) * circumference
+  const riskKey = (
+    computedHealth?.riskLevel === "high"
+      ? "high"
+      : computedHealth?.riskLevel === "moderate"
+        ? "moderate"
+        : "low"
+  ) as keyof typeof heroLevelConfig
+  const config = heroLevelConfig[riskKey]
 
   // Dynamic evolution chart from session history
   const evolutionData = useMemo(() => {
@@ -204,131 +180,51 @@ export function MemberOverview({
               </p>
             </div>
           </div>
+          {showBack && (
+            <Badge variant="outline" className="text-sm">
+              Employee Details
+            </Badge>
+          )}
         </div>
       </header>
 
-      {/* If loading */}
       {isLoading ? (
-        <Card className="border-2 p-8">
-          <div className="flex justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <div className="space-y-6">
+          <Skeleton className="h-64 w-full rounded-2xl" />
+          <div className="grid gap-6 md:grid-cols-2">
+            <Skeleton className="h-48 rounded-2xl" />
+            <Skeleton className="h-48 rounded-2xl" />
           </div>
-        </Card>
-      ) : !latestSession ? (
-        /* Empty State: Prompt user to fill forms */
-        <Card className="relative overflow-hidden border-dashed border-2 bg-card/60 p-8 shadow-sm">
-          <div className="flex flex-col items-center justify-center text-center space-y-4">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        </div>
+      ) : !sessions.length ? (
+        /* Empty State */
+        <Card className="border-dashed">
+          <div className="flex flex-col items-center justify-center p-12 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground mb-4">
               <ClipboardList className="size-7" />
             </div>
-            <div className="space-y-1 max-w-md">
-              <h3 className="text-xl font-bold tracking-tight">No Health Assessments Yet</h3>
-              <p className="text-sm text-muted-foreground">
-                Complete your biometrics, sleep, and lifestyle forms to unlock your personalized health score, evaluated risk metrics, and recommendations.
-              </p>
-            </div>
-            <Button asChild className="gap-2">
-              <a href="/forms">
-                Go to Health Forms
-                <ArrowRight className="size-4" />
-              </a>
+            <h3 className="text-lg font-semibold">No Assessments Found</h3>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+              There are no recorded health evaluations for this member yet. Completed form results will appear here.
+            </p>
+            <Button
+              className="mt-6 rounded-full"
+              onClick={() => {
+                window.location.href = "/forms"
+              }}
+            >
+              Complete First Assessment
             </Button>
           </div>
         </Card>
       ) : (
         <>
           {/* Health Score Hero */}
-          <Card className="border-2">
-            <CardHeader className="pb-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <CardTitle className="text-xl">Health Score</CardTitle>
-                  <CardDescription>
-                    Evaluated from your latest clinical studies & health forms
-                  </CardDescription>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={`${config.bg} ${config.color} border-transparent`}
-                >
-                  {config.label}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col items-center justify-center gap-6 py-4 md:flex-row md:justify-between">
-                <div className="relative flex items-center justify-center">
-                  <svg
-                    className="size-40 -rotate-90 transform md:size-48"
-                    viewBox="0 0 160 160"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r={radius}
-                      stroke="currentColor"
-                      strokeWidth="12"
-                      fill="none"
-                      className="text-muted"
-                    />
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r={radius}
-                      stroke="currentColor"
-                      strokeWidth="12"
-                      fill="none"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={offset}
-                      strokeLinecap="round"
-                      className={`${config.ringColor} transition-all duration-1000 ease-out`}
-                    />
-                  </svg>
-                  <div className="absolute flex flex-col items-center">
-                    <span
-                      className={`text-5xl font-bold tabular-nums ${config.color}`}
-                    >
-                      {score}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      out of 100
-                    </span>
-                  </div>
-                </div>
-
-                <div className="w-full max-w-md space-y-3 text-center md:text-left">
-                  <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-4 text-left">
-                    <Sparkles className="mt-0.5 size-5 shrink-0 text-primary" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm leading-relaxed font-medium">
-                        Evaluated Status Summary
-                      </p>
-                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                        {computedHealth?.explanation}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-sm">
-                    <div className="rounded-lg bg-muted/30 p-3">
-                      <p className="font-medium text-[color:var(--success)]">85-100</p>
-                      <p className="text-xs text-muted-foreground">Low Risk</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/30 p-3">
-                      <p className="font-medium text-[color:var(--warning)]">
-                        60-84
-                      </p>
-                      <p className="text-xs text-muted-foreground">Moderate Risk</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/30 p-3">
-                      <p className="font-medium text-destructive">&lt;60</p>
-                      <p className="text-xs text-muted-foreground">Attention Needed</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <HealthScoreHeroCard
+            score={score}
+            riskLevel={computedHealth?.riskLevel}
+            explanation={computedHealth?.explanation}
+          />
 
           {/* Recommendation Card Carousel */}
           {!showBack && recommendationsList.length > 0 && (
@@ -371,19 +267,29 @@ export function MemberOverview({
                             </div>
                             <Badge
                               variant="outline"
-                              className={`${pConfig.bg} ${pConfig.color} text-xs`}
+                              className={`text-xs ${pConfig.bg} ${pConfig.color}`}
                             >
                               {pConfig.label}
                             </Badge>
                           </div>
-                          <div className="space-y-1.5">
-                            <h3 className="font-semibold text-base leading-snug">
+                          <div className="space-y-1">
+                            <h3 className="font-semibold text-foreground leading-snug">
                               {recommendation.title}
                             </h3>
-                            <p className="text-sm leading-relaxed text-muted-foreground">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
                               {recommendation.description}
                             </p>
                           </div>
+                          {recommendation.action && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="group/btn -ml-2 text-xs font-semibold text-primary"
+                            >
+                              {recommendation.action}
+                              <ArrowRight className="ml-1 size-3 transition-transform group-hover/btn:translate-x-1" />
+                            </Button>
+                          )}
                         </Card>
                       </CarouselItem>
                     )
@@ -393,128 +299,93 @@ export function MemberOverview({
             </section>
           )}
 
-          {/* Health Evolution Chart */}
-          {evolutionData.length > 0 && (
-            <div className="pt-2">
-              <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
-                <div>
-                  <h3 className="text-base font-semibold text-foreground">
-                    Health score trend
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Evolution across assessment sessions
-                  </p>
-                </div>
-                <div className="mt-4 h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={evolutionData}
-                      margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-                    >
-                      <defs>
-                        <linearGradient
-                          id="memberHealthScoreGradientShared"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="0%"
-                            stopColor="oklch(0.55 0.16 35)"
-                            stopOpacity={0.35}
-                          />
-                          <stop
-                            offset="100%"
-                            stopColor="oklch(0.55 0.16 35)"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        stroke="oklch(0.92 0.015 210)"
-                        vertical={false}
-                      />
-                      <XAxis
-                        dataKey="month"
-                        stroke="oklch(0.5 0.03 220)"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        stroke="oklch(0.5 0.03 220)"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        domain={[0, 100]}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          background: "var(--card)",
-                          border: "1px solid var(--border)",
-                          borderRadius: 12,
-                          fontSize: 12,
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="score"
-                        name="Health Score"
-                        stroke="oklch(0.55 0.16 35)"
-                        fill="url(#memberHealthScoreGradientShared)"
-                        strokeWidth={2}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
+          {/* Health Score History Evolution Chart */}
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold">Evolution</h2>
+              <p className="text-sm text-muted-foreground">
+                Health score progression over time (higher is healthier)
+              </p>
             </div>
-          )}
+            <Card className="p-6">
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={evolutionData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="memberScoreGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted" />
+                    <XAxis
+                      dataKey="month"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      className="text-xs text-muted-foreground"
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      className="text-xs text-muted-foreground"
+                    />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const val = payload[0]?.value as number
+                          return (
+                            <div className="rounded-lg border bg-background p-2.5 shadow-md text-xs">
+                              <p className="font-semibold">{payload[0]?.payload.month}</p>
+                              <p className="text-muted-foreground">
+                                Score: <span className="font-bold text-foreground">{val}</span> / 100
+                              </p>
+                            </div>
+                          )
+                        }
+                        return null
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="score"
+                      stroke="var(--primary)"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#memberScoreGradient)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </section>
         </>
       )}
     </div>
   )
 }
 
-export function MemberOverviewSkeleton({
-  showBack = false,
-}: {
-  showBack?: boolean
-}) {
+export function MemberOverviewSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-7xl animate-in space-y-8 duration-300 fade-in">
-      <header className="space-y-6">
-        <div className="flex items-center gap-4">
-          {showBack && <Skeleton className="size-10 shrink-0 rounded-lg" />}
-          <Skeleton className="size-14 shrink-0 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-44" />
-            <Skeleton className="h-4 w-72 max-w-full" />
-          </div>
+    <div className="mx-auto w-full max-w-7xl space-y-8">
+      <div className="flex items-center gap-4">
+        <Skeleton className="size-14 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
         </div>
-      </header>
-
-      <Card className="border-2">
-        <CardHeader>
-          <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-4 w-64 max-w-full" />
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center gap-6 py-4 md:flex-row md:justify-between">
-            <Skeleton className="size-40 rounded-full md:size-48" />
-            <div className="w-full max-w-md space-y-3">
-              <Skeleton className="h-24 w-full rounded-lg" />
-              <div className="grid grid-cols-3 gap-2">
-                <Skeleton className="h-16 rounded-lg" />
-                <Skeleton className="h-16 rounded-lg" />
-                <Skeleton className="h-16 rounded-lg" />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      </div>
+      <Skeleton className="h-64 w-full rounded-2xl" />
+      <div className="grid gap-6 md:grid-cols-2">
+        <Skeleton className="h-48 rounded-2xl" />
+        <Skeleton className="h-48 rounded-2xl" />
+      </div>
     </div>
   )
 }
+
