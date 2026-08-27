@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select"
+import { useTheme } from "@workspace/ui/components/theme-provider"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   ArrowLeft,
@@ -20,9 +21,11 @@ import {
   Check,
   HeartPulse,
   LogOut,
+  Moon,
   Ruler,
   ShieldCheck,
   Sparkles,
+  Sun,
   User,
   Weight,
   type LucideIcon,
@@ -31,6 +34,36 @@ import { useMemo, useState } from "react"
 import { Navigate } from "react-router-dom"
 import { usePwaInstall } from "../components/pwa/pwa-install-context"
 import { PwaInstallDrawer } from "../components/pwa/pwa-install-drawer"
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme()
+
+  const toggleTheme = () => {
+    const resolvedTheme =
+      theme === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+        : theme
+
+    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      className="flex size-9 items-center justify-center rounded-lg border border-border/40 bg-background/70 text-muted-foreground shadow-xs transition-all hover:bg-muted hover:text-foreground"
+      aria-label="Toggle color theme"
+    >
+      {theme === "dark" ? (
+        <Sun className="size-4 animate-in duration-300 spin-in-45" />
+      ) : (
+        <Moon className="size-4 animate-in duration-300 spin-in-45" />
+      )}
+    </button>
+  )
+}
 
 type OnboardingData = {
   firstName: string
@@ -324,7 +357,8 @@ export function MemberOnboardingPage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--border))_1px,transparent_0)] bg-[length:28px_28px] opacity-35" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-muted/60 blur-3xl" />
 
-      <div className="relative z-10 mx-auto mb-4 flex w-full max-w-6xl items-center justify-end">
+      <div className="relative z-10 mx-auto mb-4 flex w-full max-w-6xl items-center justify-end gap-2">
+        <ThemeToggle />
         <Button
           type="button"
           variant="ghost"
