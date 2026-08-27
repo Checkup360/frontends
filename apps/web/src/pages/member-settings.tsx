@@ -67,7 +67,8 @@ export function MemberSettingsPage() {
       if (!cancelled && biometricsForm?.data) {
         const d = biometricsForm.data
         setBiologicalSex((d.biological_sex as string) ?? "")
-        setHeight(d.height ? String(d.height) : "")
+        const h = d.height ? Number(d.height) : null
+        setHeight(h ? String(h <= 3 ? Math.round(h * 100) : h) : "")
         setWeight(d.weight ? String(d.weight) : "")
       }
 
