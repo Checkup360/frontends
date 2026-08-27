@@ -13,8 +13,6 @@ import {
   type OrganizationInvite,
   type SysadminInvite,
   type MemberProfileResponse,
-  type MemberBiometricsResponse,
-  type ClinicalAssessmentRequest,
   type AssessmentsResponse,
   type MemberFormResponse,
   type MemberFormSubmissionResponse,
@@ -260,57 +258,6 @@ export async function updateMemberProfile(payload: {
   }
 }
 
-export async function fetchMemberBiometrics(): Promise<MemberBiometricsResponse | null> {
-  try {
-    const response = await fetchWithAuth(
-      `${resolveApiBaseUrl()}${apiRoutes.members.myBiometrics}`,
-      { credentials: "include" }
-    )
-    if (!response.ok) return null
-    return (await response.json()) as MemberBiometricsResponse
-  } catch (error) {
-    console.error("Error fetching member biometrics:", error)
-    return null
-  }
-}
-
-export interface UpdateBiometricsError {
-  code: string
-  message: string
-}
-
-export async function updateMemberBiometrics(payload: {
-  biological_sex?: string | null
-  height?: number | null
-  weight?: number | null
-}): Promise<
-  | { success: MemberBiometricsResponse; error?: never }
-  | { success?: never; error: UpdateBiometricsError }
-> {
-  try {
-    const response = await fetchWithAuth(
-      `${resolveApiBaseUrl()}${apiRoutes.members.myBiometrics}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      }
-    )
-
-    if (response.status === 401) {
-      return { error: { code: "unauthorized", message: "Session expired. Please log in again." } }
-    }
-    if (!response.ok) {
-      return { error: { code: "unknown_error", message: "Failed to save health profile. Please try again." } }
-    }
-
-    return { success: (await response.json()) as MemberBiometricsResponse }
-  } catch (error) {
-    console.error("Error updating member biometrics:", error)
-    return { error: { code: "network_error", message: "Network error. Please try again." } }
-  }
-}
 
 export async function fetchMemberForm(
   formType: string
@@ -1468,40 +1415,6 @@ export async function deleteSysadminInvitations(
   return payload.deleted_count ?? 0
 }
 
-export async function submitClinicalAssessment(
-  payload: ClinicalAssessmentRequest
-): Promise<{ success: AssessmentsResponse; error?: never } | { success?: never; error: { code: string; message: string } }> {
-  try {
-    const response = await fetchWithAuth(
-      `${resolveApiBaseUrl()}${apiRoutes.assessments.evaluate}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      }
-    )
-
-    if (response.status === 401) {
-      return { error: { code: "unauthorized", message: "Session expired. Please log in again." } }
-    }
-    if (response.status === 403) {
-      return { error: { code: "forbidden", message: "Only members can submit assessments." } }
-    }
-    if (response.status === 422) {
-      const data = await response.json()
-      return { error: { code: "invalid_input", message: typeof data.detail === 'string' ? data.detail : "Invalid input data." } }
-    }
-    if (!response.ok) {
-      return { error: { code: "unknown_error", message: "Failed to submit assessment. Please try again." } }
-    }
-
-    return { success: (await response.json()) as AssessmentsResponse }
-  } catch (error) {
-    console.error("Error submitting clinical assessment:", error)
-    return { error: { code: "network_error", message: "Network error. Please try again." } }
-  }
-}
 
 export async function listAssessments(): Promise<AssessmentsResponse | null> {
   try {

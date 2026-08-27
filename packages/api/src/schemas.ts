@@ -23,14 +23,6 @@ export type MemberProfileResponse = {
   priority_topics?: string[]
 }
 
-export type MemberBiometricsResponse = {
-  biological_sex: string | null
-  height: number | null
-  weight: number | null
-  waist_circumference: number | null
-  neck_circumference: number | null
-}
-
 export type InviteCreateResponse = {
   token: string
   invite_url: string
@@ -194,23 +186,6 @@ export type AssessmentResultResponse = {
 
 export type AssessmentsResponse = {
   results: AssessmentResultResponse[]
-}
-
-export type ClinicalAssessmentRequest = {
-  age?: number
-  height?: number
-  weight?: number
-  waist_circumference?: number
-  neck_circumference?: number
-  sex?: string
-  snoring?: boolean
-  tired?: boolean
-  observed_apnea?: boolean
-  hypertension_medication?: boolean
-  daily_physical_activity?: boolean
-  fruits_vegetables?: boolean
-  previous_high_glucose?: boolean
-  family_diabetes?: string
 }
 
 export type MemberFormResponse = {
