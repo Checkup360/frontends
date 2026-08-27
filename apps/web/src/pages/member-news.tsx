@@ -1,8 +1,10 @@
+import { useNavigate } from "react-router-dom"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { HealthContentGrid } from "@workspace/components/components/health-content-grid"
 import { useMemberArticles } from "@/hooks/use-member-articles"
 
 export function MemberNewsPage() {
+  const navigate = useNavigate()
   const { articles, isLoading } = useMemberArticles()
 
   if (isLoading) {
@@ -32,6 +34,7 @@ export function MemberNewsPage() {
         articles={articles}
         title="Health Articles & News"
         description="Explore articles, medical advice, and healthy habits tailored for you."
+        onNavigate={(href) => navigate(href)}
       />
     </div>
   )

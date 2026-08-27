@@ -11,16 +11,31 @@ type HealthContentGridProps = {
   articles: HealthContentArticle[]
   title?: string
   description?: string
+  onNavigate?: (href: string) => void
 }
 
-function ArticleCard({ article }: { article: HealthContentArticle }) {
+function ArticleCard({
+  article,
+  onNavigate,
+}: {
+  article: HealthContentArticle
+  onNavigate?: (href: string) => void
+}) {
   const targetHref = article.href || `/news/${article.id}`
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (onNavigate) {
+      e.preventDefault()
+      onNavigate(targetHref)
+    }
+  }
 
   return (
     <Card className="group h-full gap-0 p-0 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md relative overflow-hidden flex flex-col">
       {article.image && (
         <a
           href={targetHref}
+          onClick={handleClick}
           className="block overflow-hidden bg-muted aspect-video w-full focus:outline-none"
           tabIndex={-1}
         >
@@ -46,7 +61,7 @@ function ArticleCard({ article }: { article: HealthContentArticle }) {
         </div>
         <div className="space-y-2">
           <h3 className="line-clamp-2 text-base leading-snug font-semibold text-foreground group-hover:text-primary transition-colors">
-            <a href={targetHref} className="focus:outline-none focus:underline">
+            <a href={targetHref} onClick={handleClick} className="focus:outline-none focus:underline">
               {article.title}
             </a>
           </h3>
@@ -65,7 +80,7 @@ function ArticleCard({ article }: { article: HealthContentArticle }) {
             <span />
           )}
           <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-primary font-medium" asChild>
-            <a href={targetHref} aria-label={`Read ${article.title}`}>
+            <a href={targetHref} onClick={handleClick} aria-label={`Read ${article.title}`}>
               Read article
               <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
             </a>
@@ -80,6 +95,7 @@ export function HealthContentGrid({
   articles,
   title = "Health content",
   description = "Articles and practical tips for your wellbeing.",
+  onNavigate,
 }: HealthContentGridProps) {
   const [category, setCategory] = useState("All")
   const [search, setSearch] = useState("")
@@ -140,7 +156,7 @@ export function HealthContentGrid({
       {visibleArticles.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visibleArticles.map((article) => (
-            <ArticleCard key={article.id} article={article} />
+            <ArticleCard key={article.id} article={article} onNavigate={onNavigate} />
           ))}
         </div>
       ) : (
