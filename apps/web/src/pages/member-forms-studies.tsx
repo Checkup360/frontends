@@ -17,9 +17,15 @@ import {
 } from "@workspace/ui/components/radio-group"
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
 import {
+  Activity,
   AlertCircle,
   ArrowLeft,
+  HeartPulse,
   Info,
+  Moon,
+  Ruler,
+  User,
+  Weight,
 } from "lucide-react"
 import { toast } from "@workspace/ui/components/sonner"
 import { cn } from "@workspace/ui/lib/utils"
@@ -31,7 +37,7 @@ import {
 type FormType = "biometrics" | "sleep" | "habits"
 
 type StudiesData = {
-  // Biometrics (including height, weight, sex pre-filled from onboarding/profile)
+  // Biometrics
   biological_sex: string
   height: string
   weight: string
@@ -168,20 +174,38 @@ export function MemberFormsStudiesPage() {
   const handleSaveBiometrics = async (e: React.FormEvent) => {
     e.preventDefault()
     const errors: Record<string, string> = {}
-    
+
     if (!data.biological_sex) {
       errors.biological_sex = "Please select biological sex."
     }
-    if (!data.height || isNaN(Number(data.height)) || Number(data.height) <= 0 || Number(data.height) >= 300) {
+    if (
+      !data.height ||
+      isNaN(Number(data.height)) ||
+      Number(data.height) <= 0 ||
+      Number(data.height) >= 300
+    ) {
       errors.height = "Please enter a valid height in centimeters (cm)."
     }
-    if (!data.weight || isNaN(Number(data.weight)) || Number(data.weight) <= 0 || Number(data.weight) >= 500) {
+    if (
+      !data.weight ||
+      isNaN(Number(data.weight)) ||
+      Number(data.weight) <= 0 ||
+      Number(data.weight) >= 500
+    ) {
       errors.weight = "Please enter a valid weight in kilograms (kg)."
     }
-    if (!data.neck_circumference || isNaN(Number(data.neck_circumference)) || Number(data.neck_circumference) <= 0) {
+    if (
+      !data.neck_circumference ||
+      isNaN(Number(data.neck_circumference)) ||
+      Number(data.neck_circumference) <= 0
+    ) {
       errors.neck_circumference = "Please enter a valid neck circumference (cm)."
     }
-    if (!data.waist_circumference || isNaN(Number(data.waist_circumference)) || Number(data.waist_circumference) <= 0) {
+    if (
+      !data.waist_circumference ||
+      isNaN(Number(data.waist_circumference)) ||
+      Number(data.waist_circumference) <= 0
+    ) {
       errors.waist_circumference = "Please enter a valid waist circumference (cm)."
     }
 
@@ -214,7 +238,8 @@ export function MemberFormsStudiesPage() {
     const errors: Record<string, string> = {}
     if (!data.snoring) errors.snoring = "Please select an option for snoring."
     if (!data.tired) errors.tired = "Please select an option for daytime fatigue."
-    if (!data.observed_apnea) errors.observed_apnea = "Please select an option for sleep apnea observation."
+    if (!data.observed_apnea)
+      errors.observed_apnea = "Please select an option for sleep apnea observation."
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
@@ -242,11 +267,20 @@ export function MemberFormsStudiesPage() {
   const handleSaveHabits = async (e: React.FormEvent) => {
     e.preventDefault()
     const errors: Record<string, string> = {}
-    if (!data.hypertension_medication) errors.hypertension_medication = "Please select an option for blood pressure medication."
-    if (!data.daily_physical_activity) errors.daily_physical_activity = "Please select an option for daily physical activity."
-    if (!data.fruits_vegetables) errors.fruits_vegetables = "Please select an option for fruit/vegetable consumption."
-    if (!data.previous_high_glucose) errors.previous_high_glucose = "Please select an option for previous high blood glucose."
-    if (!data.family_diabetes) errors.family_diabetes = "Please select an option for family history of diabetes."
+    if (!data.hypertension_medication)
+      errors.hypertension_medication =
+        "Please select an option for blood pressure medication."
+    if (!data.daily_physical_activity)
+      errors.daily_physical_activity =
+        "Please select an option for daily physical activity."
+    if (!data.fruits_vegetables)
+      errors.fruits_vegetables =
+        "Please select an option for fruit/vegetable consumption."
+    if (!data.previous_high_glucose)
+      errors.previous_high_glucose =
+        "Please select an option for previous high blood glucose."
+    if (!data.family_diabetes)
+      errors.family_diabetes = "Please select an option for family history of diabetes."
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
@@ -272,22 +306,31 @@ export function MemberFormsStudiesPage() {
     }
   }
 
-  const titlesMap: Record<FormType, { title: string; description: string }> = {
+  const titlesMap: Record<
+    FormType,
+    { title: string; description: string; icon: typeof Activity }
+  > = {
     biometrics: {
       title: "Physical Biometrics Form",
-      description: "Review and update your body measurements and physical parameters.",
+      description:
+        "Review and update your body measurements and physical parameters.",
+      icon: Activity,
     },
     sleep: {
       title: "Sleep Quality Form",
       description: "Answer questions regarding your daily sleep habits and rest.",
+      icon: Moon,
     },
     habits: {
       title: "Lifestyle & Habits Form",
-      description: "Information regarding physical activity, diet, and health history.",
+      description:
+        "Information regarding physical activity, diet, and health history.",
+      icon: HeartPulse,
     },
   }
 
   const currentTitle = titlesMap[formType] || titlesMap.biometrics
+  const TitleIcon = currentTitle.icon
 
   return (
     <div className="space-y-6">
@@ -298,13 +341,18 @@ export function MemberFormsStudiesPage() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            {currentTitle.title}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {currentTitle.description}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <TitleIcon className="size-5" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">
+              {currentTitle.title}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {currentTitle.description}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -318,19 +366,19 @@ export function MemberFormsStudiesPage() {
 
       {/* FORM 1: BIOMETRICS */}
       {formType === "biometrics" && (
-        <Card>
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="text-lg">Physical Biometrics</CardTitle>
             <CardDescription>
-              Physical parameters and body measurements pre-filled from your onboarding profile.
+              Physical parameters pre-filled from your onboarding baseline.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveBiometrics(e)}>
             <CardContent className="space-y-6">
-              <Alert variant="info">
-                <Info className="h-4 w-4" />
-                <AlertDescription className="text-xs">
-                  Height and weight were initially set during onboarding. You can update them here anytime to keep your assessments accurate.
+              <Alert variant="info" className="border-primary/20 bg-primary/5">
+                <Info className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-xs text-muted-foreground">
+                  Height, weight, and biological sex are pre-filled from your onboarding profile. Updating them here keeps your health biometrics up to date.
                 </AlertDescription>
               </Alert>
 
@@ -338,11 +386,15 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-biological_sex"
                 className={cn(
-                  "space-y-3 rounded-lg p-3 transition-all",
-                  fieldErrors.biological_sex && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  fieldErrors.biological_sex &&
+                    "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
               >
-                <Label className="font-medium">Biological Sex</Label>
+                <Label className="flex items-center gap-2 font-medium">
+                  <User className="size-4 text-muted-foreground" />
+                  Biological Sex
+                </Label>
                 <RadioGroup
                   value={data.biological_sex}
                   onValueChange={(val) => updateField("biological_sex", val)}
@@ -351,13 +403,19 @@ export function MemberFormsStudiesPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="M" id="sex-male" />
-                    <Label htmlFor="sex-male" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="sex-male"
+                      className="cursor-pointer font-normal"
+                    >
                       Male
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="F" id="sex-female" />
-                    <Label htmlFor="sex-female" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="sex-female"
+                      className="cursor-pointer font-normal"
+                    >
                       Female
                     </Label>
                   </div>
@@ -375,22 +433,30 @@ export function MemberFormsStudiesPage() {
                 <div
                   id="field-group-height"
                   className={cn(
-                    "space-y-2 rounded-lg p-3 transition-all",
-                    fieldErrors.height && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                    "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors.height &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
                 >
                   <Label htmlFor="height" className="font-medium">
                     Height (cm)
                   </Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    placeholder="e.g. 175"
-                    value={data.height}
-                    onChange={(e) => updateField("height", e.target.value)}
-                    disabled={isSubmitting || isLoadingData}
-                    className={cn(fieldErrors.height && "border-destructive focus-visible:ring-destructive")}
-                  />
+                  <div className="relative">
+                    <Ruler className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="height"
+                      type="number"
+                      placeholder="175"
+                      value={data.height}
+                      onChange={(e) => updateField("height", e.target.value)}
+                      disabled={isSubmitting || isLoadingData}
+                      className={cn(
+                        "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
+                        fieldErrors.height &&
+                          "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                  </div>
                   {fieldErrors.height && (
                     <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
                       <AlertCircle className="size-3.5 shrink-0" />
@@ -402,22 +468,30 @@ export function MemberFormsStudiesPage() {
                 <div
                   id="field-group-weight"
                   className={cn(
-                    "space-y-2 rounded-lg p-3 transition-all",
-                    fieldErrors.weight && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                    "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors.weight &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
                 >
                   <Label htmlFor="weight" className="font-medium">
                     Weight (kg)
                   </Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    placeholder="e.g. 70"
-                    value={data.weight}
-                    onChange={(e) => updateField("weight", e.target.value)}
-                    disabled={isSubmitting || isLoadingData}
-                    className={cn(fieldErrors.weight && "border-destructive focus-visible:ring-destructive")}
-                  />
+                  <div className="relative">
+                    <Weight className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="weight"
+                      type="number"
+                      placeholder="70"
+                      value={data.weight}
+                      onChange={(e) => updateField("weight", e.target.value)}
+                      disabled={isSubmitting || isLoadingData}
+                      className={cn(
+                        "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
+                        fieldErrors.weight &&
+                          "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                  </div>
                   {fieldErrors.weight && (
                     <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
                       <AlertCircle className="size-3.5 shrink-0" />
@@ -432,22 +506,30 @@ export function MemberFormsStudiesPage() {
                 <div
                   id="field-group-neck_circumference"
                   className={cn(
-                    "space-y-2 rounded-lg p-3 transition-all",
-                    fieldErrors.neck_circumference && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                    "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors.neck_circumference &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
                 >
                   <Label htmlFor="neck_circumference" className="font-medium">
                     Neck Circumference (cm)
                   </Label>
-                  <Input
-                    id="neck_circumference"
-                    type="number"
-                    placeholder="e.g. 38"
-                    value={data.neck_circumference}
-                    onChange={(e) => updateField("neck_circumference", e.target.value)}
-                    disabled={isSubmitting || isLoadingData}
-                    className={cn(fieldErrors.neck_circumference && "border-destructive focus-visible:ring-destructive")}
-                  />
+                  <div className="relative">
+                    <Ruler className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="neck_circumference"
+                      type="number"
+                      placeholder="38"
+                      value={data.neck_circumference}
+                      onChange={(e) => updateField("neck_circumference", e.target.value)}
+                      disabled={isSubmitting || isLoadingData}
+                      className={cn(
+                        "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
+                        fieldErrors.neck_circumference &&
+                          "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                  </div>
                   {fieldErrors.neck_circumference && (
                     <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
                       <AlertCircle className="size-3.5 shrink-0" />
@@ -459,22 +541,30 @@ export function MemberFormsStudiesPage() {
                 <div
                   id="field-group-waist_circumference"
                   className={cn(
-                    "space-y-2 rounded-lg p-3 transition-all",
-                    fieldErrors.waist_circumference && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                    "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors.waist_circumference &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
                 >
                   <Label htmlFor="waist_circumference" className="font-medium">
                     Waist Circumference (cm)
                   </Label>
-                  <Input
-                    id="waist_circumference"
-                    type="number"
-                    placeholder="e.g. 85"
-                    value={data.waist_circumference}
-                    onChange={(e) => updateField("waist_circumference", e.target.value)}
-                    disabled={isSubmitting || isLoadingData}
-                    className={cn(fieldErrors.waist_circumference && "border-destructive focus-visible:ring-destructive")}
-                  />
+                  <div className="relative">
+                    <Ruler className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="waist_circumference"
+                      type="number"
+                      placeholder="85"
+                      value={data.waist_circumference}
+                      onChange={(e) => updateField("waist_circumference", e.target.value)}
+                      disabled={isSubmitting || isLoadingData}
+                      className={cn(
+                        "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
+                        fieldErrors.waist_circumference &&
+                          "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                  </div>
                   {fieldErrors.waist_circumference && (
                     <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
                       <AlertCircle className="size-3.5 shrink-0" />
@@ -498,7 +588,7 @@ export function MemberFormsStudiesPage() {
 
       {/* FORM 2: SLEEP */}
       {formType === "sleep" && (
-        <Card>
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="text-lg">Sleep Quality & Rest</CardTitle>
             <CardDescription>
@@ -511,8 +601,9 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-snoring"
                 className={cn(
-                  "space-y-3 rounded-lg p-4 transition-all",
-                  fieldErrors.snoring && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  fieldErrors.snoring &&
+                    "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
               >
                 <Label className="text-sm font-medium">
@@ -526,13 +617,19 @@ export function MemberFormsStudiesPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="true" id="snoring-yes" />
-                    <Label htmlFor="snoring-yes" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="snoring-yes"
+                      className="cursor-pointer font-normal"
+                    >
                       Yes
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="false" id="snoring-no" />
-                    <Label htmlFor="snoring-no" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="snoring-no"
+                      className="cursor-pointer font-normal"
+                    >
                       No
                     </Label>
                   </div>
@@ -549,8 +646,9 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-tired"
                 className={cn(
-                  "space-y-3 rounded-lg p-4 transition-all",
-                  fieldErrors.tired && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  fieldErrors.tired &&
+                    "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
               >
                 <Label className="text-sm font-medium">
@@ -564,13 +662,19 @@ export function MemberFormsStudiesPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="true" id="tired-yes" />
-                    <Label htmlFor="tired-yes" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="tired-yes"
+                      className="cursor-pointer font-normal"
+                    >
                       Yes
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="false" id="tired-no" />
-                    <Label htmlFor="tired-no" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="tired-no"
+                      className="cursor-pointer font-normal"
+                    >
                       No
                     </Label>
                   </div>
@@ -587,8 +691,9 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-observed_apnea"
                 className={cn(
-                  "space-y-3 rounded-lg p-4 transition-all",
-                  fieldErrors.observed_apnea && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  fieldErrors.observed_apnea &&
+                    "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
               >
                 <Label className="text-sm font-medium">
@@ -602,13 +707,19 @@ export function MemberFormsStudiesPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="true" id="apnea-yes" />
-                    <Label htmlFor="apnea-yes" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="apnea-yes"
+                      className="cursor-pointer font-normal"
+                    >
                       Yes
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="false" id="apnea-no" />
-                    <Label htmlFor="apnea-no" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="apnea-no"
+                      className="cursor-pointer font-normal"
+                    >
                       No
                     </Label>
                   </div>
@@ -635,7 +746,7 @@ export function MemberFormsStudiesPage() {
 
       {/* FORM 3: HABITS */}
       {formType === "habits" && (
-        <Card>
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="text-lg">Lifestyle & Daily Habits</CardTitle>
             <CardDescription>
@@ -648,8 +759,9 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-hypertension_medication"
                 className={cn(
-                  "space-y-3 rounded-lg p-4 transition-all",
-                  fieldErrors.hypertension_medication && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  fieldErrors.hypertension_medication &&
+                    "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
               >
                 <Label className="text-sm font-medium">
@@ -663,13 +775,19 @@ export function MemberFormsStudiesPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="true" id="hyp-yes" />
-                    <Label htmlFor="hyp-yes" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="hyp-yes"
+                      className="cursor-pointer font-normal"
+                    >
                       Yes
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="false" id="hyp-no" />
-                    <Label htmlFor="hyp-no" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="hyp-no"
+                      className="cursor-pointer font-normal"
+                    >
                       No
                     </Label>
                   </div>
@@ -686,8 +804,9 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-daily_physical_activity"
                 className={cn(
-                  "space-y-3 rounded-lg p-4 transition-all",
-                  fieldErrors.daily_physical_activity && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  fieldErrors.daily_physical_activity &&
+                    "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
               >
                 <Label className="text-sm font-medium">
@@ -701,13 +820,19 @@ export function MemberFormsStudiesPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="true" id="pa-yes" />
-                    <Label htmlFor="pa-yes" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="pa-yes"
+                      className="cursor-pointer font-normal"
+                    >
                       Yes
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="false" id="pa-no" />
-                    <Label htmlFor="pa-no" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="pa-no"
+                      className="cursor-pointer font-normal"
+                    >
                       No
                     </Label>
                   </div>
@@ -724,8 +849,9 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-fruits_vegetables"
                 className={cn(
-                  "space-y-3 rounded-lg p-4 transition-all",
-                  fieldErrors.fruits_vegetables && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  fieldErrors.fruits_vegetables &&
+                    "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
               >
                 <Label className="text-sm font-medium">
@@ -739,13 +865,19 @@ export function MemberFormsStudiesPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="true" id="fv-yes" />
-                    <Label htmlFor="fv-yes" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="fv-yes"
+                      className="cursor-pointer font-normal"
+                    >
                       Every day
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="false" id="fv-no" />
-                    <Label htmlFor="fv-no" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="fv-no"
+                      className="cursor-pointer font-normal"
+                    >
                       Not every day
                     </Label>
                   </div>
@@ -762,8 +894,9 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-previous_high_glucose"
                 className={cn(
-                  "space-y-3 rounded-lg p-4 transition-all",
-                  fieldErrors.previous_high_glucose && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  fieldErrors.previous_high_glucose &&
+                    "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
               >
                 <Label className="text-sm font-medium">
@@ -777,13 +910,19 @@ export function MemberFormsStudiesPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="true" id="hg-yes" />
-                    <Label htmlFor="hg-yes" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="hg-yes"
+                      className="cursor-pointer font-normal"
+                    >
                       Yes
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="false" id="hg-no" />
-                    <Label htmlFor="hg-no" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="hg-no"
+                      className="cursor-pointer font-normal"
+                    >
                       No
                     </Label>
                   </div>
@@ -800,8 +939,9 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-family_diabetes"
                 className={cn(
-                  "space-y-3 rounded-lg p-4 transition-all",
-                  fieldErrors.family_diabetes && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  fieldErrors.family_diabetes &&
+                    "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
               >
                 <Label className="text-sm font-medium">
@@ -815,19 +955,28 @@ export function MemberFormsStudiesPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="no" id="fd-no" />
-                    <Label htmlFor="fd-no" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="fd-no"
+                      className="cursor-pointer font-normal"
+                    >
                       No
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="second_degree" id="fd-yes2" />
-                    <Label htmlFor="fd-yes2" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="fd-yes2"
+                      className="cursor-pointer font-normal"
+                    >
                       Yes: grandparent, aunt, uncle, or first cousin
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="first_degree" id="fd-yes1" />
-                    <Label htmlFor="fd-yes1" className="cursor-pointer font-normal">
+                    <Label
+                      htmlFor="fd-yes1"
+                      className="cursor-pointer font-normal"
+                    >
                       Yes: parent, brother, sister, or child
                     </Label>
                   </div>
