@@ -26,7 +26,7 @@ export function MemberNewsDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-4xl animate-in space-y-8 px-4 py-12 duration-300 fade-in">
+      <div className="mx-auto w-full max-w-4xl animate-in space-y-8 px-4 py-4 duration-300 fade-in">
         <div className="flex items-center justify-between">
           <Skeleton className="h-9 w-32 rounded-lg" />
           <Skeleton className="h-6 w-24 rounded-full" />

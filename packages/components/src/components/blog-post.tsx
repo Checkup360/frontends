@@ -218,7 +218,7 @@ export const Blogpost1 = ({
   }
 
   return (
-    <section className={cn("py-12 sm:py-16 md:py-20", className)}>
+    <section className={cn("py-2 sm:py-4 md:py-6 pb-12", className)}>
       <div className="container mx-auto px-4 max-w-5xl">
         {/* Navigation & Action Bar */}
         <div className="mb-8 flex items-center justify-between">
