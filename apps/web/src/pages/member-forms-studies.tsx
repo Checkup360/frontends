@@ -31,11 +31,17 @@ import {
 type FormType = "biometrics" | "sleep" | "habits"
 
 type StudiesData = {
+  // Biometrics (including height, weight, sex pre-filled from onboarding/profile)
+  biological_sex: string
+  height: string
+  weight: string
   neck_circumference: string
   waist_circumference: string
+  // Sleep
   snoring: string
   tired: string
   observed_apnea: string
+  // Habits
   hypertension_medication: string
   daily_physical_activity: string
   fruits_vegetables: string
@@ -44,6 +50,9 @@ type StudiesData = {
 }
 
 const initialData: StudiesData = {
+  biological_sex: "",
+  height: "",
+  weight: "",
   neck_circumference: "",
   waist_circumference: "",
   snoring: "",
@@ -85,7 +94,14 @@ export function MemberFormsStudiesPage() {
         const sleepData = sleepForm?.data || {}
         const habitsData = habitsForm?.data || {}
 
+        const biologicalSex = (bioData.biological_sex as string) || ""
+        const heightVal = bioData.height ? String(bioData.height) : ""
+        const weightVal = bioData.weight ? String(bioData.weight) : ""
+
         setData({
+          biological_sex: biologicalSex,
+          height: heightVal,
+          weight: weightVal,
           waist_circumference: bioData.waist_circumference
             ? String(bioData.waist_circumference)
             : "",
@@ -152,6 +168,16 @@ export function MemberFormsStudiesPage() {
   const handleSaveBiometrics = async (e: React.FormEvent) => {
     e.preventDefault()
     const errors: Record<string, string> = {}
+    
+    if (!data.biological_sex) {
+      errors.biological_sex = "Please select biological sex."
+    }
+    if (!data.height || isNaN(Number(data.height)) || Number(data.height) <= 0 || Number(data.height) >= 300) {
+      errors.height = "Please enter a valid height in centimeters (cm)."
+    }
+    if (!data.weight || isNaN(Number(data.weight)) || Number(data.weight) <= 0 || Number(data.weight) >= 500) {
+      errors.weight = "Please enter a valid weight in kilograms (kg)."
+    }
     if (!data.neck_circumference || isNaN(Number(data.neck_circumference)) || Number(data.neck_circumference) <= 0) {
       errors.neck_circumference = "Please enter a valid neck circumference (cm)."
     }
@@ -167,6 +193,9 @@ export function MemberFormsStudiesPage() {
 
     setIsSubmitting(true)
     const res = await submitMemberForm("biometrics", {
+      biological_sex: data.biological_sex,
+      height: Number(data.height),
+      weight: Number(data.weight),
       neck_circumference: Number(data.neck_circumference),
       waist_circumference: Number(data.waist_circumference),
     })
@@ -246,7 +275,7 @@ export function MemberFormsStudiesPage() {
   const titlesMap: Record<FormType, { title: string; description: string }> = {
     biometrics: {
       title: "Physical Biometrics Form",
-      description: "Enter your body measurements for neck and waist circumference.",
+      description: "Review and update your body measurements and physical parameters.",
     },
     sleep: {
       title: "Sleep Quality Form",
@@ -291,9 +320,9 @@ export function MemberFormsStudiesPage() {
       {formType === "biometrics" && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Physical Measurements</CardTitle>
+            <CardTitle className="text-lg">Physical Biometrics</CardTitle>
             <CardDescription>
-              Enter your neck and waist body measurements.
+              Physical parameters and body measurements pre-filled from your onboarding profile.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveBiometrics(e)}>
@@ -301,10 +330,104 @@ export function MemberFormsStudiesPage() {
               <Alert variant="info">
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-xs">
-                  Height and weight biometrics are managed via your profile. You can update them in <Link to="/settings" className="font-semibold underline">Settings</Link>.
+                  Height and weight were initially set during onboarding. You can update them here anytime to keep your assessments accurate.
                 </AlertDescription>
               </Alert>
 
+              {/* Biological Sex */}
+              <div
+                id="field-group-biological_sex"
+                className={cn(
+                  "space-y-3 rounded-lg p-3 transition-all",
+                  fieldErrors.biological_sex && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                )}
+              >
+                <Label className="font-medium">Biological Sex</Label>
+                <RadioGroup
+                  value={data.biological_sex}
+                  onValueChange={(val) => updateField("biological_sex", val)}
+                  disabled={isSubmitting || isLoadingData}
+                  className="flex gap-6 pt-1"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="M" id="sex-male" />
+                    <Label htmlFor="sex-male" className="cursor-pointer font-normal">
+                      Male
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="F" id="sex-female" />
+                    <Label htmlFor="sex-female" className="cursor-pointer font-normal">
+                      Female
+                    </Label>
+                  </div>
+                </RadioGroup>
+                {fieldErrors.biological_sex && (
+                  <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                    <AlertCircle className="size-3.5 shrink-0" />
+                    {fieldErrors.biological_sex}
+                  </p>
+                )}
+              </div>
+
+              {/* Height and Weight */}
+              <div className="grid gap-6 md:grid-cols-2">
+                <div
+                  id="field-group-height"
+                  className={cn(
+                    "space-y-2 rounded-lg p-3 transition-all",
+                    fieldErrors.height && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  )}
+                >
+                  <Label htmlFor="height" className="font-medium">
+                    Height (cm)
+                  </Label>
+                  <Input
+                    id="height"
+                    type="number"
+                    placeholder="e.g. 175"
+                    value={data.height}
+                    onChange={(e) => updateField("height", e.target.value)}
+                    disabled={isSubmitting || isLoadingData}
+                    className={cn(fieldErrors.height && "border-destructive focus-visible:ring-destructive")}
+                  />
+                  {fieldErrors.height && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      {fieldErrors.height}
+                    </p>
+                  )}
+                </div>
+
+                <div
+                  id="field-group-weight"
+                  className={cn(
+                    "space-y-2 rounded-lg p-3 transition-all",
+                    fieldErrors.weight && "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  )}
+                >
+                  <Label htmlFor="weight" className="font-medium">
+                    Weight (kg)
+                  </Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    placeholder="e.g. 70"
+                    value={data.weight}
+                    onChange={(e) => updateField("weight", e.target.value)}
+                    disabled={isSubmitting || isLoadingData}
+                    className={cn(fieldErrors.weight && "border-destructive focus-visible:ring-destructive")}
+                  />
+                  {fieldErrors.weight && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      {fieldErrors.weight}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Neck and Waist Circumference */}
               <div className="grid gap-6 md:grid-cols-2">
                 <div
                   id="field-group-neck_circumference"
