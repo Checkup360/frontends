@@ -11,7 +11,12 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
-import { fetchMemberProfile, updateMemberProfile, fetchMemberBiometrics, updateMemberBiometrics } from "@workspace/api"
+import {
+  fetchMemberProfile,
+  updateMemberProfile,
+  fetchMemberForm,
+  submitMemberForm,
+} from "@workspace/api"
 import {
   Select,
   SelectContent,
@@ -46,25 +51,26 @@ export function MemberSettingsPage() {
     async function loadProfile() {
       setProfileLoading(true)
       setBiometricsLoading(true)
-      
-      const [profile, biometrics] = await Promise.all([
+
+      const [profile, biometricsForm] = await Promise.all([
         fetchMemberProfile(),
-        fetchMemberBiometrics()
+        fetchMemberForm("biometrics"),
       ])
-      
+
       if (!cancelled && profile) {
         setFirstName(profile.first_name)
         setLastName(profile.last_name)
         setPhone(profile.phone_number ?? "")
         setDateOfBirth(profile.date_of_birth)
       }
-      
-      if (!cancelled && biometrics) {
-        setBiologicalSex(biometrics.biological_sex ?? "")
-        setHeight(biometrics.height ? String(biometrics.height) : "")
-        setWeight(biometrics.weight ? String(biometrics.weight) : "")
+
+      if (!cancelled && biometricsForm?.data) {
+        const d = biometricsForm.data
+        setBiologicalSex((d.biological_sex as string) ?? "")
+        setHeight(d.height ? String(d.height) : "")
+        setWeight(d.weight ? String(d.weight) : "")
       }
-      
+
       if (!cancelled) {
         setProfileLoading(false)
         setBiometricsLoading(false)
@@ -117,11 +123,12 @@ export function MemberSettingsPage() {
     setIsSavingBiometrics(true)
 
     try {
-      const result = await updateMemberBiometrics({
-        biological_sex: biologicalSex || null,
-        height: height ? parseFloat(height) : null,
-        weight: weight ? parseFloat(weight) : null,
-      })
+      const payload: Record<string, unknown> = {}
+      if (biologicalSex) payload.biological_sex = biologicalSex
+      if (height) payload.height = parseFloat(height)
+      if (weight) payload.weight = parseFloat(weight)
+
+      const result = await submitMemberForm("biometrics", payload)
 
       if (result.error) {
         setSaveBiometricsError(result.error.message)
@@ -133,6 +140,7 @@ export function MemberSettingsPage() {
       setIsSavingBiometrics(false)
     }
   }
+
 
   if (isLoading) {
     return <AuthLoadingSkeleton />
@@ -264,8 +272,8 @@ export function MemberSettingsPage() {
                           <SelectValue placeholder="Select sex" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="M">Male</SelectItem>
+                          <SelectItem value="F">Female</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

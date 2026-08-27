@@ -16,6 +16,8 @@ import {
   type MemberBiometricsResponse,
   type ClinicalAssessmentRequest,
   type AssessmentsResponse,
+  type MemberFormResponse,
+  type MemberFormSubmissionResponse,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -309,6 +311,72 @@ export async function updateMemberBiometrics(payload: {
     return { error: { code: "network_error", message: "Network error. Please try again." } }
   }
 }
+
+export async function fetchMemberForm(
+  formType: string
+): Promise<MemberFormResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.myForm(formType)}`,
+      { credentials: "include" }
+    )
+    if (!response.ok) return null
+    return (await response.json()) as MemberFormResponse
+  } catch (error) {
+    console.error(`Error fetching member form '${formType}':`, error)
+    return null
+  }
+}
+
+export interface SubmitMemberFormError {
+  code: string
+  message: string
+}
+
+export async function submitMemberForm(
+  formType: string,
+  payload: Record<string, unknown>
+): Promise<
+  | { success: MemberFormSubmissionResponse; error?: never }
+  | { success?: never; error: SubmitMemberFormError }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.myForm(formType)}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }
+    )
+
+    if (response.status === 401) {
+      return {
+        error: {
+          code: "unauthorized",
+          message: "Session expired. Please log in again.",
+        },
+      }
+    }
+    if (!response.ok) {
+      return {
+        error: {
+          code: "unknown_error",
+          message: "Failed to submit form data. Please try again.",
+        },
+      }
+    }
+
+    return { success: (await response.json()) as MemberFormSubmissionResponse }
+  } catch (error) {
+    console.error(`Error submitting member form '${formType}':`, error)
+    return {
+      error: { code: "network_error", message: "Network error. Please try again." },
+    }
+  }
+}
+
 
 export async function logout(): Promise<void> {
   const response = await fetchWithAuth(

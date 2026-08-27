@@ -19,7 +19,13 @@ import { Separator } from "@workspace/ui/components/separator"
 import { ArrowLeft, CheckCircle2, FileText, Info, AlertCircle } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { submitClinicalAssessment, fetchMemberProfile, fetchMemberBiometrics } from "@workspace/api"
+import {
+  fetchMemberProfile,
+  fetchMemberForm,
+  submitMemberForm,
+  type EvaluatedScoreSummary,
+} from "@workspace/api"
+
 
 type StudiesData = {
   snoring: string
@@ -73,12 +79,15 @@ export function MemberFormsStudiesPage() {
     let cancelled = false
     async function loadData() {
       setIsLoadingData(true)
-      const [profile, biometrics] = await Promise.all([
+      const [profile, biometricsForm, sleepForm, habitsForm] = await Promise.all([
         fetchMemberProfile(),
-        fetchMemberBiometrics()
+        fetchMemberForm("biometrics"),
+        fetchMemberForm("sleep"),
+        fetchMemberForm("habits"),
       ])
 
       if (!cancelled) {
+        let ageStr = ""
         if (profile && profile.date_of_birth) {
           const birthDate = new Date(profile.date_of_birth)
           const today = new Date()
@@ -88,18 +97,51 @@ export function MemberFormsStudiesPage() {
             calculatedAge--
           }
           if (!isNaN(calculatedAge) && calculatedAge > 0) {
-            setData(d => ({ ...d, age: calculatedAge.toString() }))
+            ageStr = calculatedAge.toString()
           }
         }
-        
-        if (biometrics) {
-          setData(d => ({
-            ...d,
-            sex: biometrics.biological_sex || "",
-            height: biometrics.height ? biometrics.height.toString() : "",
-            weight: biometrics.weight ? biometrics.weight.toString() : ""
-          }))
-        }
+
+        const bioData = biometricsForm?.data || {}
+        const sleepData = sleepForm?.data || {}
+        const habitsData = habitsForm?.data || {}
+
+        setData({
+          age: ageStr,
+          sex: (bioData.biological_sex as string) || "",
+          height: bioData.height ? String(bioData.height) : "",
+          weight: bioData.weight ? String(bioData.weight) : "",
+          waist_circumference: bioData.waist_circumference
+            ? String(bioData.waist_circumference)
+            : "",
+          neck_circumference: sleepData.neck_circumference
+            ? String(sleepData.neck_circumference)
+            : bioData.neck_circumference
+            ? String(bioData.neck_circumference)
+            : "",
+          snoring: sleepData.snoring !== undefined ? String(sleepData.snoring) : "",
+          tired: sleepData.tired !== undefined ? String(sleepData.tired) : "",
+          observed_apnea:
+            sleepData.observed_apnea !== undefined
+              ? String(sleepData.observed_apnea)
+              : "",
+          hypertension_medication:
+            habitsData.hypertension_medication !== undefined
+              ? String(habitsData.hypertension_medication)
+              : "",
+          daily_physical_activity:
+            habitsData.daily_physical_activity !== undefined
+              ? String(habitsData.daily_physical_activity)
+              : "",
+          fruits_vegetables:
+            habitsData.fruits_vegetables !== undefined
+              ? String(habitsData.fruits_vegetables)
+              : "",
+          previous_high_glucose:
+            habitsData.previous_high_glucose !== undefined
+              ? String(habitsData.previous_high_glucose)
+              : "",
+          family_diabetes: (habitsData.family_diabetes as string) || "",
+        })
         setIsLoadingData(false)
       }
     }
@@ -120,14 +162,25 @@ export function MemberFormsStudiesPage() {
     setSubmitErrorMessage(null)
   }
 
-  const isMissingProfileData = !isLoadingData && (!data.height || !data.weight || !data.sex || !data.age)
+  const isMissingProfileData =
+    !isLoadingData && (!data.height || !data.weight || !data.sex || !data.age)
 
   const validateForm = () => {
-    if (!data.height || isNaN(Number(data.height)) || !data.weight || isNaN(Number(data.weight)) || !data.sex || !data.age || isNaN(Number(data.age))) {
+    if (
+      !data.height ||
+      isNaN(Number(data.height)) ||
+      !data.weight ||
+      isNaN(Number(data.weight)) ||
+      !data.sex ||
+      !data.age ||
+      isNaN(Number(data.age))
+    ) {
       return "missing_profile_data"
     }
-    if (!data.neck_circumference || isNaN(Number(data.neck_circumference))) return "neck_circumference"
-    if (!data.waist_circumference || isNaN(Number(data.waist_circumference))) return "waist_circumference"
+    if (!data.neck_circumference || isNaN(Number(data.neck_circumference)))
+      return "neck_circumference"
+    if (!data.waist_circumference || isNaN(Number(data.waist_circumference)))
+      return "waist_circumference"
     if (!data.snoring) return "snoring"
     if (!data.tired) return "tired"
     if (!data.observed_apnea) return "observed_apnea"
@@ -147,51 +200,70 @@ export function MemberFormsStudiesPage() {
     if (invalidField) {
       setError(invalidField)
       if (invalidField === "missing_profile_data") {
-        setSubmitErrorMessage("Your physical profile data (height, weight, biological sex, or date of birth) is incomplete. Please complete your profile in Settings before submitting.")
+        setSubmitErrorMessage(
+          "Your physical profile data (height, weight, biological sex, or date of birth) is incomplete. Please complete your profile in Settings before submitting."
+        )
       }
       return
     }
 
     setIsSubmitting(true)
 
-    const payload = {
-      height: Number(data.height),
-      weight: Number(data.weight),
+    const biometricsPayload = {
+      waist_circumference: Number(data.waist_circumference),
       neck_circumference: Number(data.neck_circumference),
-      sex: data.sex,
+    }
+
+    const sleepPayload = {
       snoring: data.snoring === "true",
       tired: data.tired === "true",
       observed_apnea: data.observed_apnea === "true",
-      hypertension_medication: data.hypertension_medication === "true",
-      age: Number(data.age),
-      waist_circumference: Number(data.waist_circumference),
+      neck_circumference: Number(data.neck_circumference),
+    }
+
+    const habitsPayload = {
       daily_physical_activity: data.daily_physical_activity === "true",
       fruits_vegetables: data.fruits_vegetables === "true",
+      hypertension_medication: data.hypertension_medication === "true",
       previous_high_glucose: data.previous_high_glucose === "true",
       family_diabetes: data.family_diabetes,
     }
 
-    const response = await submitClinicalAssessment(payload)
+    const [resBio, resSleep, resHabits] = await Promise.all([
+      submitMemberForm("biometrics", biometricsPayload),
+      submitMemberForm("sleep", sleepPayload),
+      submitMemberForm("habits", habitsPayload),
+    ])
+
     setIsSubmitting(false)
 
-    if (response.error) {
-      const msg = response.error.message || "An error occurred"
-      const lowerMsg = msg.toLowerCase()
-      if (lowerMsg.includes("detail") || lowerMsg.includes("onboarding") || lowerMsg.includes("profile") || lowerMsg.includes("not found")) {
-        setSubmitErrorMessage("Your basic physical profile is incomplete in our records. Please complete your date of birth, height, weight, and biological sex in Settings before submitting.")
-      } else {
-        setSubmitErrorMessage(msg)
-      }
+    if (resBio.error || resSleep.error || resHabits.error) {
+      const err = resBio.error || resSleep.error || resHabits.error
+      setSubmitErrorMessage(err?.message || "Failed to submit health form data.")
       return
     }
 
-    const mappedResults = response.success.results.map((res) => ({
+    const allCalculatedScores: EvaluatedScoreSummary[] = []
+    const seen = new Set<string>()
+    for (const res of [resBio, resSleep, resHabits]) {
+      if (res.success?.recalculated_scores) {
+        for (const score of res.success.recalculated_scores) {
+          if (!seen.has(score.score_name)) {
+            seen.add(score.score_name)
+            allCalculatedScores.push(score)
+          }
+        }
+      }
+    }
+
+    const mappedResults: AssessmentResult[] = allCalculatedScores.map((res) => ({
       score_name: res.score_name,
       risk_level: res.risk_level || "Unknown",
       explanation: res.explanation || "No explanation provided.",
     }))
     setResults(mappedResults)
   }
+
 
   const fieldError = (fieldError: string | null, field: string) => {
     return fieldError === field ? (
@@ -595,17 +667,18 @@ export function MemberFormsStudiesPage() {
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes_2nd_degree" id="fd-yes2" />
+                        <RadioGroupItem value="second_degree" id="fd-yes2" />
                         <Label htmlFor="fd-yes2" className="cursor-pointer font-normal">
                           Yes: grandparent, aunt, uncle, or first cousin (but no own parent, brother, sister or child)
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes_1st_degree" id="fd-yes1" />
+                        <RadioGroupItem value="first_degree" id="fd-yes1" />
                         <Label htmlFor="fd-yes1" className="cursor-pointer font-normal">
                           Yes: parent, brother, sister, or own child
                         </Label>
                       </div>
+
                     </RadioGroup>
                     {fieldError(error, "family_diabetes")}
                   </div>

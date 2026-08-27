@@ -30,8 +30,10 @@ export const apiRoutes = {
     myDetails: "/members/me/details",
     myProfile: "/members/me/profile",
     myBiometrics: "/members/me/biometrics",
+    myForm: (formType: string) =>
+      `/members/me/forms/${encodeURIComponent(formType)}`,
   },
   assessments: {
     evaluate: "/members/me/assessments/evaluate",
-  }
+  },
 } as const

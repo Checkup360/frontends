@@ -212,3 +212,23 @@ export type ClinicalAssessmentRequest = {
   previous_high_glucose?: boolean
   family_diabetes?: string
 }
+
+export type MemberFormResponse = {
+  form_type: string
+  data: Record<string, unknown>
+}
+
+export type EvaluatedScoreSummary = {
+  score_name: string
+  risk_level: string | null
+  raw_value: number | null
+  explanation: string | null
+}
+
+export type MemberFormSubmissionResponse = {
+  form_type: string
+  status: string
+  updated_fields: string[]
+  recalculated_scores: EvaluatedScoreSummary[]
+}
+
