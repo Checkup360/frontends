@@ -740,6 +740,53 @@ export async function getOrganizationSummary(
   }
 }
 
+export interface ScoreWeightsResponse {
+  score_weights: Record<string, number>
+}
+
+export async function getOrganizationScoreWeights(
+  organizationId: string
+): Promise<ScoreWeightsResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationScoreWeights(organizationId)}`,
+      {
+        credentials: "include",
+      }
+    )
+
+    if (response.status === 401 || !response.ok) return null
+    return (await response.json()) as ScoreWeightsResponse
+  } catch (error) {
+    console.error("Error loading score weights:", error)
+    return null
+  }
+}
+
+export async function updateOrganizationScoreWeights(
+  organizationId: string,
+  scoreWeights: Record<string, number>
+): Promise<ScoreWeightsResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationScoreWeights(organizationId)}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ score_weights: scoreWeights }),
+      }
+    )
+
+    if (!response.ok) return null
+    return (await response.json()) as ScoreWeightsResponse
+  } catch (error) {
+    console.error("Error updating score weights:", error)
+    return null
+  }
+}
+
+
 export async function listOrganizationEmployees(
   organizationId: string,
   roles?: OrganizationEmployeeRole[],

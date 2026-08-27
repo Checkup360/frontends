@@ -26,6 +26,9 @@ export const apiRoutes = {
     `/organizations/${encodeURIComponent(organizationId)}/employees/${encodeURIComponent(userId)}/department`,
   organizationEmployees: (organizationId: string) =>
     `/organizations/${encodeURIComponent(organizationId)}/employees`,
+  organizationScoreWeights: (organizationId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/score-weights`,
+
   members: {
     myDetails: "/members/me/details",
     myProfile: "/members/me/profile",

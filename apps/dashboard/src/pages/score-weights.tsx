@@ -23,7 +23,12 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
+import {
+  getOrganizationScoreWeights,
+  updateOrganizationScoreWeights,
+} from "@workspace/api"
 
 interface ScoreTopic {
   id: string
@@ -75,31 +80,43 @@ function computeBalancedWeights(topics: ScoreTopic[]): Record<string, number> {
 }
 
 export function ScoreWeightsPage() {
-  const [weights, setWeights] = useState<Record<string, number>>(() => {
-    const balanced = computeBalancedWeights(SCORE_TOPICS)
-    const saved = localStorage.getItem("checkup360_score_weights")
-    if (saved) {
+  const { user } = useCurrentUser()
+  const organizationId = user?.membership?.organization_id
+
+  const [weights, setWeights] = useState<Record<string, number>>(() =>
+    computeBalancedWeights(SCORE_TOPICS)
+  )
+
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    const loadWeights = async () => {
+      if (!organizationId) {
+        setLoading(false)
+        return
+      }
       try {
-        const parsed = JSON.parse(saved)
-        // Verify all active topics exist and sum to <= 100
-        const hasAllKeys = SCORE_TOPICS.every(
-          (t) => typeof parsed[t.id] === "number"
-        )
-        const total = SCORE_TOPICS.reduce(
-          (sum, t) => sum + (parsed[t.id] || 0),
-          0
-        )
-        if (hasAllKeys && total <= 100) {
-          return parsed
+        const res = await getOrganizationScoreWeights(organizationId)
+        if (active && res && res.score_weights) {
+          const loaded = res.score_weights
+          setWeights((prev) => ({
+            ...prev,
+            ...loaded,
+          }))
         }
-      } catch {
-        // Fallback to balanced
+      } catch (e) {
+        console.error("Failed to load score weights from API", e)
+      } finally {
+        if (active) setLoading(false)
       }
     }
-    return balanced
-  })
-
-  const [saving, setSaving] = useState(false)
+    void loadWeights()
+    return () => {
+      active = false
+    }
+  }, [organizationId])
 
   // Calculate total allocated weight
   const totalWeight = useMemo(() => {
@@ -160,17 +177,28 @@ export function ScoreWeightsPage() {
     })
   }
 
-  const handleSave = () => {
-    if (!isValid) return
+  const handleSave = async () => {
+    if (!isValid || !organizationId) return
     setSaving(true)
-    setTimeout(() => {
-      localStorage.setItem("checkup360_score_weights", JSON.stringify(weights))
+    try {
+      const res = await updateOrganizationScoreWeights(organizationId, weights)
+      if (res && res.score_weights) {
+        setWeights(res.score_weights)
+        toast.success("Score weights updated successfully", {
+          description: "Composite health score evaluations will now reflect these topic weights.",
+        })
+      } else {
+        toast.error("Failed to save score weights", {
+          description: "Please check your organization access and try again.",
+        })
+      }
+    } catch {
+      toast.error("An error occurred while saving score weights.")
+    } finally {
       setSaving(false)
-      toast.success("Score weights updated successfully", {
-        description: "Composite health score evaluations will now reflect these topic weights.",
-      })
-    }, 350)
+    }
   }
+
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8 pb-12">
@@ -197,7 +225,7 @@ export function ScoreWeightsPage() {
             variant="outline"
             size="sm"
             onClick={handleApplyBalanced}
-            disabled={saving}
+            disabled={loading || saving}
           >
             <RotateCcw className="size-4" />
             Reset to balanced
@@ -206,7 +234,7 @@ export function ScoreWeightsPage() {
             type="button"
             size="sm"
             onClick={handleSave}
-            disabled={!isValid || saving}
+            disabled={!isValid || loading || saving}
             className="gap-2"
           >
             <Save className="size-4" />
