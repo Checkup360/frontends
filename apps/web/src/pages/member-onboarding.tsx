@@ -2,7 +2,6 @@ import { logout, resolveWebUrl, submitMemberDetails } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import {
@@ -12,17 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select"
-import { Separator } from "@workspace/ui/components/separator"
 import { cn } from "@workspace/ui/lib/utils"
 import {
-  Activity,
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
   CalendarDays,
   Check,
-  Cigarette,
-  Droplet,
   HeartPulse,
   LogOut,
   Ruler,
@@ -30,7 +25,6 @@ import {
   Sparkles,
   User,
   Weight,
-  Wine,
   type LucideIcon,
 } from "lucide-react"
 import { useMemo, useState } from "react"
@@ -46,11 +40,6 @@ type OnboardingData = {
   gender: string
   weight: string
   height: string
-  bloodType: string
-  smokingStatus: string
-  alcoholConsumption: string
-  exerciseFrequency: string
-  chronicConditions: string[]
 }
 
 type WizardStep = {
@@ -68,21 +57,7 @@ const initialData: OnboardingData = {
   gender: "",
   weight: "",
   height: "",
-  bloodType: "",
-  smokingStatus: "",
-  alcoholConsumption: "",
-  exerciseFrequency: "",
-  chronicConditions: [],
 }
-
-const chronicConditionOptions = [
-  "Diabetes",
-  "Hypertension",
-  "Asthma",
-  "Arthritis",
-  "Severe allergies",
-  "Heart conditions",
-]
 
 const steps: WizardStep[] = [
   {
@@ -99,8 +74,8 @@ const steps: WizardStep[] = [
   },
   {
     id: 2,
-    name: "Health profile",
-    description: "Wellness baseline",
+    name: "Biometrics",
+    description: "Height and weight",
     icon: HeartPulse,
   },
 ]
@@ -247,18 +222,6 @@ export function MemberOnboardingPage() {
     }
   }
 
-  const toggleCondition = (condition: string) => {
-    setData((current) => {
-      const exists = current.chronicConditions.includes(condition)
-      return {
-        ...current,
-        chronicConditions: exists
-          ? current.chronicConditions.filter((item) => item !== condition)
-          : [...current.chronicConditions, condition],
-      }
-    })
-  }
-
   const validateStep = () => {
     if (currentStep === 1) {
       if (!data.firstName.trim()) return "firstName"
@@ -273,10 +236,6 @@ export function MemberOnboardingPage() {
     if (currentStep === 2) {
       if (!data.weight) return "weight"
       if (!data.height) return "height"
-      if (!data.bloodType) return "bloodType"
-      if (!data.smokingStatus) return "smokingStatus"
-      if (!data.alcoholConsumption) return "alcoholConsumption"
-      if (!data.exerciseFrequency) return "exerciseFrequency"
     }
 
     return null
@@ -322,8 +281,8 @@ export function MemberOnboardingPage() {
     try {
       const result = await submitMemberDetails({
         date_of_birth: data.dateOfBirth,
-        first_name: data.firstName,
-        last_name: data.lastName,
+        first_name: data.firstName.trim(),
+        last_name: data.lastName.trim(),
         phone_number: data.phoneNumber.trim(),
         height: parseFloat(data.height),
         weight: parseFloat(data.weight),
@@ -559,7 +518,7 @@ export function MemberOnboardingPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="gender">Gender</Label>
+                          <Label htmlFor="gender">Biological sex</Label>
                           <Select
                             value={data.gender}
                             onValueChange={(value) =>
@@ -576,17 +535,13 @@ export function MemberOnboardingPage() {
                             <SelectContent>
                               <SelectItem value="male">Male</SelectItem>
                               <SelectItem value="female">Female</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                              <SelectItem value="prefer-not-to-say">
-                                Prefer not to say
-                              </SelectItem>
                             </SelectContent>
                           </Select>
                           {fieldError(error, "gender")}
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-8">
+                      <div className="space-y-6">
                         <div className="grid gap-6 md:grid-cols-2">
                           <div className="space-y-2">
                             <Label htmlFor="weight">Weight (kg)</Label>
@@ -596,6 +551,7 @@ export function MemberOnboardingPage() {
                                 id="weight"
                                 type="number"
                                 min="1"
+                                max="300"
                                 step="0.1"
                                 value={data.weight}
                                 onChange={(event) =>
@@ -618,6 +574,7 @@ export function MemberOnboardingPage() {
                                 type="number"
                                 step="0.01"
                                 min="0.5"
+                                max="2.5"
                                 value={data.height}
                                 onChange={(event) =>
                                   updateField("height", event.target.value)
@@ -628,187 +585,6 @@ export function MemberOnboardingPage() {
                               />
                             </div>
                             {fieldError(error, "height")}
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="blood-type">Blood type</Label>
-                          <Select
-                            value={data.bloodType}
-                            onValueChange={(value) =>
-                              updateField("bloodType", value)
-                            }
-                            disabled={isSubmitting}
-                          >
-                            <SelectTrigger
-                              id="blood-type"
-                              className="rounded-lg border-border/40 bg-background/40 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60"
-                            >
-                              <Droplet className="mr-2 size-4 text-muted-foreground" />
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="a-positive">A+</SelectItem>
-                              <SelectItem value="a-negative">A-</SelectItem>
-                              <SelectItem value="b-positive">B+</SelectItem>
-                              <SelectItem value="b-negative">B-</SelectItem>
-                              <SelectItem value="ab-positive">AB+</SelectItem>
-                              <SelectItem value="ab-negative">AB-</SelectItem>
-                              <SelectItem value="o-positive">O+</SelectItem>
-                              <SelectItem value="o-negative">O-</SelectItem>
-                              <SelectItem value="unknown">
-                                I don't know
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {fieldError(error, "bloodType")}
-                        </div>
-
-                        <Separator className="bg-border/40" />
-
-                        <div className="space-y-4">
-                          <Label className="text-base">Lifestyle habits</Label>
-                          <div className="grid gap-6 md:grid-cols-2">
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor="smoking-status"
-                                className="flex items-center gap-2 text-sm font-normal"
-                              >
-                                <Cigarette className="size-4" />
-                                Smoking status
-                              </Label>
-                              <Select
-                                value={data.smokingStatus}
-                                onValueChange={(value) =>
-                                  updateField("smokingStatus", value)
-                                }
-                                disabled={isSubmitting}
-                              >
-                                <SelectTrigger
-                                  id="smoking-status"
-                                  className="rounded-lg border-border/40 bg-background/40 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60"
-                                >
-                                  <SelectValue placeholder="Select" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="never">Never</SelectItem>
-                                  <SelectItem value="former">
-                                    Former smoker
-                                  </SelectItem>
-                                  <SelectItem value="occasional">
-                                    Occasionally
-                                  </SelectItem>
-                                  <SelectItem value="regular">
-                                    Regularly
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                              {fieldError(error, "smokingStatus")}
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor="alcohol-consumption"
-                                className="flex items-center gap-2 text-sm font-normal"
-                              >
-                                <Wine className="size-4" />
-                                Alcohol consumption
-                              </Label>
-                              <Select
-                                value={data.alcoholConsumption}
-                                onValueChange={(value) =>
-                                  updateField("alcoholConsumption", value)
-                                }
-                                disabled={isSubmitting}
-                              >
-                                <SelectTrigger
-                                  id="alcohol-consumption"
-                                  className="rounded-lg border-border/40 bg-background/40 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60"
-                                >
-                                  <SelectValue placeholder="Select" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="never">Never</SelectItem>
-                                  <SelectItem value="occasional">
-                                    Occasionally
-                                  </SelectItem>
-                                  <SelectItem value="moderate">
-                                    Moderate
-                                  </SelectItem>
-                                  <SelectItem value="frequent">
-                                    Frequent
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                              {fieldError(error, "alcoholConsumption")}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="exercise-frequency"
-                            className="flex items-center gap-2"
-                          >
-                            <Activity className="size-4" />
-                            Exercise frequency
-                          </Label>
-                          <Select
-                            value={data.exerciseFrequency}
-                            onValueChange={(value) =>
-                              updateField("exerciseFrequency", value)
-                            }
-                            disabled={isSubmitting}
-                          >
-                            <SelectTrigger
-                              id="exercise-frequency"
-                              className="rounded-lg border-border/40 bg-background/40 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60"
-                            >
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">No exercise</SelectItem>
-                              <SelectItem value="1-2">
-                                1-2 times per week
-                              </SelectItem>
-                              <SelectItem value="3-4">
-                                3-4 times per week
-                              </SelectItem>
-                              <SelectItem value="5+">
-                                5+ times per week
-                              </SelectItem>
-                              <SelectItem value="daily">Daily</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {fieldError(error, "exerciseFrequency")}
-                        </div>
-
-                        <Separator className="bg-border/40" />
-
-                        <div className="space-y-3">
-                          <Label className="text-base">
-                            Chronic conditions
-                          </Label>
-                          <div className="grid gap-3 md:grid-cols-2">
-                            {chronicConditionOptions.map((condition) => (
-                              <label
-                                key={condition}
-                                htmlFor={`condition-${condition}`}
-                                className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-border/40 bg-background/40 px-3 py-2 text-sm backdrop-blur transition-all hover:border-primary/50 hover:bg-background/60 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
-                              >
-                                <Checkbox
-                                  id={`condition-${condition}`}
-                                  checked={data.chronicConditions.includes(
-                                    condition
-                                  )}
-                                  onCheckedChange={() =>
-                                    toggleCondition(condition)
-                                  }
-                                  disabled={isSubmitting}
-                                />
-                                <span>{condition}</span>
-                              </label>
-                            ))}
                           </div>
                         </div>
                       </div>
