@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   MailPlus,
   Settings,
+  SlidersHorizontal,
   Users,
 } from "lucide-react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
@@ -27,6 +28,12 @@ const navigation: WorkspaceShellNavItem[] = [
     url: "/departments",
     icon: Folders,
     to: "/departments",
+  },
+  {
+    title: "Score weights",
+    url: "/score-weights",
+    icon: SlidersHorizontal,
+    to: "/score-weights",
   },
 ]
 
@@ -67,6 +74,8 @@ export function DashboardShell() {
         return "Invitations"
       case "/departments":
         return "Departments"
+      case "/score-weights":
+        return "Score weights"
       case "/settings":
         return "Settings"
       default:
