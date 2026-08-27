@@ -333,10 +333,10 @@ export function MemberFormsStudiesPage() {
         </Button>
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Clinical Studies Form
+            Health Data Form
           </h2>
           <p className="text-sm text-muted-foreground">
-            Please complete the following information.
+            Complete your physical measurements, sleep quality, and lifestyle habits.
           </p>
         </div>
       </div>
@@ -349,7 +349,7 @@ export function MemberFormsStudiesPage() {
               <CardTitle className="text-lg">Health Information</CardTitle>
             </div>
             <CardDescription>
-              Please complete the following information.
+              Please answer the questions below regarding your physical measurements, sleep indicators, and lifestyle habits.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
