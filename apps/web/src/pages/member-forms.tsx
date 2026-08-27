@@ -75,16 +75,16 @@ export function MemberFormsPage() {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-foreground">
-          Health Data Forms
+          Health Forms
         </h2>
         <p className="text-sm text-muted-foreground">
           Keep your physical, sleep, and lifestyle information up to date.
         </p>
       </div>
 
-      {/* Main Unified Assessment Card */}
+      {/* Overall Progress Card */}
       <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 shadow-sm">
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
               <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -92,10 +92,10 @@ export function MemberFormsPage() {
               </div>
               <div>
                 <CardTitle className="text-lg font-semibold">
-                  Health & Clinical Data Questionnaire
+                  Overall Completion Status
                 </CardTitle>
                 <CardDescription>
-                  Comprehensive health questionnaire gathering physical measurements, sleep indicators, and lifestyle habits.
+                  Completion progress for your health data forms.
                 </CardDescription>
               </div>
             </div>
@@ -105,57 +105,41 @@ export function MemberFormsPage() {
               </Badge>
             ) : allCompleted ? (
               <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700">
-                <CheckCircle2 className="mr-1 size-3.5" /> Fully Completed
-              </Badge>
-            ) : completedCount > 0 ? (
-              <Badge variant="secondary" className="border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300">
-                <Clock className="mr-1 size-3.5" /> In Progress ({completedCount}/3)
+                <CheckCircle2 className="mr-1 size-3.5" /> 3 of 3 Completed
               </Badge>
             ) : (
               <Badge variant="secondary">
-                <Clock className="mr-1 size-3.5" /> Pending
+                <Clock className="mr-1 size-3.5" /> {completedCount} of 3 Completed
               </Badge>
             )}
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-medium text-muted-foreground">
-              <span>Form Completion Status</span>
-              <span>{progressPercent}% Complete ({completedCount} of 3 sections filled)</span>
+              <span>Form Completion</span>
+              <span>{progressPercent}% ({completedCount} of 3 sections filled)</span>
             </div>
-            <Progress value={progressPercent} className="h-2" />
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-muted/40 p-4 border border-border/40">
-            <p className="text-xs text-muted-foreground max-w-xl">
-              Updating your health information ensures all evaluations and member insights remain accurate.
-            </p>
-            <Button size="default" asChild className="gap-2">
-              <Link to="/forms/studies">
-                {allCompleted ? "Update Health Form" : "Complete Health Form"}
-                <ArrowRight className="size-4" />
-              </Link>
-            </Button>
+            <Progress value={progressPercent} className="h-2.5" />
           </div>
         </CardContent>
       </Card>
 
-      {/* Modular Form Sections Breakdown */}
+      {/* Individual Form Modules Cards */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <FileText className="size-5 text-muted-foreground" />
           <h3 className="text-lg font-semibold tracking-tight text-foreground">
-            Form Information Sections
+            Available Health Forms
           </h3>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          {/* Section 1: Biometrics */}
+          {/* Card 1: Biometrics */}
           <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <div className="flex size-9 items-center justify-center rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
                   <Activity className="size-5" />
                 </div>
                 {biometricsFilled ? (
@@ -167,21 +151,29 @@ export function MemberFormsPage() {
                 )}
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-foreground">
-                  Biometrics & Body Measurements
+                <h4 className="text-base font-semibold text-foreground">
+                  Physical Biometrics
                 </h4>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Body measurement data such as neck and waist circumference parameters.
+                  Neck and waist body measurements.
                 </p>
               </div>
             </div>
+            <div className="mt-6 pt-2">
+              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
+                <Link to="/forms/studies?form=biometrics">
+                  {biometricsFilled ? "Edit Biometrics" : "Complete Biometrics"}
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
           </Card>
 
-          {/* Section 2: Sleep */}
+          {/* Card 2: Sleep */}
           <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <div className="flex size-9 items-center justify-center rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                   <Moon className="size-5" />
                 </div>
                 {sleepFilled ? (
@@ -193,21 +185,29 @@ export function MemberFormsPage() {
                 )}
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-foreground">
-                  Sleep & Rest Indicators
+                <h4 className="text-base font-semibold text-foreground">
+                  Sleep Quality
                 </h4>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Questions regarding snoring, daytime fatigue, and sleep quality indicators.
+                  Snoring, daytime fatigue, and rest indicators.
                 </p>
               </div>
             </div>
+            <div className="mt-6 pt-2">
+              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
+                <Link to="/forms/studies?form=sleep">
+                  {sleepFilled ? "Edit Sleep Data" : "Complete Sleep Data"}
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
           </Card>
 
-          {/* Section 3: Habits */}
+          {/* Card 3: Habits */}
           <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <div className="flex size-9 items-center justify-center rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
                   <HeartPulse className="size-5" />
                 </div>
                 {habitsFilled ? (
@@ -219,13 +219,21 @@ export function MemberFormsPage() {
                 )}
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-foreground">
-                  Lifestyle & Health Habits
+                <h4 className="text-base font-semibold text-foreground">
+                  Lifestyle & Habits
                 </h4>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Daily physical activity, dietary habits, medical treatments, and family history.
+                  Physical activity, dietary habits, and history.
                 </p>
               </div>
+            </div>
+            <div className="mt-6 pt-2">
+              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
+                <Link to="/forms/studies?form=habits">
+                  {habitsFilled ? "Edit Habits" : "Complete Habits"}
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
             </div>
           </Card>
         </div>
