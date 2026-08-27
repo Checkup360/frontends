@@ -104,7 +104,7 @@ export function MemberOverview({
   const initials = getInitials(memberName) || "M"
 
   const sessions = useMemo(() => {
-    return groupResultsIntoSessions(assessmentsData?.results || [])
+    return groupResultsIntoSessions(assessmentsData)
   }, [assessmentsData])
 
   const latestSession = sessions[0]

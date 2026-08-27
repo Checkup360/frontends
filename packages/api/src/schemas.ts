@@ -184,9 +184,21 @@ export type AssessmentResultResponse = {
   evaluated_at?: string | null
 }
 
+export type AssessmentSessionResponse = {
+  id: string
+  evaluated_at: string
+  overall_score?: number | null
+  overall_risk_level?: string | null
+  results: AssessmentResultResponse[]
+}
+
 export type AssessmentsResponse = {
   overall_score?: number | null
   overall_risk_level?: string | null
+  total_sessions?: number
+  page?: number
+  limit?: number
+  sessions?: AssessmentSessionResponse[]
   results: AssessmentResultResponse[]
 }
 

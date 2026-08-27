@@ -1,4 +1,88 @@
-import type { AssessmentResultResponse } from "@workspace/api"
+import type { AssessmentResultResponse, AssessmentsResponse } from "@workspace/api"
+
+export function getLatestResultsPerScore(results: AssessmentResultResponse[]): AssessmentResultResponse[] {
+  if (!results || results.length === 0) return []
+
+  const latestMap = new Map<string, AssessmentResultResponse>()
+  const sorted = [...results].sort((a, b) => {
+    const timeA = a.evaluated_at ? new Date(a.evaluated_at).getTime() : 0
+    const timeB = b.evaluated_at ? new Date(b.evaluated_at).getTime() : 0
+    return timeB - timeA
+  })
+
+  for (const item of sorted) {
+    const key = item.score_name.toLowerCase()
+    if (!latestMap.has(key)) {
+      latestMap.set(key, item)
+    }
+  }
+
+  return Array.from(latestMap.values())
+}
+
+export function groupResultsIntoSessions(
+  input: AssessmentsResponse | AssessmentResultResponse[] | null | undefined
+): AssessmentSession[] {
+  if (!input) return []
+
+  // If input is an AssessmentsResponse object containing backend-calculated sessions, use them directly
+  if (!Array.isArray(input) && input.sessions && input.sessions.length > 0) {
+    return input.sessions.map((s, index) => ({
+      id: s.id,
+      evaluatedAt: s.evaluated_at ? new Date(s.evaluated_at) : null,
+      formattedDate: formatSessionDate(s.evaluated_at),
+      isLatest: index === 0,
+      results: s.results,
+    }))
+  }
+
+  // Fallback for legacy raw array
+  const results = Array.isArray(input) ? input : input.results || []
+  if (results.length === 0) return []
+
+  const sessionGroups: {
+    [key: string]: {
+      timestamp: number
+      dateStr: string
+      resultsMap: Map<string, AssessmentResultResponse>
+    }
+  } = {}
+
+  for (const item of results) {
+    const rawTime = item.evaluated_at ? new Date(item.evaluated_at).getTime() : 0
+    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 2000) * 2000 : 0
+    const key = `session_${bucketTime}`
+
+    if (!sessionGroups[key]) {
+      sessionGroups[key] = {
+        timestamp: rawTime,
+        dateStr: item.evaluated_at || "",
+        resultsMap: new Map(),
+      }
+    }
+
+    const scoreKey = item.score_name.toLowerCase()
+    if (!sessionGroups[key].resultsMap.has(scoreKey)) {
+      sessionGroups[key].resultsMap.set(scoreKey, item)
+    }
+  }
+
+  const sortedGroups = Object.values(sessionGroups).sort((a, b) => b.timestamp - a.timestamp)
+
+  const sessions: AssessmentSession[] = sortedGroups.map((group, index) => ({
+    id: `session_${group.timestamp}_${index}`,
+    evaluatedAt: group.timestamp > 0 ? new Date(group.timestamp) : null,
+    formattedDate: formatSessionDate(group.dateStr),
+    isLatest: index === 0,
+    results: Array.from(group.resultsMap.values()),
+  }))
+
+  if (sessions.length > 0) {
+    sessions[0].results = getLatestResultsPerScore(results)
+  }
+
+  return sessions
+}
 import { Badge } from "@workspace/ui/components/badge"
 import {
   Dialog,
@@ -179,47 +263,7 @@ export function formatSessionDate(dateString?: string | null): string {
   return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 
-export function groupResultsIntoSessions(results: AssessmentResultResponse[]): AssessmentSession[] {
-  if (!results || results.length === 0) return []
 
-  const sessionGroups: {
-    [key: string]: {
-      timestamp: number
-      dateStr: string
-      resultsMap: Map<string, AssessmentResultResponse>
-    }
-  } = {}
-
-  for (const item of results) {
-    const rawTime = item.evaluated_at ? new Date(item.evaluated_at).getTime() : 0
-    // Group evaluations generated within a 2-second window (a single calculation run)
-    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 2000) * 2000 : 0
-    const key = `session_${bucketTime}`
-
-    if (!sessionGroups[key]) {
-      sessionGroups[key] = {
-        timestamp: rawTime,
-        dateStr: item.evaluated_at || "",
-        resultsMap: new Map(),
-      }
-    }
-
-    const scoreKey = item.score_name.toLowerCase()
-    if (!sessionGroups[key].resultsMap.has(scoreKey)) {
-      sessionGroups[key].resultsMap.set(scoreKey, item)
-    }
-  }
-
-  return Object.values(sessionGroups)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .map((group, index) => ({
-      id: `session_${group.timestamp}_${index}`,
-      evaluatedAt: group.timestamp > 0 ? new Date(group.timestamp) : null,
-      formattedDate: formatSessionDate(group.dateStr),
-      isLatest: index === 0,
-      results: Array.from(group.resultsMap.values()),
-    }))
-}
 
 export function getRiskIcon(riskLevel: string | null) {
   if (!riskLevel) return <ClipboardList className="h-5 w-5 text-muted-foreground" />

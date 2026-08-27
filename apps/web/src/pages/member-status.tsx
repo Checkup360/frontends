@@ -211,7 +211,7 @@ export function MemberStatusPage() {
   }, [])
 
   const sessions = useMemo(() => {
-    return groupResultsIntoSessions(assessments?.results || [])
+    return groupResultsIntoSessions(assessments)
   }, [assessments])
 
   const activeSession = useMemo(() => {

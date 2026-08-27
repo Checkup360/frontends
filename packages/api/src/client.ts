@@ -1416,10 +1416,10 @@ export async function deleteSysadminInvitations(
 }
 
 
-export async function listAssessments(): Promise<AssessmentsResponse | null> {
+export async function listAssessments(page = 1, limit = 10): Promise<AssessmentsResponse | null> {
   try {
     const response = await fetchWithAuth(
-      `${resolveApiBaseUrl()}/members/me/assessments`,
+      `${resolveApiBaseUrl()}/members/me/assessments?page=${page}&limit=${limit}`,
       {
         credentials: "include",
       }
@@ -1437,11 +1437,13 @@ export async function listAssessments(): Promise<AssessmentsResponse | null> {
 
 export async function listEmployeeAssessments(
   organizationId: string,
-  userId: string
+  userId: string,
+  page = 1,
+  limit = 10
 ): Promise<AssessmentsResponse | null> {
   try {
     const response = await fetchWithAuth(
-      `${resolveApiBaseUrl()}/organizations/${organizationId}/employees/${userId}/assessments`,
+      `${resolveApiBaseUrl()}/organizations/${organizationId}/employees/${userId}/assessments?page=${page}&limit=${limit}`,
       {
         credentials: "include",
       }

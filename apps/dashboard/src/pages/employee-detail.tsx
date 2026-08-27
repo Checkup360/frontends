@@ -162,7 +162,7 @@ export function EmployeeDetailPage() {
   }, [organizationId, id])
 
   const sessions = useMemo(() => {
-    return groupResultsIntoSessions(assessments?.results || [])
+    return groupResultsIntoSessions(assessments)
   }, [assessments])
 
   const activeSession = useMemo(() => {
