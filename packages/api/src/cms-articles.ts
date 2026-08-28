@@ -70,6 +70,8 @@ export type HealthContentArticle = {
   content?: unknown
 }
 
+import { resolveCmsUrl } from "./client"
+
 /**
  * Extrae texto plano de la estructura JSON AST de Lexical RichText
  */
@@ -257,8 +259,7 @@ export async function fetchCmsPages(options?: {
 }): Promise<PayloadPageDoc[]> {
   const cmsOrigin = (
     options?.cmsOrigin ||
-    (typeof window !== "undefined" && (window as unknown as { __CMS_ORIGIN__?: string }).__CMS_ORIGIN__) ||
-    "http://localhost:3000"
+    resolveCmsUrl()
   ).replace(/\/$/, "")
 
   const limit = options?.limit ?? 50
@@ -289,8 +290,7 @@ export async function fetchCmsPageById(
 ): Promise<PayloadPageDoc | null> {
   const cmsOrigin = (
     options?.cmsOrigin ||
-    (typeof window !== "undefined" && (window as unknown as { __CMS_ORIGIN__?: string }).__CMS_ORIGIN__) ||
-    "http://localhost:3000"
+    resolveCmsUrl()
   ).replace(/\/$/, "")
 
   const url = `${cmsOrigin}/api/pages/${id}?depth=2`

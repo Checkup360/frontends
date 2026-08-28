@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react"
 import {
   fetchCmsPageById,
   mapPayloadPageToArticle,
+  resolveCmsUrl,
   type HealthContentArticle,
 } from "@workspace/api"
 
@@ -22,9 +23,7 @@ export function useMemberArticleDetail(articleId: string | undefined) {
     setError(null)
 
     try {
-      const cmsOrigin =
-        (import.meta.env.VITE_PUBLIC_CMS_ORIGIN as string | undefined) ||
-        "http://localhost:3000"
+      const cmsOrigin = resolveCmsUrl()
 
       const doc = await fetchCmsPageById(articleId, { cmsOrigin })
 

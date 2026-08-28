@@ -25,10 +25,12 @@ export const appsConfig: Record<AppName, AppRuntimeConfig> = {
 }
 
 const API_DEV_PORT = 8000
+const CMS_DEV_PORT = 3000
 
 export const publicDevDefaults = {
   apiOrigin: `http://localhost:${API_DEV_PORT}`,
   webOrigin: `http://localhost:${appsConfig.web.devPort}`,
   dashboardOrigin: `http://localhost:${appsConfig.dashboard.devPort}`,
   backofficeOrigin: `http://localhost:${appsConfig.backoffice.devPort}`,
+  cmsOrigin: `http://localhost:${CMS_DEV_PORT}`,
 } as const

@@ -47,6 +47,10 @@ export function resolveBackofficeUrl(): string {
   return resolveUrl("backofficeOrigin", publicDevDefaults.backofficeOrigin)
 }
 
+export function resolveCmsUrl(): string {
+  return resolveUrl("cmsOrigin", publicDevDefaults.cmsOrigin)
+}
+
 export function getRedirectUrlByUserRole(
   user: AuthMeResponse | null | undefined
 ): string {

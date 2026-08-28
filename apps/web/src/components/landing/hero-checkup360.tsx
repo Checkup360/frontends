@@ -13,7 +13,7 @@ import {
   LogOut,
 } from "lucide-react"
 import { Link } from "react-router-dom"
-import { getRedirectUrlByUserRole, logout } from "@workspace/api"
+import { getRedirectUrlByUserRole, logout, resolveCmsUrl } from "@workspace/api"
 import type { AuthMeResponse } from "@workspace/api"
 import { useTheme } from "@workspace/ui/components/theme-provider"
 import { useState } from "react"
@@ -48,8 +48,6 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
   const isAdmin = user?.membership?.roles?.includes("admin")
   const isContentManager = user?.membership?.roles?.includes("content_manager")
 
-
-  const CMS_URL = import.meta.env.VITE_CMS_URL ?? "http://localhost:3000"
   const [loggingOut, setLoggingOut] = useState(false)
 
   const toggleTheme = () => {
@@ -71,7 +69,7 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
 
   const handleNavigate = () => {
     if (isContentManager && !isAdmin && !isSysadmin) {
-      window.location.assign(`${CMS_URL}/admin`)
+      window.location.assign(`${resolveCmsUrl()}/admin`)
       return
     }
     const redirectUrl = getRedirectUrlByUserRole(user)

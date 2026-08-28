@@ -4,6 +4,7 @@ import {
   fetchCmsPages,
   mapPayloadPageToArticle,
   sortArticlesByTopics,
+  resolveCmsUrl,
   type HealthContentArticle,
 } from "@workspace/api"
 
@@ -17,9 +18,7 @@ export function useMemberArticles() {
     setError(null)
 
     try {
-      const cmsOrigin =
-        (import.meta.env.VITE_PUBLIC_CMS_ORIGIN as string | undefined) ||
-        "http://localhost:3000"
+      const cmsOrigin = resolveCmsUrl()
 
       // Consultar perfil (para prioridades) y páginas de CMS en paralelo
       const [profileResult, docsResult] = await Promise.allSettled([
