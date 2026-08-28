@@ -446,7 +446,7 @@ export function ScoreWeightsPage() {
                             onChange={(e) =>
                               handleInputChange(topic.id, e.target.value)
                             }
-                            className="h-8 text-center text-sm font-semibold tabular-nums pr-5"
+                            className="h-8 text-center text-sm font-semibold tabular-nums pr-5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <span className="pointer-events-none absolute right-2 top-1.5 text-xs text-muted-foreground font-semibold">
                             %
