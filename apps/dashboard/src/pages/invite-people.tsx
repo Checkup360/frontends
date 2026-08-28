@@ -241,7 +241,7 @@ export function InvitePeoplePage() {
 
   if (userLoading) {
     return (
-      <Card className="mx-auto w-full max-w-5xl">
+      <Card className="mx-auto w-full max-w-7xl">
         <CardContent className="space-y-6 py-6 md:px-8">
           <div className="space-y-2">
             <Skeleton className="h-6 w-32" />
@@ -269,7 +269,7 @@ export function InvitePeoplePage() {
 
   if (showCreateForm) {
     return (
-      <div className="mx-auto w-full max-w-5xl animate-in space-y-6 duration-300 fade-in">
+      <div className="mx-auto w-full max-w-7xl animate-in space-y-6 duration-300 fade-in">
         <div className="flex items-center">
           <Button
             variant="ghost"
@@ -301,12 +301,7 @@ export function InvitePeoplePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl animate-in space-y-6 duration-300 fade-in">
-      {/* Title section */}
-      <div>
-        <h2 className="text-base font-semibold text-foreground">Overview</h2>
-      </div>
-
+    <div className="mx-auto w-full max-w-7xl animate-in space-y-6 duration-300 fade-in">
       {/* KPI Cards on Top */}
       <section className="grid gap-4 md:grid-cols-4">
         {loading ? (

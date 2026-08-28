@@ -12,7 +12,10 @@ import {
   type RiskTrendPoint,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
-import { OverviewStatCard } from "@workspace/components/components/card"
+import {
+  OverviewStatCard,
+  OverviewStatCardSkeleton,
+} from "@workspace/components/components/card"
 import { AlertTriangle, TrendingUp, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
@@ -62,10 +65,11 @@ export function DashboardPage() {
     }
   }, [organizationId])
 
-  // Derive per-department scores from real data
+  // Derive per-department scores from real analytics data
   const areas = useMemo<AreaScoreItem[]>(() => {
     if (deptAnalytics.length > 0) {
       return deptAnalytics.map((dept) => ({
+        id: dept.department_id,
         name: dept.name,
         score: Math.round(dept.average_score),
         workers: dept.total_workers,
@@ -74,6 +78,7 @@ export function DashboardPage() {
     return departments.map((dept) => {
       const members = employees.filter((emp) => emp.department?.id === dept.id)
       return {
+        id: dept.id,
         name: dept.name,
         score: 100,
         workers: members.length,
@@ -82,43 +87,53 @@ export function DashboardPage() {
   }, [deptAnalytics, departments, employees])
 
   // Summary stats derived from real data
-  const totalEmployees = loading ? "..." : employees.length.toString()
+  const totalEmployees = employees.length.toString()
   const averageScore =
-    loading || areas.length === 0
-      ? "..."
-      : (
+    areas.length === 0
+      ? "100"
+      : Math.round(
           areas.reduce((sum, a) => sum + a.score, 0) / areas.length
-        ).toFixed(1)
-  const highRiskCount = loading
-    ? "..."
-    : areas.filter((a) => a.score < 60).length.toString()
+        ).toString()
+  const highRiskCount = areas.filter((a) => a.score < 60).length.toString()
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <OverviewStatCard
-          label="Total employees"
-          value={totalEmployees}
-          icon={Users}
-          iconVariant="icon"
-          tone="primary"
-        />
-        <OverviewStatCard
-          label="Average score"
-          value={averageScore}
-          hint="Aggregated health index"
-          icon={TrendingUp}
-          iconVariant="icon"
-          tone="success"
-        />
-        <OverviewStatCard
-          label="High risk departments"
-          value={highRiskCount}
-          hint="Score below 60"
-          icon={AlertTriangle}
-          iconVariant="icon"
-          tone="warning"
-        />
+        {loading ? (
+          <OverviewStatCardSkeleton />
+        ) : (
+          <OverviewStatCard
+            label="Total employees"
+            value={totalEmployees}
+            icon={Users}
+            iconVariant="icon"
+            tone="primary"
+          />
+        )}
+        {loading ? (
+          <OverviewStatCardSkeleton />
+        ) : (
+          <OverviewStatCard
+            label="Average score"
+            value={`${averageScore}%`}
+            hint="Aggregated health index"
+            icon={TrendingUp}
+            iconVariant="icon"
+            tone="success"
+          />
+        )}
+        {loading ? (
+          <OverviewStatCardSkeleton />
+        ) : (
+          <OverviewStatCard
+            label="High risk departments"
+            value={highRiskCount}
+            hint="Score below 60%"
+            icon={AlertTriangle}
+            iconVariant="icon"
+            tone="warning"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
