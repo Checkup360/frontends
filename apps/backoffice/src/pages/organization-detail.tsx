@@ -209,12 +209,12 @@ export function OrganizationDetailPage() {
           icon={UsersRound}
         />
         <MetricCard
-          label="Total members"
+          label="Employees"
           value={summary.total_employees}
           icon={UsersRound}
         />
         <MetricCard
-          label="Total admins"
+          label="Admins"
           value={summary.total_admins}
           icon={ShieldCheck}
         />
