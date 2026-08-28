@@ -10,11 +10,13 @@ import {
   ArrowRight,
   Sun,
   Moon,
+  LogOut,
 } from "lucide-react"
 import { Link } from "react-router-dom"
-import { getRedirectUrlByUserRole } from "@workspace/api"
+import { getRedirectUrlByUserRole, logout } from "@workspace/api"
 import type { AuthMeResponse } from "@workspace/api"
 import { useTheme } from "@workspace/ui/components/theme-provider"
+import { useState } from "react"
 
 type HeroCheckup360Props = {
   className?: string
@@ -46,8 +48,9 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
   const isAdmin = user?.membership?.roles?.includes("admin")
   const isContentManager = user?.membership?.roles?.includes("content_manager")
 
-  const hasDashboardAccess = Boolean(user && (isSysadmin || isAdmin || isContentManager))
+
   const CMS_URL = import.meta.env.VITE_CMS_URL ?? "http://localhost:3000"
+  const [loggingOut, setLoggingOut] = useState(false)
 
   const toggleTheme = () => {
     const resolvedTheme =
@@ -73,6 +76,12 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
     }
     const redirectUrl = getRedirectUrlByUserRole(user)
     window.location.replace(redirectUrl)
+  }
+
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    await logout()
+    window.location.replace("/")
   }
 
   return (
@@ -127,11 +136,17 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
               </p>
 
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                {hasDashboardAccess ? (
-                  <Button size="lg" onClick={handleNavigate}>
-                    {getButtonLabel()}
-                    <ArrowRight className="ml-2 size-4" />
-                  </Button>
+                {user ? (
+                  <>
+                    <Button size="lg" onClick={handleNavigate}>
+                      {getButtonLabel()}
+                      <ArrowRight className="ml-2 size-4" />
+                    </Button>
+                    <Button size="lg" variant="outline" onClick={handleLogout} disabled={loggingOut}>
+                      {loggingOut ? "Logging out..." : "Log out"}
+                      {!loggingOut && <LogOut className="ml-2 size-4" />}
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Button size="lg" asChild>
