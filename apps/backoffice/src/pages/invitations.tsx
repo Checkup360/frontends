@@ -165,6 +165,7 @@ export function InvitationsPage() {
     const pCreate = searchParams.get("create") === "1"
 
     if (pCreate) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCreating(true)
       if (pType === "organization" || pOrg) {
         setSelectedType("organization")

@@ -1,226 +1,183 @@
 import {
-  createDepartment,
-  deleteDepartment,
-  listDepartments,
-  type DepartmentResponse,
+  listOrganizationEmployees,
+  type OrganizationEmployee,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
+import { ActionButton } from "@workspace/components/components/action-button"
+import {
+  OverviewStatCard,
+  OverviewStatCardSkeleton,
+} from "@workspace/components/components/card"
 import { Button } from "@workspace/ui/components/button"
+import { Card } from "@workspace/ui/components/card"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@workspace/ui/components/alert-dialog"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
-import { Input } from "@workspace/ui/components/input"
-import { Label } from "@workspace/ui/components/label"
-import { Pencil, Plus, Trash2 } from "lucide-react"
-import { useEffect, useState, type FormEvent } from "react"
+  Building2,
+  FileText,
+  MailPlus,
+  RefreshCw,
+  ShieldCheck,
+  UserCheck,
+  Users,
+} from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { EmployeesTable } from "@/components/employees-table"
 
 export function OrganizationPage() {
   const { user } = useCurrentUser()
   const navigate = useNavigate()
   const organizationId = user?.membership?.organization_id
-  const [departments, setDepartments] = useState<DepartmentResponse[]>([])
-  const [name, setName] = useState("")
-  const [deleteTarget, setDeleteTarget] = useState<DepartmentResponse | null>(
-    null
-  )
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState("")
 
+  // ── Overall Stats Data ──
+  const [allMembers, setAllMembers] = useState<OrganizationEmployee[]>([])
+  const [loadingMeta, setLoadingMeta] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  // Load overall member count stats
   useEffect(() => {
     let active = true
 
-    async function loadDepartments() {
+    async function loadStats() {
       if (!organizationId) {
-        setDepartments([])
-        setLoading(false)
+        setAllMembers([])
+        setLoadingMeta(false)
         return
       }
-      setLoading(true)
-      const nextDepartments = await listDepartments(organizationId)
-      if (!active) return
-      setDepartments(nextDepartments)
-      setLoading(false)
+
+      setLoadingMeta(true)
+      try {
+        const memRes = await listOrganizationEmployees(organizationId)
+        if (!active) return
+        setAllMembers(memRes)
+      } catch {
+        if (!active) return
+      } finally {
+        if (active) setLoadingMeta(false)
+      }
     }
 
-    void loadDepartments()
+    void loadStats()
 
     return () => {
       active = false
     }
-  }, [organizationId])
+  }, [organizationId, refreshKey])
 
-  async function refreshDepartments() {
-    if (!organizationId) return
-    setDepartments(await listDepartments(organizationId))
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1)
   }
 
-  async function handleCreate(event: FormEvent) {
-    event.preventDefault()
-    if (!organizationId || !name.trim()) return
-    setSaving(true)
-    setError("")
-    const result = await createDepartment(organizationId, { name: name.trim() })
-    if ("error" in result) {
-      setError(result.error?.message ?? "Unknown error")
-    } else {
-      setName("")
-      await refreshDepartments()
-    }
-    setSaving(false)
-  }
+  const roleCounts = useMemo(() => {
+    let admins = 0
+    let contentManagers = 0
+    let regularMembers = 0
 
-  async function handleDelete() {
-    if (!organizationId || !deleteTarget) return
-    setSaving(true)
-    setError("")
-    const result = await deleteDepartment(organizationId, deleteTarget.id)
-    if ("error" in result) {
-      setError(result.error.message)
-    } else {
-      setDepartments((current) =>
-        current.filter((department) => department.id !== deleteTarget.id)
-      )
-      setDeleteTarget(null)
-    }
-    setSaving(false)
-  }
+    allMembers.forEach((m) => {
+      if (m.roles.includes("admin")) admins++
+      if (m.roles.includes("content_manager")) contentManagers++
+      if (m.roles.includes("member")) regularMembers++
+    })
+
+    return { admins, contentManagers, regularMembers }
+  }, [allMembers])
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Departments</CardTitle>
-          <CardDescription>
-            Manage departments used for member invitations and employee lists.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <form
-            onSubmit={handleCreate}
-            className="flex flex-col gap-3 sm:flex-row"
-          >
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="department-name">Department name</Label>
-              <Input
-                id="department-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="People Operations"
-                disabled={saving}
-              />
+    <div className="mx-auto w-full max-w-7xl space-y-6">
+      {/* ── Organization Information Header Card ── */}
+      <Card className="rounded-3xl border-border/70 bg-card/80 p-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex size-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+              <Building2 className="size-7" />
             </div>
-            <Button type="submit" className="sm:self-end" disabled={saving}>
-              <Plus className="size-4" />
-              Add department
-            </Button>
-          </form>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
-
-          <div className="space-y-2">
-            {loading ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                Loading departments...
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                  {user?.membership?.organization_name || "Organization"}
+                </h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Overview of company members, roles, and administrative access.
               </p>
-            ) : departments.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No departments yet.
-              </p>
-            ) : (
-              departments.map((department) => (
-                <div
-                  key={department.id}
-                  className="flex flex-col gap-3 rounded-lg border border-border/60 p-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {department.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {department.slug}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      onClick={() =>
-                        navigate(`/departments/${department.slug}/edit`)
-                      }
-                      disabled={saving}
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      onClick={() => {
-                        setError("")
-                        setDeleteTarget(department)
-                      }}
-                      disabled={saving}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
+            </div>
           </div>
-        </CardContent>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={loadingMeta}
+            >
+              <RefreshCw className={`mr-2 size-4 ${loadingMeta ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <ActionButton
+              type="button"
+              variant="default"
+              icon={MailPlus}
+              onClick={() => navigate("/invitations")}
+            >
+              Invite People
+            </ActionButton>
+          </div>
+        </div>
       </Card>
 
-      <AlertDialog
-        open={deleteTarget !== null}
-        onOpenChange={(open) => {
-          if (!open && !saving) {
-            setDeleteTarget(null)
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete department?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete "{deleteTarget?.name}". This action
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={saving}
-              onClick={(event) => {
-                event.preventDefault()
-                void handleDelete()
-              }}
-            >
-              {saving ? "Deleting..." : "Delete department"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* ── Stats KPIs ── */}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {loadingMeta ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <OverviewStatCardSkeleton key={index} />
+          ))
+        ) : (
+          <>
+            <OverviewStatCard
+              icon={Users}
+              iconVariant="icon"
+              tone="primary"
+              label="Total members"
+              value={allMembers.length.toString()}
+              hint="Active organization users"
+            />
+            <OverviewStatCard
+              icon={ShieldCheck}
+              iconVariant="icon"
+              tone="success"
+              label="Administrators"
+              value={roleCounts.admins.toString()}
+              hint="Full access users"
+            />
+            <OverviewStatCard
+              icon={FileText}
+              iconVariant="icon"
+              tone="warning"
+              label="Content Managers"
+              value={roleCounts.contentManagers.toString()}
+              hint="CMS article editors"
+            />
+            <OverviewStatCard
+              icon={UserCheck}
+              iconVariant="icon"
+              tone="primary"
+              label="Regular Members"
+              value={roleCounts.regularMembers.toString()}
+              hint="App & health form users"
+            />
+          </>
+        )}
+      </section>
+
+      {/* ── Reusable Employees / Members Table ── */}
+      <EmployeesTable
+        key={refreshKey}
+        organizationId={organizationId}
+        roles={undefined}
+        showRoleFilter={true}
+        showRolesColumn={true}
+        title="Organization Members & Roles"
+        description="Detailed list of all accounts registered in this organization and their assigned roles."
+      />
     </div>
   )
 }

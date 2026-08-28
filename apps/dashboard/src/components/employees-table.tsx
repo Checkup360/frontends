@@ -46,14 +46,50 @@ const employeeTableSkeletonColumns = [
   { skeletonClassName: "h-4 w-24" },
 ]
 
+function getRoleBadgeVariant(
+  role: string
+): "info-light" | "warning-light" | "outline" | "secondary" {
+  switch (role) {
+    case "admin":
+      return "info-light"
+    case "content_manager":
+      return "warning-light"
+    case "member":
+      return "outline"
+    default:
+      return "secondary"
+  }
+}
+
+function formatRoleName(role: string) {
+  switch (role) {
+    case "admin":
+      return "Admin"
+    case "content_manager":
+      return "Content Manager"
+    case "member":
+      return "Member"
+    default:
+      return role
+  }
+}
+
 interface EmployeesTableProps {
   organizationId: string | null | undefined
   roles?: OrganizationEmployeeRole[]
+  showRoleFilter?: boolean
+  showRolesColumn?: boolean
+  title?: string
+  description?: string
 }
 
 export function EmployeesTable({
   organizationId,
   roles = MEMBER_ROLES,
+  showRoleFilter = false,
+  showRolesColumn = false,
+  title = "Employees",
+  description = "Individual data and status level",
 }: EmployeesTableProps) {
   const navigate = useNavigate()
 
@@ -67,6 +103,7 @@ export function EmployeesTable({
   const [search, setSearch] = useState("")
   const [selectedDept, setSelectedDept] = useState("all")
   const [selectedStatus, setSelectedStatus] = useState("all")
+  const [selectedRole, setSelectedRole] = useState("all")
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
@@ -103,9 +140,15 @@ export function EmployeesTable({
         if (selectedStatus !== "all") apiFilters.status = selectedStatus
         if (search.trim()) apiFilters.search = search.trim()
 
+        const effectiveRoles = showRoleFilter
+          ? selectedRole !== "all"
+            ? [selectedRole as OrganizationEmployeeRole]
+            : undefined
+          : roles
+
         const data = await listOrganizationEmployeesPage(
           organizationId,
-          roles,
+          effectiveRoles,
           apiFilters
         )
         if (!active) return
@@ -126,6 +169,8 @@ export function EmployeesTable({
   }, [
     organizationId,
     roles,
+    showRoleFilter,
+    selectedRole,
     selectedDept,
     selectedStatus,
     search,
@@ -137,12 +182,16 @@ export function EmployeesTable({
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
 
   const hasActiveFilters =
-    search !== "" || selectedDept !== "all" || selectedStatus !== "all"
+    search !== "" ||
+    selectedDept !== "all" ||
+    selectedStatus !== "all" ||
+    selectedRole !== "all"
 
   const handleResetFilters = () => {
     setSearch("")
     setSelectedDept("all")
     setSelectedStatus("all")
+    setSelectedRole("all")
     setCurrentPage(1)
   }
 
@@ -151,11 +200,9 @@ export function EmployeesTable({
       {/* Title & Desc */}
       <div className="mb-6 flex flex-col gap-1">
         <h3 className="text-lg font-semibold tracking-tight text-foreground">
-          Employees
+          {title}
         </h3>
-        <p className="text-sm text-muted-foreground">
-          Individual data and status level
-        </p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
 
       {/* Advanced Filter Toolbar (Radix Data Table style layout) */}
@@ -174,6 +221,31 @@ export function EmployeesTable({
               className="h-9 w-full bg-background"
             />
           </div>
+
+          {/* Role Select Dropdown (Optional) */}
+          {showRoleFilter && (
+            <div className="w-[160px]">
+              <Select
+                value={selectedRole}
+                onValueChange={(val) => {
+                  setSelectedRole(val)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="h-9 bg-background">
+                  <SelectValue placeholder="All Roles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="content_manager">
+                    Content Manager
+                  </SelectItem>
+                  <SelectItem value="member">Member</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Department Select Dropdown (Hitting endpoint dynamically!) */}
           <div className="w-[180px]">
@@ -240,6 +312,11 @@ export function EmployeesTable({
               <TableHead className="font-semibold text-foreground">
                 Employee
               </TableHead>
+              {showRolesColumn && (
+                <TableHead className="font-semibold text-foreground">
+                  Roles
+                </TableHead>
+              )}
               <TableHead className="font-semibold text-foreground">
                 Area
               </TableHead>
@@ -260,7 +337,7 @@ export function EmployeesTable({
             ) : employees.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={showRolesColumn ? 6 : 5}
                   className="h-32 text-center text-muted-foreground"
                 >
                   No employees found matching the active criteria.
@@ -276,6 +353,27 @@ export function EmployeesTable({
                   <TableCell className="font-medium text-foreground transition-colors group-hover:text-primary">
                     {w.email}
                   </TableCell>
+                  {showRolesColumn && (
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {w.roles && w.roles.length > 0 ? (
+                          w.roles.map((role) => (
+                            <Badge
+                              key={role}
+                              variant={getRoleBadgeVariant(role)}
+                              size="xs"
+                            >
+                              {formatRoleName(role)}
+                            </Badge>
+                          ))
+                        ) : (
+                          <Badge variant="outline" size="xs">
+                            No roles
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                   <TableCell className="text-muted-foreground">
                     {w.department?.name ?? "Unassigned"}
                   </TableCell>
@@ -315,7 +413,7 @@ export function EmployeesTable({
             {Math.min(currentPage * pageSize, totalItems)}
           </span>{" "}
           of <span className="font-medium text-foreground">{totalItems}</span>{" "}
-          employees
+          members
         </p>
 
         {/* Controls */}

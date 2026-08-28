@@ -5,6 +5,7 @@ import {
   type WorkspaceShellNavItem,
 } from "@workspace/components/components/workspace-shell"
 import {
+  Building2,
   Folders,
   LayoutDashboard,
   MailPlus,
@@ -16,6 +17,12 @@ import { NavLink, Outlet, useLocation } from "react-router-dom"
 
 const navigation: WorkspaceShellNavItem[] = [
   { title: "Overview", url: "/", icon: LayoutDashboard, to: "/", end: true },
+  {
+    title: "Organization",
+    url: "/organization",
+    icon: Building2,
+    to: "/organization",
+  },
   { title: "Employees", url: "/employees", icon: Users, to: "/employees" },
   {
     title: "Invitations",
@@ -68,6 +75,8 @@ export function DashboardShell() {
     switch (pathname) {
       case "/":
         return "Dashboard"
+      case "/organization":
+        return "Organization"
       case "/employees":
         return "Employees"
       case "/invitations":

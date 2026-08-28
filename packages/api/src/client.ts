@@ -512,7 +512,7 @@ export interface DepartmentResponse {
   slug: string
 }
 
-export type OrganizationEmployeeRole = "admin" | "member"
+export type OrganizationEmployeeRole = "admin" | "member" | "content_manager"
 
 export interface OrganizationEmployee {
   id: string
