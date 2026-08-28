@@ -8,14 +8,15 @@ import { cn } from "@workspace/ui/lib/utils"
 
 export interface HealthScoreRow {
   label: string
-  value: number
+  value: number | null
   icon?: LucideIcon
-  tone?: "blue" | "green" | "amber"
+  tone?: "blue" | "green" | "amber" | "muted"
+  isPending?: boolean
 }
 
 interface HealthScoreCardProps {
   title: string
-  score: number
+  score: number | null
   scoreLabel?: string
   deltaLabel?: string
   rows: HealthScoreRow[]
@@ -37,6 +38,10 @@ const toneClasses = {
     icon: "bg-amber-500/15 text-amber-400",
     bar: "bg-amber-500",
   },
+  muted: {
+    icon: "bg-muted text-muted-foreground/50",
+    bar: "bg-muted/40",
+  },
 }
 
 export function HealthScoreCard({
@@ -49,11 +54,18 @@ export function HealthScoreCard({
   className,
   compact = false,
 }: HealthScoreCardProps) {
-  const safeScore = Math.min(Math.max(score, 0), 100)
+  const hasScore = typeof score === "number"
+  const safeScore = hasScore ? Math.min(Math.max(score, 0), 100) : 0
   const gaugeDegrees = Math.round((safeScore / 100) * 180)
 
   return (
-    <Card className={cn("relative overflow-visible rounded-3xl border-border/80 bg-card/85 p-6 shadow-sm flex flex-col justify-between", compact && "p-5", className)}>
+    <Card
+      className={cn(
+        "relative overflow-visible rounded-3xl border-border/80 bg-card/85 p-6 shadow-sm flex flex-col justify-between",
+        compact && "p-5",
+        className
+      )}
+    >
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <Badge
           variant="outline"
@@ -76,7 +88,12 @@ export function HealthScoreCard({
         )}
       </div>
 
-      <div className={cn("mx-auto mt-7 flex w-56 flex-col items-center", compact && "mt-3")}>
+      <div
+        className={cn(
+          "mx-auto mt-7 flex w-56 flex-col items-center",
+          compact && "mt-3"
+        )}
+      >
         {loading ? (
           <Skeleton className="h-28 w-56 rounded-t-full" />
         ) : (
@@ -93,7 +110,7 @@ export function HealthScoreCard({
               <div className="absolute inset-x-5 top-5 h-[184px] rounded-full bg-card" />
               <div className="absolute inset-x-0 bottom-0 text-center">
                 <p className="text-4xl font-semibold text-foreground tabular-nums">
-                  {safeScore}
+                  {hasScore ? safeScore : "—"}
                 </p>
                 <p className="text-sm text-muted-foreground">{scoreLabel}</p>
               </div>
@@ -109,7 +126,7 @@ export function HealthScoreCard({
 
       <div className={cn("mt-8 space-y-5", compact && "mt-4 space-y-3")}>
         {loading
-          ? Array.from({ length: 5 }).map((_, index) => (
+          ? Array.from({ length: 4 }).map((_, index) => (
               <div key={index} className="flex items-center gap-3">
                 <Skeleton className="size-8 rounded-lg" />
                 <Skeleton className="h-4 flex-1" />
@@ -118,14 +135,23 @@ export function HealthScoreCard({
               </div>
             ))
           : rows.map((row, index) => {
-              const tone = toneClasses[row.tone ?? "green"]
+              const isPending =
+                row.isPending || row.value === null || row.value === undefined
+              const tone = isPending
+                ? toneClasses.muted
+                : toneClasses[row.tone ?? "green"]
               const Icon = row.icon ?? Activity
-              const value = Math.min(Math.max(row.value, 0), 100)
+              const value = isPending
+                ? 0
+                : Math.min(Math.max(row.value ?? 0, 0), 100)
 
               return (
                 <div
                   key={`${row.label}-${index}`}
-                  className="flex items-center gap-3"
+                  className={cn(
+                    "flex items-center gap-3 transition-opacity",
+                    isPending && "opacity-60"
+                  )}
                 >
                   <span
                     className={cn(
@@ -135,18 +161,32 @@ export function HealthScoreCard({
                   >
                     <Icon className="size-4" />
                   </span>
-                  <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                  <p
+                    className={cn(
+                      "min-w-0 flex-1 truncate text-sm font-medium",
+                      isPending ? "text-muted-foreground" : "text-foreground"
+                    )}
+                  >
                     {row.label}
                   </p>
                   <div className="hidden h-2 w-24 overflow-hidden rounded-full bg-muted sm:block">
                     <div
                       className={cn("h-full rounded-full", tone.bar)}
-                      style={{ width: `${value}%` }}
+                      style={{ width: isPending ? "0%" : `${value}%` }}
                     />
                   </div>
-                  <span className="w-8 text-right text-sm font-semibold text-foreground tabular-nums">
-                    {value}
-                  </span>
+                  {isPending ? (
+                    <Badge
+                      variant="outline"
+                      className="border-border/60 text-[10px] text-muted-foreground font-normal px-2 py-0 h-5"
+                    >
+                      Pending
+                    </Badge>
+                  ) : (
+                    <span className="w-8 text-right text-sm font-semibold text-foreground tabular-nums">
+                      {value}
+                    </span>
+                  )}
                   <ChevronRight className="size-4 text-muted-foreground" />
                 </div>
               )

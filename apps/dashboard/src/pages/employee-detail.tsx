@@ -38,9 +38,7 @@ import {
 } from "@workspace/ui/components/empty"
 import {
   ArrowLeft,
-  Dumbbell,
   Moon,
-  Stethoscope,
   Apple,
   Clock,
   History,
@@ -61,11 +59,9 @@ import {
   YAxis,
 } from "recharts"
 
-const healthIndicators: HealthScoreRow[] = [
-  { label: "Physical Activity", value: 85, icon: Dumbbell, tone: "green" },
-  { label: "Sleep Quality", value: 72, icon: Moon, tone: "amber" },
-  { label: "Preventive Care", value: 90, icon: Stethoscope, tone: "blue" },
-  { label: "Nutrition Profile", value: 80, icon: Apple, tone: "green" },
+const STANDARD_MODULES = [
+  { id: "findrisc", name: "Diabetes", icon: Apple },
+  { id: "stop_bang", name: "Sleep Apnea", icon: Moon },
 ]
 
 function EmployeeDetailSkeleton() {
@@ -182,13 +178,89 @@ export function EmployeeDetailPage() {
 
   const isViewingLatest = activeSession?.isLatest ?? true
 
+  // Indicators: if a form is not submitted or pending, render as dimmed (value: null, isPending: true) without number
+  const dynamicIndicators: HealthScoreRow[] = useMemo(() => {
+    const results = activeSession?.results || []
+
+    return STANDARD_MODULES.map((module) => {
+      const match = results.find(
+        (r) =>
+          (r.score_id && r.score_id.toLowerCase().includes(module.id)) ||
+          (r.score_name &&
+            r.score_name.toLowerCase().includes(module.name.toLowerCase()))
+      )
+
+      if (
+        !match ||
+        match.normalized_value === null ||
+        match.normalized_value === undefined
+      ) {
+        return {
+          label: module.name,
+          value: null,
+          icon: module.icon,
+          tone: "muted",
+          isPending: true,
+        }
+      }
+
+      const risk = (match.risk_level || "").toLowerCase()
+      let tone: "green" | "amber" | "blue" = "green"
+      if (risk.includes("high")) {
+        tone = "amber"
+      } else if (risk.includes("moderate") || risk.includes("elevated")) {
+        tone = "amber"
+      }
+
+      return {
+        label: match.score_name || module.name,
+        value: Math.round(match.normalized_value),
+        icon: module.icon,
+        tone,
+        isPending: false,
+      }
+    })
+  }, [activeSession])
+
+  const hasAnyEvaluated = dynamicIndicators.some(
+    (i) => !i.isPending && i.value !== null
+  )
+
   const computedHealth = useMemo(() => {
-    return computeOverallHealthScore(
-      activeSession?.results || [],
-      assessments?.overall_score,
-      assessments?.overall_risk_level
+    if (!hasAnyEvaluated) {
+      return {
+        score: null,
+        label: "Pending assessment",
+      }
+    }
+    const evaluated = dynamicIndicators.filter(
+      (i) => !i.isPending && typeof i.value === "number"
     )
-  }, [activeSession, assessments])
+    const calculatedAvg =
+      evaluated.length > 0
+        ? Math.round(
+            evaluated.reduce((sum, i) => sum + (i.value ?? 0), 0) /
+              evaluated.length
+          )
+        : 100
+
+    const finalScore =
+      typeof assessments?.overall_score === "number"
+        ? Math.round(assessments.overall_score)
+        : calculatedAvg
+
+    const label =
+      finalScore >= 80
+        ? "Good"
+        : finalScore >= 60
+        ? "Moderate risk"
+        : "High risk"
+
+    return {
+      score: finalScore,
+      label,
+    }
+  }, [hasAnyEvaluated, dynamicIndicators, assessments])
 
   // Dynamic evolution chart from session history
   const evolutionData = useMemo(() => {
@@ -208,38 +280,6 @@ export function EmployeeDetailPage() {
         }
       })
   }, [sessions, assessments])
-
-  const dynamicIndicators: HealthScoreRow[] = useMemo(() => {
-    if (!activeSession?.results.length) return healthIndicators
-    return activeSession.results.map((r) => {
-      const risk = (r.risk_level || "").toLowerCase()
-      let tone: "green" | "amber" | "blue" = "green"
-      let val = 90
-      if (risk.includes("high")) {
-        tone = "amber"
-        val = 40
-      } else if (risk.includes("moderate") || risk.includes("elevated")) {
-        tone = "amber"
-        val = 70
-      }
-      const name = r.score_name || r.score_id || "Score"
-      const icon = name.toLowerCase().includes("sleep")
-        ? Moon
-        : name.toLowerCase().includes("diabet")
-        ? Apple
-        : Stethoscope
-
-      return {
-        label: name,
-        value:
-          r.normalized_value !== null && r.normalized_value !== undefined
-            ? Math.round(r.normalized_value)
-            : val,
-        icon,
-        tone,
-      }
-    })
-  }, [activeSession])
 
   if (loading) {
     return <EmployeeDetailSkeleton />
@@ -525,30 +565,73 @@ export function EmployeeDetailPage() {
 
               {/* Assessment Preview Grid */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {activeSession?.results.map((result) => (
-                  <div
-                    key={result.score_id}
-                    className="flex flex-col justify-between rounded-xl border bg-card p-4 transition-all hover:shadow-xs"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="font-semibold text-foreground text-sm">
-                          {result.score_name}
-                        </span>
-                        {getRiskIcon(result.risk_level)}
+                {STANDARD_MODULES.map((module) => {
+                  const result = activeSession?.results.find(
+                    (r) =>
+                      (r.score_id &&
+                        r.score_id.toLowerCase().includes(module.id)) ||
+                      (r.score_name &&
+                        r.score_name
+                          .toLowerCase()
+                          .includes(module.name.toLowerCase()))
+                  )
+
+                  if (
+                    !result ||
+                    result.normalized_value === null ||
+                    result.normalized_value === undefined
+                  ) {
+                    return (
+                      <div
+                        key={module.id}
+                        className="flex flex-col justify-between rounded-xl border border-dashed border-border/60 bg-muted/20 p-4 opacity-60"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className="font-medium text-muted-foreground text-sm">
+                              {module.name}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] text-muted-foreground border-border/60"
+                            >
+                              Pending form
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            This clinical study has not been completed or
+                            evaluated yet.
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-xs text-muted-foreground mb-2">
-                        Risk Level:{" "}
-                        <span className="font-semibold text-foreground">
-                          {result.risk_level || "Unknown"}
-                        </span>
+                    )
+                  }
+
+                  return (
+                    <div
+                      key={result.score_id}
+                      className="flex flex-col justify-between rounded-xl border bg-card p-4 transition-all hover:shadow-xs"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="font-semibold text-foreground text-sm">
+                            {result.score_name}
+                          </span>
+                          {getRiskIcon(result.risk_level)}
+                        </div>
+                        <div className="text-xs text-muted-foreground mb-2">
+                          Risk Level:{" "}
+                          <span className="font-semibold text-foreground">
+                            {result.risk_level || "Unknown"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-3">
+                          {result.explanation || "No explanation provided."}
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-3">
-                        {result.explanation || "No explanation provided."}
-                      </p>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
