@@ -10,7 +10,7 @@ export interface HealthScoreRow {
   label: string
   value: number | null
   icon?: LucideIcon
-  tone?: "blue" | "green" | "amber" | "muted"
+  tone?: "blue" | "green" | "amber" | "red" | "muted"
   isPending?: boolean
 }
 
@@ -18,6 +18,7 @@ interface HealthScoreCardProps {
   title: string
   score: number | null
   scoreLabel?: string
+  riskLevel?: "low" | "moderate" | "high" | null
   deltaLabel?: string
   rows: HealthScoreRow[]
   loading?: boolean
@@ -27,20 +28,29 @@ interface HealthScoreCardProps {
 
 const toneClasses = {
   blue: {
-    icon: "bg-blue-500/15 text-blue-400",
+    icon: "bg-blue-500/15 text-blue-500",
     bar: "bg-blue-500",
+    text: "text-blue-500",
   },
   green: {
-    icon: "bg-emerald-500/15 text-emerald-400",
+    icon: "bg-emerald-500/15 text-emerald-500",
     bar: "bg-emerald-500",
+    text: "text-emerald-500",
   },
   amber: {
-    icon: "bg-amber-500/15 text-amber-400",
+    icon: "bg-amber-500/15 text-amber-500",
     bar: "bg-amber-500",
+    text: "text-amber-500",
+  },
+  red: {
+    icon: "bg-rose-500/15 text-rose-500",
+    bar: "bg-rose-500",
+    text: "text-rose-500",
   },
   muted: {
     icon: "bg-muted text-muted-foreground/50",
     bar: "bg-muted/40",
+    text: "text-muted-foreground",
   },
 }
 
@@ -48,6 +58,7 @@ export function HealthScoreCard({
   title,
   score,
   scoreLabel = "Good",
+  riskLevel,
   deltaLabel,
   rows,
   loading = false,
@@ -58,6 +69,26 @@ export function HealthScoreCard({
   const safeScore = hasScore ? Math.min(Math.max(score, 0), 100) : 0
   const gaugeDegrees = Math.round((safeScore / 100) * 180)
 
+  // Determine dynamic risk color for gauge and score
+  const computedRisk =
+    riskLevel ?? (hasScore ? (safeScore >= 80 ? "low" : safeScore >= 60 ? "moderate" : "high") : null)
+
+  const gaugeColor = !hasScore
+    ? "var(--muted)"
+    : computedRisk === "high"
+    ? "#ef4444"
+    : computedRisk === "moderate"
+    ? "#f59e0b"
+    : "#10b981"
+
+  const scoreTextColor = !hasScore
+    ? "text-muted-foreground"
+    : computedRisk === "high"
+    ? "text-rose-500"
+    : computedRisk === "moderate"
+    ? "text-amber-500"
+    : "text-emerald-500"
+
   return (
     <Card
       className={cn(
@@ -66,20 +97,10 @@ export function HealthScoreCard({
         className
       )}
     >
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <Badge
-          variant="outline"
-          className="h-8 rounded-full border-border bg-background px-4 shadow-sm"
-        >
-          <Activity className="size-3.5" />
-          {title}
-        </Badge>
-      </div>
-
-      <div className="flex items-start justify-between gap-4 pt-1">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Activity className="size-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          <Activity className="size-4 text-primary" />
+          <h3 className="text-lg font-semibold tracking-tight text-foreground">{title}</h3>
         </div>
         {deltaLabel && (
           <Badge className="rounded-full bg-emerald-500/15 text-emerald-400">
@@ -103,16 +124,24 @@ export function HealthScoreCard({
               style={
                 {
                   "--gauge-deg": `${gaugeDegrees}deg`,
+                  "--gauge-color": gaugeColor,
                 } as CSSProperties
               }
             >
-              <div className="absolute inset-x-0 top-0 h-56 rounded-full bg-[conic-gradient(from_270deg,var(--primary)_0deg,var(--primary)_var(--gauge-deg),var(--muted)_var(--gauge-deg),var(--muted)_180deg,transparent_180deg)]" />
+              <div className="absolute inset-x-0 top-0 h-56 rounded-full bg-[conic-gradient(from_270deg,var(--gauge-color)_0deg,var(--gauge-color)_var(--gauge-deg),var(--muted)_var(--gauge-deg),var(--muted)_180deg,transparent_180deg)]" />
               <div className="absolute inset-x-5 top-5 h-[184px] rounded-full bg-card" />
               <div className="absolute inset-x-0 bottom-0 text-center">
-                <p className="text-4xl font-semibold text-foreground tabular-nums">
+                <p
+                  className={cn(
+                    "text-4xl font-bold tracking-tight tabular-nums",
+                    scoreTextColor
+                  )}
+                >
                   {hasScore ? safeScore : "—"}
                 </p>
-                <p className="text-sm text-muted-foreground">{scoreLabel}</p>
+                <p className={cn("text-xs font-semibold capitalize mt-0.5", scoreTextColor)}>
+                  {scoreLabel}
+                </p>
               </div>
             </div>
             <div className="mt-1 flex w-full justify-between px-1 text-xs text-muted-foreground">
@@ -171,7 +200,7 @@ export function HealthScoreCard({
                   </p>
                   <div className="hidden h-2 w-24 overflow-hidden rounded-full bg-muted sm:block">
                     <div
-                      className={cn("h-full rounded-full", tone.bar)}
+                      className={cn("h-full rounded-full transition-all", tone.bar)}
                       style={{ width: isPending ? "0%" : `${value}%` }}
                     />
                   </div>
@@ -183,7 +212,12 @@ export function HealthScoreCard({
                       Pending
                     </Badge>
                   ) : (
-                    <span className="w-8 text-right text-sm font-semibold text-foreground tabular-nums">
+                    <span
+                      className={cn(
+                        "w-8 text-right text-sm font-semibold tabular-nums",
+                        tone.text
+                      )}
+                    >
                       {value}
                     </span>
                   )}
