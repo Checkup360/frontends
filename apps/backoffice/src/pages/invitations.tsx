@@ -162,6 +162,17 @@ export function InvitationsPage() {
   useEffect(() => {
     const pType = searchParams.get("type")
     const pOrg = searchParams.get("organizationId")
+    const pCreate = searchParams.get("create") === "1"
+
+    if (pCreate) {
+      setIsCreating(true)
+      if (pType === "organization" || pOrg) {
+        setSelectedType("organization")
+      } else if (pType === "sysadmin") {
+        setSelectedType("sysadmin")
+      }
+    }
+
     if (pType === "organization" || pType === "sysadmin") {
       setFilterType(pType)
     } else if (pOrg) {

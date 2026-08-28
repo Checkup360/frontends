@@ -92,9 +92,13 @@ export function OrgInvitationForm({
         const orgs = await listOrganizations()
         setOrganizations(orgs)
         if (initialOrganizationId) {
-          setSelected(
-            orgs.find((org) => org.id === initialOrganizationId) ?? null
+          const targetId = initialOrganizationId.trim().toLowerCase()
+          const matched = orgs.find(
+            (org) => org.id.trim().toLowerCase() === targetId
           )
+          if (matched) {
+            setSelected(matched)
+          }
         }
       } catch (err) {
         setOrgsError("Failed to load organizations")
@@ -105,6 +109,18 @@ export function OrgInvitationForm({
     }
     fetchOrganizations()
   }, [fixedOrganization, initialOrganizationId])
+
+  useEffect(() => {
+    if (initialOrganizationId && organizations.length > 0 && !selected) {
+      const targetId = initialOrganizationId.trim().toLowerCase()
+      const matched = organizations.find(
+        (org) => org.id.trim().toLowerCase() === targetId
+      )
+      if (matched) {
+        setSelected(matched)
+      }
+    }
+  }, [initialOrganizationId, organizations, selected])
 
   useEffect(() => {
     const organizationId = selectedOrganization?.id

@@ -366,7 +366,7 @@ export function OrganizationsPage() {
                           <Link
                             to={`/invitations?type=organization&organizationId=${encodeURIComponent(
                               org.id
-                            )}`}
+                            )}&create=1`}
                           >
                             <Link2 className="size-4" />
                           </Link>
