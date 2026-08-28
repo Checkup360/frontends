@@ -135,8 +135,17 @@ export function InvitationsPage() {
   const initialOrganizationId = searchParams.get("organizationId") ?? undefined
   const currentStep = completed ? 3 : selectedType ? 2 : 1
 
+  const initialFilterType = useMemo<"all" | "sysadmin" | "organization">(() => {
+    const t = searchParams.get("type")
+    if (t === "organization" || t === "sysadmin") return t
+    if (searchParams.get("organizationId")) return "organization"
+    return "all"
+  }, [searchParams])
+
   // --- Listing Filters and Data State ---
-  const [filterType, setFilterType] = useState<"all" | "sysadmin" | "organization">("all")
+  const [filterType, setFilterType] = useState<"all" | "sysadmin" | "organization">(
+    initialFilterType
+  )
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "used" | "expired">("all")
   const [selectedOrg, setSelectedOrg] = useState(
     searchParams.get("organizationId") ?? ""
@@ -148,6 +157,20 @@ export function InvitationsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   const [searchQuery, setSearchQuery] = useState("")
+
+  // Keep state in sync if URL search params change
+  useEffect(() => {
+    const pType = searchParams.get("type")
+    const pOrg = searchParams.get("organizationId")
+    if (pType === "organization" || pType === "sysadmin") {
+      setFilterType(pType)
+    } else if (pOrg) {
+      setFilterType("organization")
+    }
+    if (pOrg !== null) {
+      setSelectedOrg(pOrg)
+    }
+  }, [searchParams])
 
   // Data arrays
   const [sysadminInvites, setSysadminInvites] = useState<SysadminInvite[]>([])
@@ -183,6 +206,7 @@ export function InvitationsPage() {
       // 1. Filter by Type
       if (filterType === "sysadmin" && !invite.isSysadmin) return false
       if (filterType === "organization" && invite.isSysadmin) return false
+      if (selectedOrg && invite.isSysadmin) return false
 
       // 2. Filter by Email Search (client-side only)
       if (searchQuery) {
@@ -194,7 +218,7 @@ export function InvitationsPage() {
 
       return true
     })
-  }, [combinedInvites, filterType, searchQuery])
+  }, [combinedInvites, filterType, selectedOrg, searchQuery])
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -232,21 +256,27 @@ export function InvitationsPage() {
     void fetchOrgs()
   }, [])
 
-  // Fetch all invites from both endpoints with backend filters
+  // Fetch all invites from endpoints with backend filters
   const loadInvites = async () => {
     setLoading(true)
     try {
-      const sysPromise = (filterType === "all" || filterType === "sysadmin")
+      // Sysadmin invitations are independent and do not belong to any organization.
+      // Therefore, if a specific organization is selected or filterType is "organization",
+      // we do NOT request sysadmin invitations from the backend.
+      const shouldFetchSysadmin = (filterType === "all" || filterType === "sysadmin") && !selectedOrg
+      const shouldFetchOrg = filterType === "all" || filterType === "organization"
+
+      const sysPromise = shouldFetchSysadmin
         ? listSysadminInvitations({ status: filterStatus })
-        : Promise.resolve([]);
+        : Promise.resolve([])
       
-      const orgPromise = (filterType === "all" || filterType === "organization")
+      const orgPromise = shouldFetchOrg
         ? listOrgInvitations({
             status: filterStatus,
             organizationId: selectedOrg || undefined,
             role: selectedRole || undefined,
           })
-        : Promise.resolve([]);
+        : Promise.resolve([])
 
       const [sysadminData, orgData] = await Promise.all([sysPromise, orgPromise])
       setSysadminInvites(sysadminData)
@@ -508,6 +538,9 @@ export function InvitationsPage() {
                 value={filterType}
                 onValueChange={(val: "all" | "sysadmin" | "organization") => {
                   setFilterType(val)
+                  if (val === "sysadmin") {
+                    setSelectedOrg("")
+                  }
                   setCurrentPage(1)
                 }}
               >
@@ -550,7 +583,11 @@ export function InvitationsPage() {
                   <Select
                     value={selectedOrg || "all"}
                     onValueChange={(val) => {
-                      setSelectedOrg(val === "all" ? "" : val)
+                      const newOrg = val === "all" ? "" : val
+                      setSelectedOrg(newOrg)
+                      if (newOrg) {
+                        setFilterType("organization")
+                      }
                       setCurrentPage(1)
                     }}
                   >
