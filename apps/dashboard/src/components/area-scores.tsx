@@ -53,7 +53,7 @@ export function AreaScores({ areas, loading = false, limit = 5 }: AreaScoresProp
           Top risk areas
         </h3>
         <p className="text-sm text-muted-foreground">
-          Departments with highest onboarding risk
+          Departments ordered by health index
         </p>
       </div>
 

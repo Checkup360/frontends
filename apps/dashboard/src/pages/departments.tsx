@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom"
 import {
   createDepartment,
   deleteDepartment,
+  getOrganizationDepartmentAnalytics,
   listDepartments,
   listDepartmentsPage,
   listOrganizationEmployees,
+  type DepartmentAnalyticsSummary,
   type DepartmentResponse,
   type OrganizationEmployee,
 } from "@workspace/api"
@@ -72,30 +74,31 @@ import {
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
+  TrendingUp,
 } from "lucide-react"
 import { DepartmentTrendsChart } from "@workspace/components/components/department-trends-chart"
 import { useIsMobile } from "@workspace/ui/hooks/use-mobile"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface DepartmentRiskInsight {
+interface DepartmentHealthInsight {
   id: string
   name: string
   slug: string
   total: number
-  onboarding: number
+  score: number
   risk: number
 }
 
-function riskTone(risk: number) {
-  if (risk >= 50) {
+function scoreTone(score: number) {
+  if (score >= 80) {
     return {
-      label: "High risk",
-      variant: "destructive" as const,
-      icon: AlertTriangle,
+      label: "Healthy",
+      variant: "success-light" as const,
+      icon: ShieldCheck,
     }
   }
-  if (risk >= 25) {
+  if (score >= 60) {
     return {
       label: "Monitor",
       variant: "warning-light" as const,
@@ -103,9 +106,9 @@ function riskTone(risk: number) {
     }
   }
   return {
-    label: "Healthy",
-    variant: "success-light" as const,
-    icon: ShieldCheck,
+    label: "High risk",
+    variant: "destructive" as const,
+    icon: AlertTriangle,
   }
 }
 
@@ -122,6 +125,9 @@ export function DepartmentsPage() {
   // ── All departments (for KPIs + trends chart) ──
   const [allDepartments, setAllDepartments] = useState<DepartmentResponse[]>([])
   const [employees, setEmployees] = useState<OrganizationEmployee[]>([])
+  const [deptAnalytics, setDeptAnalytics] = useState<
+    DepartmentAnalyticsSummary[]
+  >([])
   const [loadingMeta, setLoadingMeta] = useState(true)
 
   // ── Paginated grid ──
@@ -146,24 +152,27 @@ export function DepartmentsPage() {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
 
-  // ── Load all depts + employees once (for KPIs & trends) ──
+  // ── Load all depts + employees + analytics once (for KPIs & trends) ──
   useEffect(() => {
     let active = true
     async function load() {
       if (!organizationId) {
         setAllDepartments([])
         setEmployees([])
+        setDeptAnalytics([])
         setLoadingMeta(false)
         return
       }
       setLoadingMeta(true)
-      const [depts, emps] = await Promise.all([
+      const [depts, emps, analytics] = await Promise.all([
         listDepartments(organizationId),
         listOrganizationEmployees(organizationId, ["member"]),
+        getOrganizationDepartmentAnalytics(organizationId),
       ])
       if (!active) return
       setAllDepartments(depts)
       setEmployees(emps)
+      setDeptAnalytics(analytics || [])
       setLoadingMeta(false)
     }
     void load()
@@ -194,7 +203,8 @@ export function DepartmentsPage() {
         setDepartments(data.items)
         setTotalItems(data.total)
       } catch {
-        if (active) setError("Failed to load departments.")
+        if (!active) return
+        setError("Failed to load departments.")
       } finally {
         if (active) setLoadingGrid(false)
       }
@@ -207,51 +217,52 @@ export function DepartmentsPage() {
 
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE))
 
-  // ── Insights derived from ALL departments ──
-  const insights = useMemo<DepartmentRiskInsight[]>(() => {
+  // ── Insights derived from real department analytics ──
+  const insights = useMemo<DepartmentHealthInsight[]>(() => {
     return allDepartments.map((department) => {
+      const summary = deptAnalytics.find(
+        (a) => a.department_id === department.id
+      )
       const members = employees.filter(
         (employee) => employee.department?.id === department.id
       )
-      const onboarding = members.filter(
-        (employee) => employee.status.toLowerCase() === "onboarding"
-      ).length
+      const score = summary ? Math.round(summary.average_score) : 100
       return {
         id: department.id,
         name: department.name,
         slug: department.slug,
-        total: members.length,
-        onboarding,
-        risk:
-          members.length === 0
-            ? 0
-            : Math.round((onboarding / members.length) * 100),
+        total: summary?.total_workers ?? members.length,
+        score,
+        risk: 100 - score,
       }
     })
-  }, [allDepartments, employees])
+  }, [allDepartments, employees, deptAnalytics])
 
-  const highestRisk = useMemo(() => {
-    return insights
-      .filter((d) => d.total > 0)
-      .sort((a, b) => b.risk - a.risk)[0]
+  const highestScoreDept = useMemo(() => {
+    if (insights.length === 0) return null
+    const activePool = insights.filter((d) => d.total > 0)
+    const pool = activePool.length > 0 ? activePool : insights
+    return [...pool].sort((a, b) => b.score - a.score)[0]
   }, [insights])
 
-  const averageRisk =
-    insights.length === 0
-      ? 0
-      : Math.round(
-          insights.reduce((total, d) => total + d.risk, 0) / insights.length
-        )
+  const averageScore = useMemo(() => {
+    if (insights.length === 0) return 0
+    return Math.round(
+      insights.reduce((total, d) => total + d.score, 0) / insights.length
+    )
+  }, [insights])
 
   // ── Refresh helpers ──
   const refreshAll = async () => {
     if (!organizationId) return
-    const [depts, emps] = await Promise.all([
+    const [depts, emps, analytics] = await Promise.all([
       listDepartments(organizationId),
       listOrganizationEmployees(organizationId, ["member"]),
+      getOrganizationDepartmentAnalytics(organizationId),
     ])
     setAllDepartments(depts)
     setEmployees(emps)
+    setDeptAnalytics(analytics || [])
   }
 
   const refreshGrid = async () => {
@@ -349,12 +360,12 @@ export function DepartmentsPage() {
           <OverviewStatCardSkeleton />
         ) : (
           <OverviewStatCard
-            icon={AlertTriangle}
+            icon={TrendingUp}
             iconVariant="icon"
-            tone="warning"
-            label="Highest onboarding risk"
-            value={highestRisk ? `${highestRisk.risk}%` : "0%"}
-            hint={highestRisk?.name ?? "No members assigned"}
+            tone="success"
+            label="Highest health score"
+            value={highestScoreDept ? `${highestScoreDept.score}%` : "100%"}
+            hint={highestScoreDept?.name ?? "No departments assigned"}
           />
         )}
         {loading ? (
@@ -364,9 +375,9 @@ export function DepartmentsPage() {
             icon={ShieldCheck}
             iconVariant="icon"
             tone="success"
-            label="Average department risk"
-            value={`${averageRisk}%`}
-            hint="Based on onboarding members"
+            label="Average department score"
+            value={`${averageScore}%`}
+            hint="Aggregated health index"
           />
         )}
       </section>
@@ -385,70 +396,69 @@ export function DepartmentsPage() {
               </p>
             </div>
             <ActionButton
-              size="sm"
-              className="self-start"
+              type="button"
+              variant="default"
               icon={Plus}
-              onClick={() => setCreateOpen(true)}
+              onClick={() => {
+                setNewName("")
+                setCreateError("")
+                setCreateOpen(true)
+              }}
             >
               New department
             </ActionButton>
           </div>
 
-          {/* Search + total */}
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative sm:max-w-xs sm:flex-1">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value)
-                  setCurrentPage(1)
-                }}
-                placeholder="Search departments..."
-                className="h-9 rounded-full border-transparent bg-muted/60 pl-9 shadow-none"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="outline"
-                className="h-8 rounded-full border-border/70 px-3 text-muted-foreground"
-              >
-                {loadingGrid ? "..." : totalItems} total
-              </Badge>
-            </div>
+          {/* Search bar */}
+          <div className="relative mb-5 w-full sm:max-w-xs">
+            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setCurrentPage(1)
+              }}
+              placeholder="Search departments..."
+              className="pl-9"
+            />
           </div>
 
-          {/* Error */}
-          {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              <AlertCircle className="size-4 shrink-0" />
-              {error}
-            </div>
-          )}
-
-          {/* Grid */}
+          {/* Grid content */}
           {loadingGrid ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-                <Skeleton key={index} className="h-44 rounded-2xl" />
+            <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                <Skeleton key={i} className="h-44 w-full rounded-2xl" />
               ))}
             </div>
-          ) : totalItems === 0 && !error ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/80 bg-muted/20 py-10 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-foreground">
-              <span className="inline-flex size-10 items-center justify-center rounded-full bg-muted">
-                <FolderIcon className="size-5" />
-              </span>
-              <span className="text-sm font-medium">
+          ) : error ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center">
+              <AlertCircle className="size-8 text-destructive" />
+              <p className="text-sm text-muted-foreground">{error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refreshGrid()}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : departments.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center">
+              <FolderIcon className="size-10 text-muted-foreground/40" />
+              <p className="text-sm font-medium text-foreground">
+                No departments found
+              </p>
+              <p className="text-xs text-muted-foreground">
                 {search
-                  ? "No departments match your search."
-                  : "No departments yet. Use the button above to create one."}
-              </span>
+                  ? "Try adjusting your search query."
+                  : "Get started by creating your first department."}
+              </p>
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {departments.map((dept) => {
-                const insight = insights.find((item) => item.id === dept.id)
-                const tone = riskTone(insight?.risk ?? 0)
+                const insight = insights.find((d) => d.id === dept.id)
+                const tone = scoreTone(insight?.score ?? 100)
                 const deptMembers = employees.filter(
                   (employee) => employee.department?.id === dept.id
                 )
@@ -456,7 +466,6 @@ export function DepartmentsPage() {
                 return (
                   <Item
                     key={dept.id}
-                    variant="outline"
                     className="group cursor-pointer rounded-2xl border-border/85 bg-card/45 shadow-xs transition-all duration-200 ease-out hover:border-primary/40 hover:bg-muted/20"
                     onClick={() => navigate(`/departments/${dept.slug}`)}
                   >
@@ -545,11 +554,11 @@ export function DepartmentsPage() {
 
                       <div className="flex items-center gap-2">
                         <Progress
-                          value={insight?.risk ?? 0}
+                          value={insight?.score ?? 100}
                           className="h-1.5 w-16"
                         />
                         <span className="text-xs font-medium text-muted-foreground">
-                          {insight?.risk ?? 0}%
+                          {insight?.score ?? 100}%
                         </span>
                       </div>
                     </ItemFooter>
@@ -570,31 +579,26 @@ export function DepartmentsPage() {
                 of{" "}
                 <span className="font-medium text-foreground">
                   {totalPages}
-                </span>{" "}
-                ·{" "}
-                <span className="font-medium text-foreground">
-                  {totalItems}
-                </span>{" "}
-                total
+                </span>
               </p>
-              <div className="flex gap-1.5">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="size-8 bg-background"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  size="sm"
                   disabled={currentPage === 1 || loadingGrid}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  aria-label="Previous page"
                 >
                   <ChevronLeft className="size-4" />
                 </Button>
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="size-8 bg-background"
+                  size="sm"
+                  disabled={currentPage === totalPages || loadingGrid}
                   onClick={() =>
                     setCurrentPage((p) => Math.min(totalPages, p + 1))
                   }
-                  disabled={currentPage === totalPages || loadingGrid}
+                  aria-label="Next page"
                 >
                   <ChevronRight className="size-4" />
                 </Button>
@@ -623,42 +627,31 @@ export function DepartmentsPage() {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create department</DialogTitle>
             <DialogDescription>
-              Add a new department to your workspace.
+              Add a new department to organize your team and manage risk.
             </DialogDescription>
           </DialogHeader>
-          <form
-            onSubmit={(e) => void handleCreateLocal(e)}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="dept-new-name">Department name</Label>
+          <form onSubmit={handleCreateLocal} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="create-dept-name">Department name</Label>
               <Input
-                id="dept-new-name"
-                placeholder="e.g. Engineering, People Ops..."
+                id="create-dept-name"
                 value={newName}
-                onChange={(e) => {
-                  setNewName(e.target.value)
-                  setCreateError("")
-                }}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="e.g. Engineering, Sales, HR"
+                autoFocus
                 disabled={creating}
               />
               {newName.trim() && (
-                <p className="text-xs text-muted-foreground">
-                  URL identifier:{" "}
-                  <span className="rounded border border-border/40 bg-muted/60 px-1 py-0.5 font-mono font-medium text-foreground">
-                    {makeSlugPreview(newName)}
-                  </span>
+                <p className="font-mono text-xs text-muted-foreground">
+                  Slug: /{makeSlugPreview(newName)}
                 </p>
               )}
               {createError && (
-                <p className="flex items-center gap-1.5 text-xs text-destructive">
-                  <AlertCircle className="size-3 shrink-0" />
-                  {createError}
-                </p>
+                <p className="text-xs text-destructive">{createError}</p>
               )}
             </div>
             <DialogFooter>
@@ -671,7 +664,6 @@ export function DepartmentsPage() {
                 Cancel
               </Button>
               <Button type="submit" disabled={creating || !newName.trim()}>
-                <Plus className="size-4" />
                 {creating ? "Creating..." : "Create"}
               </Button>
             </DialogFooter>
@@ -691,37 +683,30 @@ export function DepartmentsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete department?</AlertDialogTitle>
+            <AlertDialogTitle>Delete department</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{deleteTarget?.name}". This action
-              cannot be undone.
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {deleteTarget?.name}
+              </span>
+              ? This action cannot be undone. Departments with assigned employees
+              cannot be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError && (
-            <p className="flex items-center gap-1.5 text-sm text-destructive">
-              <AlertCircle className="size-4 shrink-0" />
-              {deleteError}
-            </p>
+            <p className="text-xs text-destructive">{deleteError}</p>
           )}
           <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setDeleteTarget(null)
-                setDeleteError("")
-              }}
-              disabled={deleting}
-            >
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
-              onClick={(event) => {
-                event.preventDefault()
+              onClick={(e) => {
+                e.preventDefault()
                 void handleDeleteLocal()
               }}
               disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? "Deleting..." : "Delete department"}
+              {deleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

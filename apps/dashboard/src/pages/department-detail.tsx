@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import {
+  getOrganizationDepartmentAnalytics,
   listDepartments,
   listOrganizationEmployeesPage,
+  type DepartmentAnalyticsSummary,
   type DepartmentResponse,
   type OrganizationEmployee,
 } from "@workspace/api"
@@ -57,6 +59,7 @@ const statusClasses: Record<string, string> = {
 const tableSkeletonColumns = [
   { skeletonClassName: "h-4 w-48" },
   { skeletonClassName: "h-5 w-20 rounded-full" },
+  { skeletonClassName: "h-4 w-24" },
 ]
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -129,6 +132,8 @@ export function DepartmentDetailPage() {
   const organizationId = user?.membership?.organization_id
 
   const [department, setDepartment] = useState<DepartmentResponse | null>(null)
+  const [deptAnalytics, setDeptAnalytics] =
+    useState<DepartmentAnalyticsSummary | null>(null)
   const [loadingDept, setLoadingDept] = useState(true)
   const [error, setError] = useState("")
 
@@ -141,25 +146,39 @@ export function DepartmentDetailPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(10)
 
-  // ── Load department by slug ──
+  // ── Load department by slug + real analytics ──
   useEffect(() => {
     let active = true
     async function load() {
       if (!organizationId || !slug) return
       setLoadingDept(true)
       setError("")
-      const depts = await listDepartments(organizationId)
-      if (!active) return
-      const found = depts.find((d) => d.slug === slug)
-      if (found) {
-        setDepartment(found)
-      } else {
-        setError("Department not found.")
+      try {
+        const [depts, analytics] = await Promise.all([
+          listDepartments(organizationId),
+          getOrganizationDepartmentAnalytics(organizationId),
+        ])
+        if (!active) return
+        const found = depts.find((d) => d.slug === slug)
+        if (found) {
+          setDepartment(found)
+          const summary =
+            analytics.find((a) => a.department_id === found.id) ?? null
+          setDeptAnalytics(summary)
+        } else {
+          setError("Department not found.")
+        }
+      } catch {
+        if (!active) return
+        setError("Failed to load department.")
+      } finally {
+        if (active) setLoadingDept(false)
       }
-      setLoadingDept(false)
     }
     void load()
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [organizationId, slug])
 
   // ── Load employees for this department (paginated) ──
@@ -185,21 +204,21 @@ export function DepartmentDetailPage() {
       setLoadingTable(false)
     }
     void load()
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [organizationId, department, selectedStatus, search, currentPage, pageSize])
 
-  // ── Derived stats ──
+  // ── Derived stats from real analytics ──
   const totalMembers = totalItems
-  const onboardingCount = employees.filter(
-    (e) => e.status.toLowerCase() === "onboarding"
-  ).length
   const activeCount = employees.filter(
     (e) => e.status.toLowerCase() === "active"
   ).length
-  const risk =
-    totalMembers === 0
-      ? 0
-      : Math.round((onboardingCount / totalMembers) * 100)
+
+  const healthScore = deptAnalytics
+    ? Math.round(deptAnalytics.average_score)
+    : 100
+  const highRiskWorkers = deptAnalytics ? deptAnalytics.high_risk_count : 0
 
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const hasFilters = search !== "" || selectedStatus !== "all"
@@ -248,9 +267,9 @@ export function DepartmentDetailPage() {
             <h2 className="text-lg font-bold tracking-tight text-foreground">
               {department.name}
             </h2>
-            <span className="font-mono text-xs text-muted-foreground/60">
+            <Badge variant="outline" className="font-mono text-xs">
               /{department.slug}
-            </span>
+            </Badge>
           </div>
         </div>
       </div>
@@ -265,18 +284,22 @@ export function DepartmentDetailPage() {
           hint={loadingTable ? undefined : `${activeCount} active`}
         />
         <StatCard
-          icon={AlertTriangle}
-          tone="warning"
-          label="Onboarding"
-          value={loadingTable ? "..." : onboardingCount.toString()}
-          hint={loadingTable ? undefined : `${risk}% of members`}
+          icon={ShieldCheck}
+          tone={healthScore >= 80 ? "success" : "warning"}
+          label="Health score"
+          value={loadingDept ? "..." : `${healthScore}%`}
+          hint="Aggregated health index"
         />
         <StatCard
-          icon={ShieldCheck}
-          tone={risk >= 50 ? "warning" : risk >= 25 ? "warning" : "success"}
-          label="Risk level"
-          value={loadingTable ? "..." : `${risk}%`}
-          hint="Based on onboarding members"
+          icon={AlertTriangle}
+          tone={highRiskWorkers > 0 ? "warning" : "success"}
+          label="High risk cases"
+          value={loadingDept ? "..." : highRiskWorkers.toString()}
+          hint={
+            highRiskWorkers === 1
+              ? "1 employee in risk"
+              : `${highRiskWorkers} employees in risk`
+          }
         />
       </section>
 
@@ -293,151 +316,148 @@ export function DepartmentDetailPage() {
 
         {/* Filters */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          <div className="w-full sm:max-w-xs">
+          <div className="relative min-w-[200px] flex-1 sm:max-w-xs">
             <Input
-              placeholder="Filter by email..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
                 setCurrentPage(1)
               }}
-              className="h-9 bg-background"
+              placeholder="Search by email, role..."
+              className="h-9 pr-8 text-sm"
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            )}
           </div>
-          <div className="w-[150px]">
-            <Select
-              value={selectedStatus}
-              onValueChange={(val) => {
-                setSelectedStatus(val)
-                setCurrentPage(1)
-              }}
-            >
-              <SelectTrigger className="h-9 bg-background">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="onboarding">Onboarding</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
+          <Select
+            value={selectedStatus}
+            onValueChange={(val) => {
+              setSelectedStatus(val)
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="h-9 w-full sm:w-[150px]">
+              <SelectValue placeholder="All status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="onboarding">Onboarding</SelectItem>
+            </SelectContent>
+          </Select>
+
           {hasFilters && (
             <Button
               variant="ghost"
+              size="sm"
               onClick={() => {
                 setSearch("")
                 setSelectedStatus("all")
                 setCurrentPage(1)
               }}
-              className="h-9 gap-2 px-3 text-muted-foreground hover:text-foreground"
+              className="h-9 text-xs text-muted-foreground"
             >
               Reset
-              <X className="size-4" />
             </Button>
           )}
         </div>
 
         {/* Table */}
-        <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
-          <Table>
-            <TableHeader className="bg-muted/30">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Employee</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="hidden sm:table-cell">Role</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loadingTable ? (
+              <TableRowsSkeleton
+                rows={pageSize}
+                columns={tableSkeletonColumns}
+              />
+            ) : employees.length === 0 ? (
               <TableRow>
-                <TableHead className="font-semibold text-foreground">
-                  Employee
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
-                  Status
-                </TableHead>
+                <TableCell
+                  colSpan={3}
+                  className="py-12 text-center text-muted-foreground"
+                >
+                  {hasFilters
+                    ? "No members match the current filters."
+                    : "No members assigned to this department yet."}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loadingTable ? (
-                <TableRowsSkeleton columns={tableSkeletonColumns} />
-              ) : employees.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={2}
-                    className="h-32 text-center text-muted-foreground"
-                  >
-                    {hasFilters
-                      ? "No employees match the active filters."
-                      : "No employees in this department yet."}
+            ) : (
+              employees.map((emp) => (
+                <TableRow
+                  key={emp.id}
+                  className="cursor-pointer transition-colors hover:bg-muted/40"
+                  onClick={() => navigate(`/employees/${emp.id}`)}
+                >
+                  <TableCell>
+                    <span className="font-medium text-foreground">
+                      {emp.email}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        statusClasses[emp.status.toLowerCase()] ?? "capitalize"
+                      }
+                    >
+                      {emp.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
+                    {emp.roles.join(", ") || "—"}
                   </TableCell>
                 </TableRow>
-              ) : (
-                employees.map((emp) => (
-                  <TableRow
-                    key={emp.id}
-                    className="group cursor-pointer transition-colors hover:bg-muted/40"
-                    onClick={() => navigate(`/employees/${emp.id}`)}
-                  >
-                    <TableCell className="font-medium text-foreground transition-colors group-hover:text-primary">
-                      {emp.email}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          statusClasses[emp.status] ?? "capitalize"
-                        }
-                      >
-                        {emp.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              ))
+            )}
+          </TableBody>
+        </Table>
 
         {/* Pagination */}
-        <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <p className="text-sm text-muted-foreground">
-            Showing{" "}
-            <span className="font-medium text-foreground">
-              {totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0}
-            </span>{" "}
-            to{" "}
-            <span className="font-medium text-foreground">
-              {Math.min(currentPage * pageSize, totalItems)}
-            </span>{" "}
-            of{" "}
-            <span className="font-medium text-foreground">{totalItems}</span>{" "}
-            members
-          </p>
-          <div className="flex items-center gap-3">
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4">
             <span className="text-sm text-muted-foreground">
-              Page{" "}
-              <span className="font-medium text-foreground">{currentPage}</span>{" "}
-              of{" "}
-              <span className="font-medium text-foreground">{totalPages}</span>
+              Page {currentPage} of {totalPages} ({totalItems} members)
             </span>
-            <div className="flex gap-1.5">
+            <div className="flex gap-2">
               <Button
                 variant="outline"
-                size="icon"
-                className="size-8 bg-background"
+                size="sm"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1 || loadingTable}
+                className="gap-1"
               >
                 <ChevronLeft className="size-4" />
+                Previous
               </Button>
               <Button
                 variant="outline"
-                size="icon"
-                className="size-8 bg-background"
+                size="sm"
                 onClick={() =>
                   setCurrentPage((p) => Math.min(totalPages, p + 1))
                 }
                 disabled={currentPage === totalPages || loadingTable}
+                className="gap-1"
               >
+                Next
                 <ChevronRight className="size-4" />
               </Button>
             </div>
           </div>
-        </div>
+        )}
       </Card>
     </div>
   )

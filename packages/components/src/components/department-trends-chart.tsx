@@ -146,6 +146,12 @@ export function DepartmentTrendsChart({
     })
   }, [periodList, departments, trendsMap])
 
+  const periodBadgeText = useMemo(() => {
+    if (periodList.length === 0) return null
+    if (periodList.length === 1) return periodList[0]?.month_label ?? null
+    return `${periodList[0]?.month_label} – ${periodList[periodList.length - 1]?.month_label}`
+  }, [periodList])
+
   if (departments.length === 0) return null
 
   return (
@@ -155,10 +161,12 @@ export function DepartmentTrendsChart({
         <div>
           <h3 className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
             Department Risk Trends
-            <Badge variant="success-light" className="gap-1">
-              <TrendingUp className="size-3" aria-hidden="true" />
-              Last 6 months
-            </Badge>
+            {periodBadgeText && (
+              <Badge variant="success-light" className="gap-1">
+                <TrendingUp className="size-3" aria-hidden="true" />
+                {periodBadgeText}
+              </Badge>
+            )}
           </h3>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Aggregated health risk index per department over time.
