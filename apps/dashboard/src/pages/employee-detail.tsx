@@ -48,8 +48,18 @@ import {
   ClipboardList,
   RotateCcw,
   FileText,
+  TrendingUp,
 } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
 
 const healthIndicators: HealthScoreRow[] = [
   { label: "Physical Activity", value: 85, icon: Dumbbell, tone: "green" },
@@ -180,6 +190,25 @@ export function EmployeeDetailPage() {
     )
   }, [activeSession, assessments])
 
+  // Dynamic evolution chart from session history
+  const evolutionData = useMemo(() => {
+    if (!sessions.length) return []
+    return [...sessions]
+      .reverse()
+      .map((session, idx, arr) => {
+        const isLatestInArray = idx === arr.length - 1
+        const sessionScore =
+          isLatestInArray && typeof assessments?.overall_score === "number"
+            ? Math.round(assessments.overall_score)
+            : computeOverallHealthScore(session.results).score
+
+        return {
+          month: session.formattedDate.split(" ")[0] || "Evaluation",
+          score: sessionScore,
+        }
+      })
+  }, [sessions, assessments])
+
   const dynamicIndicators: HealthScoreRow[] = useMemo(() => {
     if (!activeSession?.results.length) return healthIndicators
     return activeSession.results.map((r) => {
@@ -202,7 +231,10 @@ export function EmployeeDetailPage() {
 
       return {
         label: name,
-        value: r.normalized_value !== null && r.normalized_value !== undefined ? Math.round(r.normalized_value) : val,
+        value:
+          r.normalized_value !== null && r.normalized_value !== undefined
+            ? Math.round(r.normalized_value)
+            : val,
         icon,
         tone,
       }
@@ -221,11 +253,11 @@ export function EmployeeDetailPage() {
             {error || "Employee not found."}
           </p>
           <Button
-            onClick={() => navigate("/employees")}
+            onClick={() => navigate(-1)}
             variant="link"
             className="text-sm font-semibold text-primary hover:underline"
           >
-            Go back to employees
+            Go back
           </Button>
         </CardContent>
       </Card>
@@ -248,9 +280,9 @@ export function EmployeeDetailPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate("/employees")}
+          onClick={() => navigate(-1)}
           className="size-9 rounded-lg border border-border/40 hover:bg-muted/50"
-          aria-label="Back to employees"
+          aria-label="Back"
         >
           <ArrowLeft className="size-4 text-muted-foreground" />
         </Button>
@@ -312,6 +344,106 @@ export function EmployeeDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Evolution Chart */}
+      {evolutionData.length > 0 && (
+        <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
+          <div className="mb-4 flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                Health score evolution
+              </h3>
+              <Badge variant="success-light" className="gap-1">
+                <TrendingUp className="size-3" aria-hidden="true" />
+                Progression over time
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Evolution of this employee's health score across completed
+              evaluations
+            </p>
+          </div>
+
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={evolutionData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient
+                    id="employeeScoreGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor="var(--primary)"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--primary)"
+                      stopOpacity={0.0}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  className="stroke-muted"
+                />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  className="text-xs text-muted-foreground"
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  className="text-xs text-muted-foreground"
+                  tickFormatter={(v: number) => `${v}%`}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const val = payload[0]?.value as number
+                      return (
+                        <div className="rounded-lg border bg-background p-2.5 shadow-md text-xs">
+                          <p className="font-semibold">
+                            {payload[0]?.payload.month}
+                          </p>
+                          <p className="text-muted-foreground">
+                            Score:{" "}
+                            <span className="font-bold text-foreground">
+                              {val}%
+                            </span>
+                          </p>
+                        </div>
+                      )
+                    }
+                    return null
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="score"
+                  stroke="var(--primary)"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#employeeScoreGradient)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      )}
 
       {/* Card 3: Clinical Study Assessment Preview & History */}
       <Card className="border-2">
