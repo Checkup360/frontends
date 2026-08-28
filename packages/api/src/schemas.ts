@@ -221,3 +221,20 @@ export type MemberFormSubmissionResponse = {
   recalculated_scores: EvaluatedScoreSummary[]
 }
 
+export type RiskTrendPoint = {
+  period: string
+  month_label: string
+  average_score: number
+  risk_index: number
+  total_assessments: number
+}
+
+export type DepartmentAnalyticsSummary = {
+  department_id: string
+  name: string
+  average_score: number
+  total_workers: number
+  high_risk_count: number
+}
+
+

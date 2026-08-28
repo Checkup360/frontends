@@ -16,6 +16,8 @@ import {
   type AssessmentsResponse,
   type MemberFormResponse,
   type MemberFormSubmissionResponse,
+  type RiskTrendPoint,
+  type DepartmentAnalyticsSummary,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -1509,5 +1511,54 @@ export async function listEmployeeAssessments(
     return null
   }
 }
+
+export async function getOrganizationRiskTrends(
+  organizationId: string,
+  months = 12,
+  departmentId?: string
+): Promise<RiskTrendPoint[]> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationAnalyticsTrends(
+        organizationId,
+        months,
+        departmentId
+      )}`,
+      {
+        credentials: "include",
+      }
+    )
+
+    if (!response.ok) return []
+    return (await response.json()) as RiskTrendPoint[]
+  } catch (error) {
+    console.error("Error fetching organization risk trends:", error)
+    return []
+  }
+}
+
+export async function getOrganizationDepartmentAnalytics(
+  organizationId: string
+): Promise<DepartmentAnalyticsSummary[]> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationAnalyticsDepartments(
+        organizationId
+      )}`,
+      {
+        credentials: "include",
+      }
+    )
+
+    if (!response.ok) return []
+    return (await response.json()) as DepartmentAnalyticsSummary[]
+  } catch (error) {
+    console.error("Error fetching organization department analytics:", error)
+    return []
+  }
+}
+
+export type { RiskTrendPoint, DepartmentAnalyticsSummary }
+
 
 

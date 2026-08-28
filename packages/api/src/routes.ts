@@ -28,6 +28,16 @@ export const apiRoutes = {
     `/organizations/${encodeURIComponent(organizationId)}/employees`,
   organizationScoreWeights: (organizationId: string) =>
     `/organizations/${encodeURIComponent(organizationId)}/score-weights`,
+  organizationAnalyticsTrends: (organizationId: string, months = 12, departmentId?: string) => {
+    let url = `/organizations/${encodeURIComponent(organizationId)}/analytics/trends?months=${months}`
+    if (departmentId) {
+      url += `&department_id=${encodeURIComponent(departmentId)}`
+    }
+    return url
+  },
+  organizationAnalyticsDepartments: (organizationId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/analytics/departments`,
+
 
   members: {
     myDetails: "/members/me/details",

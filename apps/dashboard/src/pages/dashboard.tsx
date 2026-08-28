@@ -2,10 +2,14 @@ import { AreaScores, type AreaScoreItem } from "@/components/area-scores"
 import { EmployeesTable } from "@/components/employees-table"
 import { RiskTrend } from "@/components/risk-trend"
 import {
+  getOrganizationDepartmentAnalytics,
+  getOrganizationRiskTrends,
   listDepartments,
   listOrganizationEmployees,
+  type DepartmentAnalyticsSummary,
   type DepartmentResponse,
   type OrganizationEmployee,
+  type RiskTrendPoint,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { OverviewStatCard } from "@workspace/components/components/card"
@@ -18,6 +22,10 @@ export function DashboardPage() {
 
   const [employees, setEmployees] = useState<OrganizationEmployee[]>([])
   const [departments, setDepartments] = useState<DepartmentResponse[]>([])
+  const [trends, setTrends] = useState<RiskTrendPoint[]>([])
+  const [deptAnalytics, setDeptAnalytics] = useState<
+    DepartmentAnalyticsSummary[]
+  >([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -27,18 +35,24 @@ export function DashboardPage() {
       if (!organizationId) {
         setEmployees([])
         setDepartments([])
+        setTrends([])
+        setDeptAnalytics([])
         setLoading(false)
         return
       }
 
       setLoading(true)
-      const [depts, emps] = await Promise.all([
+      const [depts, emps, trendData, deptAnalyticsData] = await Promise.all([
         listDepartments(organizationId),
         listOrganizationEmployees(organizationId, ["member"]),
+        getOrganizationRiskTrends(organizationId, 12),
+        getOrganizationDepartmentAnalytics(organizationId),
       ])
       if (!active) return
       setDepartments(depts)
       setEmployees(emps)
+      setTrends(trendData || [])
+      setDeptAnalytics(deptAnalyticsData || [])
       setLoading(false)
     }
 
@@ -48,27 +62,24 @@ export function DashboardPage() {
     }
   }, [organizationId])
 
-  // Derive per-department scores from real data.
-  // Score = 100 - onboarding_risk_rate (higher = healthier).
+  // Derive per-department scores from real data
   const areas = useMemo<AreaScoreItem[]>(() => {
+    if (deptAnalytics.length > 0) {
+      return deptAnalytics.map((dept) => ({
+        name: dept.name,
+        score: Math.round(dept.average_score),
+        workers: dept.total_workers,
+      }))
+    }
     return departments.map((dept) => {
-      const members = employees.filter(
-        (emp) => emp.department?.id === dept.id
-      )
-      const onboarding = members.filter(
-        (emp) => emp.status.toLowerCase() === "onboarding"
-      ).length
-      const risk =
-        members.length === 0
-          ? 0
-          : Math.round((onboarding / members.length) * 100)
+      const members = employees.filter((emp) => emp.department?.id === dept.id)
       return {
         name: dept.name,
-        score: 100 - risk,
+        score: 100,
         workers: members.length,
       }
     })
-  }, [departments, employees])
+  }, [deptAnalytics, departments, employees])
 
   // Summary stats derived from real data
   const totalEmployees = loading ? "..." : employees.length.toString()
@@ -95,7 +106,7 @@ export function DashboardPage() {
         <OverviewStatCard
           label="Average score"
           value={averageScore}
-          hint="Based on onboarding risk"
+          hint="Aggregated health index"
           icon={TrendingUp}
           iconVariant="icon"
           tone="success"
@@ -112,7 +123,7 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <RiskTrend />
+          <RiskTrend trends={trends} loading={loading} />
         </div>
         <div className="h-full">
           <AreaScores areas={areas} loading={loading} />
