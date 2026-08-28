@@ -70,8 +70,9 @@ export function OrgInvitationForm({
 
   const isAdminRole = role === "admin"
   const isMemberRole = role === "member"
+  const isContentManagerRole = role === "content_manager"
   const isEmailFilled = email.trim().length > 0
-  const shouldBeSingleUse = isAdminRole || isEmailFilled
+  const shouldBeSingleUse = isAdminRole || isContentManagerRole || isEmailFilled
   const selectedOrganization = fixedOrganization ?? selected
   const selectedOrganizationId = selected?.id ?? fixedOrganization?.id ?? ""
 
@@ -400,17 +401,24 @@ export function OrgInvitationForm({
               <SelectContent>
                 <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="content_manager">Content Manager</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
               {isAdminRole
                 ? "Admins can manage organization settings, invite members, and have full access to organization data."
-                : "Members can access organization data and collaborate with the team."}
+                : isContentManagerRole
+                  ? "Content managers can log in to the CMS and publish news articles for the organization."
+                  : "Members can access organization data and collaborate with the team."}
             </p>
-            {isAdminRole && (
+            {(isAdminRole || isContentManagerRole) && (
               <div className="flex gap-2 rounded-lg border border-border/60 bg-muted/40 p-3 text-sm text-muted-foreground">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[color:var(--warning)]" />
-                <p>Admin invitations are single-use.</p>
+                <p>
+                  {isAdminRole
+                    ? "Admin invitations are single-use."
+                    : "Content manager invitations are single-use."}
+                </p>
               </div>
             )}
           </div>

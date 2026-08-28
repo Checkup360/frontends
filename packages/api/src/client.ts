@@ -77,12 +77,12 @@ export function buildLoginUrl({ nextUrl }: { nextUrl: string }): string {
 
 export function getPostLoginRedirectUrl(currentUrl: URL): string {
   const next = currentUrl.searchParams.get("next")
-  if (!next) return `${currentUrl.origin}/`
+  if (!next) return ""
 
   try {
     return new URL(next, currentUrl.origin).toString()
   } catch {
-    return `${currentUrl.origin}/`
+    return ""
   }
 }
 

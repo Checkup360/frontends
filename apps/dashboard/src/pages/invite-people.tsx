@@ -405,6 +405,7 @@ export function InvitePeoplePage() {
                   <SelectItem value="all">All Roles</SelectItem>
                   <SelectItem value="member">Member</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="content_manager">Content Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -562,7 +563,7 @@ export function InvitePeoplePage() {
                       <TableCell className="font-medium text-muted-foreground">
                         <div className="flex flex-col gap-0.5">
                           <span className="capitalize text-foreground font-semibold">
-                            {inv.role ?? "Member"}
+                            {inv.role ? inv.role.replace(/_/g, " ") : "Member"}
                           </span>
                           {inv.department_name && (
                             <span className="text-xs text-muted-foreground">

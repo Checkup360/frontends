@@ -1,6 +1,7 @@
 import { buildLoginUrl } from "@workspace/api"
 import { AuthProvider } from "@workspace/auth/provider"
-import { RequireOrgAdmin } from "@workspace/auth/components/require-org-admin"
+import { RequireOrgRole } from "@workspace/auth/components/require-org-role"
+
 import { Button } from "@workspace/ui/components/button"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
@@ -18,11 +19,13 @@ import { ScoreWeightsPage } from "@/pages/score-weights"
 import { SettingsPage } from "@/pages/settings"
 import { ThemeProvider } from "./components/theme-provider"
 
+
+
 function ProtectedLayout() {
   return (
-    <RequireOrgAdmin fallback={<DashboardLoadingSkeleton />}>
+    <RequireOrgRole allowedRoles={["admin"]} fallback={<DashboardLoadingSkeleton />}>
       <Outlet />
-    </RequireOrgAdmin>
+    </RequireOrgRole>
   )
 }
 

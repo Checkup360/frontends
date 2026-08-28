@@ -3,27 +3,29 @@ import { buildLoginUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { AuthLoadingSkeleton } from "./auth-loading-skeleton"
 
-type RequireOrgAdminProps = {
+type RequireOrgRoleProps = {
+  allowedRoles: string[]
   fallback?: ReactNode
   children: ReactNode
 }
 
-export function RequireOrgAdmin({
+export function RequireOrgRole({
+  allowedRoles,
   fallback,
   children,
-}: RequireOrgAdminProps) {
+}: RequireOrgRoleProps) {
   const { user, isLoading } = useCurrentUser()
   const loginUrl = useMemo(
     () => buildLoginUrl({ nextUrl: window.location.href }),
     [],
   )
 
-  const isOrgAdmin = useMemo(
+  const hasAllowedRole = useMemo(
     () =>
       user &&
       user.membership &&
-      user.membership.roles?.includes("admin"),
-    [user]
+      user.membership.roles?.some((r) => allowedRoles.includes(r)),
+    [user, allowedRoles]
   )
 
   useEffect(() => {
@@ -36,15 +38,15 @@ export function RequireOrgAdmin({
   }, [isLoading, loginUrl, user])
 
   useEffect(() => {
-    if (!isLoading && user && !isOrgAdmin) {
+    if (!isLoading && user && !hasAllowedRole) {
       const timer = setTimeout(() => {
         window.location.replace(`${window.location.origin}/access-denied`)
       }, 100)
       return () => clearTimeout(timer)
     }
-  }, [isLoading, user, isOrgAdmin])
+  }, [isLoading, user, hasAllowedRole])
 
-  if (isLoading || !user || !isOrgAdmin) {
+  if (isLoading || !user || !hasAllowedRole) {
     return fallback ?? <AuthLoadingSkeleton />
   }
 

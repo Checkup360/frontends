@@ -42,8 +42,12 @@ const heroCards = [
 
 export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
   const { theme, setTheme } = useTheme()
-  const isAdminOrSysadmin =
-    user && (user.is_sysadmin || user.membership?.roles?.includes("admin"))
+  const isSysadmin = user?.is_sysadmin
+  const isAdmin = user?.membership?.roles?.includes("admin")
+  const isContentManager = user?.membership?.roles?.includes("content_manager")
+
+  const hasDashboardAccess = Boolean(user && (isSysadmin || isAdmin || isContentManager))
+  const CMS_URL = import.meta.env.VITE_CMS_URL ?? "http://localhost:3000"
 
   const toggleTheme = () => {
     const resolvedTheme =
@@ -57,11 +61,16 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
   }
 
   const getButtonLabel = () => {
-    if (user?.is_sysadmin) return "Backoffice"
+    if (isSysadmin) return "Backoffice"
+    if (isContentManager && !isAdmin) return "CMS"
     return "Dashboard"
   }
 
   const handleNavigate = () => {
+    if (isContentManager && !isAdmin && !isSysadmin) {
+      window.location.assign(`${CMS_URL}/admin`)
+      return
+    }
     const redirectUrl = getRedirectUrlByUserRole(user)
     window.location.replace(redirectUrl)
   }
@@ -118,7 +127,7 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
               </p>
 
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                {isAdminOrSysadmin ? (
+                {hasDashboardAccess ? (
                   <Button size="lg" onClick={handleNavigate}>
                     {getButtonLabel()}
                     <ArrowRight className="ml-2 size-4" />
