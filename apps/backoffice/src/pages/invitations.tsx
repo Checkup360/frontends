@@ -10,7 +10,7 @@ import {
   OverviewStatCard,
   OverviewStatCardSkeleton,
 } from "@workspace/components/components/card"
-import { Link, useSearchParams } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import {
   deleteOrgInvitations,
   deleteSysadminInvitations,
@@ -114,7 +114,7 @@ interface CombinedInvite {
 }
 
 export function InvitationsPage() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const initialType = useMemo<"sysadmin" | "organization">(() => {
     return searchParams.get("type") === "organization"
       ? "organization"
@@ -235,12 +235,23 @@ export function InvitationsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
+  const navigate = useNavigate()
+
   // Handle back trigger inside creation view
   const handleBack = () => {
+    if (shouldStartCreating) {
+      navigate(-1)
+      return
+    }
     setCompleted(false)
     setSelectedType(null)
     setIsCreating(false)
     setSearchQuery("")
+    if (searchParams.has("create")) {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete("create")
+      setSearchParams(nextParams, { replace: true })
+    }
   }
 
   // Copy Link function
@@ -408,7 +419,7 @@ export function InvitationsPage() {
             className="gap-2"
           >
             <ArrowLeft className="size-4" />
-            Back to Invitations
+            {shouldStartCreating ? "Back" : "Back to Invitations"}
           </Button>
         </div>
 
