@@ -607,8 +607,8 @@ export function DepartmentsPage() {
       {/* ── Trends chart ── */}
       {!loadingMeta && allDepartments.length > 0 && (
         <DepartmentTrendsChart
+          organizationId={organizationId || undefined}
           departments={allDepartments}
-          employees={employees}
         />
       )}
 

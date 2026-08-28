@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   Area,
   AreaChart,
@@ -11,13 +11,17 @@ import {
 import { TrendingUp } from "lucide-react"
 import { Badge } from "@workspace/ui/components/badge"
 import { Card } from "@workspace/ui/components/card"
-import type { DepartmentResponse, OrganizationEmployee } from "@workspace/api"
+import {
+  getOrganizationRiskTrends,
+  type DepartmentResponse,
+  type RiskTrendPoint,
+} from "@workspace/api"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface DepartmentTrendsChartProps {
+  organizationId?: string
   departments: DepartmentResponse[]
-  employees: OrganizationEmployee[]
 }
 
 // ─── Colour palette ───────────────────────────────────────────────────────────
@@ -33,54 +37,88 @@ const PALETTE = [
   "oklch(0.58 0.20 10)",
 ]
 
-// ─── Synthetic trend generation ───────────────────────────────────────────────
-// Generates a plausible 6-month trend from the current risk snapshot.
-// Replace with real API data when available.
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
-
-function generateTrend(currentRisk: number, seed: number): number[] {
-  const pts: number[] = []
-  let v = Math.max(0, currentRisk + (((seed * 7) % 30) - 15))
-  for (let i = 0; i < MONTHS.length - 1; i++) {
-    v = Math.min(100, Math.max(0, v + (((seed * (i + 3)) % 14) - 6)))
-    pts.push(Math.round(v))
-  }
-  pts.push(currentRisk)
-  return pts
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function DepartmentTrendsChart({
+  organizationId,
   departments,
-  employees,
 }: DepartmentTrendsChartProps) {
+  const [trendsMap, setTrendsMap] = useState<Record<string, RiskTrendPoint[]>>(
+    {}
+  )
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    async function loadTrends() {
+      if (!organizationId || departments.length === 0) {
+        setTrendsMap({})
+        setLoading(false)
+        return
+      }
+      setLoading(true)
+      try {
+        const results = await Promise.all(
+          departments.map(async (dept) => {
+            const pts = await getOrganizationRiskTrends(
+              organizationId,
+              6,
+              dept.id
+            )
+            return { deptId: dept.id, pts }
+          })
+        )
+        if (!active) return
+        const map: Record<string, RiskTrendPoint[]> = {}
+        results.forEach(({ deptId, pts }) => {
+          map[deptId] = pts
+        })
+        setTrendsMap(map)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    void loadTrends()
+    return () => {
+      active = false
+    }
+  }, [organizationId, departments])
+
+  // Extract chronological periods from all departments
+  const periodList = useMemo(() => {
+    const map = new Map<string, string>() // period -> month_label
+    Object.values(trendsMap).forEach((points) => {
+      points.forEach((p) => {
+        map.set(p.period, p.month_label)
+      })
+    })
+    return Array.from(map.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([period, month_label]) => ({ period, month_label }))
+  }, [trendsMap])
+
   const insights = useMemo(() => {
     return departments.map((dept, idx) => {
-      const members = employees.filter(
-        (emp) => emp.department?.id === dept.id
-      )
-      const onboarding = members.filter(
-        (emp) => emp.status.toLowerCase() === "onboarding"
-      ).length
-      const risk =
-        members.length === 0
-          ? 0
-          : Math.round((onboarding / members.length) * 100)
+      const pts = trendsMap[dept.id] || []
+      const latest = pts.length > 0 ? pts[pts.length - 1] : null
       return {
         id: dept.id,
         name: dept.name,
-        risk,
-        trend: generateTrend(risk, idx + 1),
+        latestScore: latest?.average_score ?? 100,
+        latestRisk: latest?.risk_index ?? 0,
+        points: pts,
         color: PALETTE[idx % PALETTE.length] as string,
       }
     })
-  }, [departments, employees])
+  }, [departments, trendsMap])
 
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(departments.map((d) => d.id))
   )
+
+  useEffect(() => {
+    setSelected(new Set(departments.map((d) => d.id)))
+  }, [departments])
 
   const toggle = (id: string) =>
     setSelected((prev) => {
@@ -97,13 +135,16 @@ export function DepartmentTrendsChart({
   const activeInsights = insights.filter((d) => selected.has(d.id))
 
   // One row per month, keyed by department id
-  const chartData = MONTHS.map((month, mIdx) => {
-    const row: Record<string, string | number> = { month }
-    insights.forEach((dept) => {
-      row[dept.id] = dept.trend[mIdx] ?? 0
+  const chartData = useMemo(() => {
+    return periodList.map(({ period, month_label }) => {
+      const row: Record<string, string | number> = { month: month_label }
+      departments.forEach((dept) => {
+        const pt = trendsMap[dept.id]?.find((p) => p.period === period)
+        row[dept.id] = pt ? pt.risk_index : 0
+      })
+      return row
     })
-    return row
-  })
+  }, [periodList, departments, trendsMap])
 
   if (departments.length === 0) return null
 
@@ -120,7 +161,7 @@ export function DepartmentTrendsChart({
             </Badge>
           </h3>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Onboarding risk rate per department over time.
+            Aggregated health risk index per department over time.
           </p>
         </div>
       </div>
@@ -169,99 +210,116 @@ export function DepartmentTrendsChart({
         })}
       </div>
 
-      {/* Chart — same pattern as MemberOverview & RadarAssessmentCard */}
+      {/* Chart */}
       <div className="h-[280px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={chartData}
-            margin={{ top: 10, right: 8, bottom: 0, left: -16 }}
-          >
-            <defs>
-              {activeInsights.map((dept) => (
-                <linearGradient
-                  key={dept.id}
-                  id={`deptGrad-${dept.id}`}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop
-                    offset="0%"
-                    stopColor={dept.color}
-                    stopOpacity={0.3}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor={dept.color}
-                    stopOpacity={0.02}
-                  />
-                </linearGradient>
-              ))}
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="var(--border)"
-              strokeOpacity={0.55}
-              vertical={false}
-            />
-            <XAxis
-              dataKey="month"
-              stroke="oklch(0.5 0.03 220)"
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              stroke="oklch(0.5 0.03 220)"
-              fontSize={11}
-              tickLine={false}
-              axisLine={false}
-              domain={[0, 100]}
-              tickFormatter={(v: number) => `${v}%`}
-            />
-            <Tooltip
-              contentStyle={{
-                background: "var(--card)",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                fontSize: 12,
-              }}
-              formatter={(value: number, name: string) => {
-                const dept = insights.find((d) => d.id === name)
-                return [`${value}%`, dept?.name ?? name]
-              }}
-              labelFormatter={(label: string) => `${label} 2025`}
-            />
-            {activeInsights.map((dept) => (
-              <Area
-                key={dept.id}
-                type="natural"
-                dataKey={dept.id}
-                name={dept.id}
-                stroke={dept.color}
-                fill={`url(#deptGrad-${dept.id})`}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0, fill: dept.color }}
+        {loading ? (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            Loading department trends...
+          </div>
+        ) : chartData.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-1 text-center text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">
+              No historical evaluations yet
+            </p>
+            <p className="text-xs">
+              As employees complete health evaluations, department trends will
+              appear here.
+            </p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={chartData}
+              margin={{ top: 10, right: 8, bottom: 0, left: -16 }}
+            >
+              <defs>
+                {activeInsights.map((dept) => (
+                  <linearGradient
+                    key={dept.id}
+                    id={`deptGrad-${dept.id}`}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="0%"
+                      stopColor={dept.color}
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor={dept.color}
+                      stopOpacity={0.02}
+                    />
+                  </linearGradient>
+                ))}
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--border)"
+                strokeOpacity={0.55}
+                vertical={false}
               />
-            ))}
-          </AreaChart>
-        </ResponsiveContainer>
+              <XAxis
+                dataKey="month"
+                stroke="oklch(0.5 0.03 220)"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                stroke="oklch(0.5 0.03 220)"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+                domain={[0, 100]}
+                tickFormatter={(v: number) => `${v}%`}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 12,
+                  fontSize: 12,
+                }}
+                formatter={(value: number, name: string) => {
+                  const dept = insights.find((d) => d.id === name)
+                  return [`${value}%`, dept?.name ?? name]
+                }}
+              />
+              {activeInsights.map((dept) => (
+                <Area
+                  key={dept.id}
+                  type="natural"
+                  dataKey={dept.id}
+                  name={dept.id}
+                  stroke={dept.color}
+                  fill={`url(#deptGrad-${dept.id})`}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 0, fill: dept.color }}
+                />
+              ))}
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Legend */}
-      <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
-        {activeInsights.map((dept) => (
-          <span key={dept.id} className="inline-flex items-center gap-1.5">
-            <span
-              className="size-2.5 rounded-sm"
-              style={{ backgroundColor: dept.color }}
-            />
-            {dept.name}
-          </span>
-        ))}
-      </div>
+      {chartData.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
+          {activeInsights.map((dept) => (
+            <span key={dept.id} className="inline-flex items-center gap-1.5">
+              <span
+                className="size-2.5 rounded-sm"
+                style={{ backgroundColor: dept.color }}
+              />
+              {dept.name}
+            </span>
+          ))}
+        </div>
+      )}
     </Card>
   )
 }
