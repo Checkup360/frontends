@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   MemberOverview,
@@ -7,6 +8,7 @@ import { HealthContentGrid } from "@workspace/components/components/health-conte
 import { useMemberArticles } from "@/hooks/use-member-articles"
 
 export function MemberOverviewPage() {
+  const navigate = useNavigate()
   const { user, isLoading: isUserLoading } = useCurrentUser()
   const { articles, isLoading: isArticlesLoading } = useMemberArticles()
 
@@ -19,12 +21,13 @@ export function MemberOverviewPage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="mx-auto w-full max-w-7xl space-y-10">
       <MemberOverview email={user.email} />
       <HealthContentGrid
         articles={articles}
         title="Health content"
         description="Personalized articles and wellness recommendations."
+        onNavigate={(href) => navigate(href)}
       />
     </div>
   )

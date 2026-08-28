@@ -3,7 +3,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
-import { ArrowRight, Clock, Search } from "lucide-react"
+import { ArrowRight, Clock, Newspaper, Search } from "lucide-react"
 import { useMemo, useState } from "react"
 import type { HealthContentArticle } from "@workspace/api"
 
@@ -31,22 +31,26 @@ function ArticleCard({
   }
 
   return (
-    <Card className="group h-full gap-0 p-0 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md relative overflow-hidden flex flex-col">
-      {article.image && (
-        <a
-          href={targetHref}
-          onClick={handleClick}
-          className="block overflow-hidden bg-muted aspect-video w-full focus:outline-none"
-          tabIndex={-1}
-        >
+    <Card className="group h-full gap-0 p-0 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md relative overflow-hidden flex flex-col rounded-2xl border-border/60">
+      <a
+        href={targetHref}
+        onClick={handleClick}
+        className="block overflow-hidden bg-muted aspect-video w-full focus:outline-none relative"
+        tabIndex={-1}
+      >
+        {article.image ? (
           <img
             src={article.image}
             alt={article.imageAlt ?? article.title}
             className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
-        </a>
-      )}
+        ) : (
+          <div className="flex aspect-video w-full items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-muted/80 text-primary/40">
+            <Newspaper className="size-10" />
+          </div>
+        )}
+      </a>
       <CardContent className="flex flex-1 flex-col space-y-3 p-5">
         <div className="flex items-center justify-between gap-3">
           {article.readTime ? (
@@ -57,16 +61,24 @@ function ArticleCard({
           ) : (
             <span />
           )}
-          {article.category && <Badge variant="secondary">{article.category}</Badge>}
+          {article.category && (
+            <Badge variant="secondary" className="text-xs">
+              {article.category}
+            </Badge>
+          )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <h3 className="line-clamp-2 text-base leading-snug font-semibold text-foreground group-hover:text-primary transition-colors">
-            <a href={targetHref} onClick={handleClick} className="focus:outline-none focus:underline">
+            <a
+              href={targetHref}
+              onClick={handleClick}
+              className="focus:outline-none focus:underline"
+            >
               {article.title}
             </a>
           </h3>
           {article.excerpt && (
-            <p className="line-clamp-2 text-sm text-muted-foreground">
+            <p className="line-clamp-2 text-xs text-muted-foreground leading-relaxed">
               {article.excerpt}
             </p>
           )}
@@ -79,8 +91,17 @@ function ArticleCard({
           ) : (
             <span />
           )}
-          <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-primary font-medium" asChild>
-            <a href={targetHref} onClick={handleClick} aria-label={`Read ${article.title}`}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1 px-2 text-xs text-primary font-medium"
+            asChild
+          >
+            <a
+              href={targetHref}
+              onClick={handleClick}
+              aria-label={`Read ${article.title}`}
+            >
               Read article
               <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
             </a>
@@ -100,7 +121,10 @@ export function HealthContentGrid({
   const [category, setCategory] = useState("All")
   const [search, setSearch] = useState("")
   const categories = useMemo(
-    () => ["All", ...new Set(articles.map((article) => article.category).filter(Boolean))],
+    () => [
+      "All",
+      ...new Set(articles.map((article) => article.category).filter(Boolean)),
+    ],
     [articles]
   )
   const visibleArticles = useMemo(() => {
@@ -117,14 +141,17 @@ export function HealthContentGrid({
   }, [articles, category, search])
 
   return (
-    <section className="space-y-8" aria-labelledby="health-content-title">
+    <section
+      className="mx-auto w-full max-w-7xl space-y-8"
+      aria-labelledby="health-content-title"
+    >
       <header className="space-y-1">
-        <h1
+        <h2
           id="health-content-title"
-          className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+          className="text-xl font-bold tracking-tight text-foreground sm:text-2xl"
         >
           {title}
-        </h1>
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </header>
 
@@ -154,9 +181,13 @@ export function HealthContentGrid({
       </Tabs>
 
       {visibleArticles.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {visibleArticles.map((article) => (
-            <ArticleCard key={article.id} article={article} onNavigate={onNavigate} />
+            <ArticleCard
+              key={article.id}
+              article={article}
+              onNavigate={onNavigate}
+            />
           ))}
         </div>
       ) : (
