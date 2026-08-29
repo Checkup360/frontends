@@ -8,13 +8,11 @@ import {
   OverviewStatCard,
   OverviewStatCardSkeleton,
 } from "@workspace/components/components/card"
-import { Button } from "@workspace/ui/components/button"
 import { Card } from "@workspace/ui/components/card"
 import {
   Building2,
   FileText,
   MailPlus,
-  RefreshCw,
   ShieldCheck,
   UserCheck,
   Users,
@@ -31,7 +29,6 @@ export function OrganizationPage() {
   // ── Overall Stats Data ──
   const [allMembers, setAllMembers] = useState<OrganizationEmployee[]>([])
   const [loadingMeta, setLoadingMeta] = useState(true)
-  const [refreshKey, setRefreshKey] = useState(0)
 
   // Load overall member count stats
   useEffect(() => {
@@ -61,11 +58,7 @@ export function OrganizationPage() {
     return () => {
       active = false
     }
-  }, [organizationId, refreshKey])
-
-  const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1)
-  }
+  }, [organizationId])
 
   const roleCounts = useMemo(() => {
     let admins = 0
@@ -102,25 +95,14 @@ export function OrganizationPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={loadingMeta}
-            >
-              <RefreshCw className={`mr-2 size-4 ${loadingMeta ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
-            <ActionButton
-              type="button"
-              variant="default"
-              icon={MailPlus}
-              onClick={() => navigate("/invitations")}
-            >
-              Invite People
-            </ActionButton>
-          </div>
+          <ActionButton
+            type="button"
+            variant="default"
+            icon={MailPlus}
+            onClick={() => navigate("/invitations")}
+          >
+            Invite People
+          </ActionButton>
         </div>
       </Card>
 
@@ -170,7 +152,6 @@ export function OrganizationPage() {
 
       {/* ── Reusable Employees / Members Table ── */}
       <EmployeesTable
-        key={refreshKey}
         organizationId={organizationId}
         roles={undefined}
         showRoleFilter={true}

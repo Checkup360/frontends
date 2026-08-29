@@ -29,12 +29,39 @@ const statusClasses: Record<string, string> = {
     "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
 }
 
-function getDisplayName(
-  email: string,
+export function getDisplayName(
+  input:
+    | string
+    | {
+        email?: string
+        first_name?: string | null
+        last_name?: string | null
+        name?: string | null
+        firstName?: string | null
+        lastName?: string | null
+      },
   firstName?: string | null,
   lastName?: string | null,
   name?: string | null
-) {
+): string {
+  if (typeof input === "object" && input !== null) {
+    const customName = input.name?.trim()
+    if (customName) return customName
+    const first = input.first_name ?? input.firstName
+    const last = input.last_name ?? input.lastName
+    if (first || last) {
+      return `${first ?? ""} ${last ?? ""}`.trim()
+    }
+    const email = input.email || ""
+    const prefix = email.split("@")[0] || email
+    const parts = prefix.split(/[._-]+/).filter(Boolean)
+    if (parts.length > 0) {
+      return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ")
+    }
+    return prefix
+  }
+
+  const email = input || ""
   if (name && name.trim()) return name.trim()
   if (firstName || lastName) {
     return `${firstName ?? ""} ${lastName ?? ""}`.trim()
@@ -47,7 +74,7 @@ function getDisplayName(
   return prefix
 }
 
-function getInitials(displayName: string, email: string) {
+export function getInitials(displayName: string, email?: string): string {
   const parts = displayName.split(" ").filter(Boolean)
   if (parts.length >= 2) {
     return (parts[0][0] + parts[1][0]).toUpperCase()
@@ -55,7 +82,7 @@ function getInitials(displayName: string, email: string) {
   if (parts.length === 1 && parts[0].length >= 2) {
     return parts[0].slice(0, 2).toUpperCase()
   }
-  return email.slice(0, 2).toUpperCase()
+  return (email ? email.slice(0, 2) : displayName.slice(0, 2)).toUpperCase()
 }
 
 function ProfileDetail({ label, value }: { label: string; value: ReactNode }) {

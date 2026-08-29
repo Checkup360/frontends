@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import {
+  assignEmployeeDepartment,
   getOrganizationDepartmentAnalytics,
   listDepartments,
   listOrganizationEmployeesPage,
@@ -27,6 +28,14 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog"
+import {
   Table,
   TableBody,
   TableCell,
@@ -36,7 +45,13 @@ import {
   TableRowsSkeleton,
 } from "@workspace/ui/components/table"
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar"
+import {
   ArrowLeft,
+  ArrowRightLeft,
   Users,
   AlertTriangle,
   ShieldCheck,
@@ -44,8 +59,19 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Pencil,
+  UserPlus,
+  Search,
+  Check,
 } from "lucide-react"
 import { Input } from "@workspace/ui/components/input"
+import { Label } from "@workspace/ui/components/label"
+import { toast } from "@workspace/ui/components/sonner"
+import {
+  getDisplayName,
+  getInitials,
+} from "@workspace/components/components/employee-profile-card"
+import { cn } from "@workspace/ui/lib/utils"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -123,7 +149,351 @@ function StatCard({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Assign Member Modal (Isolated State & Search) ───────────────────────────
+
+interface AssignMemberDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  organizationId: string
+  department: DepartmentResponse
+  onAssigned: () => void
+}
+
+function AssignMemberDialog({
+  open,
+  onOpenChange,
+  organizationId,
+  department,
+  onAssigned,
+}: AssignMemberDialogProps) {
+  const [employees, setEmployees] = useState<OrganizationEmployee[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState("")
+
+  // Reset state when dialog is closed/opened
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery("")
+      setSelectedEmployeeId("")
+      setError("")
+      setEmployees([])
+    }
+  }, [open])
+
+  // Backend search with debounce
+  useEffect(() => {
+    if (!open || !organizationId) return
+    let active = true
+
+    const timer = setTimeout(async () => {
+      setLoading(true)
+      setError("")
+      try {
+        const data = await listOrganizationEmployeesPage(
+          organizationId,
+          undefined,
+          {
+            search: searchQuery.trim() || undefined,
+            page: 1,
+            pageSize: 50,
+          }
+        )
+        if (!active) return
+        setEmployees(data.items)
+      } catch {
+        if (!active) return
+        setError("Failed to load organization employees.")
+      } finally {
+        if (active) setLoading(false)
+      }
+    }, 200)
+
+    return () => {
+      active = false
+      clearTimeout(timer)
+    }
+  }, [open, organizationId, searchQuery])
+
+  const selectedEmployee = useMemo(() => {
+    return employees.find((e) => e.id === selectedEmployeeId) ?? null
+  }, [employees, selectedEmployeeId])
+
+  const isAlreadyInThisDept =
+    selectedEmployee?.department?.id === department.id
+  const isInAnotherDept =
+    selectedEmployee?.department &&
+    selectedEmployee.department.id !== department.id
+
+  const handleAssign = async () => {
+    if (!organizationId || !department || !selectedEmployee) return
+    setError("")
+    setSubmitting(true)
+    try {
+      const res = await assignEmployeeDepartment(
+        organizationId,
+        selectedEmployee.id,
+        department.id
+      )
+      if (!res) {
+        setError("Failed to assign department.")
+        return
+      }
+      const displayName = getDisplayName(selectedEmployee)
+      toast.success(`${displayName} assigned to ${department.name}`)
+      onOpenChange(false)
+      onAssigned()
+    } catch (err: any) {
+      setError(
+        err?.message || "An error occurred while assigning the department."
+      )
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex flex-col sm:max-w-lg sm:h-[600px] rounded-3xl p-6">
+        <DialogHeader className="shrink-0 space-y-1">
+          <DialogTitle className="flex items-center gap-2 text-lg font-bold">
+            <UserPlus className="size-5 text-primary" />
+            Assign Member to {department.name}
+          </DialogTitle>
+          <DialogDescription className="text-xs">
+            Search by name, surname, or email to assign or switch an employee to{" "}
+            <strong className="text-foreground">{department.name}</strong>.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-1 flex-col gap-3 min-h-0 overflow-hidden py-1">
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive shrink-0">
+              <AlertTriangle className="size-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Search Input */}
+          <div className="space-y-1.5 shrink-0">
+            <Label className="text-xs font-semibold text-foreground">
+              Search employee
+            </Label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.preventDefault()
+                }}
+                placeholder="Search by name, surname, email..."
+                className="h-10 rounded-xl pl-9 text-sm"
+                autoFocus
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Results List Container - Fixed flex-1 area */}
+          <div className="flex flex-1 flex-col min-h-0 space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted-foreground px-1 shrink-0">
+              <span>
+                {loading
+                  ? "Searching..."
+                  : `Results (${employees.length})`}
+              </span>
+              {selectedEmployee && (
+                <span className="text-primary font-medium">1 selected</span>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto rounded-2xl border border-border/60 bg-muted/10 p-2 space-y-1.5">
+              {loading && employees.length === 0 ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 rounded-xl border bg-card p-3"
+                  >
+                    <Skeleton className="size-9 rounded-full" />
+                    <div className="space-y-1.5 flex-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-48" />
+                    </div>
+                  </div>
+                ))
+              ) : employees.length === 0 ? (
+                <div className="flex h-full min-h-[140px] items-center justify-center text-center text-xs text-muted-foreground p-4">
+                  {searchQuery
+                    ? "No employees match your search query."
+                    : "No employees found."}
+                </div>
+              ) : (
+                employees.map((emp) => {
+                  const fullName = getDisplayName(emp)
+                  const initials = getInitials(fullName, emp.email)
+                  const isSelected = emp.id === selectedEmployeeId
+                  const isThisDept = emp.department?.id === department.id
+
+                  return (
+                    <div
+                      key={emp.id}
+                      onClick={() => {
+                        setSelectedEmployeeId(emp.id)
+                        setError("")
+                      }}
+                      className={cn(
+                        "flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer text-left",
+                        isSelected
+                          ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+                          : "border-border/50 bg-card hover:bg-muted/50 hover:border-border"
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Avatar className="size-8.5 shrink-0 ring-1 ring-primary/15">
+                          <AvatarImage src="" alt={fullName} />
+                          <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-semibold text-foreground truncate">
+                            {fullName}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground truncate">
+                            {emp.email}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {isThisDept ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] text-muted-foreground border-border/80"
+                          >
+                            Current dept
+                          </Badge>
+                        ) : emp.department ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-medium text-amber-600 dark:text-amber-400 border-amber-500/30 bg-amber-500/10"
+                          >
+                            {emp.department.name}
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] text-muted-foreground"
+                          >
+                            Unassigned
+                          </Badge>
+                        )}
+                        {isSelected && (
+                          <div className="flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shrink-0">
+                            <Check className="size-3" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Department Status & Switch Notice (Fixed container height) */}
+          <div className="h-16 shrink-0 flex items-center">
+            {selectedEmployee ? (
+              <div className="w-full rounded-xl border bg-muted/20 p-2.5 text-xs">
+                {isAlreadyInThisDept && (
+                  <div className="text-muted-foreground">
+                    <strong>{getDisplayName(selectedEmployee)}</strong> is already in{" "}
+                    <strong>{department.name}</strong>.
+                  </div>
+                )}
+
+                {isInAnotherDept && (
+                  <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300">
+                    <ArrowRightLeft className="size-4 shrink-0 text-amber-600" />
+                    <span>
+                      Currently in{" "}
+                      <strong>{selectedEmployee.department?.name}</strong>. Will{" "}
+                      <strong>switch</strong> to{" "}
+                      <strong>{department.name}</strong>.
+                    </span>
+                  </div>
+                )}
+
+                {!selectedEmployee.department && (
+                  <div className="flex items-center gap-2 text-foreground">
+                    <UserPlus className="size-4 shrink-0 text-primary" />
+                    <span>
+                      Currently unassigned. Will assign to{" "}
+                      <strong>{department.name}</strong>.
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="w-full rounded-xl border border-dashed border-border/60 p-2.5 text-center text-xs text-muted-foreground">
+                Select an employee from the list above to proceed.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter className="shrink-0 pt-2 gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={submitting}
+            className="cursor-pointer"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={handleAssign}
+            disabled={!selectedEmployee || isAlreadyInThisDept || submitting}
+            className="gap-2 cursor-pointer"
+          >
+            {submitting ? (
+              <>
+                <div className="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                Assigning...
+              </>
+            ) : isInAnotherDept ? (
+              <>
+                <ArrowRightLeft className="size-4" />
+                Switch to {department.name}
+              </>
+            ) : (
+              <>
+                <UserPlus className="size-4" />
+                Assign to {department.name}
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function DepartmentDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -136,6 +506,7 @@ export function DepartmentDetailPage() {
     useState<DepartmentAnalyticsSummary | null>(null)
   const [loadingDept, setLoadingDept] = useState(true)
   const [error, setError] = useState("")
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Table state
   const [employees, setEmployees] = useState<OrganizationEmployee[]>([])
@@ -145,6 +516,9 @@ export function DepartmentDetailPage() {
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(10)
+
+  // Add/Assign employee modal open state
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
 
   // ── Load department by slug + real analytics ──
   useEffect(() => {
@@ -179,7 +553,7 @@ export function DepartmentDetailPage() {
     return () => {
       active = false
     }
-  }, [organizationId, slug])
+  }, [organizationId, slug, refreshKey])
 
   // ── Load employees for this department (paginated) ──
   useEffect(() => {
@@ -207,7 +581,15 @@ export function DepartmentDetailPage() {
     return () => {
       active = false
     }
-  }, [organizationId, department, selectedStatus, search, currentPage, pageSize])
+  }, [
+    organizationId,
+    department,
+    selectedStatus,
+    search,
+    currentPage,
+    pageSize,
+    refreshKey,
+  ])
 
   // ── Derived stats from real analytics ──
   const totalMembers = totalItems
@@ -236,7 +618,7 @@ export function DepartmentDetailPage() {
           <Button
             onClick={() => navigate("/departments")}
             variant="link"
-            className="text-sm font-semibold text-primary hover:underline"
+            className="cursor-pointer text-sm font-semibold text-primary hover:underline"
           >
             Back to departments
           </Button>
@@ -246,31 +628,45 @@ export function DepartmentDetailPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="mx-auto w-full max-w-7xl animate-in space-y-6 duration-300 fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/departments")}
-          className="size-9 rounded-lg border border-border/40 hover:bg-muted/50"
-          aria-label="Back to departments"
-        >
-          <ArrowLeft className="size-4 text-muted-foreground" />
-        </Button>
-        <div className="flex flex-col">
-          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-            Departments
-          </span>
-          <div className="flex items-center gap-2">
-            <FolderIcon className="size-4 text-muted-foreground" />
-            <h2 className="text-lg font-bold tracking-tight text-foreground">
-              {department.name}
-            </h2>
-            <Badge variant="outline" className="font-mono text-xs">
-              /{department.slug}
-            </Badge>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/departments")}
+            className="size-9 cursor-pointer rounded-lg border border-border/40 hover:bg-muted/50"
+            aria-label="Back to departments"
+          >
+            <ArrowLeft className="size-4 text-muted-foreground" />
+          </Button>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+              Departments
+            </span>
+            <div className="flex items-center gap-2">
+              <FolderIcon className="size-4 text-muted-foreground" />
+              <h2 className="text-xl font-bold tracking-tight text-foreground">
+                {department.name}
+              </h2>
+              <Badge variant="outline" className="font-mono text-xs">
+                /{department.slug}
+              </Badge>
+            </div>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/departments/${department.slug}/edit`)}
+            className="gap-2 cursor-pointer"
+          >
+            <Pencil className="size-3.5" />
+            Edit department
+          </Button>
         </div>
       </div>
 
@@ -305,13 +701,24 @@ export function DepartmentDetailPage() {
 
       {/* Employees table */}
       <Card className="animate-in border-border/60 p-6 shadow-[var(--shadow-card)] duration-300 fade-in">
-        <div className="mb-6 flex flex-col gap-1">
-          <h3 className="text-lg font-semibold tracking-tight text-foreground">
-            Members
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            All employees assigned to {department.name}
-          </p>
+        <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">
+              Members
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              All employees assigned to {department.name}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAddMemberOpen(true)}
+            className="mt-2 self-start gap-1.5 text-xs cursor-pointer sm:mt-0 sm:self-auto"
+          >
+            <UserPlus className="size-3.5" />
+            Assign employee
+          </Button>
         </div>
 
         {/* Filters */}
@@ -329,7 +736,7 @@ export function DepartmentDetailPage() {
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <X className="size-4" />
               </button>
@@ -362,7 +769,7 @@ export function DepartmentDetailPage() {
                 setSelectedStatus("all")
                 setCurrentPage(1)
               }}
-              className="h-9 text-xs text-muted-foreground"
+              className="h-9 text-xs text-muted-foreground cursor-pointer"
             >
               Reset
             </Button>
@@ -396,32 +803,40 @@ export function DepartmentDetailPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              employees.map((emp) => (
-                <TableRow
-                  key={emp.id}
-                  className="cursor-pointer transition-colors hover:bg-muted/40"
-                  onClick={() => navigate(`/employees/${emp.id}`)}
-                >
-                  <TableCell>
-                    <span className="font-medium text-foreground">
-                      {emp.email}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        statusClasses[emp.status.toLowerCase()] ?? "capitalize"
-                      }
-                    >
-                      {emp.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
-                    {emp.roles.join(", ") || "—"}
-                  </TableCell>
-                </TableRow>
-              ))
+              employees.map((emp) => {
+                const displayName = getDisplayName(emp)
+                return (
+                  <TableRow
+                    key={emp.id}
+                    className="cursor-pointer transition-colors hover:bg-muted/40"
+                    onClick={() => navigate(`/employees/${emp.id}`)}
+                  >
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-foreground">
+                          {displayName}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {emp.email}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          statusClasses[emp.status.toLowerCase()] ?? "capitalize"
+                        }
+                      >
+                        {emp.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
+                      {emp.roles.join(", ") || "—"}
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             )}
           </TableBody>
         </Table>
@@ -438,7 +853,7 @@ export function DepartmentDetailPage() {
                 size="sm"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1 || loadingTable}
-                className="gap-1"
+                className="gap-1 cursor-pointer"
               >
                 <ChevronLeft className="size-4" />
                 Previous
@@ -450,7 +865,7 @@ export function DepartmentDetailPage() {
                   setCurrentPage((p) => Math.min(totalPages, p + 1))
                 }
                 disabled={currentPage === totalPages || loadingTable}
-                className="gap-1"
+                className="gap-1 cursor-pointer"
               >
                 Next
                 <ChevronRight className="size-4" />
@@ -459,6 +874,17 @@ export function DepartmentDetailPage() {
           </div>
         )}
       </Card>
+
+      {/* ── Dialog: Isolated Search & Assign Component ── */}
+      {department && organizationId && (
+        <AssignMemberDialog
+          open={isAddMemberOpen}
+          onOpenChange={setIsAddMemberOpen}
+          organizationId={organizationId}
+          department={department}
+          onAssigned={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
     </div>
   )
 }
