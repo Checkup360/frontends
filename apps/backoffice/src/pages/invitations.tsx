@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { InvitationTypeCard } from "@/components/invitation-type-card"
 import { SysadminInvitationForm } from "@workspace/auth/components/sysadmin-invitation-form"
 import { CreateInvitationButton } from "@workspace/components/components/create-invitation-button"
@@ -280,19 +280,21 @@ export function InvitationsPage() {
   }, [])
 
   // Fetch all invites from endpoints with backend filters
-  const loadInvites = async () => {
+  const loadInvites = useCallback(async () => {
     setLoading(true)
     try {
       // Sysadmin invitations are independent and do not belong to any organization.
       // Therefore, if a specific organization is selected or filterType is "organization",
       // we do NOT request sysadmin invitations from the backend.
-      const shouldFetchSysadmin = (filterType === "all" || filterType === "sysadmin") && !selectedOrg
-      const shouldFetchOrg = filterType === "all" || filterType === "organization"
+      const shouldFetchSysadmin =
+        (filterType === "all" || filterType === "sysadmin") && !selectedOrg
+      const shouldFetchOrg =
+        filterType === "all" || filterType === "organization"
 
       const sysPromise = shouldFetchSysadmin
         ? listSysadminInvitations({ status: filterStatus })
         : Promise.resolve([])
-      
+
       const orgPromise = shouldFetchOrg
         ? listOrgInvitations({
             status: filterStatus,
@@ -301,7 +303,10 @@ export function InvitationsPage() {
           })
         : Promise.resolve([])
 
-      const [sysadminData, orgData] = await Promise.all([sysPromise, orgPromise])
+      const [sysadminData, orgData] = await Promise.all([
+        sysPromise,
+        orgPromise,
+      ])
       setSysadminInvites(sysadminData)
       setOrgInvites(orgData)
       setSelectedInviteIds([])
@@ -311,12 +316,12 @@ export function InvitationsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterType, selectedOrg, filterStatus, selectedRole])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadInvites()
-  }, [isCreating, filterType, filterStatus, selectedOrg, selectedRole])
+  }, [isCreating, loadInvites])
 
   // Pagination computations
   const totalPages = Math.max(1, Math.ceil(filteredInvites.length / pageSize))

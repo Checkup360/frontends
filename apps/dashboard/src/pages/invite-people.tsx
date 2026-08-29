@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { CreateInvitationButton } from "@workspace/components/components/create-invitation-button"
 import { DeleteInvitationsDialog } from "@workspace/components/components/delete-invitations-dialog"
@@ -128,11 +128,12 @@ export function InvitePeoplePage() {
   }, [invites])
 
   // Load all invitations for client-side filtering/analytics
-  const loadInvites = async () => {
+  const loadInvites = useCallback(async () => {
+    if (!organization) return
     setLoading(true)
     try {
       const data = await listOrgInvitations({
-        organizationId: organization?.id || undefined,
+        organizationId: organization.id,
         role: selectedRole || undefined,
         status: filterStatus || undefined,
       })
@@ -143,15 +144,12 @@ export function InvitePeoplePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [organization, selectedRole, filterStatus])
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (organization) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      void loadInvites()
-    }
-  }, [organization, showCreateForm, selectedRole, filterStatus])
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadInvites()
+  }, [showCreateForm, loadInvites])
 
   // Copy handler
   const handleCopy = (id: string, url: string) => {

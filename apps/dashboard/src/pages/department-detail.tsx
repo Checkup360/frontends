@@ -196,15 +196,15 @@ function AssignMemberDialog({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
-  // Reset state when dialog is closed/opened
-  useEffect(() => {
-    if (!open) {
+  const handleDialogChange = (newOpen: boolean) => {
+    if (!newOpen) {
       setSearchQuery("")
       setSelectedEmployeeId("")
       setError("")
       setEmployees([])
     }
-  }, [open])
+    onOpenChange(newOpen)
+  }
 
   // Backend search with debounce
   useEffect(() => {
@@ -266,19 +266,21 @@ function AssignMemberDialog({
       }
       const displayName = getDisplayName(selectedEmployee)
       toast.success(`${displayName} assigned to ${department.name}`)
-      onOpenChange(false)
+      handleDialogChange(false)
       onAssigned()
-    } catch (err: any) {
-      setError(
-        err?.message || "An error occurred while assigning the department."
-      )
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "An error occurred while assigning the department."
+      setError(msg)
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="flex flex-col sm:max-w-lg sm:h-[600px] rounded-3xl p-6">
         <DialogHeader className="shrink-0 space-y-1">
           <DialogTitle className="flex items-center gap-2 text-lg font-bold">
