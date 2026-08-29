@@ -227,6 +227,7 @@ export type RiskTrendPoint = {
   average_score: number
   risk_index: number
   total_assessments: number
+  scores_by_study?: Record<string, number>
 }
 
 export type DepartmentAnalyticsSummary = {
