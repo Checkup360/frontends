@@ -39,10 +39,13 @@ export function NavSecondary({
   return (
     <SidebarGroup className={className}>
       <SidebarGroupContent>
-        <SidebarMenu>
+        <SidebarMenu className="gap-1 px-1.5">
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
+              <SidebarMenuButton
+                asChild
+                className="h-9.5 rounded-xl px-3 text-sm font-medium transition-all duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&.active]:bg-primary/10 [&.active]:text-primary [&.active]:font-semibold [&.active_svg]:text-primary [&_svg]:size-4.5"
+              >
                 <Link
                   href={item.url}
                   to={item.url}

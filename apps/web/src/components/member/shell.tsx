@@ -4,7 +4,13 @@ import {
   WorkspaceShell,
   type WorkspaceShellNavItem,
 } from "@workspace/components/components/workspace-shell"
-import { FileText, LayoutDashboard, Newspaper, Settings } from "lucide-react"
+import {
+  Activity,
+  ClipboardList,
+  LayoutDashboard,
+  Newspaper,
+  Settings,
+} from "lucide-react"
 import { useState } from "react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
 import { PwaInstallDrawer } from "../pwa/pwa-install-drawer"
@@ -12,9 +18,9 @@ import { PwaInstallMenuItem } from "../pwa/pwa-install-menu-item"
 
 const navigation: WorkspaceShellNavItem[] = [
   { title: "Overview", url: "/", icon: LayoutDashboard, to: "/", end: true },
-  { title: "Status", url: "/status", icon: LayoutDashboard, to: "/status" },
+  { title: "Status", url: "/status", icon: Activity, to: "/status" },
   { title: "News", url: "/news", icon: Newspaper, to: "/news" },
-  { title: "Forms", url: "/forms", icon: FileText, to: "/forms" },
+  { title: "Forms", url: "/forms", icon: ClipboardList, to: "/forms" },
 ]
 
 const secondaryNavigation: WorkspaceShellNavItem[] = [
