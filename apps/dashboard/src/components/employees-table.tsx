@@ -25,9 +25,10 @@ import {
   TableRowsSkeleton,
   TableRow,
 } from "@workspace/ui/components/table"
+import { TablePagination } from "@workspace/components/components/table-pagination"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { X, ChevronLeft, ChevronRight } from "lucide-react"
+import { X } from "lucide-react"
 
 const statusClasses: Record<string, string> = {
   active:
@@ -401,77 +402,19 @@ export function EmployeesTable({
       </div>
 
       {/* Premium Pagination Controls */}
-      <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-        {/* Count Indicator */}
-        <p className="text-sm text-muted-foreground">
-          Showing{" "}
-          <span className="font-medium text-foreground">
-            {totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0}
-          </span>{" "}
-          to{" "}
-          <span className="font-medium text-foreground">
-            {Math.min(currentPage * pageSize, totalItems)}
-          </span>{" "}
-          of <span className="font-medium text-foreground">{totalItems}</span>{" "}
-          members
-        </p>
-
-        {/* Controls */}
-        <div className="flex items-center gap-6">
-          {/* Rows per page selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              Rows per page:
-            </span>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(val) => {
-                setPageSize(Number(val))
-                setCurrentPage(1)
-              }}
-            >
-              <SelectTrigger className="h-8 w-[70px] bg-background">
-                <SelectValue placeholder="10" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Page numbers */}
-          <span className="text-sm text-muted-foreground">
-            Page{" "}
-            <span className="font-medium text-foreground">{currentPage}</span>{" "}
-            of <span className="font-medium text-foreground">{totalPages}</span>
-          </span>
-
-          {/* Navigation Buttons */}
-          <div className="flex gap-1.5">
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8 bg-background"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1 || loading}
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8 bg-background"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages || loading}
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(newSize) => {
+          setPageSize(newSize)
+          setCurrentPage(1)
+        }}
+        itemLabel="members"
+        loading={loading}
+      />
     </Card>
   )
 }

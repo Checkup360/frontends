@@ -56,8 +56,6 @@ import {
   AlertTriangle,
   ShieldCheck,
   Folder as FolderIcon,
-  ChevronLeft,
-  ChevronRight,
   X,
   Pencil,
   UserPlus,
@@ -71,6 +69,7 @@ import {
   getDisplayName,
   getInitials,
 } from "@workspace/components/components/employee-profile-card"
+import { TablePagination } from "@workspace/components/components/table-pagination"
 import { cn } from "@workspace/ui/lib/utils"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -515,7 +514,7 @@ export function DepartmentDetailPage() {
   const [search, setSearch] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(10)
 
   // Add/Assign employee modal open state
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
@@ -841,38 +840,21 @@ export function DepartmentDetailPage() {
           </TableBody>
         </Table>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4">
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages} ({totalItems} members)
-            </span>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1 || loadingTable}
-                className="gap-1 cursor-pointer"
-              >
-                <ChevronLeft className="size-4" />
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages || loadingTable}
-                className="gap-1 cursor-pointer"
-              >
-                Next
-                <ChevronRight className="size-4" />
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* Reusable Table Pagination */}
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize)
+            setCurrentPage(1)
+          }}
+          itemLabel="members"
+          loading={loadingTable}
+          className="border-t border-border/40 pt-4"
+        />
       </Card>
 
       {/* ── Dialog: Isolated Search & Assign Component ── */}
