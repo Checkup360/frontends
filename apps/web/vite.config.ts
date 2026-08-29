@@ -14,6 +14,10 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg"],
+      workbox: {
+        navigateFallbackDenylist: [/^\/config\.js/],
+        globIgnores: ["**/config.js*"],
+      },
       manifest: {
         name: "Checkup360 Web",
         short_name: "Checkup360",
