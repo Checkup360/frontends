@@ -49,22 +49,32 @@ import {
   ClipboardList,
   RotateCcw,
   FileText,
-  TrendingUp,
   Mail,
   Building2,
   Edit3,
-  HeartPulse,
 } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
+  ScoreEvolutionChart,
+  type ChartSeries,
+} from "@workspace/components/components/score-evolution-chart"
+
+const OVERALL_SERIES_CONFIG: ChartSeries = {
+  key: "overall",
+  label: "General",
+  color: "oklch(0.65 0.18 250)", // Brand Primary / Blue
+  strokeWidth: 2.5,
+}
+
+const PALETTE = [
+  "oklch(0.62 0.20 145)", // Green / Emerald
+  "oklch(0.60 0.22 320)", // Purple / Violet
+  "oklch(0.68 0.20 55)",  // Amber / Yellow
+  "oklch(0.62 0.18 195)", // Cyan / Teal
+  "oklch(0.60 0.20 30)",  // Orange
+  "oklch(0.55 0.18 280)", // Indigo
+  "oklch(0.58 0.20 10)",  // Rose
+]
 
 /** Standard score topics reusing identical icons from score-weights.tsx */
 const SCORE_TOPICS = [
@@ -332,22 +342,64 @@ export function EmployeeDetailPage() {
     }
   }, [hasAnyEvaluated, dynamicIndicators, assessments])
 
-  // Dynamic evolution chart from session history
+  // Discover available study curves dynamically from session assessment results (100% dynamic)
+  const availableStudies = useMemo<ChartSeries[]>(() => {
+    const list: ChartSeries[] = [OVERALL_SERIES_CONFIG]
+    const foundKeys = new Set<string>()
+
+    sessions.forEach((session) => {
+      session.results.forEach((res) => {
+        if (
+          res.score_name &&
+          res.normalized_value !== null &&
+          res.normalized_value !== undefined
+        ) {
+          foundKeys.add(res.score_name.trim())
+        }
+      })
+    })
+
+    Array.from(foundKeys).forEach((studyName, idx) => {
+      const color = PALETTE[idx % PALETTE.length]
+      list.push({
+        key: studyName,
+        label: studyName,
+        color,
+        strokeWidth: 2,
+      })
+    })
+
+    return list
+  }, [sessions])
+
+  // Multi-curve evolution data from session history
   const evolutionData = useMemo(() => {
     if (!sessions.length) return []
     return [...sessions]
       .reverse()
       .map((session, idx, arr) => {
         const isLatestInArray = idx === arr.length - 1
-        const sessionScore =
+        const overallScore =
           isLatestInArray && typeof assessments?.overall_score === "number"
             ? Math.round(assessments.overall_score)
-            : computeOverallHealthScore(session.results).score
+            : computeOverallHealthScore(session.results).score ?? 0
 
-        return {
-          month: session.formattedDate.split(" ")[0] || "Evaluation",
-          score: sessionScore,
+        const row: Record<string, string | number> = {
+          month: session.formattedDate.split(" ")[0] || `Eval #${idx + 1}`,
+          overall: overallScore,
         }
+
+        session.results.forEach((r) => {
+          if (
+            r.score_name &&
+            r.normalized_value !== null &&
+            r.normalized_value !== undefined
+          ) {
+            row[r.score_name.trim()] = Math.round(r.normalized_value)
+          }
+        })
+
+        return row
       })
   }, [sessions, assessments])
 
@@ -379,10 +431,6 @@ export function EmployeeDetailPage() {
   const roleLabel = employee.roles.includes("admin")
     ? "Administrator"
     : "Member"
-  const overallRiskMeta = getRiskTone(
-    computedHealth.riskLevel,
-    computedHealth.score
-  )
 
   const handleRefresh = () => {
     void loadEmployee()
@@ -438,15 +486,6 @@ export function EmployeeDetailPage() {
                 <Badge variant="secondary" className="px-2.5 py-0.5 text-xs font-normal">
                   {roleLabel}
                 </Badge>
-                {computedHealth.score !== null && (
-                  <Badge
-                    variant="outline"
-                    className={`gap-1.5 px-2.5 py-0.5 text-xs font-semibold ${overallRiskMeta.badgeClass}`}
-                  >
-                    <HeartPulse className="size-3.5" />
-                    {overallRiskMeta.label} ({computedHealth.score}%)
-                  </Badge>
-                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
@@ -527,116 +566,19 @@ export function EmployeeDetailPage() {
             className="h-full"
           />
 
-          {/* Health Score Evolution Chart */}
-          <Card className="rounded-3xl border-border/80 bg-card/85 p-6 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="size-4 text-primary" />
-                  <h3 className="text-lg font-semibold tracking-tight text-foreground">
-                    Health score evolution
-                  </h3>
-                </div>
-                {evolutionData.length > 0 && (
-                  <Badge variant="success-light" className="text-xs">
-                    Progression
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mb-4">
-                Score progression across medical assessments
-              </p>
-            </div>
-
-            {evolutionData.length > 0 ? (
-              <div className="h-60 w-full mt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={evolutionData}
-                    margin={{ top: 20, right: 16, left: -6, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id="employeeScoreGradient"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="var(--primary)"
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="var(--primary)"
-                          stopOpacity={0.0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      className="stroke-muted"
-                    />
-                    <XAxis
-                      dataKey="month"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      className="text-xs text-muted-foreground"
-                    />
-                    <YAxis
-                      domain={[0, 100]}
-                      ticks={[0, 25, 50, 75, 100]}
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      className="text-xs text-muted-foreground"
-                      tickFormatter={(v: number) => `${v}%`}
-                    />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const val = payload[0]?.value as number
-                          return (
-                            <div className="rounded-lg border bg-background p-2.5 shadow-md text-xs">
-                              <p className="font-semibold">
-                                {payload[0]?.payload.month}
-                              </p>
-                              <p className="text-muted-foreground">
-                                Score:{" "}
-                                <span className="font-bold text-foreground">
-                                  {val}%
-                                </span>
-                              </p>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="score"
-                      stroke="var(--primary)"
-                      strokeWidth={2.5}
-                      fillOpacity={1}
-                      fill="url(#employeeScoreGradient)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="flex h-60 flex-col items-center justify-center rounded-xl border border-dashed text-center p-4">
-                <ClipboardList className="size-8 text-muted-foreground/40 mb-2" />
-                <p className="text-xs text-muted-foreground">
-                  History will be plotted as new evaluations are completed.
-                </p>
-              </div>
-            )}
-          </Card>
+          {/* Health Score Evolution Chart (Reusable Component) */}
+          <ScoreEvolutionChart
+            title="Health score evolution"
+            description="Score progression across medical assessments"
+            badgeLabel={evolutionData.length > 0 ? "Progression" : undefined}
+            data={evolutionData}
+            series={availableStudies}
+            showPercentages={false}
+            loading={loading || loadingAssessments}
+            emptyTitle="No evaluations yet"
+            emptyMessage="History will be plotted as new evaluations are completed."
+            height={240}
+          />
         </div>
       )}
 

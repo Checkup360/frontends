@@ -63,18 +63,7 @@ import {
   UserPlus,
   Search,
   Check,
-  HeartPulse,
-  Activity,
 } from "lucide-react"
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { toast } from "@workspace/ui/components/sonner"
@@ -83,6 +72,10 @@ import {
   getInitials,
 } from "@workspace/components/components/employee-profile-card"
 import { TablePagination } from "@workspace/components/components/table-pagination"
+import {
+  ScoreEvolutionChart,
+  type ChartSeries,
+} from "@workspace/components/components/score-evolution-chart"
 import { cn } from "@workspace/ui/lib/utils"
 
 // ─── Helpers & Configurations ──────────────────────────────────────────────────
@@ -100,21 +93,10 @@ const tableSkeletonColumns = [
   { skeletonClassName: "h-4 w-24" },
 ]
 
-interface StudyConfig {
-  key: string
-  label: string
-  shortLabel: string
-  color: string
-  gradientId: string
-  strokeWidth?: number
-}
-
-const OVERALL_SERIES_CONFIG: StudyConfig = {
+const OVERALL_SERIES_CONFIG: ChartSeries = {
   key: "overall",
   label: "General",
-  shortLabel: "General",
   color: "oklch(0.65 0.18 250)", // Brand Primary / Blue
-  gradientId: "grad_overall",
   strokeWidth: 2.5,
 }
 
@@ -563,11 +545,6 @@ export function DepartmentDetailPage() {
   // Add/Assign employee modal open state
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
 
-  // Active study curves selected in the chart
-  const [selectedStudies, setSelectedStudies] = useState<Set<string>>(
-    () => new Set(["overall"])
-  )
-
   // ── Load department by slug + analytics & trends ──
   useEffect(() => {
     let active = true
@@ -668,14 +645,9 @@ export function DepartmentDetailPage() {
     return [...trends].sort((a, b) => a.period.localeCompare(b.period))
   }, [trends])
 
-  const latestPoint =
-    sortedTrends.length > 0 ? sortedTrends[sortedTrends.length - 1] : null
-  const previousPoint =
-    sortedTrends.length > 1 ? sortedTrends[sortedTrends.length - 2] : null
-
   // Discover all available studies from backend trends (100% dynamic)
-  const availableStudies = useMemo<StudyConfig[]>(() => {
-    const list: StudyConfig[] = [OVERALL_SERIES_CONFIG]
+  const availableStudies = useMemo<ChartSeries[]>(() => {
+    const list: ChartSeries[] = [OVERALL_SERIES_CONFIG]
     const foundKeys = new Set<string>()
 
     trends.forEach((pt) => {
@@ -693,71 +665,13 @@ export function DepartmentDetailPage() {
       list.push({
         key: studyName,
         label: studyName,
-        shortLabel: studyName,
         color,
-        gradientId: `grad_${studyName.toLowerCase().replace(/[^a-z0-9]/g, "_")}`,
         strokeWidth: 2,
       })
     })
 
     return list
   }, [trends])
-
-  // Automatically select all discovered studies when trends load
-  useEffect(() => {
-    setSelectedStudies((prev) => {
-      const next = new Set(prev)
-      availableStudies.forEach((s) => next.add(s.key))
-      return next
-    })
-  }, [availableStudies])
-
-  const toggleStudy = (key: string) => {
-    setSelectedStudies((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) {
-        if (next.size === 1) return prev // always keep at least one
-        next.delete(key)
-      } else {
-        next.add(key)
-      }
-      return next
-    })
-  }
-
-  // Calculate score & variations for each available study
-  const studyInsights = useMemo(() => {
-    return availableStudies.map((study) => {
-      let latestScore: number | null = null
-      let prevScore: number | null = null
-
-      if (study.key === "overall") {
-        latestScore = latestPoint ? Math.round(latestPoint.average_score) : null
-        prevScore = previousPoint
-          ? Math.round(previousPoint.average_score)
-          : null
-      } else {
-        if (latestPoint?.scores_by_study?.[study.key] !== undefined) {
-          latestScore = Math.round(latestPoint.scores_by_study[study.key])
-        }
-        if (previousPoint?.scores_by_study?.[study.key] !== undefined) {
-          prevScore = Math.round(previousPoint.scores_by_study[study.key])
-        }
-      }
-
-      const diff =
-        latestScore !== null && prevScore !== null
-          ? Math.round((latestScore - prevScore) * 10) / 10
-          : null
-
-      return {
-        ...study,
-        latestScore,
-        diff,
-        isActive: selectedStudies.has(study.key),
-      }
-    })
-  }, [availableStudies, latestPoint, previousPoint, selectedStudies])
 
   // Chart data formatted for multi-study curves
   const chartData = useMemo(() => {
@@ -872,168 +786,18 @@ export function DepartmentDetailPage() {
         />
       </section>
 
-      {/* ── Clinical Studies & Health Score Evolution Chart ── */}
-      <Card className="border-border/60 p-6 shadow-[var(--shadow-card)] space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-border/40 pb-5">
-          <div>
-            <div className="flex items-center gap-2">
-              <HeartPulse className="size-5 text-primary" />
-              <h3 className="text-lg font-bold tracking-tight text-foreground">
-                Clinical Studies & Health Score Evolution
-              </h3>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Select any clinical study to visualize and compare its monthly score variation (0–100%)
-            </p>
-          </div>
-
-          {/* Interactive Study Selector Pills */}
-          <div className="flex flex-wrap items-center gap-2">
-            {studyInsights.map((study) => {
-              const active = study.isActive
-              return (
-                <button
-                  key={study.key}
-                  type="button"
-                  onClick={() => toggleStudy(study.key)}
-                  className={cn(
-                    "flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium border transition-all cursor-pointer",
-                    active
-                      ? "bg-card shadow-xs ring-1"
-                      : "bg-muted/40 text-muted-foreground/80 opacity-60 hover:opacity-100"
-                  )}
-                  style={{
-                    borderColor: active ? study.color : "transparent",
-                    color: active ? "var(--foreground)" : undefined,
-                  }}
-                >
-                  <span
-                    className="size-2.5 rounded-full shrink-0"
-                    style={{
-                      backgroundColor: study.color,
-                      boxShadow: active ? `0 0 8px ${study.color}` : "none",
-                    }}
-                  />
-                  <span>{study.label}</span>
-                  {study.latestScore !== null && (
-                    <span className="font-bold tabular-nums text-foreground/90">
-                      {study.latestScore}%
-                    </span>
-                  )}
-                  {study.diff !== null && (
-                    <span
-                      className={cn(
-                        "text-[10px] font-semibold",
-                        study.diff > 0
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : study.diff < 0
-                          ? "text-destructive"
-                          : "text-muted-foreground"
-                      )}
-                    >
-                      {study.diff > 0 ? `+${study.diff}%` : `${study.diff}%`}
-                    </span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Chart Area */}
-        <div className="h-72 w-full">
-          {loadingTrends ? (
-            <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-              <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent mr-2" />
-              Loading clinical study trends...
-            </div>
-          ) : sortedTrends.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-xs text-muted-foreground">
-              <Activity className="size-8 text-muted-foreground/40" />
-              <p className="font-medium text-foreground">No evaluation trends yet</p>
-              <p className="max-w-xs">
-                Historical scores for each clinical study will appear here as members of {department.name} complete health assessments.
-              </p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={chartData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-              >
-                <defs>
-                  {availableStudies.map((study) => (
-                    <linearGradient
-                      key={study.gradientId}
-                      id={study.gradientId}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor={study.color}
-                        stopOpacity={0.25}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor={study.color}
-                        stopOpacity={0.0}
-                      />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="var(--border)"
-                  opacity={0.6}
-                />
-                <XAxis
-                  dataKey="month"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  stroke="var(--muted-foreground)"
-                />
-                <YAxis
-                  domain={[0, 100]}
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  stroke="var(--muted-foreground)"
-                  tickFormatter={(v) => `${v}%`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--card)",
-                    borderColor: "var(--border)",
-                    borderRadius: "1rem",
-                    boxShadow: "var(--shadow-card)",
-                    fontSize: "12px",
-                  }}
-                  formatter={(val: any, name: any) => [`${val}%`, name]}
-                />
-                {availableStudies.map((study) => {
-                  if (!selectedStudies.has(study.key)) return null
-                  return (
-                    <Area
-                      key={study.key}
-                      type="monotone"
-                      dataKey={study.key}
-                      name={study.label}
-                      stroke={study.color}
-                      strokeWidth={study.strokeWidth || 2}
-                      fill={`url(#${study.gradientId})`}
-                    />
-                  )
-                })}
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </Card>
+      {/* ── Clinical Studies & Health Score Evolution Chart (Reusable Component) ── */}
+      <ScoreEvolutionChart
+        title="Clinical Studies & Health Score Evolution"
+        description="Select any clinical study to visualize and compare its monthly score variation (0–100%)"
+        data={chartData}
+        series={availableStudies}
+        showPercentages={true}
+        loading={loadingTrends}
+        emptyTitle="No evaluation trends yet"
+        emptyMessage={`Historical scores for each clinical study will appear here as members of ${department.name} complete health assessments.`}
+        height={280}
+      />
 
       {/* Employees table */}
       <Card className="animate-in border-border/60 p-6 shadow-[var(--shadow-card)] duration-300 fade-in">
