@@ -313,21 +313,6 @@ export function DepartmentTrendsChart({
           </ResponsiveContainer>
         )}
       </div>
-
-      {/* Legend */}
-      {chartData.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
-          {activeInsights.map((dept) => (
-            <span key={dept.id} className="inline-flex items-center gap-1.5">
-              <span
-                className="size-2.5 rounded-sm"
-                style={{ backgroundColor: dept.color }}
-              />
-              {dept.name}
-            </span>
-          ))}
-        </div>
-      )}
     </Card>
   )
 }
