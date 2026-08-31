@@ -47,7 +47,7 @@ export function MemberShell() {
     ? {
         name: formatFullName(user),
         email: user.email,
-        avatar: "",
+        avatar: user.avatar_url || "",
       }
     : undefined
 

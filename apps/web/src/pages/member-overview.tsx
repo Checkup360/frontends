@@ -26,6 +26,7 @@ export function MemberOverviewPage() {
         email={user.email}
         firstName={user.first_name}
         lastName={user.last_name}
+        avatarUrl={user.avatar_url}
       />
       <HealthContentGrid
         articles={articles}

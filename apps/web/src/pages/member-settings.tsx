@@ -1,6 +1,8 @@
 import { AuthLoadingSkeleton } from "@workspace/auth/components/auth-loading-skeleton"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { SettingsPage } from "@workspace/components/components/settings/settings-page"
+import { AvatarUpload } from "@workspace/components/components/file-upload"
+import { getInitials } from "@workspace/components/components/employee-profile-card"
 import {
   Card,
   CardContent,
@@ -18,12 +20,13 @@ import {
 import { useEffect, useState } from "react"
 
 export function MemberSettingsPage() {
-  const { user, isLoading } = useCurrentUser()
+  const { user, isLoading, refresh } = useCurrentUser()
 
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [phone, setPhone] = useState("")
   const [dateOfBirth, setDateOfBirth] = useState("")
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -40,6 +43,7 @@ export function MemberSettingsPage() {
         setLastName(profile.last_name)
         setPhone(profile.phone_number ?? "")
         setDateOfBirth(profile.date_of_birth)
+        setAvatarUrl(profile.avatar_url ?? null)
       }
 
       if (!cancelled) {
@@ -51,6 +55,31 @@ export function MemberSettingsPage() {
       cancelled = true
     }
   }, [])
+
+  const handleSaveAvatar = async (dataUrl: string | null) => {
+    setIsSaving(true)
+    setSaveError(null)
+    try {
+      const result = await updateMemberProfile({
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone_number: phone.trim() || null,
+        date_of_birth: dateOfBirth,
+        avatar_url: dataUrl,
+      })
+
+      if (result.error) {
+        setSaveError(result.error.message)
+      } else {
+        setAvatarUrl(dataUrl)
+        await refresh()
+        setSaveSuccess(true)
+        setTimeout(() => setSaveSuccess(false), 3000)
+      }
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   const handleSaveProfile = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -73,11 +102,13 @@ export function MemberSettingsPage() {
         last_name: lastName.trim(),
         phone_number: trimmedPhone || null,
         date_of_birth: dateOfBirth,
+        avatar_url: avatarUrl,
       })
 
       if (result.error) {
         setSaveError(result.error.message)
       } else {
+        await refresh()
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 3000)
       }
@@ -103,7 +134,19 @@ export function MemberSettingsPage() {
                 Your personal and contact information
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+              <AvatarUpload
+                currentAvatarUrl={avatarUrl}
+                initials={getInitials(
+                  firstName && lastName
+                    ? `${firstName} ${lastName}`
+                    : user?.first_name && user?.last_name
+                      ? `${user.first_name} ${user.last_name}`
+                      : user?.email ?? ""
+                )}
+                onSave={handleSaveAvatar}
+                isUpdating={isSaving}
+              />
               <form
                 onSubmit={(e) => void handleSaveProfile(e)}
                 className="space-y-6"
