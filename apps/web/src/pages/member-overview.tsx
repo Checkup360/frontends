@@ -22,7 +22,11 @@ export function MemberOverviewPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-10">
-      <MemberOverview email={user.email} />
+      <MemberOverview
+        email={user.email}
+        firstName={user.first_name}
+        lastName={user.last_name}
+      />
       <HealthContentGrid
         articles={articles}
         title="Health content"

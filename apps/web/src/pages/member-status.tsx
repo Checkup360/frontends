@@ -10,6 +10,7 @@ import {
   AssessmentHistoryDialog,
 } from "@workspace/components/components/assessment-utils"
 import { HealthScoreHeroCard } from "@workspace/components/components/health-score-hero-card"
+import { formatFullName } from "@workspace/components/components/employee-profile-card"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   Activity,
@@ -231,7 +232,7 @@ export function MemberStatusPage() {
     )
   }, [activeSession, isViewingLatest, assessments])
 
-  const memberName = user?.email?.split("@")[0] || "Member"
+  const memberName = formatFullName(user) || "Member"
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pb-12">
