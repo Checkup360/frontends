@@ -8,6 +8,7 @@ export type AuthMeResponse = {
   email: string
   first_name?: string | null
   last_name?: string | null
+  avatar_url?: string | null
   is_sysadmin: boolean
   membership: OrganizationMembership | null
   requires_onboarding: boolean
@@ -22,6 +23,7 @@ export type MemberProfileResponse = {
   last_name: string
   phone_number: string | null
   date_of_birth: string
+  avatar_url?: string | null
   priority_topics?: string[]
 }
 
@@ -90,6 +92,9 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
   const maybeLastName = (payload as { last_name?: unknown }).last_name
   const last_name = typeof maybeLastName === "string" ? maybeLastName : null
 
+  const maybeAvatarUrl = (payload as { avatar_url?: unknown }).avatar_url
+  const avatar_url = typeof maybeAvatarUrl === "string" ? maybeAvatarUrl : null
+
   const maybeIsSysadmin = (payload as { is_sysadmin?: unknown }).is_sysadmin
   if (typeof maybeIsSysadmin !== "boolean") return null
 
@@ -114,6 +119,7 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
     email: maybeEmail,
     first_name,
     last_name,
+    avatar_url,
     is_sysadmin: maybeIsSysadmin,
     membership,
     requires_onboarding: maybeRequiresOnboarding,

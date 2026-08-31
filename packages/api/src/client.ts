@@ -229,6 +229,7 @@ export async function updateMemberProfile(payload: {
   last_name: string
   phone_number: string | null
   date_of_birth: string
+  avatar_url?: string | null
 }): Promise<
   | { success: MemberProfileResponse; error?: never }
   | { success?: never; error: UpdateProfileError }
@@ -517,6 +518,9 @@ export type OrganizationEmployeeRole = "admin" | "member" | "content_manager"
 export interface OrganizationEmployee {
   id: string
   email: string
+  first_name?: string | null
+  last_name?: string | null
+  avatar_url?: string | null
   roles: OrganizationEmployeeRole[]
   department: DepartmentResponse | null
   status: string
