@@ -487,7 +487,11 @@ export function EmployeeDetailPage() {
           {/* Left: Large Avatar + Full Info */}
           <div className="flex items-start gap-4 md:gap-6">
             <Avatar className="size-16 shrink-0 ring-4 ring-primary/10 md:size-20">
-              <AvatarImage src="" alt={fullName} />
+              <AvatarImage
+                src={employee.avatar_url || ""}
+                alt={fullName}
+                className="object-cover"
+              />
               <AvatarFallback className="text-xl font-bold bg-primary/10 text-primary md:text-2xl">
                 {initials}
               </AvatarFallback>

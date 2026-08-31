@@ -54,6 +54,7 @@ import {
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
   AvatarGroup,
   AvatarGroupCount,
 } from "@workspace/ui/components/avatar"
@@ -550,6 +551,13 @@ export function DepartmentsPage() {
                           const initials = getInitials(member)
                           return (
                             <Avatar key={member.id} size="sm">
+                              {member.avatar_url && (
+                                <AvatarImage
+                                  src={member.avatar_url}
+                                  alt={member.email}
+                                  className="object-cover"
+                                />
+                              )}
                               <AvatarFallback className="text-[10px]">
                                 {initials}
                               </AvatarFallback>
