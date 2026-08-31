@@ -162,7 +162,7 @@ export function EmployeeProfileCard({
     <Card className={cn("p-0 flex flex-col justify-between", className)}>
       <CardContent className="flex flex-1 flex-col justify-between p-6">
         <div className="flex flex-col items-center text-center">
-          <Avatar className="size-20">
+          <Avatar key={avatarUrl ?? "fallback"} className="size-20">
             {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
             <AvatarFallback className="text-xl font-semibold">
               {initials}

@@ -26,7 +26,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const runFetch = async () => {
-      setIsLoading(true)
       try {
         const newUser = await fetchCurrentUser()
         setUser(newUser)

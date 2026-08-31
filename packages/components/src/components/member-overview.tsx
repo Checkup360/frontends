@@ -171,7 +171,10 @@ export function MemberOverview({
                 <ArrowLeft className="size-5" />
               </Button>
             )}
-            <Avatar className="size-14 ring-2 ring-primary/10">
+            <Avatar
+              key={avatarUrl ?? "fallback"}
+              className="size-14 ring-2 ring-primary/10"
+            >
               {avatarUrl && (
                 <AvatarImage
                   src={avatarUrl}

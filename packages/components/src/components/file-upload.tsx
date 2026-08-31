@@ -367,9 +367,16 @@ export function AvatarUpload({
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-xl border border-border/60 bg-card">
-        <Avatar className="size-20 ring-2 ring-border/50 shadow-sm">
+        <Avatar
+          key={currentAvatarUrl ?? "fallback"}
+          className="size-20 ring-2 ring-border/50 shadow-sm"
+        >
           {currentAvatarUrl && (
-            <AvatarImage src={currentAvatarUrl} alt="Avatar" className="object-cover" />
+            <AvatarImage
+              src={currentAvatarUrl}
+              alt="Avatar"
+              className="object-cover"
+            />
           )}
           <AvatarFallback className="text-xl font-semibold bg-muted text-foreground">
             {initials}

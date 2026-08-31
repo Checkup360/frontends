@@ -486,7 +486,10 @@ export function EmployeeDetailPage() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           {/* Left: Large Avatar + Full Info */}
           <div className="flex items-start gap-4 md:gap-6">
-            <Avatar className="size-16 shrink-0 ring-4 ring-primary/10 md:size-20">
+            <Avatar
+              key={employee.avatar_url ?? "fallback"}
+              className="size-16 shrink-0 ring-4 ring-primary/10 md:size-20"
+            >
               <AvatarImage
                 src={employee.avatar_url || ""}
                 alt={fullName}
