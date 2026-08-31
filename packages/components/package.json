@@ -13,6 +13,7 @@
     "date-fns": "^4.4.0",
     "lucide-react": "^1.11.0",
     "react": "^19.2.4",
+    "react-dropzone": "^20.1.1",
     "recharts": "^2.10.3"
   },
   "devDependencies": {

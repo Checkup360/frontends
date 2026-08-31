@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react"
 import { listAssessments, type AssessmentsResponse } from "@workspace/api"
-import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card } from "@workspace/ui/components/card"
@@ -62,6 +62,7 @@ interface MemberOverviewProps {
   firstName?: string | null
   lastName?: string | null
   name?: string | null
+  avatarUrl?: string | null
   assessments?: AssessmentsResponse | null
   showBack?: boolean
   onBack?: () => void
@@ -72,6 +73,7 @@ export function MemberOverview({
   firstName,
   lastName,
   name,
+  avatarUrl,
   assessments: initialAssessments,
   showBack = false,
   onBack,
@@ -170,6 +172,13 @@ export function MemberOverview({
               </Button>
             )}
             <Avatar className="size-14 ring-2 ring-primary/10">
+              {avatarUrl && (
+                <AvatarImage
+                  src={avatarUrl}
+                  alt={fullName}
+                  className="object-cover"
+                />
+              )}
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div>
