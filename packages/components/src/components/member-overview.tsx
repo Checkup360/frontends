@@ -51,17 +51,17 @@ const priorityConfig = {
   },
 } as const
 
-function getInitials(name: string) {
-  return name
-    .split(/[.\s_-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("")
-}
+import {
+  formatFullName,
+  formatFirstName,
+  getInitials,
+} from "./employee-profile-card"
 
 interface MemberOverviewProps {
   email: string
+  firstName?: string | null
+  lastName?: string | null
+  name?: string | null
   assessments?: AssessmentsResponse | null
   showBack?: boolean
   onBack?: () => void
@@ -69,6 +69,9 @@ interface MemberOverviewProps {
 
 export function MemberOverview({
   email,
+  firstName,
+  lastName,
+  name,
   assessments: initialAssessments,
   showBack = false,
   onBack,
@@ -100,8 +103,9 @@ export function MemberOverview({
     }
   }, [initialAssessments])
 
-  const memberName = email.split("@")[0] || "Member"
-  const initials = getInitials(memberName) || "M"
+  const fullName = formatFullName({ email, first_name: firstName, last_name: lastName, name })
+  const greetingName = formatFirstName({ email, first_name: firstName, name })
+  const initials = getInitials(fullName, email) || "M"
 
   const sessions = useMemo(() => {
     return groupResultsIntoSessions(assessmentsData)
@@ -170,7 +174,7 @@ export function MemberOverview({
             </Avatar>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                {showBack ? memberName : `Hi ${memberName}`}
+                {showBack ? fullName : `Hi ${greetingName}`}
               </h1>
               <p className="text-sm text-muted-foreground md:text-base">
                 Current health status is{" "}

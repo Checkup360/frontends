@@ -12,7 +12,7 @@ export function SidebarAccount({
   inviteAction,
   roleLabel = "Organization member",
 }: SidebarAccountProps) {
-  const { email, isLoading, clear } = useCurrentUser()
+  const { user, email, isLoading, clear } = useCurrentUser()
 
   const handleLogout = async () => {
     await logout()
@@ -32,13 +32,27 @@ export function SidebarAccount({
     return null
   }
 
-  const initials = email
-    .split("@")[0]
-    .split(/[._-]/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("")
+  const firstName = user?.first_name?.trim()
+  const lastName = user?.last_name?.trim()
+  let displayName = ""
+  if (firstName || lastName) {
+    displayName = `${firstName ?? ""} ${lastName ?? ""}`.trim()
+  } else {
+    const prefix = email.split("@")[0] || email
+    const parts = prefix.split(/[._-]+/).filter(Boolean)
+    displayName =
+      parts.length > 0
+        ? parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ")
+        : prefix
+  }
+
+  const nameParts = displayName.split(" ").filter(Boolean)
+  const initials =
+    nameParts.length >= 2
+      ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
+      : nameParts.length === 1 && nameParts[0].length >= 2
+        ? nameParts[0].slice(0, 2).toUpperCase()
+        : email.slice(0, 2).toUpperCase()
 
   return (
     <div className="rounded-lg border border-border/60 bg-card p-3">
@@ -47,8 +61,8 @@ export function SidebarAccount({
           {initials || "U"}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{email}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{roleLabel}</p>
+          <p className="truncate text-sm font-medium">{displayName}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{email}</p>
         </div>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">

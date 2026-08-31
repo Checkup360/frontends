@@ -33,13 +33,15 @@ export function getDisplayName(
   input:
     | string
     | {
-        email?: string
+        email?: string | null
         first_name?: string | null
         last_name?: string | null
         name?: string | null
         firstName?: string | null
         lastName?: string | null
-      },
+      }
+    | null
+    | undefined,
   firstName?: string | null,
   lastName?: string | null,
   name?: string | null
@@ -61,7 +63,7 @@ export function getDisplayName(
     return prefix
   }
 
-  const email = input || ""
+  const email = typeof input === "string" ? input : ""
   if (name && name.trim()) return name.trim()
   if (firstName || lastName) {
     return `${firstName ?? ""} ${lastName ?? ""}`.trim()
@@ -71,8 +73,51 @@ export function getDisplayName(
   if (parts.length > 0) {
     return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ")
   }
-  return prefix
+  return prefix || "Member"
 }
+
+export function formatFirstName(
+  input:
+    | string
+    | {
+        email?: string | null
+        first_name?: string | null
+        last_name?: string | null
+        name?: string | null
+        firstName?: string | null
+        lastName?: string | null
+      }
+    | null
+    | undefined,
+  firstName?: string | null,
+  name?: string | null
+): string {
+  if (firstName && firstName.trim()) return firstName.trim()
+  if (typeof input === "object" && input !== null) {
+    const first = input.first_name ?? input.firstName
+    if (first && first.trim()) return first.trim()
+    const customName = input.name?.trim()
+    if (customName) return customName.split(" ")[0] || customName
+    const email = input.email || ""
+    const prefix = email.split("@")[0] || email
+    const parts = prefix.split(/[._-]+/).filter(Boolean)
+    if (parts.length > 0) {
+      return parts[0].charAt(0).toUpperCase() + parts[0].slice(1)
+    }
+    return prefix
+  }
+  if (name && name.trim()) return name.trim().split(" ")[0] || name.trim()
+  const email = typeof input === "string" ? input : ""
+  const prefix = email.split("@")[0] || email
+  const parts = prefix.split(/[._-]+/).filter(Boolean)
+  if (parts.length > 0) {
+    return parts[0].charAt(0).toUpperCase() + parts[0].slice(1)
+  }
+  return prefix || "Member"
+}
+
+export const formatFullName = getDisplayName
+export const formatEmployeeName = getDisplayName
 
 export function getInitials(displayName: string, email?: string): string {
   const parts = displayName.split(" ").filter(Boolean)
