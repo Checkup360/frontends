@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table"
 import { TablePagination } from "@workspace/components/components/table-pagination"
+import { formatEmployeeName } from "@workspace/components/components/employee-profile-card"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { X } from "lucide-react"
@@ -352,7 +353,8 @@ export function EmployeesTable({
                   onClick={() => navigate(`/employees/${w.id}`)}
                 >
                   <TableCell className="font-medium text-foreground transition-colors group-hover:text-primary">
-                    {w.email}
+                    <span className="block font-medium">{formatEmployeeName(w)}</span>
+                    <span className="block text-xs font-normal text-muted-foreground">{w.email}</span>
                   </TableCell>
                   {showRolesColumn && (
                     <TableCell>

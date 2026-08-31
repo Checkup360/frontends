@@ -21,6 +21,10 @@ import {
   OverviewStatCard,
   OverviewStatCardSkeleton,
 } from "@workspace/components/components/card"
+import {
+  formatEmployeeName,
+  getInitials as getInitialsHelper,
+} from "@workspace/components/components/employee-profile-card"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import {
@@ -335,8 +339,20 @@ export function DepartmentsPage() {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "")
 
-  const getInitials = (email: string) =>
-    email.split("@")[0]?.slice(0, 2).toUpperCase() || "??"
+  const getInitials = (
+    member:
+      | string
+      | {
+          email?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          name?: string | null
+        }
+  ) => {
+    const fullName = formatEmployeeName(member)
+    const email = typeof member === "string" ? member : member.email || ""
+    return getInitialsHelper(fullName, email)
+  }
 
   const loading = loadingMeta && loadingGrid
 
@@ -531,7 +547,7 @@ export function DepartmentsPage() {
                     <ItemFooter className="mt-1 border-t border-border/40 pt-2">
                       <AvatarGroup>
                         {deptMembers.slice(0, 3).map((member) => {
-                          const initials = getInitials(member.email)
+                          const initials = getInitials(member)
                           return (
                             <Avatar key={member.id} size="sm">
                               <AvatarFallback className="text-[10px]">

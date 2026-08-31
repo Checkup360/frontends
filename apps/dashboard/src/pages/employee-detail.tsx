@@ -139,7 +139,32 @@ function getRiskTone(riskLevel?: string | null, value?: number | null) {
   }
 }
 
-function formatFullName(email: string) {
+function formatFullName(
+  input:
+    | string
+    | {
+        email?: string | null
+        first_name?: string | null
+        last_name?: string | null
+        name?: string | null
+      }
+) {
+  if (typeof input === "object" && input !== null) {
+    if (input.name && input.name.trim()) return input.name.trim()
+    const first = input.first_name?.trim()
+    const last = input.last_name?.trim()
+    if (first || last) {
+      return `${first ?? ""} ${last ?? ""}`.trim()
+    }
+    const email = input.email || ""
+    const prefix = email.split("@")[0] || email
+    const parts = prefix.split(/[._-]+/).filter(Boolean)
+    if (parts.length > 0) {
+      return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ")
+    }
+    return prefix
+  }
+  const email = input || ""
   const prefix = email.split("@")[0] || email
   const parts = prefix.split(/[._-]+/).filter(Boolean)
   if (parts.length > 0) {
@@ -426,7 +451,7 @@ export function EmployeeDetailPage() {
     )
   }
 
-  const fullName = formatFullName(employee.email)
+  const fullName = formatFullName(employee)
   const initials = getInitials(fullName, employee.email)
   const roleLabel = employee.roles.includes("admin")
     ? "Administrator"
