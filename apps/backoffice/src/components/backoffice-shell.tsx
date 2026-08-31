@@ -1,5 +1,6 @@
 import { logout, resolveWebUrl } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
+import { formatFullName } from "@workspace/components/components/employee-profile-card"
 import {
   WorkspaceShell,
   type WorkspaceShellNavItem,
@@ -38,7 +39,7 @@ export function BackofficeShell() {
 
   const userData = user
     ? {
-        name: user.email.split("@")[0],
+        name: formatFullName(user),
         email: user.email,
         avatar: "",
       }
