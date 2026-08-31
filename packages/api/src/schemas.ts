@@ -6,6 +6,8 @@ export type OrganizationMembership = {
 
 export type AuthMeResponse = {
   email: string
+  first_name?: string | null
+  last_name?: string | null
   is_sysadmin: boolean
   membership: OrganizationMembership | null
   requires_onboarding: boolean
@@ -82,6 +84,12 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
   const maybeEmail = (payload as { email?: unknown }).email
   if (typeof maybeEmail !== "string" || maybeEmail.length === 0) return null
 
+  const maybeFirstName = (payload as { first_name?: unknown }).first_name
+  const first_name = typeof maybeFirstName === "string" ? maybeFirstName : null
+
+  const maybeLastName = (payload as { last_name?: unknown }).last_name
+  const last_name = typeof maybeLastName === "string" ? maybeLastName : null
+
   const maybeIsSysadmin = (payload as { is_sysadmin?: unknown }).is_sysadmin
   if (typeof maybeIsSysadmin !== "boolean") return null
 
@@ -104,6 +112,8 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
 
   return {
     email: maybeEmail,
+    first_name,
+    last_name,
     is_sysadmin: maybeIsSysadmin,
     membership,
     requires_onboarding: maybeRequiresOnboarding,
