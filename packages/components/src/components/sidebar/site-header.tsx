@@ -5,6 +5,8 @@ import { SidebarTrigger } from "@workspace/ui/components/sidebar"
 import { useTheme } from "@workspace/ui/components/theme-provider"
 import { Sun, Moon } from "lucide-react"
 
+import { AppSwitcher } from "./app-switcher"
+
 export interface SiteHeaderProps {
   title: string
 }
@@ -33,17 +35,20 @@ export function SiteHeader({ title }: SiteHeaderProps) {
           <h1 className="text-base font-semibold">{title}</h1>
         </div>
 
-        <button
-          onClick={toggleTheme}
-          className="flex size-9 items-center justify-center rounded-lg border border-border/40 bg-background/70 text-muted-foreground shadow-xs transition-all hover:bg-muted hover:text-foreground"
-          aria-label="Toggle color theme"
-        >
-          {theme === "dark" ? (
-            <Sun className="size-4 animate-in duration-300 spin-in-45" />
-          ) : (
-            <Moon className="size-4 animate-in duration-300 spin-in-45" />
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <AppSwitcher variant="header-button" currentAppLabel="" />
+          <button
+            onClick={toggleTheme}
+            className="flex size-9 items-center justify-center rounded-lg border border-border/40 bg-background/70 text-muted-foreground shadow-xs transition-all hover:bg-muted hover:text-foreground"
+            aria-label="Toggle color theme"
+          >
+            {theme === "dark" ? (
+              <Sun className="size-4 animate-in duration-300 spin-in-45" />
+            ) : (
+              <Moon className="size-4 animate-in duration-300 spin-in-45" />
+            )}
+          </button>
+        </div>
       </div>
     </header>
   )
