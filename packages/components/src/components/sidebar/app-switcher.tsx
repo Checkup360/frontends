@@ -68,23 +68,25 @@ export function AppSwitcher({
     const isOrgAdmin = userRoles.includes("admin")
     const isContentManager = userRoles.includes("content_manager")
 
-    const apps: AppOption[] = [
-      {
+    const apps: AppOption[] = []
+
+    if (!isSysadmin) {
+      apps.push({
         id: "web",
         name: "CheckUp360",
-        label: "PWA Empleado",
-        description: "Portal de salud y prevención",
+        label: "Employee PWA",
+        description: "Health & wellness portal",
         url: webUrl,
         icon: User,
-      },
-    ]
+      })
+    }
 
-    if (isOrgAdmin || isSysadmin) {
+    if (isOrgAdmin) {
       apps.push({
         id: "dashboard",
         name: "CheckUp360",
-        label: "Dashboard Empleador",
-        description: "Gestión de organización y analíticas",
+        label: "Employer Dashboard",
+        description: "Organization & analytics management",
         url: dashboardUrl,
         icon: Building2,
       })
@@ -94,19 +96,19 @@ export function AppSwitcher({
       apps.push({
         id: "backoffice",
         name: "CheckUp360",
-        label: "Back Office",
-        description: "Administración global del sistema",
+        label: "Backoffice",
+        description: "Global system administration",
         url: backofficeUrl,
         icon: ShieldCheck,
       })
     }
 
-    if (isOrgAdmin || isContentManager || isSysadmin) {
+    if (isOrgAdmin || isContentManager) {
       apps.push({
         id: "cms",
         name: "CheckUp360",
         label: "CMS",
-        description: "Gestión de artículos y contenidos",
+        description: "Content & article management",
         url: cmsUrl,
         icon: FileText,
       })
@@ -147,7 +149,7 @@ export function AppSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger className="group flex items-center gap-1.5 rounded-lg border border-border/50 bg-background/70 px-2.5 py-1.5 text-xs font-medium shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden cursor-pointer">
           <LayoutGrid className="size-3.5 text-primary" />
-          <span className="hidden sm:inline">Aplicaciones</span>
+          <span className="hidden sm:inline">Apps</span>
           <ChevronDown className="size-3 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -155,7 +157,7 @@ export function AppSwitcher({
           className="w-64 rounded-xl p-1.5 shadow-lg"
         >
           <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-            Cambiar de aplicación
+            Switch Application
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="-mx-1.5 my-1" />
           <DropdownMenuGroup className="space-y-0.5">
@@ -223,7 +225,7 @@ export function AppSwitcher({
             sideOffset={4}
           >
             <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-              {hasMultipleApps ? "Cambiar de aplicación" : "Aplicación activa"}
+              {hasMultipleApps ? "Switch Application" : "Active Application"}
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="-mx-1.5 my-1" />
             <DropdownMenuGroup className="space-y-0.5">
