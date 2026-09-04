@@ -135,9 +135,13 @@ function todayIsoDate() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function fieldError(error: string | null, field: string) {
+function fieldError(
+  error: string | null,
+  field: string,
+  message: string = "Required field"
+) {
   return error === field ? (
-    <p className="text-sm text-destructive">Required field</p>
+    <p className="text-sm text-destructive">{message}</p>
   ) : null
 }
 
@@ -267,8 +271,20 @@ export function MemberOnboardingPage() {
     }
 
     if (currentStep === 2) {
-      if (!data.weight) return "weight"
-      if (!data.height) return "height"
+      if (
+        !data.weight ||
+        isNaN(Number(data.weight)) ||
+        Number(data.weight) <= 0 ||
+        Number(data.weight) >= 500
+      )
+        return "weight"
+      if (
+        !data.height ||
+        isNaN(Number(data.height)) ||
+        Number(data.height) <= 0 ||
+        Number(data.height) >= 300
+      )
+        return "height"
     }
 
     return null
@@ -585,7 +601,7 @@ export function MemberOnboardingPage() {
                                 id="weight"
                                 type="number"
                                 min="1"
-                                max="300"
+                                max="500"
                                 step="0.1"
                                 value={data.weight}
                                 onChange={(event) =>
@@ -596,29 +612,41 @@ export function MemberOnboardingPage() {
                                 className="rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60"
                               />
                             </div>
-                            {fieldError(error, "weight")}
+                            {fieldError(
+                              error,
+                              "weight",
+                              !data.weight
+                                ? "Required field"
+                                : "Please enter a valid weight in kilograms (kg)."
+                            )}
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="height">Height (m)</Label>
+                            <Label htmlFor="height">Height (cm)</Label>
                             <div className="relative">
                               <Ruler className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                               <Input
                                 id="height"
                                 type="number"
-                                step="0.01"
-                                min="0.5"
-                                max="2.5"
+                                min="1"
+                                max="300"
+                                step="0.1"
                                 value={data.height}
                                 onChange={(event) =>
                                   updateField("height", event.target.value)
                                 }
                                 disabled={isSubmitting}
-                                placeholder="1.75"
+                                placeholder="175"
                                 className="rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60"
                               />
                             </div>
-                            {fieldError(error, "height")}
+                            {fieldError(
+                              error,
+                              "height",
+                              !data.height
+                                ? "Required field"
+                                : "Please enter a valid height in centimeters (cm)."
+                            )}
                           </div>
                         </div>
                       </div>
