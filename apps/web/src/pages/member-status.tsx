@@ -1,5 +1,13 @@
 import { useEffect, useState, useMemo } from "react"
-import { listAssessments, type AssessmentsResponse, type AssessmentResultResponse } from "@workspace/api"
+import {
+  getMyAssessmentSubmission,
+  listAssessments,
+  listMyAssessmentSubmissions,
+  type AssessmentSubmissionDetail,
+  type AssessmentSubmissionSummary,
+  type AssessmentsResponse,
+  type AssessmentResultResponse,
+} from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
@@ -10,6 +18,7 @@ import {
   AssessmentHistoryDialog,
 } from "@workspace/components/components/assessment-utils"
 import { HealthScoreHeroCard } from "@workspace/components/components/health-score-hero-card"
+import { AssessmentSubmissionHistory } from "@workspace/components/components/assessment-submission-history"
 import { formatFullName } from "@workspace/components/components/employee-profile-card"
 import { cn } from "@workspace/ui/lib/utils"
 import {
@@ -200,6 +209,12 @@ export function MemberStatusPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [submissions, setSubmissions] = useState<AssessmentSubmissionSummary[]>([])
+  const [submissionPage, setSubmissionPage] = useState(1)
+  const [submissionHasNext, setSubmissionHasNext] = useState(false)
+  const [submissionsLoading, setSubmissionsLoading] = useState(true)
+  const [selectedSubmission, setSelectedSubmission] = useState<AssessmentSubmissionDetail | null>(null)
+  const [submissionDetailLoading, setSubmissionDetailLoading] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -210,6 +225,37 @@ export function MemberStatusPage() {
     }
     void load()
   }, [])
+
+  useEffect(() => {
+    async function loadSubmissions() {
+      setSubmissionsLoading(true)
+      const data = await listMyAssessmentSubmissions()
+      if (data) {
+        setSubmissions(data.items)
+        setSubmissionHasNext(data.has_next)
+      }
+      setSubmissionsLoading(false)
+    }
+    void loadSubmissions()
+  }, [])
+
+  const loadMoreSubmissions = async () => {
+    const nextPage = submissionPage + 1
+    setSubmissionsLoading(true)
+    const data = await listMyAssessmentSubmissions(nextPage)
+    if (data) {
+      setSubmissions((current) => [...current, ...data.items])
+      setSubmissionPage(nextPage)
+      setSubmissionHasNext(data.has_next)
+    }
+    setSubmissionsLoading(false)
+  }
+
+  const selectSubmission = async (submission: AssessmentSubmissionSummary) => {
+    setSubmissionDetailLoading(true)
+    setSelectedSubmission(await getMyAssessmentSubmission(submission.id))
+    setSubmissionDetailLoading(false)
+  }
 
   const sessions = useMemo(() => {
     return groupResultsIntoSessions(assessments)
@@ -379,6 +425,16 @@ export function MemberStatusPage() {
           </div>
         </div>
       )}
+
+      <AssessmentSubmissionHistory
+        submissions={submissions}
+        loading={submissionsLoading}
+        hasNext={submissionHasNext}
+        onLoadMore={loadMoreSubmissions}
+        onSelect={selectSubmission}
+        selected={selectedSubmission}
+        detailLoading={submissionDetailLoading}
+      />
 
       {/* History Dialog */}
       <AssessmentHistoryDialog

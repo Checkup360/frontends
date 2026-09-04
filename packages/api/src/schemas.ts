@@ -218,6 +218,27 @@ export type AssessmentsResponse = {
   results: AssessmentResultResponse[]
 }
 
+export type AssessmentSubmissionSummary = {
+  id: string
+  form_type: string
+  form_version: string
+  status: string
+  submitted_at: string
+}
+
+export type AssessmentSubmissionListResponse = {
+  items: AssessmentSubmissionSummary[]
+  page: number
+  limit: number
+  total: number
+  has_next: boolean
+}
+
+export type AssessmentSubmissionDetail = AssessmentSubmissionSummary & {
+  answers: Record<string, string | number | boolean | null>
+  scores: AssessmentResultResponse[]
+}
+
 export type MemberFormResponse = {
   form_type: string
   data: Record<string, unknown>

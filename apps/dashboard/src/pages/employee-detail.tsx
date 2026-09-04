@@ -3,6 +3,10 @@ import { useParams, useNavigate } from "react-router-dom"
 import {
   listOrganizationEmployees,
   listEmployeeAssessments,
+  getEmployeeAssessmentSubmission,
+  listEmployeeAssessmentSubmissions,
+  type AssessmentSubmissionDetail,
+  type AssessmentSubmissionSummary,
   type OrganizationEmployee,
   type AssessmentsResponse,
 } from "@workspace/api"
@@ -17,6 +21,7 @@ import {
   AssessmentHistoryDialog,
   computeOverallHealthScore,
 } from "@workspace/components/components/assessment-utils"
+import { AssessmentSubmissionHistory } from "@workspace/components/components/assessment-submission-history"
 import {
   Avatar,
   AvatarFallback,
@@ -213,6 +218,12 @@ export function EmployeeDetailPage() {
   const [loadingAssessments, setLoadingAssessments] = useState(true)
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [submissions, setSubmissions] = useState<AssessmentSubmissionSummary[]>([])
+  const [submissionPage, setSubmissionPage] = useState(1)
+  const [submissionHasNext, setSubmissionHasNext] = useState(false)
+  const [submissionsLoading, setSubmissionsLoading] = useState(true)
+  const [selectedSubmission, setSelectedSubmission] = useState<AssessmentSubmissionDetail | null>(null)
+  const [submissionDetailLoading, setSubmissionDetailLoading] = useState(false)
 
   const loadEmployee = async () => {
     if (!organizationId || !id) return
@@ -260,6 +271,50 @@ export function EmployeeDetailPage() {
       active = false
     }
   }, [organizationId, id])
+
+  useEffect(() => {
+    let active = true
+    const loadSubmissions = async () => {
+      if (!organizationId || !id) return
+      setSubmissionsLoading(true)
+      const data = await listEmployeeAssessmentSubmissions(organizationId, id)
+      if (active) {
+        setSubmissions(data?.items || [])
+        setSubmissionHasNext(data?.has_next || false)
+        setSubmissionsLoading(false)
+      }
+    }
+    void loadSubmissions()
+    return () => {
+      active = false
+    }
+  }, [organizationId, id])
+
+  const loadMoreSubmissions = async () => {
+    if (!organizationId || !id) return
+    const nextPage = submissionPage + 1
+    setSubmissionsLoading(true)
+    const data = await listEmployeeAssessmentSubmissions(
+      organizationId,
+      id,
+      nextPage
+    )
+    if (data) {
+      setSubmissions((current) => [...current, ...data.items])
+      setSubmissionPage(nextPage)
+      setSubmissionHasNext(data.has_next)
+    }
+    setSubmissionsLoading(false)
+  }
+
+  const selectSubmission = async (submission: AssessmentSubmissionSummary) => {
+    if (!organizationId || !id) return
+    setSubmissionDetailLoading(true)
+    setSelectedSubmission(
+      await getEmployeeAssessmentSubmission(organizationId, id, submission.id)
+    )
+    setSubmissionDetailLoading(false)
+  }
 
   useEffect(() => {
     let active = true
@@ -814,6 +869,15 @@ export function EmployeeDetailPage() {
         activeSessionId={activeSession?.id || null}
         onSelectSession={setSelectedSessionId}
         userDescription={`Select an assessment date and time for ${fullName} (${employee.email}) to inspect past evaluation results.`}
+      />
+      <AssessmentSubmissionHistory
+        submissions={submissions}
+        loading={submissionsLoading}
+        hasNext={submissionHasNext}
+        onLoadMore={loadMoreSubmissions}
+        onSelect={selectSubmission}
+        selected={selectedSubmission}
+        detailLoading={submissionDetailLoading}
       />
 
       {/* Dialog for assigning department */}

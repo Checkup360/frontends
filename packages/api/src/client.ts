@@ -14,6 +14,8 @@ import {
   type SysadminInvite,
   type MemberProfileResponse,
   type AssessmentsResponse,
+  type AssessmentSubmissionListResponse,
+  type AssessmentSubmissionDetail,
   type MemberFormResponse,
   type MemberFormSubmissionResponse,
   type RiskTrendPoint,
@@ -1512,6 +1514,76 @@ export async function listEmployeeAssessments(
     return (await response.json()) as AssessmentsResponse
   } catch (error) {
     console.error("Error listing employee assessments:", error)
+    return null
+  }
+}
+
+export async function listMyAssessmentSubmissions(
+  page = 1,
+  limit = 20
+): Promise<AssessmentSubmissionListResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}/members/me/assessment-submissions?page=${page}&limit=${limit}`,
+      { credentials: "include" }
+    )
+    if (response.status === 401 || !response.ok) return null
+    return (await response.json()) as AssessmentSubmissionListResponse
+  } catch (error) {
+    console.error("Error listing assessment submissions:", error)
+    return null
+  }
+}
+
+export async function getMyAssessmentSubmission(
+  submissionId: string
+): Promise<AssessmentSubmissionDetail | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}/members/me/assessment-submissions/${submissionId}`,
+      { credentials: "include" }
+    )
+    if (response.status === 401 || response.status === 404 || !response.ok) return null
+    return (await response.json()) as AssessmentSubmissionDetail
+  } catch (error) {
+    console.error("Error loading assessment submission:", error)
+    return null
+  }
+}
+
+export async function listEmployeeAssessmentSubmissions(
+  organizationId: string,
+  userId: string,
+  page = 1,
+  limit = 20
+): Promise<AssessmentSubmissionListResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}/organizations/${organizationId}/employees/${userId}/assessment-submissions?page=${page}&limit=${limit}`,
+      { credentials: "include" }
+    )
+    if (response.status === 401 || response.status === 403 || !response.ok) return null
+    return (await response.json()) as AssessmentSubmissionListResponse
+  } catch (error) {
+    console.error("Error listing employee assessment submissions:", error)
+    return null
+  }
+}
+
+export async function getEmployeeAssessmentSubmission(
+  organizationId: string,
+  userId: string,
+  submissionId: string
+): Promise<AssessmentSubmissionDetail | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}/organizations/${organizationId}/employees/${userId}/assessment-submissions/${submissionId}`,
+      { credentials: "include" }
+    )
+    if (response.status === 401 || response.status === 403 || response.status === 404 || !response.ok) return null
+    return (await response.json()) as AssessmentSubmissionDetail
+  } catch (error) {
+    console.error("Error loading employee assessment submission:", error)
     return null
   }
 }
