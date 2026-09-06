@@ -1,4 +1,4 @@
-import { buildLoginUrl } from "@workspace/api"
+import { buildLoginUrl, resolveWebUrl } from "@workspace/api"
 import { AuthProvider } from "@workspace/auth/provider"
 import { RequireSysadmin } from "@workspace/auth/components/require-sysadmin"
 import { Button } from "@workspace/ui/components/button"
@@ -23,6 +23,7 @@ function ProtectedLayout() {
 
 function AccessDenied() {
   const loginUrl = buildLoginUrl({ nextUrl: `${window.location.origin}/` })
+  const mainPageUrl = `${resolveWebUrl()}/`
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center px-4 text-center">
@@ -36,7 +37,10 @@ function AccessDenied() {
         You don't have permission to access this area. Only system admins can
         access the backoffice.
       </p>
-      <div className="mt-8 flex gap-3">
+      <div className="mt-8 flex flex-col sm:flex-row gap-3">
+        <Button asChild>
+          <a href={mainPageUrl}>Go to main page</a>
+        </Button>
         <Button asChild variant="outline">
           <a href={loginUrl}>Sign in with different account</a>
         </Button>
