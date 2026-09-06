@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react"
 import type { LucideIcon } from "lucide-react"
-import { Activity, ChevronRight } from "lucide-react"
+import { Activity } from "lucide-react"
 import { Badge } from "@workspace/ui/components/badge"
 import { Card } from "@workspace/ui/components/card"
 import { Skeleton } from "@workspace/ui/components/skeleton"
@@ -221,7 +221,6 @@ export function HealthScoreCard({
                       {value}
                     </span>
                   )}
-                  <ChevronRight className="size-4 text-muted-foreground" />
                 </div>
               )
             })}
