@@ -22,7 +22,6 @@ import { MemberLoadingSkeleton } from "./components/member/loading-skeleton"
 import { MemberShell } from "./components/member/shell"
 import { PwaInstallProvider } from "./components/pwa/pwa-install-provider"
 import NotFound from "./components/shared/not-found"
-import { DashboardPage } from "./pages/dashboard"
 import { MemberOverviewPage } from "./pages/member-overview"
 import { MemberNewsPage } from "./pages/member-news"
 import { MemberNewsDetailPage } from "./pages/member-news-detail"
@@ -103,7 +102,7 @@ function HomePage() {
     if (user?.requires_onboarding) {
       return <Navigate to="/onboarding" replace />
     }
-    return <DashboardPage />
+    return <MemberOverviewPage />
   }
 
   const hasNoMemberships = user && !user.is_sysadmin && !user.membership
