@@ -23,7 +23,6 @@ import { formatFullName } from "@workspace/components/components/employee-profil
 import { cn } from "@workspace/ui/lib/utils"
 import {
   Activity,
-  ChevronRight,
   ClipboardList,
   HeartPulse,
   History,
@@ -400,10 +399,6 @@ export function MemberStatusPage() {
                           <p className="text-xs text-muted-foreground leading-relaxed">
                             {config.description}
                           </p>
-                          <div className="pt-1 flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer w-fit">
-                            <span>View details</span>
-                            <ChevronRight className="size-3 text-muted-foreground" />
-                          </div>
                         </div>
                       </div>
 
