@@ -11,6 +11,12 @@ export default defineConfig({
   server: {
     port: appsConfig.backoffice.devPort,
     strictPort: appsConfig.backoffice.strictPort,
+    proxy: {
+      "/logs": {
+        target: "http://localhost:8080",
+        ws: true,
+      },
+    },
   },
   preview: {
     port: appsConfig.backoffice.previewPort,

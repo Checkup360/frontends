@@ -8,6 +8,7 @@ import { Link, Outlet, Route, Routes } from "react-router-dom"
 import { BackofficeLoadingSkeleton } from "@/components/backoffice-loading-skeleton"
 import { BackofficeShell } from "@/components/backoffice-shell"
 import { InvitationsPage } from "@/pages/invitations"
+import { LogsPage } from "@/pages/logs"
 import { OrganizationDetailPage } from "@/pages/organization-detail"
 import { OrganizationsPage } from "@/pages/organizations"
 import { SettingsPage } from "@/pages/settings"
@@ -83,6 +84,7 @@ export function App() {
                 element={<OrganizationDetailPage />}
               />
               <Route path="/invitations" element={<InvitationsPage />} />
+              <Route path="/logs" element={<LogsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>

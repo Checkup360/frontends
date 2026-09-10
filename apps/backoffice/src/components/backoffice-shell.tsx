@@ -5,7 +5,7 @@ import {
   WorkspaceShell,
   type WorkspaceShellNavItem,
 } from "@workspace/components/components/workspace-shell"
-import { Building2, MailPlus, Settings } from "lucide-react"
+import { Building2, MailPlus, Settings, Terminal } from "lucide-react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
 
 const navigation: WorkspaceShellNavItem[] = [
@@ -16,6 +16,12 @@ const navigation: WorkspaceShellNavItem[] = [
     url: "/invitations",
     icon: MailPlus,
     to: "/invitations",
+  },
+  {
+    title: "System Logs",
+    url: "/logs",
+    icon: Terminal,
+    to: "/logs",
   },
 ]
 
@@ -56,6 +62,8 @@ export function BackofficeShell() {
 
       case "/invitations":
         return "Invitations"
+      case "/logs":
+        return "System Logs"
       case "/settings":
         return "Settings"
       default:
