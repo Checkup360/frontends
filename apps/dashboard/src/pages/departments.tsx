@@ -59,15 +59,6 @@ import {
   AvatarGroupCount,
 } from "@workspace/ui/components/avatar"
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemFooter,
-  ItemHeader,
-  ItemTitle,
-} from "@workspace/ui/components/item"
-import { Progress } from "@workspace/ui/components/progress"
-import {
   AlertTriangle,
   ShieldCheck,
   Folder as FolderIcon,
@@ -132,7 +123,7 @@ export function DepartmentsPage() {
   const organizationId = user?.membership?.organization_id ?? null
 
   const isMobile = useIsMobile()
-  const PAGE_SIZE = isMobile ? 3 : 6
+  const PAGE_SIZE = isMobile ? 4 : 8
 
   // ── All departments (for KPIs + trends chart) ──
   const [allDepartments, setAllDepartments] = useState<DepartmentResponse[]>([])
@@ -417,7 +408,7 @@ export function DepartmentsPage() {
 
       {/* ── Grid card ── */}
       <div className="w-full">
-        <Card className="flex h-full min-h-[400px] flex-col rounded-3xl border-border/70 bg-card/80 p-5 shadow-sm">
+        <Card className="flex flex-col rounded-3xl border-border/70 bg-card/80 p-5 shadow-sm">
           {/* Header */}
           <div className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -458,9 +449,9 @@ export function DepartmentsPage() {
 
           {/* Grid content */}
           {loadingGrid ? (
-            <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 content-start items-start gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                <Skeleton key={i} className="h-44 w-full rounded-2xl" />
+                <Skeleton key={i} className="h-24 w-full rounded-xl" />
               ))}
             </div>
           ) : error ? (
@@ -488,7 +479,7 @@ export function DepartmentsPage() {
               </p>
             </div>
           ) : (
-            <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 content-start items-start gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {departments.map((dept) => {
                 const insight = insights.find((d) => d.id === dept.id)
                 const tone = scoreTone(insight ? insight.score : null)
@@ -497,114 +488,120 @@ export function DepartmentsPage() {
                 )
 
                 return (
-                  <Item
+                  <div
                     key={dept.id}
-                    className="group cursor-pointer rounded-2xl border-border/85 bg-card/45 shadow-xs transition-all duration-200 ease-out hover:border-primary/40 hover:bg-muted/20"
+                    className="group relative flex flex-col justify-between rounded-xl border border-border/70 bg-card/60 p-3.5 shadow-xs transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/95 hover:shadow-md cursor-pointer"
                     onClick={() => navigate(`/departments/${dept.slug}`)}
                   >
-                    <ItemHeader>
-                      <div className="flex items-center gap-2">
-                        <FolderIcon
-                          className="size-3.5 text-muted-foreground transition-all duration-300 group-hover:scale-110 group-hover:text-primary"
-                          aria-hidden="true"
-                        />
-                        <span className="font-mono text-xs text-muted-foreground transition-colors duration-300 group-hover:text-foreground">
+                    {/* Header: Name + slug on left, risk/score badge + 3 dots on right */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-primary">
+                          {dept.name}
+                        </h4>
+                        <p className="mt-0.5 font-mono text-[11px] text-muted-foreground truncate">
                           /{dept.slug}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Badge
+                          variant={tone.variant}
+                          size="xs"
+                          className="gap-1 font-medium"
+                        >
+                          {tone.icon && (
+                            <tone.icon className="size-3 shrink-0" />
+                          )}
+                          <span>{tone.label}</span>
+                          {insight?.score !== null &&
+                            insight?.score !== undefined && (
+                              <span className="ml-0.5 font-semibold tabular-nums">
+                                {insight.score}%
+                              </span>
+                            )}
+                        </Badge>
+
+                        <div onClick={(event) => event.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                className="size-6 rounded-md text-muted-foreground opacity-70 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
+                              >
+                                <MoreHorizontal className="size-3.5" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-36">
+                              <DropdownMenuItem
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  navigate(`/departments/${dept.slug}/edit`)
+                                }}
+                              >
+                                <Pencil className="mr-2 size-3.5" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  setDeleteError("")
+                                  setDeleteTarget(dept)
+                                }}
+                              >
+                                <Trash2 className="mr-2 size-3.5" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer: Member avatars + count + arrow */}
+                    <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <AvatarGroup>
+                          {deptMembers.slice(0, 3).map((member) => {
+                            const initials = getInitials(member)
+                            return (
+                              <Avatar key={member.id} size="sm" className="size-6 text-[10px]">
+                                {member.avatar_url && (
+                                  <AvatarImage
+                                    src={member.avatar_url}
+                                    alt={member.email}
+                                    className="object-cover"
+                                  />
+                                )}
+                                <AvatarFallback className="text-[9px]">
+                                  {initials}
+                                </AvatarFallback>
+                              </Avatar>
+                            )
+                          })}
+                          {deptMembers.length > 3 && (
+                            <AvatarGroupCount className="size-6 text-[9px]">
+                              +{deptMembers.length - 3}
+                            </AvatarGroupCount>
+                          )}
+                        </AvatarGroup>
+                        <span className="truncate text-xs font-medium text-muted-foreground">
+                          {deptMembers.length === 0
+                            ? "No members"
+                            : `${deptMembers.length} ${
+                                deptMembers.length === 1 ? "member" : "members"
+                              }`}
                         </span>
                       </div>
-                      <Badge variant={tone.variant} size="xs" className="gap-1">
-                        {tone.icon && <tone.icon className="shrink-0" />}
-                        {tone.label}
-                      </Badge>
-                    </ItemHeader>
 
-                    <ItemContent>
-                      <ItemTitle className="text-base font-semibold text-foreground">
-                        {dept.name}
-                      </ItemTitle>
-                    </ItemContent>
-
-                    <ItemActions onClick={(event) => event.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            className="h-8 w-8 rounded-lg"
-                          >
-                            <MoreHorizontal className="size-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              navigate(`/departments/${dept.slug}/edit`)
-                            }}
-                          >
-                            <Pencil className="mr-2 size-3.5" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              setDeleteError("")
-                              setDeleteTarget(dept)
-                            }}
-                          >
-                            <Trash2 className="mr-2 size-3.5" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </ItemActions>
-
-                    <ItemFooter className="mt-1 border-t border-border/40 pt-2">
-                      <AvatarGroup>
-                        {deptMembers.slice(0, 3).map((member) => {
-                          const initials = getInitials(member)
-                          return (
-                            <Avatar key={member.id} size="sm">
-                              {member.avatar_url && (
-                                <AvatarImage
-                                  src={member.avatar_url}
-                                  alt={member.email}
-                                  className="object-cover"
-                                />
-                              )}
-                              <AvatarFallback className="text-[10px]">
-                                {initials}
-                              </AvatarFallback>
-                            </Avatar>
-                          )
-                        })}
-                        {deptMembers.length > 3 && (
-                          <AvatarGroupCount className="text-[10px]">
-                            +{deptMembers.length - 3}
-                          </AvatarGroupCount>
-                        )}
-                        {deptMembers.length === 0 && (
-                          <span className="text-xs text-muted-foreground italic">
-                            No members
-                          </span>
-                        )}
-                      </AvatarGroup>
-
-                      <div className="flex items-center gap-2">
-                        <Progress
-                          value={insight?.score ?? 0}
-                          className="h-1.5 w-16"
-                        />
-                        <span className="text-xs font-medium text-muted-foreground">
-                          {insight?.score !== null && insight?.score !== undefined
-                            ? `${insight.score}%`
-                            : "—"}
-                        </span>
+                      <div className="flex shrink-0 items-center text-xs font-medium text-muted-foreground transition-colors group-hover:text-primary">
+                        <ChevronRight className="size-4 -translate-x-0.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                       </div>
-                    </ItemFooter>
-                  </Item>
+                    </div>
+                  </div>
                 )
               })}
             </div>
