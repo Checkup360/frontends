@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { HeartPulse, Activity } from "lucide-react"
+import { HeartPulse, Activity, type LucideIcon } from "lucide-react"
 import { Card } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"
@@ -24,10 +24,21 @@ export interface ScoreEvolutionChartProps {
   title?: string
   description?: string
   badgeLabel?: string
+  icon?: LucideIcon
   /** Chronological rows: e.g. [{ month: "Jan", overall: 82, Diabetes: 88 }, ...] */
   data: Array<Record<string, string | number>>
   /** Available series definitions to plot and toggle */
   series: ChartSeries[]
+  /** Data key used for the X-axis (default: "month") */
+  xAxisKey?: string
+  /** Custom domain for the Y-axis (default: [0, 100] when showPercentages is true, else [0, "auto"]) */
+  yAxisDomain?: [number | string, number | string]
+  /** Custom ticks for the Y-axis */
+  yAxisTicks?: number[]
+  /** Whether decimal values are allowed on the Y-axis */
+  allowDecimals?: boolean
+  /** Whether to show visible dots on each data point */
+  showDots?: boolean
   /** Whether to append % symbol to Y-axis and tooltip values */
   showPercentages?: boolean
   loading?: boolean
@@ -52,8 +63,14 @@ export function ScoreEvolutionChart({
   title = "Health score evolution",
   description = "Score progression across medical assessments",
   badgeLabel,
+  icon: Icon = HeartPulse,
   data,
   series,
+  xAxisKey = "month",
+  yAxisDomain,
+  yAxisTicks,
+  allowDecimals,
+  showDots = false,
   showPercentages = false,
   loading = false,
   emptyTitle = "No evaluation trends yet",
@@ -61,6 +78,11 @@ export function ScoreEvolutionChart({
   className,
   height = 240,
 }: ScoreEvolutionChartProps) {
+  const effectiveDomain: [number | string, number | string] =
+    yAxisDomain ?? (showPercentages ? [0, 100] : [0, "auto"])
+  const effectiveTicks =
+    yAxisTicks ?? (showPercentages ? [0, 25, 50, 75, 100] : undefined)
+
   // Enrich series with color palette if not provided
   const enrichedSeries = useMemo(() => {
     return series.map((s, idx) => ({
@@ -107,7 +129,7 @@ export function ScoreEvolutionChart({
       <div className="space-y-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <HeartPulse className="size-5 text-primary" />
+            <Icon className="size-5 text-primary" />
             <h3 className="text-lg font-semibold tracking-tight text-foreground">
               {title}
             </h3>
@@ -207,15 +229,16 @@ export function ScoreEvolutionChart({
                 opacity={0.6}
               />
               <XAxis
-                dataKey="month"
+                dataKey={xAxisKey}
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
                 className="text-xs text-muted-foreground"
               />
               <YAxis
-                domain={[0, 100]}
-                ticks={[0, 25, 50, 75, 100]}
+                domain={effectiveDomain}
+                ticks={effectiveTicks}
+                allowDecimals={allowDecimals ?? showPercentages}
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
@@ -248,6 +271,22 @@ export function ScoreEvolutionChart({
                     stroke={s.color}
                     strokeWidth={s.strokeWidth || 2}
                     fill={`url(#${s.gradientId})`}
+                    dot={
+                      showDots
+                        ? {
+                            r: 4,
+                            stroke: s.color,
+                            strokeWidth: 2,
+                            fill: "var(--card)",
+                          }
+                        : false
+                    }
+                    activeDot={{
+                      r: 6,
+                      stroke: s.color,
+                      strokeWidth: 2,
+                      fill: s.color,
+                    }}
                   />
                 )
               })}

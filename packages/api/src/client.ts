@@ -1634,7 +1634,36 @@ export async function getOrganizationDepartmentAnalytics(
   }
 }
 
+export interface RegistrationTrendPoint {
+  period: string
+  date_label: string
+  new_members: number
+  cumulative_members: number
+}
+
+export async function getOrganizationRegistrationTrends(
+  organizationId: string
+): Promise<RegistrationTrendPoint[]> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationRegistrationTrends(
+        organizationId
+      )}`,
+      {
+        credentials: "include",
+      }
+    )
+
+    if (!response.ok) return []
+    return (await response.json()) as RegistrationTrendPoint[]
+  } catch (error) {
+    console.error("Error fetching organization registration trends:", error)
+    return []
+  }
+}
+
 export type { RiskTrendPoint, DepartmentAnalyticsSummary }
+
 
 
 

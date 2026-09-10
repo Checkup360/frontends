@@ -37,6 +37,9 @@ export const apiRoutes = {
   },
   organizationAnalyticsDepartments: (organizationId: string) =>
     `/organizations/${encodeURIComponent(organizationId)}/analytics/departments`,
+  organizationRegistrationTrends: (organizationId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/registration-trends`,
+
 
 
   members: {

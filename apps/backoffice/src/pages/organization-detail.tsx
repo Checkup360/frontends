@@ -1,8 +1,14 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
+  getOrganizationRegistrationTrends,
   getOrganizationSummary,
   type OrganizationSummaryResponse,
+  type RegistrationTrendPoint,
 } from "@workspace/api"
+import {
+  ScoreEvolutionChart,
+  type ChartSeries,
+} from "@workspace/components/components/score-evolution-chart"
 import {
   Avatar,
   AvatarGroup,
@@ -21,17 +27,22 @@ import {
 import {
   ArrowLeft,
   ShieldCheck,
+  Users,
   UsersRound,
   type LucideIcon,
 } from "lucide-react"
 import { Link, useNavigate, useParams } from "react-router-dom"
+import { cn } from "@workspace/ui/lib/utils"
+
 
 function InviteMemberCard({
   organizationId,
   organizationName,
+  className,
 }: {
   organizationId: string
   organizationName: string
+  className?: string
 }) {
   const navigate = useNavigate()
   const inviteUrl = `/invitations?type=organization&organizationId=${encodeURIComponent(
@@ -39,13 +50,13 @@ function InviteMemberCard({
   )}&create=1`
 
   return (
-    <div className="w-full max-w-sm">
+    <div className={cn("w-full", className)}>
       <Card
-        className="cursor-pointer transition-colors hover:ring-primary/40"
+        className="h-full cursor-pointer transition-colors hover:ring-primary/40 flex flex-col justify-center"
         onClick={() => navigate(inviteUrl)}
       >
-        <CardContent>
-          <Empty className="h-56 border border-dashed">
+        <CardContent className="h-full p-6 flex flex-col justify-center">
+          <Empty className="h-full min-h-[260px] border border-dashed flex flex-col justify-center">
             <EmptyHeader>
               <EmptyMedia>
                 <AvatarGroup>
@@ -124,31 +135,73 @@ export function OrganizationDetailPage() {
   const [summary, setSummary] = useState<OrganizationSummaryResponse | null>(
     null
   )
+  const [registrationTrends, setRegistrationTrends] = useState<
+    RegistrationTrendPoint[]
+  >([])
   const [loading, setLoading] = useState(true)
+  const [loadingTrends, setLoadingTrends] = useState(true)
 
   useEffect(() => {
     let active = true
 
-    async function loadSummary() {
+    async function loadData() {
       if (!id) {
         setLoading(false)
+        setLoadingTrends(false)
         return
       }
 
       setLoading(true)
-      const data = await getOrganizationSummary(id)
-      if (active) {
-        setSummary(data)
-        setLoading(false)
+      setLoadingTrends(true)
+
+      try {
+        const [summaryData, trendsData] = await Promise.all([
+          getOrganizationSummary(id),
+          getOrganizationRegistrationTrends(id),
+        ])
+
+        if (active) {
+          setSummary(summaryData)
+          setRegistrationTrends(trendsData)
+        }
+      } finally {
+        if (active) {
+          setLoading(false)
+          setLoadingTrends(false)
+        }
       }
     }
 
-    void loadSummary()
+    void loadData()
 
     return () => {
       active = false
     }
   }, [id])
+
+  const chartSeries: ChartSeries[] = useMemo(
+    () => [
+      {
+        key: "cumulative_members",
+        label: "Total Members",
+        color: "oklch(0.65 0.18 250)",
+      },
+      {
+        key: "new_members",
+        label: "New Registrations",
+        color: "oklch(0.62 0.20 145)",
+      },
+    ],
+    []
+  )
+
+  const chartData = useMemo(() => {
+    return registrationTrends.map((point) => ({
+      month: point.date_label,
+      new_members: point.new_members,
+      cumulative_members: point.cumulative_members,
+    }))
+  }, [registrationTrends])
 
   if (loading) {
     return (
@@ -220,8 +273,37 @@ export function OrganizationDetailPage() {
         />
       </section>
 
-      <section className="flex justify-center">
-        <InviteMemberCard organizationId={id} organizationName={summary.name} />
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-stretch">
+        <div className="lg:col-span-2">
+          <ScoreEvolutionChart
+            title="User Registrations Evolution"
+            description="Member registration progression over time"
+            badgeLabel={
+              registrationTrends.length > 0
+                ? `${summary.total_members} members total`
+                : undefined
+            }
+            icon={Users}
+            data={chartData}
+            series={chartSeries}
+            xAxisKey="month"
+            showDots={true}
+            showPercentages={false}
+            loading={loadingTrends}
+            emptyTitle="No registrations recorded yet"
+            emptyMessage="Member registration trends will appear here as users join this organization."
+            height={260}
+            className="h-full"
+          />
+        </div>
+
+        <div className="lg:col-span-1 flex">
+          <InviteMemberCard
+            organizationId={id}
+            organizationName={summary.name}
+            className="h-full w-full"
+          />
+        </div>
       </section>
     </div>
   )
