@@ -91,11 +91,18 @@ interface DepartmentHealthInsight {
   name: string
   slug: string
   total: number
-  score: number
-  risk: number
+  score: number | null
+  risk: number | null
 }
 
-function scoreTone(score: number) {
+function scoreTone(score: number | null) {
+  if (score === null) {
+    return {
+      label: "Pending",
+      variant: "outline" as const,
+      icon: null,
+    }
+  }
   if (score >= 80) {
     return {
       label: "Healthy",
@@ -231,29 +238,38 @@ export function DepartmentsPage() {
       const members = employees.filter(
         (employee) => employee.department?.id === department.id
       )
-      const score = summary ? Math.round(summary.average_score) : 100
+      const score =
+        typeof summary?.average_score === "number"
+          ? Math.round(summary.average_score)
+          : null
       return {
         id: department.id,
         name: department.name,
         slug: department.slug,
         total: summary?.total_workers ?? members.length,
         score,
-        risk: 100 - score,
+        risk: score !== null ? 100 - score : null,
       }
     })
   }, [allDepartments, employees, deptAnalytics])
 
   const highestScoreDept = useMemo(() => {
-    if (insights.length === 0) return null
-    const activePool = insights.filter((d) => d.total > 0)
-    const pool = activePool.length > 0 ? activePool : insights
+    const scoredPool = insights.filter(
+      (d): d is DepartmentHealthInsight & { score: number } => d.score !== null
+    )
+    if (scoredPool.length === 0) return null
+    const activePool = scoredPool.filter((d) => d.total > 0)
+    const pool = activePool.length > 0 ? activePool : scoredPool
     return [...pool].sort((a, b) => b.score - a.score)[0]
   }, [insights])
 
   const averageScore = useMemo(() => {
-    if (insights.length === 0) return 0
+    const scored = insights.filter(
+      (d): d is DepartmentHealthInsight & { score: number } => d.score !== null
+    )
+    if (scored.length === 0) return null
     return Math.round(
-      insights.reduce((total, d) => total + d.score, 0) / insights.length
+      scored.reduce((total, d) => total + d.score, 0) / scored.length
     )
   }, [insights])
 
@@ -379,10 +395,10 @@ export function DepartmentsPage() {
           <OverviewStatCard
             icon={TrendingUp}
             iconVariant="icon"
-            tone="success"
+            tone={highestScoreDept ? "success" : "primary"}
             label="Highest health score"
-            value={highestScoreDept ? `${highestScoreDept.score}%` : "100%"}
-            hint={highestScoreDept?.name ?? "No departments assigned"}
+            value={highestScoreDept ? `${highestScoreDept.score}%` : "—"}
+            hint={highestScoreDept?.name ?? "No evaluations recorded"}
           />
         )}
         {loading ? (
@@ -391,10 +407,10 @@ export function DepartmentsPage() {
           <OverviewStatCard
             icon={ShieldCheck}
             iconVariant="icon"
-            tone="success"
+            tone={averageScore !== null ? "success" : "primary"}
             label="Average department score"
-            value={`${averageScore}%`}
-            hint="Aggregated health index"
+            value={averageScore !== null ? `${averageScore}%` : "—"}
+            hint={averageScore !== null ? "Aggregated health index" : "No evaluations recorded"}
           />
         )}
       </section>
@@ -475,7 +491,7 @@ export function DepartmentsPage() {
             <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {departments.map((dept) => {
                 const insight = insights.find((d) => d.id === dept.id)
-                const tone = scoreTone(insight?.score ?? 100)
+                const tone = scoreTone(insight ? insight.score : null)
                 const deptMembers = employees.filter(
                   (employee) => employee.department?.id === dept.id
                 )
@@ -578,11 +594,13 @@ export function DepartmentsPage() {
 
                       <div className="flex items-center gap-2">
                         <Progress
-                          value={insight?.score ?? 100}
+                          value={insight?.score ?? 0}
                           className="h-1.5 w-16"
                         />
                         <span className="text-xs font-medium text-muted-foreground">
-                          {insight?.score ?? 100}%
+                          {insight?.score !== null && insight?.score !== undefined
+                            ? `${insight.score}%`
+                            : "—"}
                         </span>
                       </div>
                     </ItemFooter>

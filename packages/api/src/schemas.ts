@@ -262,8 +262,8 @@ export type MemberFormSubmissionResponse = {
 export type RiskTrendPoint = {
   period: string
   month_label: string
-  average_score: number
-  risk_index: number
+  average_score: number | null
+  risk_index: number | null
   total_assessments: number
   scores_by_study?: Record<string, number>
 }
@@ -271,7 +271,7 @@ export type RiskTrendPoint = {
 export type DepartmentAnalyticsSummary = {
   department_id: string
   name: string
-  average_score: number
+  average_score: number | null
   total_workers: number
   high_risk_count: number
 }

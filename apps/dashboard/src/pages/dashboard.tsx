@@ -71,7 +71,7 @@ export function DashboardPage() {
       return deptAnalytics.map((dept) => ({
         id: dept.department_id,
         name: dept.name,
-        score: Math.round(dept.average_score),
+        score: typeof dept.average_score === "number" ? Math.round(dept.average_score) : null,
         workers: dept.total_workers,
       }))
     }
@@ -80,7 +80,7 @@ export function DashboardPage() {
       return {
         id: dept.id,
         name: dept.name,
-        score: 100,
+        score: null,
         workers: members.length,
       }
     })
@@ -88,13 +88,26 @@ export function DashboardPage() {
 
   // Summary stats derived from real data
   const totalEmployees = employees.length.toString()
+  const evaluatedAreas = areas.filter((a) => a.score !== null)
+  const sortedTrends = useMemo(() => {
+    return [...trends].sort((a, b) => a.period.localeCompare(b.period))
+  }, [trends])
+  const latestTrend =
+    sortedTrends.length > 0 ? sortedTrends[sortedTrends.length - 1] : null
+
   const averageScore =
-    areas.length === 0
-      ? "100"
-      : Math.round(
-          areas.reduce((sum, a) => sum + a.score, 0) / areas.length
-        ).toString()
-  const highRiskCount = areas.filter((a) => a.score < 60).length.toString()
+    latestTrend !== null && typeof latestTrend.average_score === "number"
+      ? `${Math.round(latestTrend.average_score)}%`
+      : evaluatedAreas.length > 0
+        ? `${Math.round(
+            evaluatedAreas.reduce((sum, a) => sum + (a.score ?? 0), 0) /
+              evaluatedAreas.length
+          )}%`
+        : "—"
+
+  const highRiskCount = areas.filter(
+    (a) => a.score !== null && a.score < 60
+  ).length.toString()
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
@@ -115,11 +128,11 @@ export function DashboardPage() {
         ) : (
           <OverviewStatCard
             label="Average score"
-            value={`${averageScore}%`}
+            value={averageScore}
             hint="Aggregated health index"
             icon={TrendingUp}
             iconVariant="icon"
-            tone="success"
+            tone={averageScore === "—" ? "primary" : "success"}
           />
         )}
         {loading ? (

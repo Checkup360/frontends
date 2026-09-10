@@ -10,15 +10,6 @@ import {
   YAxis,
 } from "recharts"
 
-const defaultFallbackData = [
-  { month: "Jan", risk: 20 },
-  { month: "Feb", risk: 18 },
-  { month: "Mar", risk: 22 },
-  { month: "Apr", risk: 19 },
-  { month: "May", risk: 16 },
-  { month: "Jun", risk: 15 },
-]
-
 interface RiskTrendProps {
   trends?: RiskTrendPoint[]
   loading?: boolean
@@ -27,25 +18,30 @@ interface RiskTrendProps {
 export function RiskTrend({ trends, loading }: RiskTrendProps) {
   const chartData =
     trends && trends.length > 0
-      ? trends.map((t) => ({
-          month: t.month_label,
-          risk: t.risk_index,
-          score: t.average_score,
-        }))
-      : defaultFallbackData
+      ? trends
+          .filter((t) => typeof t.average_score === "number")
+          .map((t) => ({
+            month: t.month_label,
+            score: Math.round(t.average_score as number),
+          }))
+      : []
 
   return (
     <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
       <div>
-        <h3 className="text-base font-semibold text-foreground">Risk trends</h3>
+        <h3 className="text-base font-semibold text-foreground">Health score trends</h3>
         <p className="text-sm text-muted-foreground">
-          Monthly evolution of the aggregated risk index
+          Monthly evolution of the aggregated health index (higher is healthier)
         </p>
       </div>
       <div className="mt-4 h-64">
         {loading ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Loading trends...
+          </div>
+        ) : chartData.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            No health trend data available yet
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -57,12 +53,12 @@ export function RiskTrend({ trends, loading }: RiskTrendProps) {
                 <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="0%"
-                    stopColor="oklch(0.55 0.16 35)"
+                    stopColor="oklch(0.65 0.18 250)"
                     stopOpacity={0.35}
                   />
                   <stop
                     offset="100%"
-                    stopColor="oklch(0.55 0.16 35)"
+                    stopColor="oklch(0.65 0.18 250)"
                     stopOpacity={0}
                   />
                 </linearGradient>
@@ -84,6 +80,8 @@ export function RiskTrend({ trends, loading }: RiskTrendProps) {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
+                domain={[0, 100]}
+                tickFormatter={(v: number) => `${v}%`}
               />
               <Tooltip
                 contentStyle={{
@@ -92,12 +90,13 @@ export function RiskTrend({ trends, loading }: RiskTrendProps) {
                   borderRadius: 12,
                   fontSize: 12,
                 }}
+                formatter={(value: number) => [`${value}%`, "Health index"]}
               />
               <Area
                 type="monotone"
-                dataKey="risk"
-                name="Risk index"
-                stroke="oklch(0.55 0.16 35)"
+                dataKey="score"
+                name="Health index"
+                stroke="oklch(0.65 0.18 250)"
                 fill="url(#g1)"
                 strokeWidth={2}
               />
@@ -109,9 +108,9 @@ export function RiskTrend({ trends, loading }: RiskTrendProps) {
         <span className="flex items-center gap-2">
           <span
             className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: "oklch(0.55 0.16 35)" }}
+            style={{ backgroundColor: "oklch(0.65 0.18 250)" }}
           />
-          Risk index
+          Health index
         </span>
       </div>
     </Card>

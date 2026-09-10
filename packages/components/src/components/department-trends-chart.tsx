@@ -104,8 +104,14 @@ export function DepartmentTrendsChart({
       return {
         id: dept.id,
         name: dept.name,
-        latestScore: latest?.average_score ?? 100,
-        latestRisk: latest?.risk_index ?? 0,
+        latestScore:
+          typeof latest?.average_score === "number"
+            ? Math.round(latest.average_score)
+            : null,
+        latestRisk:
+          typeof latest?.risk_index === "number"
+            ? Math.round(latest.risk_index)
+            : null,
         points: pts,
         color: PALETTE[idx % PALETTE.length] as string,
       }
@@ -137,10 +143,13 @@ export function DepartmentTrendsChart({
   // One row per month, keyed by department id
   const chartData = useMemo(() => {
     return periodList.map(({ period, month_label }) => {
-      const row: Record<string, string | number> = { month: month_label }
+      const row: Record<string, string | number | null> = { month: month_label }
       departments.forEach((dept) => {
         const pt = trendsMap[dept.id]?.find((p) => p.period === period)
-        row[dept.id] = pt ? pt.risk_index : 0
+        row[dept.id] =
+          typeof pt?.average_score === "number"
+            ? Math.round(pt.average_score)
+            : null
       })
       return row
     })
@@ -160,7 +169,7 @@ export function DepartmentTrendsChart({
       <div className="flex flex-col gap-1 pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
-            Department Risk Trends
+            Department Health Trends
             {periodBadgeText && (
               <Badge variant="success-light" className="gap-1">
                 <TrendingUp className="size-3" aria-hidden="true" />
@@ -169,7 +178,7 @@ export function DepartmentTrendsChart({
             )}
           </h3>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Aggregated health risk index per department over time.
+            Aggregated health score index per department over time (higher is healthier).
           </p>
         </div>
       </div>
@@ -291,9 +300,12 @@ export function DepartmentTrendsChart({
                   borderRadius: 12,
                   fontSize: 12,
                 }}
-                formatter={(value: number, name: string) => {
+                formatter={(value: any, name: string) => {
                   const dept = insights.find((d) => d.id === name)
-                  return [`${value}%`, dept?.name ?? name]
+                  return [
+                    typeof value === "number" ? `${value}%` : "—",
+                    dept?.name ?? name,
+                  ]
                 }}
               />
               {activeInsights.map((dept) => (
@@ -306,6 +318,7 @@ export function DepartmentTrendsChart({
                   fill={`url(#deptGrad-${dept.id})`}
                   strokeWidth={2}
                   dot={false}
+                  connectNulls={true}
                   activeDot={{ r: 4, strokeWidth: 0, fill: dept.color }}
                 />
               ))}

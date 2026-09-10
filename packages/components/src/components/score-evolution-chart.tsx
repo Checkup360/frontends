@@ -26,7 +26,7 @@ export interface ScoreEvolutionChartProps {
   badgeLabel?: string
   icon?: LucideIcon
   /** Chronological rows: e.g. [{ month: "Jan", overall: 82, Diabetes: 88 }, ...] */
-  data: Array<Record<string, string | number>>
+  data: Array<Record<string, string | number | null>>
   /** Available series definitions to plot and toggle */
   series: ChartSeries[]
   /** Data key used for the X-axis (default: "month") */
@@ -61,7 +61,7 @@ export const CHART_PALETTE = [
 
 export function ScoreEvolutionChart({
   title = "Health score evolution",
-  description = "Score progression across medical assessments",
+  description = "Score progression across medical assessments (higher is healthier)",
   badgeLabel,
   icon: Icon = HeartPulse,
   data,
@@ -256,7 +256,11 @@ export function ScoreEvolutionChart({
                   fontSize: "12px",
                 }}
                 formatter={(val: any, name: any) => [
-                  showPercentages ? `${val}%` : `${val}`,
+                  typeof val === "number"
+                    ? showPercentages
+                      ? `${val}%`
+                      : `${val}`
+                    : "—",
                   name,
                 ]}
               />
@@ -271,6 +275,7 @@ export function ScoreEvolutionChart({
                     stroke={s.color}
                     strokeWidth={s.strokeWidth || 2}
                     fill={`url(#${s.gradientId})`}
+                    connectNulls={true}
                     dot={
                       showDots
                         ? {

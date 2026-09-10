@@ -24,7 +24,7 @@ export function HealthEvolutionChart({ data }: HealthEvolutionChartProps) {
           Health score trend
         </h3>
         <p className="text-sm text-muted-foreground">
-          Monthly evolution of your preventive health score
+          Monthly evolution of your preventive health score (higher is healthier)
         </p>
       </div>
       <div className="mt-4 h-64">

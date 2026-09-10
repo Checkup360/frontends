@@ -638,9 +638,10 @@ export function DepartmentDetailPage() {
     (e) => e.status.toLowerCase() === "active"
   ).length
 
-  const healthScore = deptAnalytics
-    ? Math.round(deptAnalytics.average_score)
-    : 100
+  const healthScore =
+    typeof deptAnalytics?.average_score === "number"
+      ? Math.round(deptAnalytics.average_score)
+      : null
   const highRiskWorkers = deptAnalytics ? deptAnalytics.high_risk_count : 0
 
   const sortedTrends = useMemo(() => {
@@ -678,9 +679,12 @@ export function DepartmentDetailPage() {
   // Chart data formatted for multi-study curves
   const chartData = useMemo(() => {
     return sortedTrends.map((t) => {
-      const row: Record<string, string | number> = {
+      const row: Record<string, string | number | null> = {
         month: t.month_label,
-        overall: Math.round(t.average_score),
+        overall:
+          typeof t.average_score === "number"
+            ? Math.round(t.average_score)
+            : null,
       }
       if (t.scores_by_study) {
         Object.entries(t.scores_by_study).forEach(([k, v]) => {
@@ -770,10 +774,22 @@ export function DepartmentDetailPage() {
         />
         <StatCard
           icon={ShieldCheck}
-          tone={healthScore >= 80 ? "success" : "warning"}
+          tone={
+            healthScore === null
+              ? "primary"
+              : healthScore >= 80
+                ? "success"
+                : "warning"
+          }
           label="Health score"
-          value={loadingDept ? "..." : `${healthScore}%`}
-          hint="Aggregated health index"
+          value={
+            loadingDept ? "..." : healthScore !== null ? `${healthScore}%` : "—"
+          }
+          hint={
+            healthScore !== null
+              ? "Aggregated health index"
+              : "No evaluations recorded"
+          }
         />
         <StatCard
           icon={AlertTriangle}
@@ -791,7 +807,7 @@ export function DepartmentDetailPage() {
       {/* ── Clinical Studies & Health Score Evolution Chart (Reusable Component) ── */}
       <ScoreEvolutionChart
         title="Clinical Studies & Health Score Evolution"
-        description="Select any clinical study to visualize and compare its monthly score variation (0–100%)"
+        description="Select any clinical study to visualize and compare its monthly score variation (0–100%, higher is healthier)"
         data={chartData}
         series={availableStudies}
         showPercentages={true}

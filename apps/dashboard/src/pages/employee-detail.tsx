@@ -662,7 +662,7 @@ export function EmployeeDetailPage() {
           {/* Health Score Evolution Chart (Reusable Component) */}
           <ScoreEvolutionChart
             title="Health score evolution"
-            description="Score progression across medical assessments"
+            description="Score progression across medical assessments (higher is healthier)"
             badgeLabel={evolutionData.length > 0 ? "Progression" : undefined}
             data={evolutionData}
             series={availableStudies}

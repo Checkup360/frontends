@@ -4,8 +4,8 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 
 export interface AreaScoreItem {
   name: string
-  /** Health score: 100 = fully healthy, 0 = all onboarding */
-  score: number
+  /** Health score: 100 = fully healthy, null = pending evaluations */
+  score: number | null
   workers: number
 }
 
@@ -16,7 +16,15 @@ interface AreaScoresProps {
   limit?: number
 }
 
-const toneFor = (score: number) => {
+const toneFor = (score: number | null) => {
+  if (score === null) {
+    return {
+      label: "Pending",
+      className:
+        "bg-muted/40 text-muted-foreground border-border/60",
+      barClass: "bg-muted",
+    }
+  }
   if (score >= 80)
     return {
       label: "Healthy",
@@ -39,9 +47,16 @@ const toneFor = (score: number) => {
 }
 
 export function AreaScores({ areas, loading = false, limit = 5 }: AreaScoresProps) {
-  // Sort: highest risk (lowest score) first, break ties by most workers
+  // Sort: evaluated departments with lowest score first, then pending, break ties by most workers
   const sorted = [...areas]
-    .sort((a, b) => a.score - b.score || b.workers - a.workers)
+    .sort((a, b) => {
+      if (a.score !== null && b.score !== null) {
+        return a.score - b.score || b.workers - a.workers
+      }
+      if (a.score !== null && b.score === null) return -1
+      if (a.score === null && b.score !== null) return 1
+      return b.workers - a.workers
+    })
     .slice(0, limit)
 
   const hidden = areas.length - sorted.length
@@ -95,14 +110,14 @@ export function AreaScores({ areas, loading = false, limit = 5 }: AreaScoresProp
                       {a.workers} employees
                     </span>
                     <span className="font-semibold text-foreground tabular-nums">
-                      {a.score}
+                      {a.score !== null ? a.score : "—"}
                     </span>
                   </div>
                 </div>
                 <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${tone.barClass}`}
-                    style={{ width: `${a.score}%` }}
+                    style={{ width: a.score !== null ? `${a.score}%` : "0%" }}
                   />
                 </div>
               </div>
