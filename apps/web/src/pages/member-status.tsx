@@ -87,22 +87,12 @@ function getRiskLevelConfig(riskLevel: string | null, healthScore: number) {
   }
 }
 
-/** Computes a normalized score (0-100) for a given calculator */
+/** Returns the normalized score (0-100) delivered by the backend */
 function getNormalizedScore(result: AssessmentResultResponse): number {
   if (result.normalized_value !== null && result.normalized_value !== undefined) {
     return Math.min(100, Math.max(0, Math.round(result.normalized_value)))
   }
-
   const raw = result.raw_value ?? 0
-  const id = result.score_id.toLowerCase()
-
-  if (id.includes("findrisc")) {
-    return Math.min(100, Math.round((raw / 26) * 100))
-  }
-  if (id.includes("stop_bang") || id.includes("stopbang")) {
-    return Math.min(100, Math.round((raw / 8) * 100))
-  }
-
   return Math.min(100, Math.max(0, Math.round(raw)))
 }
 
@@ -336,7 +326,7 @@ export function MemberStatusPage() {
               You haven't completed any clinical or health forms yet. Fill out your health studies to generate your risk evaluations.
             </p>
             <Button asChild size="sm" className="mt-5 gap-2 rounded-full px-5">
-              <Link to="/forms/studies">
+              <Link to="/forms">
                 <Sparkles className="size-3.5" />
                 Go to Health Forms
               </Link>
@@ -347,7 +337,7 @@ export function MemberStatusPage() {
         <div className="space-y-8">
           {/* Reused Health Score Hero Card (Exact component from Overview) */}
           <HealthScoreHeroCard
-            score={computedHealth?.score ?? 100}
+            score={computedHealth?.score ?? null}
             riskLevel={computedHealth?.riskLevel}
             explanation={computedHealth?.explanation}
           />

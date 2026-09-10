@@ -124,7 +124,7 @@ export function MemberOverview({
     )
   }, [latestSession, assessmentsData])
 
-  const score = computedHealth?.score ?? 100
+  const score = computedHealth?.score ?? null
   const riskKey = (
     computedHealth?.riskLevel === "high"
       ? "high"

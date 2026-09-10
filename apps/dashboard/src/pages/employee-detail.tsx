@@ -19,7 +19,6 @@ import {
 import {
   groupResultsIntoSessions,
   AssessmentHistoryDialog,
-  computeOverallHealthScore,
 } from "@workspace/components/components/assessment-utils"
 import { AssessmentSubmissionHistory } from "@workspace/components/components/assessment-submission-history"
 import {
@@ -397,22 +396,16 @@ export function EmployeeDetailPage() {
         riskLevel: null,
       }
     }
-    const evaluated = dynamicIndicators.filter(
-      (i) => !i.isPending && typeof i.value === "number"
-    )
-    const calculatedAvg =
-      evaluated.length > 0
-        ? Math.round(
-            evaluated.reduce((sum, i) => sum + (i.value ?? 0), 0) /
-              evaluated.length
-          )
-        : 100
 
-    const finalScore =
-      typeof assessments?.overall_score === "number"
-        ? Math.round(assessments.overall_score)
-        : calculatedAvg
+    if (typeof assessments?.overall_score !== "number") {
+      return {
+        score: null,
+        label: "Incomplete assessment",
+        riskLevel: null,
+      }
+    }
 
+    const finalScore = Math.round(assessments.overall_score)
     const riskMeta = getRiskTone(assessments?.overall_risk_level, finalScore)
 
     return {
@@ -420,7 +413,7 @@ export function EmployeeDetailPage() {
       label: riskMeta.label,
       riskLevel: riskMeta.riskLevel,
     }
-  }, [hasAnyEvaluated, dynamicIndicators, assessments])
+  }, [hasAnyEvaluated, assessments])
 
   // Discover available study curves dynamically from session assessment results (100% dynamic)
   const availableStudies = useMemo<ChartSeries[]>(() => {
@@ -462,11 +455,15 @@ export function EmployeeDetailPage() {
         const overallScore =
           isLatestInArray && typeof assessments?.overall_score === "number"
             ? Math.round(assessments.overall_score)
-            : computeOverallHealthScore(session.results).score ?? 0
+            : typeof session.overallScore === "number"
+            ? Math.round(session.overallScore)
+            : null
 
         const row: Record<string, string | number> = {
           month: session.formattedDate.split(" ")[0] || `Eval #${idx + 1}`,
-          overall: overallScore,
+        }
+        if (typeof overallScore === "number") {
+          row.overall = overallScore
         }
 
         session.results.forEach((r) => {

@@ -32,6 +32,8 @@ export function groupResultsIntoSessions(
       evaluatedAt: s.evaluated_at ? new Date(s.evaluated_at) : null,
       formattedDate: formatSessionDate(s.evaluated_at),
       isLatest: index === 0,
+      overallScore: s.overall_score,
+      overallRiskLevel: s.overall_risk_level,
       results: s.results,
     }))
   }
@@ -120,9 +122,9 @@ export interface Recommendation {
 }
 
 export interface ComputedHealthScore {
-  score: number
-  label: "Low risk" | "Moderate risk" | "Needs attention"
-  riskLevel: "low" | "moderate" | "high"
+  score: number | null
+  label: "Low risk" | "Moderate risk" | "Needs attention" | "Incomplete evaluation"
+  riskLevel: "low" | "moderate" | "high" | null
   explanation: string
   recommendations: Recommendation[]
 }
@@ -142,16 +144,9 @@ export function computeOverallHealthScore(
     }
   }
 
-  let score = 100
+  let score: number | null = null
   if (typeof backendOverallScore === "number") {
     score = Math.round(backendOverallScore)
-  } else {
-    const validNorms = results
-      .map((r) => r.normalized_value)
-      .filter((v): v is number => typeof v === "number")
-    if (validNorms.length > 0) {
-      score = Math.round(validNorms.reduce((a, b) => a + b, 0) / validNorms.length)
-    }
   }
 
   const recommendations: Recommendation[] = []
@@ -215,6 +210,17 @@ export function computeOverallHealthScore(
     }
   }
 
+  if (score === null) {
+    return {
+      score: null,
+      label: "Incomplete evaluation",
+      riskLevel: null,
+      explanation:
+        "Some evaluations are still pending to calculate your overall health score. Individual disease scores are shown below.",
+      recommendations,
+    }
+  }
+
   let label: "Low risk" | "Moderate risk" | "Needs attention" = "Low risk"
   let riskLevel: "low" | "moderate" | "high" = "low"
   let explanation =
@@ -246,6 +252,8 @@ export interface AssessmentSession {
   evaluatedAt: Date | null
   formattedDate: string
   isLatest: boolean
+  overallScore?: number | null
+  overallRiskLevel?: string | null
   results: AssessmentResultResponse[]
 }
 

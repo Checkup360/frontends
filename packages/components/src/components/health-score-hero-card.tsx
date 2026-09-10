@@ -31,8 +31,8 @@ export const heroLevelConfig = {
 } as const
 
 export interface HealthScoreHeroCardProps {
-  score: number
-  riskLevel?: "low" | "moderate" | "high" | string
+  score: number | null
+  riskLevel?: "low" | "moderate" | "high" | string | null
   explanation?: string
   title?: string
   description?: string
@@ -47,20 +47,31 @@ export function HealthScoreHeroCard({
   description = "Evaluated from your latest clinical studies & health forms",
   className,
 }: HealthScoreHeroCardProps) {
+  const hasScore = typeof score === "number"
   const normalizedLevel = (
-    riskLevel.toLowerCase().includes("high")
+    riskLevel && riskLevel.toLowerCase().includes("high")
       ? "high"
-      : riskLevel.toLowerCase().includes("mod") || riskLevel.toLowerCase().includes("elevated") || riskLevel.toLowerCase().includes("inter")
+      : riskLevel &&
+          (riskLevel.toLowerCase().includes("mod") ||
+            riskLevel.toLowerCase().includes("elevated") ||
+            riskLevel.toLowerCase().includes("inter"))
         ? "moderate"
         : "low"
   ) as keyof typeof heroLevelConfig
 
-  const config = heroLevelConfig[normalizedLevel] || heroLevelConfig.low
+  const config = hasScore
+    ? heroLevelConfig[normalizedLevel] || heroLevelConfig.low
+    : {
+        bg: "bg-muted/50",
+        color: "text-muted-foreground",
+        ringColor: "text-muted",
+        label: "Incomplete",
+      }
 
   const radius = 70
   const circumference = 2 * Math.PI * radius
-  const safeScore = Math.min(Math.max(score, 0), 100)
-  const offset = circumference - (safeScore / 100) * circumference
+  const safeScore = hasScore ? Math.min(Math.max(score, 0), 100) : 0
+  const offset = hasScore ? circumference - (safeScore / 100) * circumference : circumference
 
   return (
     <Card className={cn("border-2", className)}>
@@ -112,7 +123,7 @@ export function HealthScoreHeroCard({
               <span
                 className={`text-5xl font-bold tabular-nums ${config.color}`}
               >
-                {safeScore}
+                {hasScore ? safeScore : "—"}
               </span>
               <span className="text-sm text-muted-foreground">out of 100</span>
             </div>
