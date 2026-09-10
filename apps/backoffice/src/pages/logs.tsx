@@ -4,16 +4,14 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 import { ExternalLink, Maximize2, Minimize2, RotateCw } from "lucide-react"
 
 export function LogsPage() {
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [reloadKey, setReloadKey] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const handleReload = () => {
-    if (iframeRef.current) {
-      setIsLoading(true)
-      iframeRef.current.src = iframeRef.current.src
-    }
+    setIsLoading(true)
+    setReloadKey((prev) => prev + 1)
   }
 
   const toggleFullscreen = async () => {
@@ -99,7 +97,7 @@ export function LogsPage() {
         )}
 
         <iframe
-          ref={iframeRef}
+          key={reloadKey}
           src="/logs"
           title="System Logs"
           className="h-full w-full border-0"
