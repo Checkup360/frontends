@@ -129,6 +129,18 @@ export interface ComputedHealthScore {
   recommendations: Recommendation[]
 }
 
+export function getAssessmentDisplayName(scoreId: string, scoreName: string): string {
+  const text = `${scoreId} ${scoreName}`.toLowerCase()
+  if (text.includes("phq") || text.includes("depression")) {
+    return "Mood and emotional well-being"
+  }
+  if (text.includes("findrisc") || text.includes("diabetes")) return "Diabetes"
+  if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
+    return "Sleep Apnea"
+  }
+  return scoreName
+}
+
 export function computeOverallHealthScore(
   results: AssessmentResultResponse[],
   backendOverallScore?: number | null,
@@ -153,7 +165,7 @@ export function computeOverallHealthScore(
 
   for (const r of results) {
     const risk = (r.risk_level || "").toLowerCase()
-    const name = r.score_name || r.score_id || "Assessment"
+    const name = getAssessmentDisplayName(r.score_id, r.score_name || r.score_id || "Assessment")
 
     if (risk.includes("high")) {
       recommendations.push({

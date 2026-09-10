@@ -197,6 +197,7 @@ export type AssessmentResultResponse = {
   normalized_value: number | null
   explanation: string | null
   contributing_factors: Record<string, unknown>
+  attention_flags: Record<string, boolean>
   evaluated_at?: string | null
 }
 

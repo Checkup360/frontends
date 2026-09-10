@@ -34,7 +34,7 @@ import {
   submitMemberForm,
 } from "@workspace/api"
 
-type FormType = "biometrics" | "sleep" | "habits"
+ type FormType = "biometrics" | "sleep" | "habits" | "mood"
 
 type StudiesData = {
   // Biometrics
@@ -53,6 +53,15 @@ type StudiesData = {
   fruits_vegetables: string
   previous_high_glucose: string
   family_diabetes: string
+  little_interest: string
+  feeling_down: string
+  sleep_trouble: string
+  tired_energy: string
+  appetite: string
+  feeling_bad: string
+  concentration: string
+  psychomotor: string
+  self_harm_thoughts: string
 }
 
 const initialData: StudiesData = {
@@ -69,7 +78,28 @@ const initialData: StudiesData = {
   fruits_vegetables: "",
   previous_high_glucose: "",
   family_diabetes: "",
+   little_interest: "",
+   feeling_down: "",
+   sleep_trouble: "",
+   tired_energy: "",
+   appetite: "",
+   feeling_bad: "",
+   concentration: "",
+   psychomotor: "",
+   self_harm_thoughts: "",
 }
+
+const PHQ9_QUESTIONS: Array<{ field: keyof StudiesData; prompt: string }> = [
+  { field: "little_interest", prompt: "Little interest or pleasure in doing things?" },
+  { field: "feeling_down", prompt: "Feeling down, depressed, or hopeless?" },
+  { field: "sleep_trouble", prompt: "Trouble falling or staying asleep, or sleeping too much?" },
+  { field: "tired_energy", prompt: "Feeling tired or having little energy?" },
+  { field: "appetite", prompt: "Poor appetite or overeating?" },
+  { field: "feeling_bad", prompt: "Feeling bad about yourself, or that you are a failure?" },
+  { field: "concentration", prompt: "Trouble concentrating on things?" },
+  { field: "psychomotor", prompt: "Moving or speaking so slowly that others could notice, or being unusually fidgety?" },
+  { field: "self_harm_thoughts", prompt: "Thoughts that you would be better off dead or of hurting yourself in some way?" },
+]
 
 export function MemberFormsStudiesPage() {
   const [searchParams] = useSearchParams()
@@ -89,16 +119,18 @@ export function MemberFormsStudiesPage() {
     let cancelled = false
     async function loadData() {
       setIsLoadingData(true)
-      const [biometricsForm, sleepForm, habitsForm] = await Promise.all([
+      const [biometricsForm, sleepForm, habitsForm, moodForm] = await Promise.all([
         fetchMemberForm("biometrics"),
         fetchMemberForm("sleep"),
         fetchMemberForm("habits"),
+        fetchMemberForm("mood"),
       ])
 
       if (!cancelled) {
         const bioData = biometricsForm?.data || {}
         const sleepData = sleepForm?.data || {}
         const habitsData = habitsForm?.data || {}
+  const moodData = moodForm?.data || {}
 
         const biologicalSex = (bioData.biological_sex as string) || ""
         const heightVal = bioData.height ? String(bioData.height) : ""
@@ -139,6 +171,15 @@ export function MemberFormsStudiesPage() {
               ? String(habitsData.previous_high_glucose)
               : "",
           family_diabetes: (habitsData.family_diabetes as string) || "",
+          little_interest: moodData.little_interest !== undefined ? String(moodData.little_interest) : "",
+          feeling_down: moodData.feeling_down !== undefined ? String(moodData.feeling_down) : "",
+          sleep_trouble: moodData.sleep_trouble !== undefined ? String(moodData.sleep_trouble) : "",
+          tired_energy: moodData.tired_energy !== undefined ? String(moodData.tired_energy) : "",
+          appetite: moodData.appetite !== undefined ? String(moodData.appetite) : "",
+          feeling_bad: moodData.feeling_bad !== undefined ? String(moodData.feeling_bad) : "",
+          concentration: moodData.concentration !== undefined ? String(moodData.concentration) : "",
+          psychomotor: moodData.psychomotor !== undefined ? String(moodData.psychomotor) : "",
+          self_harm_thoughts: moodData.self_harm_thoughts !== undefined ? String(moodData.self_harm_thoughts) : "",
         })
         setIsLoadingData(false)
       }
@@ -306,6 +347,36 @@ export function MemberFormsStudiesPage() {
     }
   }
 
+  const handleSaveMood = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const errors: Record<string, string> = {}
+    for (const question of PHQ9_QUESTIONS) {
+      if (data[question.field] === "") {
+        errors[question.field] = "Please select how often this affected you."
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      scrollToFirstError(errors)
+      return
+    }
+
+    setIsSubmitting(true)
+    const answers = Object.fromEntries(
+      PHQ9_QUESTIONS.map(({ field }) => [field, Number(data[field])])
+    )
+    const res = await submitMemberForm("mood", answers)
+    setIsSubmitting(false)
+
+    if (res.error) {
+      setGlobalError(res.error.message || "Failed to save mood assessment.")
+    } else {
+      toast.success("Mood assessment saved successfully.")
+      navigate("/forms")
+    }
+  }
+
   const titlesMap: Record<
     FormType,
     { title: string; description: string; icon: typeof Activity }
@@ -325,6 +396,11 @@ export function MemberFormsStudiesPage() {
       title: "Lifestyle & Habits Form",
       description:
         "Information regarding physical activity, diet, and health history.",
+      icon: HeartPulse,
+    },
+    mood: {
+      title: "Mood & Well-being Form",
+      description: "Answer questions about how you have felt during the last two weeks.",
       icon: HeartPulse,
     },
   }
@@ -995,6 +1071,65 @@ export function MemberFormsStudiesPage() {
               </Button>
               <Button type="submit" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Habits"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+
+      {formType === "mood" && (
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-lg">Mood & Well-being</CardTitle>
+            <CardDescription>
+              Over the last two weeks, how often have you been bothered by any of the following problems?
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={(e) => void handleSaveMood(e)}>
+            <CardContent className="space-y-4">
+              {PHQ9_QUESTIONS.map(({ field, prompt }, index) => (
+                <div
+                  key={field}
+                  id={`field-group-${field}`}
+                  className={cn(
+                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors[field] &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  )}
+                >
+                  <Label className="text-sm font-medium">{index + 1}. {prompt}</Label>
+                  <RadioGroup
+                    value={data[field]}
+                    onValueChange={(value) => updateField(field, value)}
+                    disabled={isSubmitting || isLoadingData}
+                    className="grid gap-2 sm:grid-cols-2"
+                  >
+                    {["Not at all", "Several days", "More than half the days", "Nearly every day"].map(
+                      (label, score) => (
+                        <div key={label} className="flex items-center space-x-2">
+                          <RadioGroupItem value={String(score)} id={`${field}-${score}`} />
+                          <Label htmlFor={`${field}-${score}`} className="cursor-pointer font-normal">
+                            {label}
+                          </Label>
+                        </div>
+                      )
+                    )}
+                  </RadioGroup>
+                  {fieldErrors[field] && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      {fieldErrors[field]}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
+              <Button variant="ghost" asChild>
+                <Link to="/forms">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+                {isSubmitting ? "Saving..." : "Save Mood Assessment"}
               </Button>
             </CardFooter>
           </form>

@@ -15,6 +15,7 @@ import { Badge } from "@workspace/ui/components/badge"
 import {
   groupResultsIntoSessions,
   computeOverallHealthScore,
+  getAssessmentDisplayName,
   AssessmentHistoryDialog,
 } from "@workspace/components/components/assessment-utils"
 import { HealthScoreHeroCard } from "@workspace/components/components/health-score-hero-card"
@@ -113,7 +114,7 @@ function formatUserScoreName(result: AssessmentResultResponse) {
   if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
     return "Sleep Apnea"
   }
-  return result.score_name
+  return getAssessmentDisplayName(result.score_id, result.score_name)
 }
 
 /** Circular Radial Progress Component for Individual Scores */

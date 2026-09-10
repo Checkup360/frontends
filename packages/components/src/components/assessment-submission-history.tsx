@@ -5,6 +5,7 @@ import type {
 } from "@workspace/api"
 import { ChevronRight, ClipboardList, Loader2 } from "lucide-react"
 import { Badge } from "@workspace/ui/components/badge"
+import { getAssessmentDisplayName } from "./assessment-utils"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import {
@@ -48,12 +49,24 @@ const FORM_FIELDS: Record<string, string[]> = {
     "previous_high_glucose",
     "family_diabetes",
   ],
+  mood: [
+    "little_interest",
+    "feeling_down",
+    "sleep_trouble",
+    "tired_energy",
+    "appetite",
+    "feeling_bad",
+    "concentration",
+    "psychomotor",
+    "self_harm_thoughts",
+  ],
 }
 
 const FORM_LABELS: Record<string, string> = {
   biometrics: "Physical biometrics",
   sleep: "Sleep quality",
   habits: "Lifestyle and habits",
+  mood: "Mood and emotional well-being",
   clinical_assessment: "Clinical assessment",
   sex: "Biological sex",
   height: "Height",
@@ -68,6 +81,15 @@ const FORM_LABELS: Record<string, string> = {
   hypertension_medication: "Blood pressure medication",
   previous_high_glucose: "Previous high blood glucose",
   family_diabetes: "Family history of diabetes",
+  little_interest: "Interest or pleasure",
+  feeling_down: "Feeling down or hopeless",
+  sleep_trouble: "Sleep trouble",
+  tired_energy: "Energy level",
+  appetite: "Appetite",
+  feeling_bad: "Feeling bad about yourself",
+  concentration: "Concentration",
+  psychomotor: "Movement or restlessness",
+  self_harm_thoughts: "Thoughts of self-harm",
 }
 
 function getFormLabel(value: string): string {
@@ -193,7 +215,7 @@ export function AssessmentSubmissionHistory({
                       <h3 className="text-sm font-semibold">Risk results</h3>
                       {selected.scores.map((score) => (
                         <div key={score.score_id} className="flex items-center justify-between rounded-md border px-3 py-2">
-                          <span className="text-sm">{score.score_name}</span>
+                          <span className="text-sm">{getAssessmentDisplayName(score.score_id, score.score_name)}</span>
                           <Badge variant="outline">{score.risk_level || "Calculated"}</Badge>
                         </div>
                       ))}

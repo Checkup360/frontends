@@ -19,6 +19,7 @@ import {
 import {
   groupResultsIntoSessions,
   AssessmentHistoryDialog,
+  getAssessmentDisplayName,
 } from "@workspace/components/components/assessment-utils"
 import { AssessmentSubmissionHistory } from "@workspace/components/components/assessment-submission-history"
 import {
@@ -46,6 +47,7 @@ import {
 import {
   Activity,
   ArrowLeft,
+  HeartPulse,
   Moon,
   Clock,
   History,
@@ -95,6 +97,13 @@ const SCORE_TOPICS = [
     name: "Sleep Apnea",
     subtitle: "Respiratory & sleep quality",
     icon: Moon,
+  },
+  {
+    id: "mood",
+    matchKey: "phq9",
+    name: "Mood & Well-being",
+    subtitle: "Emotional well-being",
+    icon: HeartPulse,
   },
 ]
 
@@ -820,7 +829,7 @@ export function EmployeeDetailPage() {
                               </div>
                               <div>
                                 <span className="font-semibold text-foreground text-sm">
-                                  {result.score_name || topic.name}
+                                  {getAssessmentDisplayName(result.score_id, result.score_name || topic.name)}
                                 </span>
                                 <p className="text-[11px] text-muted-foreground">
                                   {topic.subtitle}
