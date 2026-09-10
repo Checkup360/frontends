@@ -34,7 +34,7 @@ import {
   submitMemberForm,
 } from "@workspace/api"
 
- type FormType = "biometrics" | "sleep" | "habits" | "mood"
+ type FormType = "biometrics" | "sleep" | "habits" | "mood" | "metabolic"
 
 type StudiesData = {
   // Biometrics
@@ -43,6 +43,12 @@ type StudiesData = {
   weight: string
   neck_circumference: string
   waist_circumference: string
+  triglycerides: string
+  hdl_cholesterol: string
+  systolic_blood_pressure: string
+  diastolic_blood_pressure: string
+  fasting_glucose: string
+  glucose_lowering_medication: string
   // Sleep
   snoring: string
   tired: string
@@ -70,6 +76,12 @@ const initialData: StudiesData = {
   weight: "",
   neck_circumference: "",
   waist_circumference: "",
+  triglycerides: "",
+  hdl_cholesterol: "",
+  systolic_blood_pressure: "",
+  diastolic_blood_pressure: "",
+  fasting_glucose: "",
+  glucose_lowering_medication: "",
   snoring: "",
   tired: "",
   observed_apnea: "",
@@ -119,18 +131,20 @@ export function MemberFormsStudiesPage() {
     let cancelled = false
     async function loadData() {
       setIsLoadingData(true)
-      const [biometricsForm, sleepForm, habitsForm, moodForm] = await Promise.all([
+      const [biometricsForm, sleepForm, habitsForm, moodForm, metabolicForm] = await Promise.all([
         fetchMemberForm("biometrics"),
         fetchMemberForm("sleep"),
         fetchMemberForm("habits"),
         fetchMemberForm("mood"),
+        fetchMemberForm("metabolic"),
       ])
 
       if (!cancelled) {
         const bioData = biometricsForm?.data || {}
         const sleepData = sleepForm?.data || {}
         const habitsData = habitsForm?.data || {}
-  const moodData = moodForm?.data || {}
+      const moodData = moodForm?.data || {}
+      const metabolicData = metabolicForm?.data || {}
 
         const biologicalSex = (bioData.biological_sex as string) || ""
         const heightVal = bioData.height ? String(bioData.height) : ""
@@ -143,6 +157,12 @@ export function MemberFormsStudiesPage() {
           waist_circumference: bioData.waist_circumference
             ? String(bioData.waist_circumference)
             : "",
+          triglycerides: metabolicData.triglycerides !== undefined ? String(metabolicData.triglycerides) : "",
+          hdl_cholesterol: metabolicData.hdl_cholesterol !== undefined ? String(metabolicData.hdl_cholesterol) : "",
+          systolic_blood_pressure: metabolicData.systolic_blood_pressure !== undefined ? String(metabolicData.systolic_blood_pressure) : "",
+          diastolic_blood_pressure: metabolicData.diastolic_blood_pressure !== undefined ? String(metabolicData.diastolic_blood_pressure) : "",
+          fasting_glucose: metabolicData.fasting_glucose !== undefined ? String(metabolicData.fasting_glucose) : "",
+          glucose_lowering_medication: metabolicData.glucose_lowering_medication !== undefined ? String(metabolicData.glucose_lowering_medication) : "",
           neck_circumference: sleepData.neck_circumference
             ? String(sleepData.neck_circumference)
             : bioData.neck_circumference
@@ -377,6 +397,49 @@ export function MemberFormsStudiesPage() {
     }
   }
 
+  const handleSaveMetabolic = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const errors: Record<string, string> = {}
+    const numericFields: Array<keyof StudiesData> = [
+      "triglycerides",
+      "hdl_cholesterol",
+      "systolic_blood_pressure",
+      "diastolic_blood_pressure",
+      "fasting_glucose",
+    ]
+    for (const field of numericFields) {
+      if (!data[field] || Number(data[field]) <= 0 || Number.isNaN(Number(data[field]))) {
+        errors[field] = "Please enter a valid value."
+      }
+    }
+    if (!data.glucose_lowering_medication) {
+      errors.glucose_lowering_medication = "Please select an option."
+    }
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      scrollToFirstError(errors)
+      return
+    }
+
+    setIsSubmitting(true)
+    const res = await submitMemberForm("metabolic", {
+      triglycerides: Number(data.triglycerides),
+      hdl_cholesterol: Number(data.hdl_cholesterol),
+      systolic_blood_pressure: Number(data.systolic_blood_pressure),
+      diastolic_blood_pressure: Number(data.diastolic_blood_pressure),
+      fasting_glucose: Number(data.fasting_glucose),
+      glucose_lowering_medication: data.glucose_lowering_medication === "true",
+    })
+    setIsSubmitting(false)
+
+    if (res.error) {
+      setGlobalError(res.error.message || "Failed to save metabolic health data.")
+    } else {
+      toast.success("Metabolic health data saved successfully.")
+      navigate("/forms")
+    }
+  }
+
   const titlesMap: Record<
     FormType,
     { title: string; description: string; icon: typeof Activity }
@@ -402,6 +465,11 @@ export function MemberFormsStudiesPage() {
       title: "Mood & Well-being Form",
       description: "Answer questions about how you have felt during the last two weeks.",
       icon: HeartPulse,
+    },
+    metabolic: {
+      title: "Metabolic Health Form",
+      description: "Record measurements used to assess metabolic health.",
+      icon: Activity,
     },
   }
 
@@ -1131,6 +1199,55 @@ export function MemberFormsStudiesPage() {
               <Button type="submit" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Mood Assessment"}
               </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+
+      {formType === "metabolic" && (
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-lg">Metabolic Health</CardTitle>
+            <CardDescription>
+              Enter your latest measurements and treatment information.
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={(e) => void handleSaveMetabolic(e)}>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                {([
+                  ["triglycerides", "Triglycerides (mg/dL)"],
+                  ["hdl_cholesterol", "HDL cholesterol (mg/dL)"],
+                  ["systolic_blood_pressure", "Systolic blood pressure (mmHg)"],
+                  ["diastolic_blood_pressure", "Diastolic blood pressure (mmHg)"],
+                  ["fasting_glucose", "Fasting glucose (mg/dL)"],
+                ] as Array<[keyof StudiesData, string]>).map(([field, label]) => (
+                  <div key={field} id={`field-group-${field}`} className="space-y-2 rounded-xl border border-border/30 bg-background/40 p-4">
+                    <Label htmlFor={field}>{label}</Label>
+                    <Input
+                      id={field}
+                      type="number"
+                      min="0"
+                      value={data[field]}
+                      onChange={(e) => updateField(field, e.target.value)}
+                      disabled={isSubmitting || isLoadingData}
+                    />
+                    {fieldErrors[field] && <p className="text-xs font-medium text-destructive">{fieldErrors[field]}</p>}
+                  </div>
+                ))}
+              </div>
+              <div id="field-group-glucose_lowering_medication" className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
+                <Label>Are you taking glucose-lowering medication?</Label>
+                <RadioGroup value={data.glucose_lowering_medication} onValueChange={(value) => updateField("glucose_lowering_medication", value)} disabled={isSubmitting || isLoadingData} className="flex gap-6">
+                  <div className="flex items-center gap-2"><RadioGroupItem value="true" id="metabolic-glucose-yes" /><Label htmlFor="metabolic-glucose-yes">Yes</Label></div>
+                  <div className="flex items-center gap-2"><RadioGroupItem value="false" id="metabolic-glucose-no" /><Label htmlFor="metabolic-glucose-no">No</Label></div>
+                </RadioGroup>
+                {fieldErrors.glucose_lowering_medication && <p className="text-xs font-medium text-destructive">{fieldErrors.glucose_lowering_medication}</p>}
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
+              <Button variant="ghost" asChild><Link to="/forms">Cancel</Link></Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>{isSubmitting ? "Saving..." : "Save Metabolic Data"}</Button>
             </CardFooter>
           </form>
         </Card>

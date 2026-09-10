@@ -60,6 +60,14 @@ const FORM_FIELDS: Record<string, string[]> = {
     "psychomotor",
     "self_harm_thoughts",
   ],
+  metabolic: [
+    "triglycerides",
+    "hdl_cholesterol",
+    "systolic_blood_pressure",
+    "diastolic_blood_pressure",
+    "fasting_glucose",
+    "glucose_lowering_medication",
+  ],
 }
 
 const FORM_LABELS: Record<string, string> = {
@@ -67,11 +75,18 @@ const FORM_LABELS: Record<string, string> = {
   sleep: "Sleep quality",
   habits: "Lifestyle and habits",
   mood: "Mood and emotional well-being",
+  metabolic: "Metabolic health",
   clinical_assessment: "Clinical assessment",
   sex: "Biological sex",
   height: "Height",
   weight: "Weight",
   waist_circumference: "Waist circumference",
+  triglycerides: "Triglycerides",
+  hdl_cholesterol: "HDL cholesterol",
+  systolic_blood_pressure: "Systolic blood pressure",
+  diastolic_blood_pressure: "Diastolic blood pressure",
+  fasting_glucose: "Fasting glucose",
+  glucose_lowering_medication: "Glucose-lowering medication",
   neck_circumference: "Neck circumference",
   snoring: "Snoring",
   tired: "Daytime fatigue",

@@ -138,6 +138,9 @@ export function getAssessmentDisplayName(scoreId: string, scoreName: string): st
   if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
     return "Sleep Apnea"
   }
+  if (text.includes("metabolic_syndrome") || text.includes("metabolic syndrome")) {
+    return "Metabolic Health"
+  }
   return scoreName
 }
 

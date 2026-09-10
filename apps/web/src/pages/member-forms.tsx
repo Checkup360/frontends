@@ -22,16 +22,18 @@ export function MemberFormsPage() {
   const [sleepFilled, setSleepFilled] = useState(false)
   const [habitsFilled, setHabitsFilled] = useState(false)
   const [moodFilled, setMoodFilled] = useState(false)
+  const [metabolicFilled, setMetabolicFilled] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     async function loadFormStatuses() {
       setIsLoading(true)
-      const [bio, sleep, habits, mood] = await Promise.all([
+      const [bio, sleep, habits, mood, metabolic] = await Promise.all([
         fetchMemberForm("biometrics"),
         fetchMemberForm("sleep"),
         fetchMemberForm("habits"),
         fetchMemberForm("mood"),
+        fetchMemberForm("metabolic"),
       ])
 
       if (!cancelled) {
@@ -57,11 +59,15 @@ export function MemberFormsPage() {
         const hasMood = Boolean(
           mood?.data && Object.keys(mood.data).length > 0
         )
+        const hasMetabolic = Boolean(
+          metabolic?.data && Object.keys(metabolic.data).length > 0
+        )
 
         setBiometricsFilled(hasBio)
         setSleepFilled(hasSleep)
         setHabitsFilled(hasHabits)
         setMoodFilled(hasMood)
+        setMetabolicFilled(hasMetabolic)
         setIsLoading(false)
       }
     }
@@ -75,9 +81,10 @@ export function MemberFormsPage() {
     (biometricsFilled ? 1 : 0) +
     (sleepFilled ? 1 : 0) +
     (habitsFilled ? 1 : 0) +
-    (moodFilled ? 1 : 0)
-  const progressPercent = Math.round((completedCount / 4) * 100)
-  const allCompleted = completedCount === 4
+    (moodFilled ? 1 : 0) +
+    (metabolicFilled ? 1 : 0)
+  const progressPercent = Math.round((completedCount / 5) * 100)
+  const allCompleted = completedCount === 5
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pb-12">
@@ -114,11 +121,11 @@ export function MemberFormsPage() {
               </Badge>
             ) : allCompleted ? (
               <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700">
-                <CheckCircle2 className="mr-1 size-3.5" /> 4 of 4 Completed
+                <CheckCircle2 className="mr-1 size-3.5" /> 5 of 5 Completed
               </Badge>
             ) : (
               <Badge variant="secondary">
-                <Clock className="mr-1 size-3.5" /> {completedCount} of 4 Completed
+                <Clock className="mr-1 size-3.5" /> {completedCount} of 5 Completed
               </Badge>
             )}
           </div>
@@ -127,7 +134,7 @@ export function MemberFormsPage() {
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-medium text-muted-foreground">
               <span>Form Completion</span>
-              <span>{progressPercent}% ({completedCount} of 4 sections filled)</span>
+              <span>{progressPercent}% ({completedCount} of 5 sections filled)</span>
             </div>
             <Progress value={progressPercent} className="h-2.5" />
           </div>
@@ -143,7 +150,7 @@ export function MemberFormsPage() {
           </h3>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {/* Card 1: Biometrics */}
           <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
             <div className="space-y-4">
@@ -269,6 +276,35 @@ export function MemberFormsPage() {
               <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
                 <Link to="/forms/studies?form=habits">
                   {habitsFilled ? "Edit Habits" : "Complete Habits"}
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
+            <div className="space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
+                  <Activity className="size-5" />
+                </div>
+                {metabolicFilled ? (
+                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                    <CheckCircle2 className="mr-1 size-3" /> Completed
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">Pending</Badge>
+                )}
+              </div>
+              <div>
+                <h4 className="text-base font-semibold text-foreground">Metabolic Health</h4>
+                <p className="mt-1 text-xs text-muted-foreground">Blood pressure, lipids, glucose, and treatment information.</p>
+              </div>
+            </div>
+            <div className="mt-6 pt-2">
+              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
+                <Link to="/forms/studies?form=metabolic">
+                  {metabolicFilled ? "Edit Metabolic Data" : "Complete Metabolic Data"}
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>

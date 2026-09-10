@@ -114,6 +114,9 @@ function formatUserScoreName(result: AssessmentResultResponse) {
   if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
     return "Sleep Apnea"
   }
+  if (text.includes("metabolic_syndrome") || text.includes("metabolic syndrome")) {
+    return "Metabolic Health"
+  }
   return getAssessmentDisplayName(result.score_id, result.score_name)
 }
 
