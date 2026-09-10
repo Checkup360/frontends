@@ -276,4 +276,19 @@ export type DepartmentAnalyticsSummary = {
   high_risk_count: number
 }
 
+export interface SysadminUser {
+  id: string
+  email: string
+  first_name: string | null
+  last_name: string | null
+  avatar_url: string | null
+  is_active: boolean
+}
+
+export interface SysadminStats {
+  total_sysadmins: number
+  active_sysadmins: number
+  pending_invites: number
+}
+
 

@@ -7,6 +7,10 @@ export const apiRoutes = {
     resetPassword: "/auth/reset-password",
     googleAuthorize: "/auth/google/authorize",
   },
+  admin: {
+    sysadmins: "/admin/sysadmins",
+    sysadminStats: "/admin/sysadmins/stats",
+  },
   invites: {
     admin: "/admin/invites",
     organization: "/invites/organization",

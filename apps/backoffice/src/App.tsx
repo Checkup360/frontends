@@ -12,6 +12,7 @@ import { LogsPage } from "@/pages/logs"
 import { OrganizationDetailPage } from "@/pages/organization-detail"
 import { OrganizationsPage } from "@/pages/organizations"
 import { SettingsPage } from "@/pages/settings"
+import { SysadminsPage } from "@/pages/sysadmins"
 import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
@@ -83,6 +84,7 @@ export function App() {
                 path="organizations/:id"
                 element={<OrganizationDetailPage />}
               />
+              <Route path="/sysadmins" element={<SysadminsPage />} />
               <Route path="/invitations" element={<InvitationsPage />} />
               <Route path="/logs" element={<LogsPage />} />
               <Route path="/settings" element={<SettingsPage />} />

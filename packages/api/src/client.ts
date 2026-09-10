@@ -20,6 +20,8 @@ import {
   type MemberFormSubmissionResponse,
   type RiskTrendPoint,
   type DepartmentAnalyticsSummary,
+  type SysadminUser,
+  type SysadminStats,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -1473,6 +1475,89 @@ export async function deleteSysadminInvitations(
 
   const payload = (await response.json()) as { deleted_count?: number }
   return payload.deleted_count ?? 0
+}
+
+export async function listSysadmins(filters?: {
+  search?: string
+  isActive?: boolean
+}): Promise<SysadminUser[]> {
+  try {
+    const queryParams = new URLSearchParams()
+    if (filters?.search && filters.search.trim()) {
+      queryParams.append("search", filters.search.trim())
+    }
+    if (filters?.isActive !== undefined) {
+      queryParams.append("is_active", String(filters.isActive))
+    }
+    const queryString = queryParams.toString()
+    const url = `${resolveApiBaseUrl()}${apiRoutes.admin.sysadmins}${queryString ? `?${queryString}` : ""}`
+
+    const response = await fetchWithAuth(url, {
+      method: "GET",
+      credentials: "include",
+    })
+    if (!response.ok) return []
+    return (await response.json()) as SysadminUser[]
+  } catch (error) {
+    console.error("Error listing sysadmins:", error)
+    return []
+  }
+}
+
+export async function listSysadminsPage(filters: {
+  search?: string
+  isActive?: boolean
+  page: number
+  pageSize: number
+}): Promise<PaginatedResponse<SysadminUser>> {
+  try {
+    const queryParams = new URLSearchParams()
+    if (filters.search && filters.search.trim()) {
+      queryParams.append("search", filters.search.trim())
+    }
+    if (filters.isActive !== undefined) {
+      queryParams.append("is_active", String(filters.isActive))
+    }
+    queryParams.append("page", filters.page.toString())
+    queryParams.append("page_size", filters.pageSize.toString())
+
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.admin.sysadmins}?${queryParams.toString()}`,
+      { method: "GET", credentials: "include" }
+    )
+    if (!response.ok) {
+      return {
+        items: [],
+        total: 0,
+        page: filters.page,
+        page_size: filters.pageSize,
+      }
+    }
+    const items = (await response.json()) as SysadminUser[]
+    return paginatedFromHeaders(response, items, filters.page, filters.pageSize)
+  } catch (error) {
+    console.error("Error listing paginated sysadmins:", error)
+    return {
+      items: [],
+      total: 0,
+      page: filters.page,
+      page_size: filters.pageSize,
+    }
+  }
+}
+
+export async function getSysadminStats(): Promise<SysadminStats | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.admin.sysadminStats}`,
+      { method: "GET", credentials: "include" }
+    )
+    if (!response.ok) return null
+    return (await response.json()) as SysadminStats
+  } catch (error) {
+    console.error("Error fetching sysadmin stats:", error)
+    return null
+  }
 }
 
 
