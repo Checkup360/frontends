@@ -26,6 +26,7 @@ import {
 } from "@workspace/ui/components/empty"
 import {
   ArrowLeft,
+  FileText,
   ShieldCheck,
   Users,
   UsersRound,
@@ -207,8 +208,8 @@ export function OrganizationDetailPage() {
     return (
       <div className="mx-auto w-full max-w-7xl space-y-6">
         <div className="h-8 w-40 animate-pulse rounded bg-muted" />
-        <div className="grid gap-4 md:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
             <Card key={index}>
               <CardContent>
                 <div className="h-20 animate-pulse rounded bg-muted" />
@@ -255,11 +256,11 @@ export function OrganizationDetailPage() {
         <p className="text-sm text-muted-foreground">{summary.slug}</p>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          label="Total members"
+          label="Total users"
           value={summary.total_members}
-          icon={UsersRound}
+          icon={Users}
         />
         <MetricCard
           label="Employees"
@@ -271,16 +272,21 @@ export function OrganizationDetailPage() {
           value={summary.total_admins}
           icon={ShieldCheck}
         />
+        <MetricCard
+          label="Content managers"
+          value={summary.total_content_managers}
+          icon={FileText}
+        />
       </section>
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-stretch">
         <div className="lg:col-span-2">
           <ScoreEvolutionChart
             title="User Registrations Evolution"
-            description="Member registration progression over time"
+            description="User registration progression over time"
             badgeLabel={
               registrationTrends.length > 0
-                ? `${summary.total_members} members total`
+                ? `${summary.total_members} users total`
                 : undefined
             }
             icon={Users}

@@ -506,6 +506,7 @@ export interface OrganizationSummaryResponse {
   total_members: number
   total_employees: number
   total_admins: number
+  total_content_managers: number
 }
 
 export interface DepartmentResponse {
