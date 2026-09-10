@@ -141,6 +141,7 @@ export function getAssessmentDisplayName(scoreId: string, scoreName: string): st
   if (text.includes("metabolic_syndrome") || text.includes("metabolic syndrome")) {
     return "Metabolic Health"
   }
+  if (text.includes("eoss")) return "Obesity-related Health Impact"
   return scoreName
 }
 

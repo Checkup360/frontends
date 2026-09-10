@@ -34,7 +34,7 @@ import {
   submitMemberForm,
 } from "@workspace/api"
 
- type FormType = "biometrics" | "sleep" | "habits" | "mood" | "metabolic"
+ type FormType = "biometrics" | "sleep" | "habits" | "mood" | "metabolic" | "eoss"
 
 type StudiesData = {
   // Biometrics
@@ -49,6 +49,9 @@ type StudiesData = {
   diastolic_blood_pressure: string
   fasting_glucose: string
   glucose_lowering_medication: string
+  eoss_physical_health_stage: string
+  eoss_mental_health_stage: string
+  eoss_functional_stage: string
   // Sleep
   snoring: string
   tired: string
@@ -82,6 +85,9 @@ const initialData: StudiesData = {
   diastolic_blood_pressure: "",
   fasting_glucose: "",
   glucose_lowering_medication: "",
+  eoss_physical_health_stage: "",
+  eoss_mental_health_stage: "",
+  eoss_functional_stage: "",
   snoring: "",
   tired: "",
   observed_apnea: "",
@@ -131,12 +137,13 @@ export function MemberFormsStudiesPage() {
     let cancelled = false
     async function loadData() {
       setIsLoadingData(true)
-      const [biometricsForm, sleepForm, habitsForm, moodForm, metabolicForm] = await Promise.all([
+      const [biometricsForm, sleepForm, habitsForm, moodForm, metabolicForm, eossForm] = await Promise.all([
         fetchMemberForm("biometrics"),
         fetchMemberForm("sleep"),
         fetchMemberForm("habits"),
         fetchMemberForm("mood"),
         fetchMemberForm("metabolic"),
+        fetchMemberForm("eoss"),
       ])
 
       if (!cancelled) {
@@ -145,6 +152,7 @@ export function MemberFormsStudiesPage() {
         const habitsData = habitsForm?.data || {}
       const moodData = moodForm?.data || {}
       const metabolicData = metabolicForm?.data || {}
+        const eossData = eossForm?.data || {}
 
         const biologicalSex = (bioData.biological_sex as string) || ""
         const heightVal = bioData.height ? String(bioData.height) : ""
@@ -163,6 +171,9 @@ export function MemberFormsStudiesPage() {
           diastolic_blood_pressure: metabolicData.diastolic_blood_pressure !== undefined ? String(metabolicData.diastolic_blood_pressure) : "",
           fasting_glucose: metabolicData.fasting_glucose !== undefined ? String(metabolicData.fasting_glucose) : "",
           glucose_lowering_medication: metabolicData.glucose_lowering_medication !== undefined ? String(metabolicData.glucose_lowering_medication) : "",
+          eoss_physical_health_stage: eossData.eoss_physical_health_stage !== undefined ? String(eossData.eoss_physical_health_stage) : "",
+          eoss_mental_health_stage: eossData.eoss_mental_health_stage !== undefined ? String(eossData.eoss_mental_health_stage) : "",
+          eoss_functional_stage: eossData.eoss_functional_stage !== undefined ? String(eossData.eoss_functional_stage) : "",
           neck_circumference: sleepData.neck_circumference
             ? String(sleepData.neck_circumference)
             : bioData.neck_circumference
@@ -440,6 +451,39 @@ export function MemberFormsStudiesPage() {
     }
   }
 
+  const handleSaveEoss = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const fields: Array<keyof StudiesData> = [
+      "eoss_physical_health_stage",
+      "eoss_mental_health_stage",
+      "eoss_functional_stage",
+    ]
+    const errors: Record<string, string> = {}
+    for (const field of fields) {
+      if (data[field] === "") errors[field] = "Please select a stage."
+    }
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      scrollToFirstError(errors)
+      return
+    }
+
+    setIsSubmitting(true)
+    const res = await submitMemberForm("eoss", {
+      eoss_physical_health_stage: Number(data.eoss_physical_health_stage),
+      eoss_mental_health_stage: Number(data.eoss_mental_health_stage),
+      eoss_functional_stage: Number(data.eoss_functional_stage),
+    })
+    setIsSubmitting(false)
+
+    if (res.error) {
+      setGlobalError(res.error.message || "Failed to save obesity-related health impact.")
+    } else {
+      toast.success("Obesity-related health impact saved successfully.")
+      navigate("/forms")
+    }
+  }
+
   const titlesMap: Record<
     FormType,
     { title: string; description: string; icon: typeof Activity }
@@ -470,6 +514,11 @@ export function MemberFormsStudiesPage() {
       title: "Metabolic Health Form",
       description: "Record measurements used to assess metabolic health.",
       icon: Activity,
+    },
+    eoss: {
+      title: "Obesity-related Health Impact",
+      description: "Reflect on how your health, mood, and daily function are affected.",
+      icon: HeartPulse,
     },
   }
 
@@ -1248,6 +1297,60 @@ export function MemberFormsStudiesPage() {
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
               <Button variant="ghost" asChild><Link to="/forms">Cancel</Link></Button>
               <Button type="submit" disabled={isSubmitting || isLoadingData}>{isSubmitting ? "Saving..." : "Save Metabolic Data"}</Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+
+      {formType === "eoss" && (
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-lg">Obesity-related Health Impact</CardTitle>
+            <CardDescription>
+              Choose the statement that best describes each area today. This is a self-assessment, not a diagnosis.
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={(e) => void handleSaveEoss(e)}>
+            <CardContent className="space-y-6">
+              {([
+                ["eoss_physical_health_stage", "Physical health", "chronic conditions, symptoms, or medical complications"],
+                ["eoss_mental_health_stage", "Mental health", "mood, distress, or other psychological impact"],
+                ["eoss_functional_stage", "Daily function", "mobility, activities, or participation in daily life"],
+              ] as Array<[keyof StudiesData, string, string]>).map(([field, title, context]) => (
+                <div key={field} id={`field-group-${field}`} className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
+                  <div>
+                    <Label className="text-sm font-medium">{title}</Label>
+                    <p className="mt-1 text-xs text-muted-foreground">Select the level of {context}.</p>
+                  </div>
+                  <RadioGroup
+                    value={data[field]}
+                    onValueChange={(value) => updateField(field, value)}
+                    disabled={isSubmitting || isLoadingData}
+                    className="space-y-2"
+                  >
+                    {[
+                      ["0", "Stage 0", "No risk factors or impairment"],
+                      ["1", "Stage 1", "Mild or subclinical impact"],
+                      ["2", "Stage 2", "Established or moderate impact"],
+                      ["3", "Stage 3", "Significant impact or complications"],
+                      ["4", "Stage 4", "Severe or end-stage impact"],
+                    ].map(([value, label, description]) => (
+                      <div key={value} className="flex items-start gap-2 rounded-md border border-border/20 p-2">
+                        <RadioGroupItem value={value} id={`${field}-${value}`} className="mt-0.5" />
+                        <Label htmlFor={`${field}-${value}`} className="cursor-pointer font-normal">
+                          <span className="font-medium">{label}</span>
+                          <span className="ml-2 text-xs text-muted-foreground">{description}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  {fieldErrors[field] && <p className="text-xs font-medium text-destructive">{fieldErrors[field]}</p>}
+                </div>
+              ))}
+            </CardContent>
+            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
+              <Button variant="ghost" asChild><Link to="/forms">Cancel</Link></Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>{isSubmitting ? "Saving..." : "Save Health Impact"}</Button>
             </CardFooter>
           </form>
         </Card>

@@ -68,6 +68,11 @@ const FORM_FIELDS: Record<string, string[]> = {
     "fasting_glucose",
     "glucose_lowering_medication",
   ],
+  eoss: [
+    "eoss_physical_health_stage",
+    "eoss_mental_health_stage",
+    "eoss_functional_stage",
+  ],
 }
 
 const FORM_LABELS: Record<string, string> = {
@@ -76,7 +81,11 @@ const FORM_LABELS: Record<string, string> = {
   habits: "Lifestyle and habits",
   mood: "Mood and emotional well-being",
   metabolic: "Metabolic health",
+  eoss: "Obesity-related Health Impact",
   clinical_assessment: "Clinical assessment",
+  eoss_physical_health_stage: "EOSS physical health stage",
+  eoss_mental_health_stage: "EOSS mental health stage",
+  eoss_functional_stage: "EOSS functional stage",
   sex: "Biological sex",
   height: "Height",
   weight: "Weight",

@@ -23,17 +23,19 @@ export function MemberFormsPage() {
   const [habitsFilled, setHabitsFilled] = useState(false)
   const [moodFilled, setMoodFilled] = useState(false)
   const [metabolicFilled, setMetabolicFilled] = useState(false)
+  const [eossFilled, setEossFilled] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     async function loadFormStatuses() {
       setIsLoading(true)
-      const [bio, sleep, habits, mood, metabolic] = await Promise.all([
+      const [bio, sleep, habits, mood, metabolic, eoss] = await Promise.all([
         fetchMemberForm("biometrics"),
         fetchMemberForm("sleep"),
         fetchMemberForm("habits"),
         fetchMemberForm("mood"),
         fetchMemberForm("metabolic"),
+        fetchMemberForm("eoss"),
       ])
 
       if (!cancelled) {
@@ -62,12 +64,14 @@ export function MemberFormsPage() {
         const hasMetabolic = Boolean(
           metabolic?.data && Object.keys(metabolic.data).length > 0
         )
+        const hasEoss = Boolean(eoss?.data && Object.keys(eoss.data).length > 0)
 
         setBiometricsFilled(hasBio)
         setSleepFilled(hasSleep)
         setHabitsFilled(hasHabits)
         setMoodFilled(hasMood)
         setMetabolicFilled(hasMetabolic)
+        setEossFilled(hasEoss)
         setIsLoading(false)
       }
     }
@@ -83,8 +87,9 @@ export function MemberFormsPage() {
     (habitsFilled ? 1 : 0) +
     (moodFilled ? 1 : 0) +
     (metabolicFilled ? 1 : 0)
-  const progressPercent = Math.round((completedCount / 5) * 100)
-  const allCompleted = completedCount === 5
+    + (eossFilled ? 1 : 0)
+  const progressPercent = Math.round((completedCount / 6) * 100)
+  const allCompleted = completedCount === 6
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pb-12">
@@ -121,11 +126,11 @@ export function MemberFormsPage() {
               </Badge>
             ) : allCompleted ? (
               <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700">
-                <CheckCircle2 className="mr-1 size-3.5" /> 5 of 5 Completed
+                <CheckCircle2 className="mr-1 size-3.5" /> 6 of 6 Completed
               </Badge>
             ) : (
               <Badge variant="secondary">
-                <Clock className="mr-1 size-3.5" /> {completedCount} of 5 Completed
+                <Clock className="mr-1 size-3.5" /> {completedCount} of 6 Completed
               </Badge>
             )}
           </div>
@@ -134,7 +139,7 @@ export function MemberFormsPage() {
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-medium text-muted-foreground">
               <span>Form Completion</span>
-              <span>{progressPercent}% ({completedCount} of 5 sections filled)</span>
+              <span>{progressPercent}% ({completedCount} of 6 sections filled)</span>
             </div>
             <Progress value={progressPercent} className="h-2.5" />
           </div>
@@ -181,6 +186,26 @@ export function MemberFormsPage() {
                   {biometricsFilled ? "Edit Biometrics" : "Complete Biometrics"}
                   <ArrowRight className="size-4" />
                 </Link>
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
+            <div className="space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
+                  <HeartPulse className="size-5" />
+                </div>
+                {eossFilled ? <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="mr-1 size-3" /> Completed</Badge> : <Badge variant="secondary">Pending</Badge>}
+              </div>
+              <div>
+                <h4 className="text-base font-semibold text-foreground">Obesity-related Health Impact</h4>
+                <p className="mt-1 text-xs text-muted-foreground">A reflective assessment of health, mood, and daily function.</p>
+              </div>
+            </div>
+            <div className="mt-6 pt-2">
+              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
+                <Link to="/forms/studies?form=eoss">{eossFilled ? "Edit Health Impact" : "Complete Health Impact"}<ArrowRight className="size-4" /></Link>
               </Button>
             </div>
           </Card>

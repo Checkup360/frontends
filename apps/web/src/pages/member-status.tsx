@@ -90,6 +90,10 @@ function getRiskLevelConfig(riskLevel: string | null, healthScore: number) {
 
 /** Returns the normalized score (0-100) delivered by the backend */
 function getNormalizedScore(result: AssessmentResultResponse): number {
+  if (result.score_id.toLowerCase() === "eoss" && result.raw_value !== null) {
+    const stage = Math.min(4, Math.max(0, result.raw_value))
+    return Math.round(100 - (stage / 4) * 100)
+  }
   if (result.normalized_value !== null && result.normalized_value !== undefined) {
     return Math.min(100, Math.max(0, Math.round(result.normalized_value)))
   }
@@ -117,6 +121,7 @@ function formatUserScoreName(result: AssessmentResultResponse) {
   if (text.includes("metabolic_syndrome") || text.includes("metabolic syndrome")) {
     return "Metabolic Health"
   }
+  if (text.includes("eoss")) return "Obesity-related Health Impact"
   return getAssessmentDisplayName(result.score_id, result.score_name)
 }
 
