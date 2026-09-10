@@ -113,10 +113,12 @@ export function SysadminsPage() {
   }, [search, selectedStatus, currentPage, pageSize])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadStats()
   }, [loadStats])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadSysadmins()
   }, [loadSysadmins])
 
