@@ -120,30 +120,83 @@ export function consumePostLoginRedirectUrl(fallbackUrl: string): string {
   return url
 }
 
-async function fetchWithAuth(
-  input: RequestInfo,
-  init?: RequestInit
+function isAuthEndpoint(url: string): boolean {
+  return url.includes("/auth") && !url.includes("/auth/me")
+}
+
+let refreshPromise: Promise<boolean> | null = null
+
+export async function refreshAuthSession(): Promise<boolean> {
+  if (refreshPromise) {
+    return refreshPromise
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(
+        `${resolveApiBaseUrl()}${apiRoutes.auth.refresh}`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      )
+      return response.ok
+    } catch (error) {
+      console.error("Failed to refresh auth session:", error)
+      return false
+    } finally {
+      refreshPromise = null
+    }
+  })()
+
+  return refreshPromise
+}
+
+export async function fetchWithAuth(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  isRetry = false
 ): Promise<Response> {
-  const res = await fetch(input, init)
+  const config: RequestInit = {
+    ...init,
+    credentials: "include",
+  }
+
+  const res = await fetch(input, config)
+
   if (res.status === 401) {
-    document.cookie = "auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-    window.dispatchEvent(new Event("auth-logout"))
+    const url = String(input)
+    if (!isRetry && !isAuthEndpoint(url)) {
+      const success = await refreshAuthSession()
+      if (success) {
+        return fetchWithAuth(input, init, true)
+      }
+    }
+
+    if (!isAuthEndpoint(url) || url.includes("/auth/refresh")) {
+      window.dispatchEvent(new Event("auth-logout"))
+    }
   } else if (res.status === 403) {
     window.dispatchEvent(new Event("auth-forbidden"))
   }
+
   return res
 }
 
 export async function fetchCurrentUser(): Promise<AuthMeResponse | null> {
-  const response = await fetchWithAuth(
-    `${resolveApiBaseUrl()}${apiRoutes.auth.me}`,
-    {
-      credentials: "include",
-    }
-  )
-  if (response.status === 401) return null
-  if (!response.ok) return null
-  return parseAuthMeResponse(await response.json())
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.auth.me}`,
+      {
+        credentials: "include",
+      }
+    )
+    if (response.status === 401) return null
+    if (!response.ok) return null
+    return parseAuthMeResponse(await response.json())
+  } catch {
+    return null
+  }
 }
 
 export interface SubmitMemberDetailsError {
@@ -337,15 +390,13 @@ export async function submitMemberForm(
 
 
 export async function logout(): Promise<void> {
-  const response = await fetchWithAuth(
-    `${resolveApiBaseUrl()}${apiRoutes.auth.logout}`,
-    {
+  try {
+    await fetch(`${resolveApiBaseUrl()}${apiRoutes.auth.logout}`, {
       method: "POST",
       credentials: "include",
-    }
-  )
-  if (!response.ok) {
-    throw new Error("Failed to close session")
+    })
+  } finally {
+    window.dispatchEvent(new Event("auth-logout"))
   }
 }
 
