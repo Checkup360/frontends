@@ -50,6 +50,7 @@ export const apiRoutes = {
   members: {
     myDetails: "/members/me/details",
     myProfile: "/members/me/profile",
+    riskPriorities: "/members/me/risk-priorities",
     myForm: (formType: string) =>
       `/members/me/forms/${encodeURIComponent(formType)}`,
   },

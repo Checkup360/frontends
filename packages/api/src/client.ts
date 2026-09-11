@@ -22,6 +22,7 @@ import {
   type DepartmentAnalyticsSummary,
   type SysadminUser,
   type SysadminStats,
+  type MemberRiskPriorities,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -272,6 +273,20 @@ export async function fetchMemberProfile(): Promise<MemberProfileResponse | null
     return (await response.json()) as MemberProfileResponse
   } catch (error) {
     console.error("Error fetching member profile:", error)
+    return null
+  }
+}
+
+export async function fetchMemberRiskPriorities(): Promise<MemberRiskPriorities | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.riskPriorities}`,
+      { credentials: "include" }
+    )
+    if (!response.ok) return null
+    return (await response.json()) as MemberRiskPriorities
+  } catch (error) {
+    console.error("Error fetching member risk priorities:", error)
     return null
   }
 }

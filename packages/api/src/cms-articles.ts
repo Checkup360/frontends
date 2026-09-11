@@ -314,3 +314,48 @@ export async function fetchCmsPageById(
   const data = (await response.json()) as PayloadPageDoc
   return data
 }
+
+/**
+ * Consulta la API recomendada del CMS con priorización por riesgos y decaimiento temporal
+ */
+export async function fetchRecommendedCmsPages(options?: {
+  cmsOrigin?: string
+  riskWeights?: Record<string, number>
+  page?: number
+  limit?: number
+  organizationId?: string
+}): Promise<PayloadPagesResponse> {
+  const cmsOrigin = (
+    options?.cmsOrigin ||
+    resolveCmsUrl()
+  ).replace(/\/$/, "")
+
+  const page = Math.max(1, options?.page ?? 1)
+  const limit = Math.max(1, options?.limit ?? 10)
+  const params = new URLSearchParams()
+  params.append("page", page.toString())
+  params.append("limit", limit.toString())
+
+  if (options?.riskWeights && Object.keys(options.riskWeights).length > 0) {
+    params.append("weights", JSON.stringify(options.riskWeights))
+  }
+  if (options?.organizationId) {
+    params.append("organization", options.organizationId)
+  }
+
+  const url = `${cmsOrigin}/api/pages/recommended?${params.toString()}`
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch recommended CMS pages: HTTP ${response.status}`)
+  }
+
+  return (await response.json()) as PayloadPagesResponse
+}

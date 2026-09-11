@@ -291,4 +291,10 @@ export interface SysadminStats {
   pending_invites: number
 }
 
+export type MemberRiskPriorities = {
+  user_id: string
+  risk_weights: Record<string, number>
+  highest_risk: string | null
+}
+
 

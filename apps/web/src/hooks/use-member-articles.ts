@@ -1,15 +1,39 @@
 import { useEffect, useState, useCallback } from "react"
 import {
-  fetchMemberProfile,
-  fetchCmsPages,
+  fetchMemberRiskPriorities,
+  fetchRecommendedCmsPages,
   mapPayloadPageToArticle,
-  sortArticlesByTopics,
   resolveCmsUrl,
   type HealthContentArticle,
 } from "@workspace/api"
 
-export function useMemberArticles() {
+export interface UseMemberArticlesOptions {
+  page?: number
+  limit?: number
+}
+
+export interface PaginationInfo {
+  page: number
+  totalPages: number
+  totalDocs: number
+  limit: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
+}
+
+export function useMemberArticles(options?: UseMemberArticlesOptions) {
+  const page = options?.page ?? 1
+  const limit = options?.limit ?? 10
+
   const [articles, setArticles] = useState<HealthContentArticle[]>([])
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page,
+    totalPages: 1,
+    totalDocs: 0,
+    limit,
+    hasNextPage: false,
+    hasPrevPage: false,
+  })
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,42 +44,40 @@ export function useMemberArticles() {
     try {
       const cmsOrigin = resolveCmsUrl()
 
-      // Consultar perfil (para prioridades) y páginas de CMS en paralelo
-      const [profileResult, docsResult] = await Promise.allSettled([
-        fetchMemberProfile(),
-        fetchCmsPages({ cmsOrigin }),
-      ])
+      // 1. Consultar prioridades clínicas de riesgo calculadas por el backend
+      const priorities = await fetchMemberRiskPriorities()
+      const riskWeights = priorities?.risk_weights
 
-      const priorityTopics =
-        profileResult.status === "fulfilled"
-          ? (profileResult.value?.priority_topics ?? [])
-          : []
+      // 2. Consultar recomendaciones ponderadas y paginadas del CMS
+      const response = await fetchRecommendedCmsPages({
+        cmsOrigin,
+        riskWeights,
+        page,
+        limit,
+      })
 
-      if (docsResult.status === "fulfilled") {
-        const docs = docsResult.value || []
-        const mapped = docs.map((doc) =>
-          mapPayloadPageToArticle(doc, cmsOrigin)
-        )
-        const sorted = sortArticlesByTopics(mapped, priorityTopics)
-        setArticles(sorted)
-      } else {
-        const fetchError = docsResult.reason
-        console.error("Error fetching articles from CMS:", fetchError)
-        setError(
-          fetchError instanceof Error
-            ? fetchError.message
-            : "Failed to load articles from CMS"
-        )
-        setArticles([])
-      }
+      const docs = response.docs || []
+      const mapped = docs.map((doc) => mapPayloadPageToArticle(doc, cmsOrigin))
+
+      setArticles(mapped)
+      setPagination({
+        page: response.page || page,
+        totalPages: response.totalPages || 1,
+        totalDocs: response.totalDocs || mapped.length,
+        limit: response.limit || limit,
+        hasNextPage: Boolean(response.hasNextPage),
+        hasPrevPage: Boolean(response.hasPrevPage),
+      })
     } catch (err) {
-      console.error("Unexpected error in useMemberArticles:", err)
-      setError(err instanceof Error ? err.message : "Unexpected error")
+      console.error("Error fetching recommended articles from CMS:", err)
+      setError(
+        err instanceof Error ? err.message : "Failed to load recommended articles"
+      )
       setArticles([])
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [page, limit])
 
   useEffect(() => {
     // eslint-disable-next-line
@@ -64,6 +86,7 @@ export function useMemberArticles() {
 
   return {
     articles,
+    pagination,
     isLoading,
     error,
     refetch: loadArticles,

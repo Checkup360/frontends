@@ -1,11 +1,15 @@
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Skeleton } from "@workspace/ui/components/skeleton"
+import { Button } from "@workspace/ui/components/button"
 import { HealthContentGrid } from "@workspace/components/components/health-content-grid"
 import { useMemberArticles } from "@/hooks/use-member-articles"
 
 export function MemberNewsPage() {
   const navigate = useNavigate()
-  const { articles, isLoading } = useMemberArticles()
+  const [page, setPage] = useState(1)
+  const { articles, pagination, isLoading } = useMemberArticles({ page, limit: 9 })
 
   if (isLoading) {
     return (
@@ -29,13 +33,43 @@ export function MemberNewsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl">
+    <div className="mx-auto w-full max-w-7xl space-y-8">
       <HealthContentGrid
         articles={articles}
         title="Health Articles & News"
         description="Explore articles, medical advice, and healthy habits tailored for you."
         onNavigate={(href) => navigate(href)}
       />
+
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-border pt-4">
+          <p className="text-sm text-muted-foreground">
+            Página {pagination.page} de {pagination.totalPages} ({pagination.totalDocs} artículos)
+          </p>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={!pagination.hasPrevPage}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={!pagination.hasNextPage}
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
+export default MemberNewsPage
