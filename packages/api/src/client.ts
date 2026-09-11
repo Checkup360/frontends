@@ -529,6 +529,7 @@ export interface OrganizationEmployee {
   roles: OrganizationEmployeeRole[]
   department: DepartmentResponse | null
   status: string
+  last_assessment?: string | null
 }
 
 export interface PaginatedResponse<T> {

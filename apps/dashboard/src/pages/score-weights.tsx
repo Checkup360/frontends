@@ -11,6 +11,7 @@ import { Slider } from "@workspace/ui/components/slider"
 import { toast } from "@workspace/ui/components/sonner"
 import {
   Activity,
+  HeartPulse,
   Moon,
   RotateCcw,
   Save,
@@ -50,6 +51,30 @@ const SCORE_TOPICS: ScoreTopic[] = [
     icon: Moon,
     color: "bg-blue-500",
   },
+  {
+    id: "depression",
+    name: "Mood & Well-being",
+    subtitle: "Emotional well-being",
+    description: "Evaluates mood and emotional well-being indicators.",
+    icon: HeartPulse,
+    color: "bg-rose-500",
+  },
+  {
+    id: "metabolic_syndrome",
+    name: "Metabolic Health",
+    subtitle: "Cardiometabolic risk",
+    description: "Evaluates metabolic syndrome criteria and cardiometabolic risk.",
+    icon: Activity,
+    color: "bg-amber-500",
+  },
+  {
+    id: "eoss",
+    name: "Obesity-related Health Impact",
+    subtitle: "Health impact staging",
+    description: "Evaluates the self-reported impact on health, mood, and daily function.",
+    icon: HeartPulse,
+    color: "bg-violet-500",
+  },
 ]
 
 function computeBalancedWeights(topics: ScoreTopic[]): Record<string, number> {
@@ -86,10 +111,14 @@ export function ScoreWeightsPage() {
       try {
         const res = await getOrganizationScoreWeights(organizationId)
         if (active && res && res.score_weights) {
-          setWeights((prev) => ({
-            ...prev,
-            ...res.score_weights,
-          }))
+          setWeights(
+            Object.fromEntries(
+              SCORE_TOPICS.map((topic) => [
+                topic.id,
+                res.score_weights[topic.id] ?? 0,
+              ])
+            )
+          )
         }
       } catch (e) {
         console.error("Failed to load score weights from API", e)
@@ -128,7 +157,7 @@ export function ScoreWeightsPage() {
   const handleApplyBalanced = () => {
     const balanced = computeBalancedWeights(SCORE_TOPICS)
     setWeights(balanced)
-    toast.info("Balanced weights applied (50% / 50%)")
+    toast.info("Balanced weights applied across all score categories")
   }
 
   const handleSave = async () => {

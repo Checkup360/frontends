@@ -76,6 +76,13 @@ function formatRoleName(role: string) {
   }
 }
 
+function formatLastAssessment(value?: string | null): string {
+  if (!value) return "Not assessed"
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+  }).format(new Date(value))
+}
+
 interface EmployeesTableProps {
   organizationId: string | null | undefined
   roles?: OrganizationEmployeeRole[]
@@ -394,7 +401,7 @@ export function EmployeesTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    Not assessed
+                    {formatLastAssessment(w.last_assessment)}
                   </TableCell>
                 </TableRow>
               ))
