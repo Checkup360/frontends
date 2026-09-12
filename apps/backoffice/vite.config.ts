@@ -12,7 +12,7 @@ export default defineConfig({
     port: appsConfig.backoffice.devPort,
     strictPort: appsConfig.backoffice.strictPort,
     proxy: {
-      "/logs": {
+      "/dozzle": {
         target: "http://localhost:8080",
         ws: true,
       },

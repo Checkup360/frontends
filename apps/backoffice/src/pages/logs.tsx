@@ -80,7 +80,7 @@ export function LogsPage() {
             size="sm"
             className="h-8 px-2.5 text-xs"
           >
-            <a href="/logs" target="_blank" rel="noopener noreferrer">
+            <a href="/dozzle" target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
               Open in new tab
             </a>
@@ -98,7 +98,7 @@ export function LogsPage() {
 
         <iframe
           key={reloadKey}
-          src="/logs"
+          src="/dozzle"
           title="System Logs"
           className="h-full w-full border-0"
           onLoad={() => setIsLoading(false)}
