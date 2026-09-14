@@ -490,13 +490,17 @@ export function DepartmentsPage() {
                 return (
                   <div
                     key={dept.id}
+                    data-slot="item"
                     className="group relative flex flex-col justify-between rounded-xl border border-border/70 bg-card/60 p-3.5 shadow-xs transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/95 hover:shadow-md cursor-pointer"
                     onClick={() => navigate(`/departments/${dept.slug}`)}
                   >
                     {/* Header: Name + slug on left, risk/score badge + 3 dots on right */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <h4 className="text-sm font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-primary">
+                        <h4
+                          data-slot="item-title"
+                          className="text-sm font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-primary"
+                        >
                           {dept.name}
                         </h4>
                         <p className="mt-0.5 font-mono text-[11px] text-muted-foreground truncate">
