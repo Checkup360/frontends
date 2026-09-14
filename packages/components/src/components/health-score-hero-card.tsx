@@ -143,15 +143,15 @@ export function HealthScoreHeroCard({
             </div>
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-[color:var(--success)]">85-100</p>
+                <p className="font-medium text-[color:var(--success)]">0-20</p>
                 <p className="text-xs text-muted-foreground">Low Risk</p>
               </div>
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-[color:var(--warning)]">60-84</p>
+                <p className="font-medium text-[color:var(--warning)]">21-50</p>
                 <p className="text-xs text-muted-foreground">Moderate Risk</p>
               </div>
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-destructive">&lt;60</p>
+                <p className="font-medium text-destructive">&gt;50</p>
                 <p className="text-xs text-muted-foreground">
                   Attention Needed
                 </p>

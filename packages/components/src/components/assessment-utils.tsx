@@ -132,8 +132,8 @@ export interface ComputedHealthScore {
 
 export function getAssessmentDisplayName(scoreId: string, scoreName: string): string {
   const text = `${scoreId} ${scoreName}`.toLowerCase()
-  if (text.includes("phq") || text.includes("depression")) {
-    return "Mood and emotional well-being"
+  if (text.includes("phq") || text.includes("depression") || text.includes("mood")) {
+    return "Mood and Emotional Well-being"
   }
   if (text.includes("findrisc") || text.includes("diabetes")) return "Diabetes"
   if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
@@ -142,9 +142,9 @@ export function getAssessmentDisplayName(scoreId: string, scoreName: string): st
   if (text.includes("metabolic_syndrome") || text.includes("metabolic syndrome")) {
     return "Metabolic Health"
   }
-  if (text.includes("eoss")) return "Obesity-related Health Impact"
+  if (text.includes("eoss") || text.includes("obesity")) return "Obesity-related Health Impact"
   if (text.includes("score2") || text.includes("cardiovascular")) {
-    return "Cardiovascular Risk"
+    return "Cardiovascular Health"
   }
   return scoreName
 }
@@ -156,7 +156,7 @@ export function computeOverallHealthScore(
 ): ComputedHealthScore {
   if (!results || results.length === 0) {
     return {
-      score: 100,
+      score: 0,
       label: "Low risk",
       riskLevel: "low",
       explanation: "Complete your health forms to get your personalized risk evaluation.",
@@ -255,12 +255,12 @@ export function computeOverallHealthScore(
   let explanation =
     "Your preventive health indicators show a favorable status. Keep up your active lifestyle!"
 
-  if (score < 60) {
+  if (score > 50) {
     label = "Needs attention"
     riskLevel = "high"
     explanation =
       "One or more evaluations show elevated risk parameters requiring preventive care and lifestyle modifications."
-  } else if (score < 85) {
+  } else if (score > 20) {
     label = "Moderate risk"
     riskLevel = "moderate"
     explanation =

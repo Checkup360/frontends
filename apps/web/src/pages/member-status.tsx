@@ -33,27 +33,47 @@ import {
 } from "lucide-react"
 import { Link } from "react-router-dom"
 
-/** Helper to determine theme tone and labels for risk levels (Health Score: 100 = best/optimal, 0 = highest risk) */
-function getRiskLevelConfig(riskLevel: string | null, healthScore: number) {
+function formatRiskLevelLabel(riskLevel: string | null, score: number): string {
   const lower = (riskLevel || "").toLowerCase()
+  if (lower.includes("very high") || lower.includes("severe") || (!lower && score >= 80)) {
+    return "Very high risk"
+  }
+  if (lower.includes("high") || (!lower && score > 50)) {
+    return "High risk"
+  }
+  if (lower.includes("moderate") || (!lower && score > 30)) {
+    return "Moderate risk"
+  }
+  if (lower.includes("elevated") || lower.includes("mild") || (!lower && score > 15)) {
+    return "Slightly elevated risk"
+  }
+  return "Low risk"
+}
 
-  // 1. High / Very high risk (red/destructive)
-  if (lower.includes("high") || (!lower && healthScore < 50)) {
+/** Helper to determine theme tone and labels for risk levels (Risk Score: 0 = low/optimal risk, 100 = highest risk) */
+function getRiskLevelConfig(riskLevel: string | null, riskScore: number) {
+  const label = formatRiskLevelLabel(riskLevel, riskScore)
+  const lower = label.toLowerCase()
+
+  // 1. Very high / High risk (red/destructive)
+  if (lower.includes("high")) {
     return {
-      label: riskLevel || "High Risk",
+      label,
       color: "text-destructive",
       badgeVariant: "destructive" as const,
       badgeClass: "bg-destructive/15 text-destructive border-transparent font-medium",
       ringColor: "stroke-destructive text-destructive",
       barColor: "bg-destructive",
-      description: "Needs attention and proactive medical follow-up.",
+      description: lower.includes("very high")
+        ? "Severe risk indicators detected. Needs attention and proactive medical follow-up."
+        : "High risk indicators detected. Needs attention and proactive medical follow-up.",
     }
   }
 
-  // 2. Moderate / Intermediate risk (amber/orange)
-  if (lower.includes("moderate") || lower.includes("intermediate") || (!lower && healthScore < 70)) {
+  // 2. Moderate risk (amber/orange)
+  if (lower.includes("moderate")) {
     return {
-      label: riskLevel || "Moderate Risk",
+      label,
       color: "text-amber-600 dark:text-amber-400",
       badgeVariant: "outline" as const,
       badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-medium",
@@ -64,9 +84,9 @@ function getRiskLevelConfig(riskLevel: string | null, healthScore: number) {
   }
 
   // 3. Slightly elevated risk (yellow/gold tone)
-  if (lower.includes("elevated") || (!lower && healthScore < 85)) {
+  if (lower.includes("elevated") || lower.includes("mild")) {
     return {
-      label: riskLevel || "Slightly Elevated",
+      label,
       color: "text-yellow-600 dark:text-yellow-400",
       badgeVariant: "outline" as const,
       badgeClass: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 font-medium",
@@ -78,7 +98,7 @@ function getRiskLevelConfig(riskLevel: string | null, healthScore: number) {
 
   // 4. Low risk / Optimal (emerald green)
   return {
-    label: riskLevel || "Low Risk",
+    label,
     color: "text-emerald-600 dark:text-emerald-400",
     badgeVariant: "outline" as const,
     badgeClass: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-medium",
@@ -90,10 +110,6 @@ function getRiskLevelConfig(riskLevel: string | null, healthScore: number) {
 
 /** Returns the normalized score (0-100) delivered by the backend */
 function getNormalizedScore(result: AssessmentResultResponse): number {
-  if (result.score_id.toLowerCase() === "eoss" && result.raw_value !== null) {
-    const stage = Math.min(4, Math.max(0, result.raw_value))
-    return Math.round(100 - (stage / 4) * 100)
-  }
   if (result.normalized_value !== null && result.normalized_value !== undefined) {
     return Math.min(100, Math.max(0, Math.round(result.normalized_value)))
   }
@@ -111,20 +127,6 @@ function getScoreIcon(scoreId: string, scoreName?: string) {
 
 /** Formats technical score names for clean user-facing view */
 function formatUserScoreName(result: AssessmentResultResponse) {
-  const text = `${result.score_id} ${result.score_name}`.toLowerCase()
-  if (text.includes("findrisc") || text.includes("diabetes")) {
-    return "Diabetes"
-  }
-  if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
-    return "Sleep Apnea"
-  }
-  if (text.includes("metabolic_syndrome") || text.includes("metabolic syndrome")) {
-    return "Metabolic Health"
-  }
-  if (text.includes("eoss")) return "Obesity-related Health Impact"
-  if (text.includes("score2") || text.includes("cardiovascular")) {
-    return "Cardiovascular Risk"
-  }
   return getAssessmentDisplayName(result.score_id, result.score_name)
 }
 
