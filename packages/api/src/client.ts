@@ -465,6 +465,29 @@ export async function deleteMemberAvatar(): Promise<
 }
 
 
+export interface ActiveFormDefinition {
+  form_type: string
+  fields: string[]
+}
+
+export interface ActiveFormsResponse {
+  active_forms: ActiveFormDefinition[]
+}
+
+export async function fetchActiveMemberForms(): Promise<ActiveFormsResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.myActiveForms}`,
+      { credentials: "include" }
+    )
+    if (!response.ok) return null
+    return (await response.json()) as ActiveFormsResponse
+  } catch (error) {
+    console.error("Error fetching active member forms:", error)
+    return null
+  }
+}
+
 export async function fetchMemberForm(
   formType: string
 ): Promise<MemberFormResponse | null> {
