@@ -1,4 +1,3 @@
-import { publicDevDefaults } from "../../../apps.config"
 import {
   parseAuthMeResponse,
   parseOAuthAuthorizeResponse,
@@ -28,19 +27,14 @@ import { apiRoutes } from "./routes"
 
 const POST_LOGIN_REDIRECT_STORAGE_KEY = "auth.postLoginRedirectUrl"
 
-function resolveUrl(configKey: string, defaultValue: string): string {
-  if (
-    typeof window !== "undefined" &&
-    (window as any).__CONFIG__?.[configKey]
-  ) {
-    return ((window as any).__CONFIG__[configKey] as string).replace(/\/$/, "")
-  }
-  return defaultValue
-}
+import {
+  publicDevDefaults,
+  resolveUrl,
+  resolveApiBaseUrl,
+  resolveMediaUrl,
+} from "./config"
 
-function resolveApiBaseUrl(): string {
-  return resolveUrl("apiOrigin", publicDevDefaults.apiOrigin)
-}
+export { resolveMediaUrl, resolveApiBaseUrl }
 
 export function resolveWebUrl(): string {
   return resolveUrl("webOrigin", publicDevDefaults.webOrigin)
@@ -270,7 +264,11 @@ export async function fetchMemberProfile(): Promise<MemberProfileResponse | null
       { credentials: "include" }
     )
     if (!response.ok) return null
-    return (await response.json()) as MemberProfileResponse
+    const data = (await response.json()) as MemberProfileResponse
+    return {
+      ...data,
+      avatar_url: resolveMediaUrl(data.avatar_url),
+    }
   } catch (error) {
     console.error("Error fetching member profile:", error)
     return null
@@ -330,10 +328,139 @@ export async function updateMemberProfile(payload: {
       return { error: { code: "unknown_error", message: "Failed to save changes. Please try again." } }
     }
 
-    return { success: (await response.json()) as MemberProfileResponse }
+    const data = (await response.json()) as MemberProfileResponse
+    return {
+      success: {
+        ...data,
+        avatar_url: resolveMediaUrl(data.avatar_url),
+      },
+    }
   } catch (error) {
     console.error("Error updating member profile:", error)
     return { error: { code: "network_error", message: "Network error. Please try again." } }
+  }
+}
+
+export interface AvatarUploadError {
+  code: string
+  message: string
+}
+
+export async function uploadMemberAvatar(file: Blob | File): Promise<
+  | { success: { avatar_url: string }; error?: never }
+  | { success?: never; error: AvatarUploadError }
+> {
+  try {
+    const formData = new FormData()
+    formData.append(
+      "file",
+      file,
+      file instanceof File ? file.name : "avatar.png"
+    )
+
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.myAvatar}`,
+      {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      }
+    )
+
+    if (response.status === 401) {
+      return {
+        error: {
+          code: "unauthorized",
+          message: "Session expired. Please log in again.",
+        },
+      }
+    }
+    if (response.status === 404) {
+      return {
+        error: {
+          code: "profile_not_found",
+          message: "Complete onboarding first.",
+        },
+      }
+    }
+    if (response.status === 422) {
+      const data = (await response.json().catch(() => null)) as {
+        detail?: string
+      } | null
+      return {
+        error: {
+          code: "invalid_file",
+          message:
+            data?.detail ||
+            "Invalid image file. Please use JPG, PNG or WEBP up to 5MB.",
+        },
+      }
+    }
+    if (!response.ok) {
+      return {
+        error: {
+          code: "unknown_error",
+          message: "Failed to upload avatar. Please try again.",
+        },
+      }
+    }
+
+    const data = (await response.json()) as { avatar_url: string }
+    return {
+      success: {
+        avatar_url: resolveMediaUrl(data.avatar_url) || data.avatar_url,
+      },
+    }
+  } catch (error) {
+    console.error("Error uploading member avatar:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: "Network error. Please try again.",
+      },
+    }
+  }
+}
+
+export async function deleteMemberAvatar(): Promise<
+  | { success: true; error?: never }
+  | { success?: never; error: AvatarUploadError }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.myAvatar}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    )
+
+    if (response.status === 401) {
+      return {
+        error: {
+          code: "unauthorized",
+          message: "Session expired. Please log in again.",
+        },
+      }
+    }
+    if (!response.ok && response.status !== 204) {
+      return {
+        error: {
+          code: "unknown_error",
+          message: "Failed to remove avatar. Please try again.",
+        },
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting member avatar:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: "Network error. Please try again.",
+      },
+    }
   }
 }
 
@@ -898,7 +1025,11 @@ export async function listOrganizationEmployees(
       return []
     }
 
-    return (await response.json()) as OrganizationEmployee[]
+    const employees = (await response.json()) as OrganizationEmployee[]
+    return employees.map((e) => ({
+      ...e,
+      avatar_url: resolveMediaUrl(e.avatar_url),
+    }))
   } catch (error) {
     console.error("Error listing organization employees:", error)
     return []
@@ -947,7 +1078,11 @@ export async function listOrganizationEmployeesPage(
     }
 
     const items = (await response.json()) as OrganizationEmployee[]
-    return paginatedFromHeaders(response, items, filters.page, filters.pageSize)
+    const normalizedItems = items.map((e) => ({
+      ...e,
+      avatar_url: resolveMediaUrl(e.avatar_url),
+    }))
+    return paginatedFromHeaders(response, normalizedItems, filters.page, filters.pageSize)
   } catch (error) {
     console.error("Error listing paginated organization employees:", error)
     return {
@@ -1601,7 +1736,11 @@ export async function listSysadminsPage(filters: {
       }
     }
     const items = (await response.json()) as SysadminUser[]
-    return paginatedFromHeaders(response, items, filters.page, filters.pageSize)
+    const normalizedItems = items.map((s) => ({
+      ...s,
+      avatar_url: resolveMediaUrl(s.avatar_url),
+    }))
+    return paginatedFromHeaders(response, normalizedItems, filters.page, filters.pageSize)
   } catch (error) {
     console.error("Error listing paginated sysadmins:", error)
     return {

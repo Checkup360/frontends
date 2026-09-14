@@ -1,3 +1,5 @@
+import { resolveMediaUrl } from "./config"
+
 export type OrganizationMembership = {
   organization_id: string
   organization_name: string
@@ -93,7 +95,8 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
   const last_name = typeof maybeLastName === "string" ? maybeLastName : null
 
   const maybeAvatarUrl = (payload as { avatar_url?: unknown }).avatar_url
-  const avatar_url = typeof maybeAvatarUrl === "string" ? maybeAvatarUrl : null
+  const avatar_url =
+    typeof maybeAvatarUrl === "string" ? resolveMediaUrl(maybeAvatarUrl) : null
 
   const maybeIsSysadmin = (payload as { is_sysadmin?: unknown }).is_sysadmin
   if (typeof maybeIsSysadmin !== "boolean") return null

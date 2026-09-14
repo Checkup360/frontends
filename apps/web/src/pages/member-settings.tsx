@@ -16,6 +16,8 @@ import { Label } from "@workspace/ui/components/label"
 import {
   fetchMemberProfile,
   updateMemberProfile,
+  uploadMemberAvatar,
+  deleteMemberAvatar,
 } from "@workspace/api"
 import { useEffect, useState } from "react"
 
@@ -56,26 +58,29 @@ export function MemberSettingsPage() {
     }
   }, [])
 
-  const handleSaveAvatar = async (dataUrl: string | null) => {
+  const handleSaveAvatar = async (file: Blob | null) => {
     setIsSaving(true)
     setSaveError(null)
     try {
-      const result = await updateMemberProfile({
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        phone_number: phone.trim() || null,
-        date_of_birth: dateOfBirth,
-        avatar_url: dataUrl,
-      })
-
-      if (result.error) {
-        setSaveError(result.error.message)
+      if (file) {
+        const result = await uploadMemberAvatar(file)
+        if (result.error) {
+          setSaveError(result.error.message)
+          return
+        }
+        setAvatarUrl(result.success.avatar_url)
       } else {
-        setAvatarUrl(dataUrl)
-        await refresh()
-        setSaveSuccess(true)
-        setTimeout(() => setSaveSuccess(false), 3000)
+        const result = await deleteMemberAvatar()
+        if (result.error) {
+          setSaveError(result.error.message)
+          return
+        }
+        setAvatarUrl(null)
       }
+
+      await refresh()
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
     } finally {
       setIsSaving(false)
     }

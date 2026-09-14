@@ -29,7 +29,7 @@ const loadImage = (src: string) =>
   })
 
 export interface FileUploadProps {
-  onCropComplete?: (dataUrl: string) => void | Promise<void>
+  onCropComplete?: (blob: Blob) => void | Promise<void>
   className?: string
 }
 
@@ -151,18 +151,25 @@ export function FileUpload({ onCropComplete, className }: FileUploadProps) {
       ctx.drawImage(img, -naturalSize.width / 2, -naturalSize.height / 2)
       ctx.restore()
 
-      const croppedData = canvas.toDataURL("image/png")
-      setResultUrl(croppedData)
-      setStage("done")
+      canvas.toBlob(
+        async (blob) => {
+          if (!blob) return
+          const previewUrl = URL.createObjectURL(blob)
+          setResultUrl(previewUrl)
+          setStage("done")
 
-      if (onCropComplete) {
-        setIsSaving(true)
-        try {
-          await onCropComplete(croppedData)
-        } finally {
-          setIsSaving(false)
-        }
-      }
+          if (onCropComplete) {
+            setIsSaving(true)
+            try {
+              await onCropComplete(blob)
+            } finally {
+              setIsSaving(false)
+            }
+          }
+        },
+        "image/webp",
+        0.9
+      )
     })
   }
 
@@ -341,7 +348,7 @@ export function FileUpload({ onCropComplete, className }: FileUploadProps) {
 export interface AvatarUploadProps {
   currentAvatarUrl?: string | null
   initials?: string
-  onSave: (dataUrl: string | null) => Promise<void> | void
+  onSave: (file: Blob | null) => Promise<void> | void
   isUpdating?: boolean
   className?: string
 }
@@ -355,8 +362,8 @@ export function AvatarUpload({
 }: AvatarUploadProps) {
   const [showUploader, setShowUploader] = useState(false)
 
-  const handleCropComplete = async (dataUrl: string) => {
-    await onSave(dataUrl)
+  const handleCropComplete = async (blob: Blob) => {
+    await onSave(blob)
     setShowUploader(false)
   }
 
