@@ -6,9 +6,11 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
 } from "@workspace/ui/components/sidebar"
-
-import { AppSwitcher } from "./app-switcher"
+import { HeartPulse } from "lucide-react"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   appLabel: string
@@ -31,7 +33,24 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
-        <AppSwitcher currentAppLabel={appLabel} currentAppName={appName} />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              className="cursor-default hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent"
+            >
+              <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs shrink-0">
+                <HeartPulse className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">{appName}</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {appLabel}
+                </span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>

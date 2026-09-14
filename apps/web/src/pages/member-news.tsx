@@ -44,7 +44,7 @@ export function MemberNewsPage() {
       {pagination.totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-border pt-4">
           <p className="text-sm text-muted-foreground">
-            Página {pagination.page} de {pagination.totalPages} ({pagination.totalDocs} artículos)
+            Page {pagination.page} of {pagination.totalPages} ({pagination.totalDocs} articles)
           </p>
           <div className="flex items-center space-x-2">
             <Button
@@ -54,7 +54,7 @@ export function MemberNewsPage() {
               disabled={!pagination.hasPrevPage}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Anterior
+              Previous
             </Button>
             <Button
               variant="outline"
@@ -62,7 +62,7 @@ export function MemberNewsPage() {
               onClick={() => setPage((p) => p + 1)}
               disabled={!pagination.hasNextPage}
             >
-              Siguiente
+              Next
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>

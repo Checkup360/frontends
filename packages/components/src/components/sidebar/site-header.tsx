@@ -36,7 +36,7 @@ export function SiteHeader({ title }: SiteHeaderProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <AppSwitcher variant="header-button" currentAppLabel="" />
+          <AppSwitcher />
           <button
             onClick={toggleTheme}
             className="flex size-9 items-center justify-center rounded-lg border border-border/40 bg-background/70 text-muted-foreground shadow-xs transition-all hover:bg-muted hover:text-foreground"
