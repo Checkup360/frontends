@@ -9,6 +9,7 @@ export type SettingsPageProps = {
   email: string
   organizationName?: string | null
   accountAction?: ReactNode
+  avatarAction?: ReactNode
 }
 
 function ActiveSection({
@@ -20,7 +21,13 @@ function ActiveSection({
 }) {
   if (section === "appearance") return <AppearanceSettings />
   if (section === "notifications") return <NotificationSettings />
-  return <AccountSettings {...account} action={account.accountAction} />
+  return (
+    <AccountSettings
+      {...account}
+      action={account.accountAction}
+      avatarAction={account.avatarAction}
+    />
+  )
 }
 
 export function SettingsPage(props: SettingsPageProps) {

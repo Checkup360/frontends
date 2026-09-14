@@ -24,12 +24,14 @@ type AccountSettingsProps = {
   email: string
   organizationName?: string | null
   action?: ReactNode
+  avatarAction?: ReactNode
 }
 
 export function AccountSettings({
   email,
   organizationName,
   action,
+  avatarAction,
 }: AccountSettingsProps) {
   return (
     <SettingsContent
@@ -37,6 +39,7 @@ export function AccountSettings({
       description="Information associated with your Checkup360 access."
     >
       <div className="space-y-6">
+        {avatarAction}
         <ReadOnlyField
           id="settings-email"
           label="Email address"

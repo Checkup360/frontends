@@ -404,7 +404,13 @@ export function AvatarUpload({
               onClick={() => setShowUploader((prev) => !prev)}
               disabled={isUpdating}
             >
-              {showUploader ? "Close Uploader" : currentAvatarUrl ? "Change Photo" : "Upload Photo"}
+              {isUpdating
+                ? "Saving..."
+                : showUploader
+                  ? "Close Uploader"
+                  : currentAvatarUrl
+                    ? "Change Photo"
+                    : "Upload Photo"}
             </Button>
             {currentAvatarUrl && !showUploader && (
               <Button

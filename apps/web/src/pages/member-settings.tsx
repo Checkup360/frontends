@@ -13,6 +13,7 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
+import { toast } from "@workspace/ui/components/sonner"
 import {
   fetchMemberProfile,
   updateMemberProfile,
@@ -31,8 +32,7 @@ export function MemberSettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [isAvatarUpdating, setIsAvatarUpdating] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -59,41 +59,40 @@ export function MemberSettingsPage() {
   }, [])
 
   const handleSaveAvatar = async (file: Blob | null) => {
-    setIsSaving(true)
-    setSaveError(null)
+    setIsAvatarUpdating(true)
     try {
       if (file) {
         const result = await uploadMemberAvatar(file)
         if (result.error) {
-          setSaveError(result.error.message)
+          toast.error(result.error.message || "Failed to update profile photo.")
           return
         }
         setAvatarUrl(result.success.avatar_url)
+        toast.success("Profile photo updated successfully.")
       } else {
         const result = await deleteMemberAvatar()
         if (result.error) {
-          setSaveError(result.error.message)
+          toast.error(result.error.message || "Failed to remove profile photo.")
           return
         }
         setAvatarUrl(null)
+        toast.success("Profile photo removed.")
       }
 
       await refresh()
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 3000)
+    } catch {
+      toast.error("Failed to update profile photo. Please try again.")
     } finally {
-      setIsSaving(false)
+      setIsAvatarUpdating(false)
     }
   }
 
   const handleSaveProfile = async (event: React.FormEvent) => {
     event.preventDefault()
-    setSaveError(null)
-    setSaveSuccess(false)
 
     const trimmedPhone = phone.trim()
     if (trimmedPhone && !/^\+[\d\s\-(). ]{7,19}$/.test(trimmedPhone)) {
-      setSaveError(
+      toast.error(
         "Phone number must start with + and country code (e.g. +54 11 1234-5678)."
       )
       return
@@ -111,12 +110,13 @@ export function MemberSettingsPage() {
       })
 
       if (result.error) {
-        setSaveError(result.error.message)
+        toast.error(result.error.message || "Failed to update profile.")
       } else {
         await refresh()
-        setSaveSuccess(true)
-        setTimeout(() => setSaveSuccess(false), 3000)
+        toast.success("Profile updated successfully.")
       }
+    } catch {
+      toast.error("An error occurred while saving your profile.")
     } finally {
       setIsSaving(false)
     }
@@ -130,6 +130,20 @@ export function MemberSettingsPage() {
     <SettingsPage
       email={user?.email ?? ""}
       organizationName={user?.membership?.organization_name}
+      avatarAction={
+        <AvatarUpload
+          currentAvatarUrl={avatarUrl}
+          initials={getInitials(
+            firstName && lastName
+              ? `${firstName} ${lastName}`
+              : user?.first_name && user?.last_name
+                ? `${user.first_name} ${user.last_name}`
+                : user?.email ?? ""
+          )}
+          onSave={handleSaveAvatar}
+          isUpdating={isAvatarUpdating}
+        />
+      }
       accountAction={
         <div className="space-y-6">
           <Card>
@@ -140,18 +154,6 @@ export function MemberSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <AvatarUpload
-                currentAvatarUrl={avatarUrl}
-                initials={getInitials(
-                  firstName && lastName
-                    ? `${firstName} ${lastName}`
-                    : user?.first_name && user?.last_name
-                      ? `${user.first_name} ${user.last_name}`
-                      : user?.email ?? ""
-                )}
-                onSave={handleSaveAvatar}
-                isUpdating={isSaving}
-              />
               <form
                 onSubmit={(e) => void handleSaveProfile(e)}
                 className="space-y-6"
@@ -214,18 +216,6 @@ export function MemberSettingsPage() {
                       </div>
                     </div>
                   </>
-                )}
-
-                {saveError && (
-                  <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {saveError}
-                  </p>
-                )}
-
-                {saveSuccess && (
-                  <p className="rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-600 dark:text-green-400">
-                    Changes saved successfully.
-                  </p>
                 )}
 
                 <Button type="submit" disabled={isSaving || profileLoading}>
