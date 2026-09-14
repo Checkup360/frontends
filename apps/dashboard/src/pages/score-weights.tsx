@@ -75,6 +75,14 @@ const SCORE_TOPICS: ScoreTopic[] = [
     icon: HeartPulse,
     color: "bg-violet-500",
   },
+  {
+    id: "cardiovascular",
+    name: "Cardiovascular Risk",
+    subtitle: "Heart health & 10-year CVD risk",
+    description: "Evaluates 10-year fatal and non-fatal cardiovascular risk based on SCORE2 model.",
+    icon: HeartPulse,
+    color: "bg-red-500",
+  },
 ]
 
 function computeBalancedWeights(topics: ScoreTopic[]): Record<string, number> {

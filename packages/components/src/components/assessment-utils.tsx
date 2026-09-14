@@ -107,6 +107,7 @@ import {
   Stethoscope,
   Apple,
   Activity,
+  HeartPulse,
   Sparkles,
   type LucideIcon,
 } from "lucide-react"
@@ -142,6 +143,9 @@ export function getAssessmentDisplayName(scoreId: string, scoreName: string): st
     return "Metabolic Health"
   }
   if (text.includes("eoss")) return "Obesity-related Health Impact"
+  if (text.includes("score2") || text.includes("cardiovascular")) {
+    return "Cardiovascular Risk"
+  }
   return scoreName
 }
 
@@ -170,6 +174,7 @@ export function computeOverallHealthScore(
   for (const r of results) {
     const risk = (r.risk_level || "").toLowerCase()
     const name = getAssessmentDisplayName(r.score_id, r.score_name || r.score_id || "Assessment")
+    const isCardio = name.toLowerCase().includes("cardio") || (r.score_id || "").toLowerCase().includes("score2")
 
     if (risk.includes("high")) {
       recommendations.push({
@@ -183,11 +188,15 @@ export function computeOverallHealthScore(
           ? "Sleep"
           : name.toLowerCase().includes("diabet")
           ? "Nutrition & Lifestyle"
+          : isCardio
+          ? "Cardiovascular Health"
           : "Preventive care",
         icon: name.toLowerCase().includes("sleep")
           ? Moon
           : name.toLowerCase().includes("diabet")
           ? Apple
+          : isCardio
+          ? HeartPulse
           : Stethoscope,
         action: "View details",
       })
@@ -203,11 +212,15 @@ export function computeOverallHealthScore(
           ? "Sleep"
           : name.toLowerCase().includes("diabet")
           ? "Nutrition & Activity"
+          : isCardio
+          ? "Cardiovascular Health"
           : "Preventive care",
         icon: name.toLowerCase().includes("sleep")
           ? Moon
           : name.toLowerCase().includes("diabet")
           ? Dumbbell
+          : isCardio
+          ? HeartPulse
           : Activity,
         action: "View recommendations",
       })
@@ -219,7 +232,7 @@ export function computeOverallHealthScore(
           r.explanation ||
           `Your ${name} evaluation shows low risk. Maintain your healthy habits!`,
         priority: "low",
-        category: "Lifestyle",
+        category: isCardio ? "Cardiovascular Health" : "Lifestyle",
         icon: Sparkles,
         action: "Keep it up",
       })

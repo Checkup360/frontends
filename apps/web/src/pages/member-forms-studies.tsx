@@ -44,6 +44,7 @@ type StudiesData = {
   neck_circumference: string
   waist_circumference: string
   triglycerides: string
+  total_cholesterol: string
   hdl_cholesterol: string
   systolic_blood_pressure: string
   diastolic_blood_pressure: string
@@ -61,6 +62,7 @@ type StudiesData = {
   daily_physical_activity: string
   fruits_vegetables: string
   previous_high_glucose: string
+  smoker: string
   family_diabetes: string
   little_interest: string
   feeling_down: string
@@ -80,6 +82,7 @@ const initialData: StudiesData = {
   neck_circumference: "",
   waist_circumference: "",
   triglycerides: "",
+  total_cholesterol: "",
   hdl_cholesterol: "",
   systolic_blood_pressure: "",
   diastolic_blood_pressure: "",
@@ -95,6 +98,7 @@ const initialData: StudiesData = {
   daily_physical_activity: "",
   fruits_vegetables: "",
   previous_high_glucose: "",
+  smoker: "",
   family_diabetes: "",
    little_interest: "",
    feeling_down: "",
@@ -166,6 +170,7 @@ export function MemberFormsStudiesPage() {
             ? String(bioData.waist_circumference)
             : "",
           triglycerides: metabolicData.triglycerides !== undefined ? String(metabolicData.triglycerides) : "",
+          total_cholesterol: metabolicData.total_cholesterol !== undefined ? String(metabolicData.total_cholesterol) : "",
           hdl_cholesterol: metabolicData.hdl_cholesterol !== undefined ? String(metabolicData.hdl_cholesterol) : "",
           systolic_blood_pressure: metabolicData.systolic_blood_pressure !== undefined ? String(metabolicData.systolic_blood_pressure) : "",
           diastolic_blood_pressure: metabolicData.diastolic_blood_pressure !== undefined ? String(metabolicData.diastolic_blood_pressure) : "",
@@ -200,6 +205,10 @@ export function MemberFormsStudiesPage() {
           previous_high_glucose:
             habitsData.previous_high_glucose !== undefined
               ? String(habitsData.previous_high_glucose)
+              : "",
+          smoker:
+            habitsData.smoker !== undefined
+              ? String(habitsData.smoker)
               : "",
           family_diabetes: (habitsData.family_diabetes as string) || "",
           little_interest: moodData.little_interest !== undefined ? String(moodData.little_interest) : "",
@@ -351,6 +360,8 @@ export function MemberFormsStudiesPage() {
     if (!data.previous_high_glucose)
       errors.previous_high_glucose =
         "Please select an option for previous high blood glucose."
+    if (!data.smoker)
+      errors.smoker = "Please select an option for smoking status."
     if (!data.family_diabetes)
       errors.family_diabetes = "Please select an option for family history of diabetes."
 
@@ -366,6 +377,7 @@ export function MemberFormsStudiesPage() {
       fruits_vegetables: data.fruits_vegetables === "true",
       hypertension_medication: data.hypertension_medication === "true",
       previous_high_glucose: data.previous_high_glucose === "true",
+      smoker: data.smoker === "true",
       family_diabetes: data.family_diabetes,
     })
     setIsSubmitting(false)
@@ -381,9 +393,20 @@ export function MemberFormsStudiesPage() {
   const handleSaveMood = async (e: React.FormEvent) => {
     e.preventDefault()
     const errors: Record<string, string> = {}
-    for (const question of PHQ9_QUESTIONS) {
-      if (data[question.field] === "") {
-        errors[question.field] = "Please select how often this affected you."
+    const phq9Fields: Array<keyof StudiesData> = [
+      "little_interest",
+      "feeling_down",
+      "sleep_trouble",
+      "tired_energy",
+      "appetite",
+      "feeling_bad",
+      "concentration",
+      "psychomotor",
+      "self_harm_thoughts",
+    ]
+    for (const field of phq9Fields) {
+      if (data[field] === "") {
+        errors[field] = "Please select an option."
       }
     }
 
@@ -394,9 +417,10 @@ export function MemberFormsStudiesPage() {
     }
 
     setIsSubmitting(true)
-    const answers = Object.fromEntries(
-      PHQ9_QUESTIONS.map(({ field }) => [field, Number(data[field])])
-    )
+    const answers = phq9Fields.reduce<Record<string, number>>((acc, field) => {
+      acc[field] = Number(data[field])
+      return acc
+    }, {})
     const res = await submitMemberForm("mood", answers)
     setIsSubmitting(false)
 
@@ -413,6 +437,7 @@ export function MemberFormsStudiesPage() {
     const errors: Record<string, string> = {}
     const numericFields: Array<keyof StudiesData> = [
       "triglycerides",
+      "total_cholesterol",
       "hdl_cholesterol",
       "systolic_blood_pressure",
       "diastolic_blood_pressure",
@@ -435,6 +460,7 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(true)
     const res = await submitMemberForm("metabolic", {
       triglycerides: Number(data.triglycerides),
+      total_cholesterol: Number(data.total_cholesterol),
       hdl_cholesterol: Number(data.hdl_cholesterol),
       systolic_blood_pressure: Number(data.systolic_blood_pressure),
       diastolic_blood_pressure: Number(data.diastolic_blood_pressure),
@@ -1128,7 +1154,52 @@ export function MemberFormsStudiesPage() {
                 )}
               </div>
 
-              {/* Question 5 */}
+              {/* Question 5: Smoking status */}
+              <div
+                id="field-group-smoker"
+                className={cn(
+                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  fieldErrors.smoker &&
+                    "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                )}
+              >
+                <Label className="text-sm font-medium">
+                  Do you currently smoke cigarettes or use tobacco products?
+                </Label>
+                <RadioGroup
+                  value={data.smoker}
+                  onValueChange={(val) => updateField("smoker", val)}
+                  disabled={isSubmitting || isLoadingData}
+                  className="flex gap-6 pt-1"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="true" id="smoker-yes" />
+                    <Label
+                      htmlFor="smoker-yes"
+                      className="cursor-pointer font-normal"
+                    >
+                      Yes
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="false" id="smoker-no" />
+                    <Label
+                      htmlFor="smoker-no"
+                      className="cursor-pointer font-normal"
+                    >
+                      No
+                    </Label>
+                  </div>
+                </RadioGroup>
+                {fieldErrors.smoker && (
+                  <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                    <AlertCircle className="size-3.5 shrink-0" />
+                    {fieldErrors.smoker}
+                  </p>
+                )}
+              </div>
+
+              {/* Question 6: Family History */}
               <div
                 id="field-group-family_diabetes"
                 className={cn(
@@ -1266,6 +1337,7 @@ export function MemberFormsStudiesPage() {
               <div className="grid gap-6 md:grid-cols-2">
                 {([
                   ["triglycerides", "Triglycerides (mg/dL)"],
+                  ["total_cholesterol", "Total cholesterol (mg/dL)"],
                   ["hdl_cholesterol", "HDL cholesterol (mg/dL)"],
                   ["systolic_blood_pressure", "Systolic blood pressure (mmHg)"],
                   ["diastolic_blood_pressure", "Diastolic blood pressure (mmHg)"],

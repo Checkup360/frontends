@@ -47,6 +47,7 @@ const FORM_FIELDS: Record<string, string[]> = {
     "fruits_vegetables",
     "hypertension_medication",
     "previous_high_glucose",
+    "smoker",
     "family_diabetes",
   ],
   mood: [
@@ -62,6 +63,7 @@ const FORM_FIELDS: Record<string, string[]> = {
   ],
   metabolic: [
     "triglycerides",
+    "total_cholesterol",
     "hdl_cholesterol",
     "systolic_blood_pressure",
     "diastolic_blood_pressure",
@@ -91,6 +93,7 @@ const FORM_LABELS: Record<string, string> = {
   weight: "Weight",
   waist_circumference: "Waist circumference",
   triglycerides: "Triglycerides",
+  total_cholesterol: "Total cholesterol",
   hdl_cholesterol: "HDL cholesterol",
   systolic_blood_pressure: "Systolic blood pressure",
   diastolic_blood_pressure: "Diastolic blood pressure",
@@ -104,6 +107,7 @@ const FORM_LABELS: Record<string, string> = {
   fruits_vegetables: "Fruit and vegetable intake",
   hypertension_medication: "Blood pressure medication",
   previous_high_glucose: "Previous high blood glucose",
+  smoker: "Current smoking status",
   family_diabetes: "Family history of diabetes",
   little_interest: "Interest or pleasure",
   feeling_down: "Feeling down or hopeless",

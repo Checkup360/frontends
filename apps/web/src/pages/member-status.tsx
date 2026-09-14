@@ -122,6 +122,9 @@ function formatUserScoreName(result: AssessmentResultResponse) {
     return "Metabolic Health"
   }
   if (text.includes("eoss")) return "Obesity-related Health Impact"
+  if (text.includes("score2") || text.includes("cardiovascular")) {
+    return "Cardiovascular Risk"
+  }
   return getAssessmentDisplayName(result.score_id, result.score_name)
 }
 
