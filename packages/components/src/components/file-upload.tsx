@@ -348,6 +348,8 @@ export function FileUpload({ onCropComplete, className }: FileUploadProps) {
 export interface AvatarUploadProps {
   currentAvatarUrl?: string | null
   initials?: string
+  title?: string
+  description?: string
   onSave: (file: Blob | null) => Promise<void> | void
   isUpdating?: boolean
   className?: string
@@ -356,6 +358,8 @@ export interface AvatarUploadProps {
 export function AvatarUpload({
   currentAvatarUrl,
   initials = "U",
+  title = "Profile Photo",
+  description = "JPG, PNG or WEBP. Max size 5MB. Pan, zoom and crop before saving.",
   onSave,
   isUpdating = false,
   className,
@@ -391,10 +395,8 @@ export function AvatarUpload({
         </Avatar>
 
         <div className="flex flex-1 flex-col items-center sm:items-start gap-1 text-center sm:text-left">
-          <p className="text-sm font-medium text-foreground">Profile Photo</p>
-          <p className="text-xs text-muted-foreground">
-            JPG, PNG or WEBP. Max size 5MB. Pan, zoom and crop before saving.
-          </p>
+          <p className="text-sm font-medium text-foreground">{title}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
           <div className="mt-2 flex items-center gap-2">
             <Button
               type="button"

@@ -68,10 +68,15 @@ export function MemberShell() {
     }
   }
 
+  const organizationName = user?.membership?.organization_name
+  const organizationLogoUrl = user?.membership?.organization_logo_url
+
   return (
     <>
       <WorkspaceShell
-        appLabel="Member dashboard"
+        appName={organizationName ?? "CheckUp360"}
+        appLogoUrl={organizationLogoUrl}
+        appLabel={organizationName ? "CheckUp360" : "Member dashboard"}
         title={getTitleForPath()}
         navigation={navigation}
         secondaryNavigation={secondaryNavigation}

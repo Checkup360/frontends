@@ -15,6 +15,7 @@ import { HeartPulse } from "lucide-react"
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   appLabel: string
   appName?: string
+  appLogoUrl?: string | null
   navMain?: ReactNode
   navDocuments?: ReactNode
   navSecondary?: ReactNode
@@ -24,6 +25,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({
   appLabel,
   appName = "CheckUp360",
+  appLogoUrl,
   navMain,
   navDocuments,
   navSecondary,
@@ -39,8 +41,16 @@ export function AppSidebar({
               size="lg"
               className="cursor-default hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent"
             >
-              <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs shrink-0">
-                <HeartPulse className="size-4" />
+              <div className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs shrink-0 overflow-hidden">
+                {appLogoUrl ? (
+                  <img
+                    src={appLogoUrl}
+                    alt={appName}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <HeartPulse className="size-4" />
+                )}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{appName}</span>

@@ -94,10 +94,12 @@ export function DashboardShell() {
   }
 
   const organizationName = user?.membership?.organization_name
+  const organizationLogoUrl = user?.membership?.organization_logo_url
 
   return (
     <WorkspaceShell
       appName={organizationName ?? "CheckUp360"}
+      appLogoUrl={organizationLogoUrl}
       appLabel={organizationName ? "CheckUp360" : "Company dashboard"}
       title={getTitleForPath()}
       navigation={navigation}

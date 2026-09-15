@@ -29,6 +29,7 @@ export type WorkspaceShellPageMeta = {
 type WorkspaceShellProps = {
   appLabel: string
   appName?: string
+  appLogoUrl?: string | null
   title: string
   navigation: WorkspaceShellNavItem[]
   secondaryNavigation?: WorkspaceShellNavItem[]
@@ -43,6 +44,7 @@ type WorkspaceShellProps = {
 export function WorkspaceShell({
   appLabel,
   appName = "CheckUp360",
+  appLogoUrl,
   title,
   navigation,
   secondaryNavigation,
@@ -58,6 +60,7 @@ export function WorkspaceShell({
       <AppSidebar
         appLabel={appLabel}
         appName={appName}
+        appLogoUrl={appLogoUrl}
         navMain={<NavMain items={navigation} linkComponent={linkComponent} />}
         navDocuments={
           documents && (
