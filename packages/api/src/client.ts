@@ -715,6 +715,7 @@ export interface OrganizationResponse {
   name: string
   slug: string
   collaborators_count: number
+  logo_url?: string | null
 }
 
 export interface OrganizationSummaryResponse {
@@ -725,6 +726,7 @@ export interface OrganizationSummaryResponse {
   total_employees: number
   total_admins: number
   total_content_managers: number
+  logo_url?: string | null
 }
 
 export interface DepartmentResponse {
@@ -965,10 +967,228 @@ export async function getOrganizationSummary(
       return null
     }
 
-    return (await response.json()) as OrganizationSummaryResponse
+    const data = (await response.json()) as OrganizationSummaryResponse
+    if (data.logo_url) {
+      data.logo_url = resolveMediaUrl(data.logo_url) || data.logo_url
+    }
+    return data
   } catch (error) {
     console.error("Error loading organization summary:", error)
     return null
+  }
+}
+
+export interface OrganizationError {
+  code: string
+  message: string
+}
+
+export async function getOrganization(
+  organizationId: string
+): Promise<OrganizationResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organization(organizationId)}`,
+      { credentials: "include" }
+    )
+    if (!response.ok) return null
+    const data = (await response.json()) as OrganizationResponse
+    if (data.logo_url) {
+      data.logo_url = resolveMediaUrl(data.logo_url) || data.logo_url
+    }
+    return data
+  } catch (error) {
+    console.error("Error loading organization:", error)
+    return null
+  }
+}
+
+export async function updateOrganization(
+  organizationId: string,
+  payload: { name: string }
+): Promise<
+  | { success: OrganizationResponse; error?: never }
+  | { success?: never; error: OrganizationError }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organization(organizationId)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }
+    )
+    if (response.status === 401) {
+      return {
+        error: {
+          code: "unauthorized",
+          message: "Session expired. Please log in again.",
+        },
+      }
+    }
+    if (response.status === 403) {
+      return {
+        error: {
+          code: "forbidden",
+          message: "You don't have permission to edit this organization.",
+        },
+      }
+    }
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as {
+        detail?: string
+      } | null
+      return {
+        error: {
+          code: "update_error",
+          message: data?.detail || "Failed to update organization.",
+        },
+      }
+    }
+    const data = (await response.json()) as OrganizationResponse
+    if (data.logo_url) {
+      data.logo_url = resolveMediaUrl(data.logo_url) || data.logo_url
+    }
+    return { success: data }
+  } catch (error) {
+    console.error("Error updating organization:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: "Network error. Please try again.",
+      },
+    }
+  }
+}
+
+export async function uploadOrganizationLogo(
+  organizationId: string,
+  file: Blob | File
+): Promise<
+  | { success: { logo_url: string }; error?: never }
+  | { success?: never; error: OrganizationError }
+> {
+  try {
+    const formData = new FormData()
+    formData.append(
+      "file",
+      file,
+      file instanceof File ? file.name : "logo.png"
+    )
+
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationLogo(organizationId)}`,
+      {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      }
+    )
+
+    if (response.status === 401) {
+      return {
+        error: {
+          code: "unauthorized",
+          message: "Session expired. Please log in again.",
+        },
+      }
+    }
+    if (response.status === 403) {
+      return {
+        error: {
+          code: "forbidden",
+          message: "You don't have permission to edit this organization.",
+        },
+      }
+    }
+    if (response.status === 422) {
+      const data = (await response.json().catch(() => null)) as {
+        detail?: string
+      } | null
+      return {
+        error: {
+          code: "invalid_file",
+          message:
+            data?.detail ||
+            "Invalid image file. Please use JPG, PNG or WEBP up to 5MB.",
+        },
+      }
+    }
+    if (!response.ok) {
+      return {
+        error: {
+          code: "unknown_error",
+          message: "Failed to upload logo. Please try again.",
+        },
+      }
+    }
+
+    const data = (await response.json()) as { logo_url: string }
+    return {
+      success: {
+        logo_url: resolveMediaUrl(data.logo_url) || data.logo_url,
+      },
+    }
+  } catch (error) {
+    console.error("Error uploading organization logo:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: "Network error. Please try again.",
+      },
+    }
+  }
+}
+
+export async function deleteOrganizationLogo(
+  organizationId: string
+): Promise<
+  | { success: true; error?: never }
+  | { success?: never; error: OrganizationError }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationLogo(organizationId)}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    )
+    if (response.status === 401) {
+      return {
+        error: {
+          code: "unauthorized",
+          message: "Session expired. Please log in again.",
+        },
+      }
+    }
+    if (response.status === 403) {
+      return {
+        error: {
+          code: "forbidden",
+          message: "You don't have permission to edit this organization.",
+        },
+      }
+    }
+    if (!response.ok && response.status !== 204) {
+      return {
+        error: {
+          code: "unknown_error",
+          message: "Failed to remove logo. Please try again.",
+        },
+      }
+    }
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting organization logo:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: "Network error. Please try again.",
+      },
+    }
   }
 }
 

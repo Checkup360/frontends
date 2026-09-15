@@ -3,6 +3,7 @@ import { resolveMediaUrl } from "./config"
 export type OrganizationMembership = {
   organization_id: string
   organization_name: string
+  organization_logo_url?: string | null
   roles: string[]
 }
 
@@ -109,11 +110,15 @@ export function parseAuthMeResponse(payload: unknown): AuthMeResponse | null {
   let membership: OrganizationMembership | null = null
 
   if (maybeMembership !== null && typeof maybeMembership === "object") {
+    const rawLogo = (maybeMembership as { organization_logo_url?: unknown })
+      .organization_logo_url
     membership = {
       organization_id: (maybeMembership as { organization_id?: unknown })
         .organization_id as string,
       organization_name: (maybeMembership as { organization_name?: unknown })
         .organization_name as string,
+      organization_logo_url:
+        typeof rawLogo === "string" ? resolveMediaUrl(rawLogo) : null,
       roles: (maybeMembership as { roles?: unknown }).roles as string[],
     }
   }

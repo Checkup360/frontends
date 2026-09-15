@@ -21,6 +21,10 @@ export const apiRoutes = {
       `/invites/${encodeURIComponent(token)}/google-session`,
   },
   organizations: "/organizations",
+  organization: (organizationId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}`,
+  organizationLogo: (organizationId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/logo`,
   organizationSummary: (organizationId: string) =>
     `/organizations/${encodeURIComponent(organizationId)}/summary`,
   organizationDepartments: (organizationId: string) =>
