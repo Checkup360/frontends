@@ -119,11 +119,12 @@ export function ScoreWeightsPage() {
       try {
         const res = await getOrganizationScoreWeights(organizationId)
         if (active && res && res.score_weights) {
+          const hasKeys = Object.keys(res.score_weights).length > 0
           setWeights(
             Object.fromEntries(
               SCORE_TOPICS.map((topic) => [
                 topic.id,
-                res.score_weights[topic.id] ?? 0,
+                res.score_weights[topic.id] ?? (hasKeys ? 0 : Math.floor(100 / SCORE_TOPICS.length)),
               ])
             )
           )
@@ -147,13 +148,15 @@ export function ScoreWeightsPage() {
     )
   }, [weights])
 
-  const isValid = totalWeight === 100
-  const remaining = Math.max(0, 100 - totalWeight)
+  const isValid = totalWeight > 0
 
   const handleSliderChange = (id: string, val: number[]) => {
     const rawVal = val[0] ?? 0
-    const current = weights[id] || 0
-    const maxAllowed = Math.min(100, current + remaining)
+    const otherSum = SCORE_TOPICS.reduce(
+      (sum, topic) => (topic.id === id ? sum : sum + (weights[topic.id] || 0)),
+      0
+    )
+    const maxAllowed = Math.max(0, 100 - otherSum)
     const clampedVal = Math.max(0, Math.min(maxAllowed, rawVal))
 
     setWeights((prev) => ({
@@ -252,7 +255,7 @@ export function ScoreWeightsPage() {
                     : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-xs"
                 }
               >
-                {isValid ? "100% Allocated" : `${remaining}% unallocated`}
+                {isValid ? `${totalWeight}% Allocated` : "At least 1 score required"}
               </Badge>
             </div>
           </div>

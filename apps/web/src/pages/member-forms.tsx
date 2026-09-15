@@ -14,31 +14,97 @@ import {
   Moon,
   Sparkles,
 } from "lucide-react"
-import { fetchMemberForm } from "@workspace/api"
+import { fetchActiveMemberForms, fetchMemberForm } from "@workspace/api"
+
+interface FormCardDef {
+  type: string
+  title: string
+  description: string
+  icon: typeof Activity
+  editLabel: string
+  completeLabel: string
+}
+
+const ALL_FORMS: FormCardDef[] = [
+  {
+    type: "biometrics",
+    title: "Physical Biometrics",
+    description: "Neck and waist body measurements.",
+    icon: Activity,
+    editLabel: "Edit Biometrics",
+    completeLabel: "Complete Biometrics",
+  },
+  {
+    type: "eoss",
+    title: "Obesity-related Health Impact",
+    description: "A reflective assessment of health, mood, and daily function.",
+    icon: HeartPulse,
+    editLabel: "Edit Health Impact",
+    completeLabel: "Complete Health Impact",
+  },
+  {
+    type: "mood",
+    title: "Mood & Well-being",
+    description: "Recent mood and emotional well-being indicators.",
+    icon: HeartPulse,
+    editLabel: "Edit Mood Assessment",
+    completeLabel: "Complete Mood Assessment",
+  },
+  {
+    type: "sleep",
+    title: "Sleep Quality",
+    description: "Snoring, daytime fatigue, and rest indicators.",
+    icon: Moon,
+    editLabel: "Edit Sleep Data",
+    completeLabel: "Complete Sleep Data",
+  },
+  {
+    type: "habits",
+    title: "Lifestyle & Habits",
+    description: "Physical activity, dietary habits, and history.",
+    icon: HeartPulse,
+    editLabel: "Edit Habits",
+    completeLabel: "Complete Habits",
+  },
+  {
+    type: "metabolic",
+    title: "Metabolic Health",
+    description: "Blood pressure, lipids, glucose, and treatment information.",
+    icon: Activity,
+    editLabel: "Edit Metabolic Data",
+    completeLabel: "Complete Metabolic Data",
+  },
+]
 
 export function MemberFormsPage() {
   const [isLoading, setIsLoading] = useState(true)
-  const [biometricsFilled, setBiometricsFilled] = useState(false)
-  const [sleepFilled, setSleepFilled] = useState(false)
-  const [habitsFilled, setHabitsFilled] = useState(false)
-  const [moodFilled, setMoodFilled] = useState(false)
-  const [metabolicFilled, setMetabolicFilled] = useState(false)
-  const [eossFilled, setEossFilled] = useState(false)
+  const [activeFormTypes, setActiveFormTypes] = useState<Set<string>>(
+    () => new Set(ALL_FORMS.map((f) => f.type))
+  )
+  const [formStatuses, setFormStatuses] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     let cancelled = false
     async function loadFormStatuses() {
       setIsLoading(true)
-      const [bio, sleep, habits, mood, metabolic, eoss] = await Promise.all([
-        fetchMemberForm("biometrics"),
-        fetchMemberForm("sleep"),
-        fetchMemberForm("habits"),
-        fetchMemberForm("mood"),
-        fetchMemberForm("metabolic"),
-        fetchMemberForm("eoss"),
-      ])
+      const [activeRes, bio, sleep, habits, mood, metabolic, eoss] =
+        await Promise.all([
+          fetchActiveMemberForms(),
+          fetchMemberForm("biometrics"),
+          fetchMemberForm("sleep"),
+          fetchMemberForm("habits"),
+          fetchMemberForm("mood"),
+          fetchMemberForm("metabolic"),
+          fetchMemberForm("eoss"),
+        ])
 
       if (!cancelled) {
+        if (activeRes?.active_forms) {
+          setActiveFormTypes(
+            new Set(activeRes.active_forms.map((f) => f.form_type))
+          )
+        }
+
         const hasBio = Boolean(
           bio?.data &&
             (bio.data.waist_circumference !== undefined ||
@@ -66,12 +132,14 @@ export function MemberFormsPage() {
         )
         const hasEoss = Boolean(eoss?.data && Object.keys(eoss.data).length > 0)
 
-        setBiometricsFilled(hasBio)
-        setSleepFilled(hasSleep)
-        setHabitsFilled(hasHabits)
-        setMoodFilled(hasMood)
-        setMetabolicFilled(hasMetabolic)
-        setEossFilled(hasEoss)
+        setFormStatuses({
+          biometrics: hasBio,
+          sleep: hasSleep,
+          habits: hasHabits,
+          mood: hasMood,
+          metabolic: hasMetabolic,
+          eoss: hasEoss,
+        })
         setIsLoading(false)
       }
     }
@@ -81,15 +149,12 @@ export function MemberFormsPage() {
     }
   }, [])
 
-  const completedCount =
-    (biometricsFilled ? 1 : 0) +
-    (sleepFilled ? 1 : 0) +
-    (habitsFilled ? 1 : 0) +
-    (moodFilled ? 1 : 0) +
-    (metabolicFilled ? 1 : 0)
-    + (eossFilled ? 1 : 0)
-  const progressPercent = Math.round((completedCount / 6) * 100)
-  const allCompleted = completedCount === 6
+  const visibleForms = ALL_FORMS.filter((f) => activeFormTypes.has(f.type))
+  const totalCount = visibleForms.length
+  const completedCount = visibleForms.filter((f) => formStatuses[f.type]).length
+  const progressPercent =
+    totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 100
+  const allCompleted = totalCount > 0 && completedCount === totalCount
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pb-12">
@@ -116,7 +181,7 @@ export function MemberFormsPage() {
                   Overall Completion Status
                 </CardTitle>
                 <CardDescription>
-                  Completion progress for your health data forms.
+                  Completion progress for your active health data forms.
                 </CardDescription>
               </div>
             </div>
@@ -125,12 +190,17 @@ export function MemberFormsPage() {
                 Checking...
               </Badge>
             ) : allCompleted ? (
-              <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700">
-                <CheckCircle2 className="mr-1 size-3.5" /> 6 of 6 Completed
+              <Badge
+                variant="default"
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                <CheckCircle2 className="mr-1 size-3.5" /> {completedCount} of{" "}
+                {totalCount} Completed
               </Badge>
             ) : (
               <Badge variant="secondary">
-                <Clock className="mr-1 size-3.5" /> {completedCount} of 6 Completed
+                <Clock className="mr-1 size-3.5" /> {completedCount} of{" "}
+                {totalCount} Completed
               </Badge>
             )}
           </div>
@@ -139,7 +209,9 @@ export function MemberFormsPage() {
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-medium text-muted-foreground">
               <span>Form Completion</span>
-              <span>{progressPercent}% ({completedCount} of 6 sections filled)</span>
+              <span>
+                {progressPercent}% ({completedCount} of {totalCount} active sections filled)
+              </span>
             </div>
             <Progress value={progressPercent} className="h-2.5" />
           </div>
@@ -156,185 +228,56 @@ export function MemberFormsPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {/* Card 1: Biometrics */}
-          <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
-                  <Activity className="size-5" />
-                </div>
-                {biometricsFilled ? (
-                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 className="mr-1 size-3" /> Completed
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">Pending</Badge>
-                )}
-              </div>
-              <div>
-                <h4 className="text-base font-semibold text-foreground">
-                  Physical Biometrics
-                </h4>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Neck and waist body measurements.
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 pt-2">
-              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
-                <Link to="/forms/studies?form=biometrics">
-                  {biometricsFilled ? "Edit Biometrics" : "Complete Biometrics"}
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-            </div>
-          </Card>
+          {visibleForms.map((form) => {
+            const isFilled = Boolean(formStatuses[form.type])
+            const Icon = form.icon
 
-          <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
-                  <HeartPulse className="size-5" />
+            return (
+              <Card
+                key={form.type}
+                className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
+                      <Icon className="size-5" />
+                    </div>
+                    {isFilled ? (
+                      <Badge
+                        variant="outline"
+                        className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                      >
+                        <CheckCircle2 className="mr-1 size-3" /> Completed
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary">Pending</Badge>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-foreground">
+                      {form.title}
+                    </h4>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {form.description}
+                    </p>
+                  </div>
                 </div>
-                {eossFilled ? <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="mr-1 size-3" /> Completed</Badge> : <Badge variant="secondary">Pending</Badge>}
-              </div>
-              <div>
-                <h4 className="text-base font-semibold text-foreground">Obesity-related Health Impact</h4>
-                <p className="mt-1 text-xs text-muted-foreground">A reflective assessment of health, mood, and daily function.</p>
-              </div>
-            </div>
-            <div className="mt-6 pt-2">
-              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
-                <Link to="/forms/studies?form=eoss">{eossFilled ? "Edit Health Impact" : "Complete Health Impact"}<ArrowRight className="size-4" /></Link>
-              </Button>
-            </div>
-          </Card>
-
-          <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
-                  <HeartPulse className="size-5" />
+                <div className="mt-6 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="w-full justify-between gap-1"
+                  >
+                    <Link to={`/forms/studies?form=${form.type}`}>
+                      {isFilled ? form.editLabel : form.completeLabel}
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
                 </div>
-                {moodFilled ? (
-                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 className="mr-1 size-3" /> Completed
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">Pending</Badge>
-                )}
-              </div>
-              <div>
-                <h4 className="text-base font-semibold text-foreground">Mood & Well-being</h4>
-                <p className="mt-1 text-xs text-muted-foreground">Recent mood and emotional well-being indicators.</p>
-              </div>
-            </div>
-            <div className="mt-6 pt-2">
-              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
-                <Link to="/forms/studies?form=mood">
-                  {moodFilled ? "Edit Mood Assessment" : "Complete Mood Assessment"}
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-            </div>
-          </Card>
-
-          {/* Card 2: Sleep */}
-          <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
-                  <Moon className="size-5" />
-                </div>
-                {sleepFilled ? (
-                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 className="mr-1 size-3" /> Completed
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">Pending</Badge>
-                )}
-              </div>
-              <div>
-                <h4 className="text-base font-semibold text-foreground">
-                  Sleep Quality
-                </h4>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Snoring, daytime fatigue, and rest indicators.
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 pt-2">
-              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
-                <Link to="/forms/studies?form=sleep">
-                  {sleepFilled ? "Edit Sleep Data" : "Complete Sleep Data"}
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-            </div>
-          </Card>
-
-          {/* Card 3: Habits */}
-          <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
-                  <HeartPulse className="size-5" />
-                </div>
-                {habitsFilled ? (
-                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 className="mr-1 size-3" /> Completed
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">Pending</Badge>
-                )}
-              </div>
-              <div>
-                <h4 className="text-base font-semibold text-foreground">
-                  Lifestyle & Habits
-                </h4>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Physical activity, dietary habits, and history.
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 pt-2">
-              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
-                <Link to="/forms/studies?form=habits">
-                  {habitsFilled ? "Edit Habits" : "Complete Habits"}
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-            </div>
-          </Card>
-
-          <Card className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
-                  <Activity className="size-5" />
-                </div>
-                {metabolicFilled ? (
-                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 className="mr-1 size-3" /> Completed
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">Pending</Badge>
-                )}
-              </div>
-              <div>
-                <h4 className="text-base font-semibold text-foreground">Metabolic Health</h4>
-                <p className="mt-1 text-xs text-muted-foreground">Blood pressure, lipids, glucose, and treatment information.</p>
-              </div>
-            </div>
-            <div className="mt-6 pt-2">
-              <Button variant="outline" size="sm" asChild className="w-full justify-between gap-1">
-                <Link to="/forms/studies?form=metabolic">
-                  {metabolicFilled ? "Edit Metabolic Data" : "Complete Metabolic Data"}
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-            </div>
-          </Card>
+              </Card>
+            )
+          })}
         </div>
       </section>
     </div>
