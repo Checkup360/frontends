@@ -3,6 +3,7 @@ import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { useState } from "react"
+import { PasswordRequirements } from "./password-requirements"
 
 type EmailFieldProps = {
   email: string
@@ -47,6 +48,7 @@ type PasswordFieldProps = {
   disabled?: boolean
   id?: string
   autocomplete?: string
+  showRequirements?: boolean
 }
 
 export function PasswordField({
@@ -56,6 +58,7 @@ export function PasswordField({
   disabled,
   id = "auth-password",
   autocomplete = "current-password",
+  showRequirements = false,
 }: PasswordFieldProps) {
   const [passwordVisible, setPasswordVisible] = useState(false)
 
@@ -90,6 +93,7 @@ export function PasswordField({
           {passwordVisible ? <EyeOffIcon /> : <EyeIcon />}
         </Button>
       </div>
+      {showRequirements && <PasswordRequirements password={password} />}
     </div>
   )
 }
@@ -104,6 +108,7 @@ type EmailPasswordFieldsProps = {
   passwordId?: string
   emailAutocomplete?: string
   passwordAutocomplete?: string
+  showPasswordRequirements?: boolean
 }
 
 export function EmailPasswordFields({
@@ -116,6 +121,7 @@ export function EmailPasswordFields({
   passwordId = "auth-password",
   emailAutocomplete = "email",
   passwordAutocomplete,
+  showPasswordRequirements = false,
 }: EmailPasswordFieldsProps) {
   return (
     <div className="space-y-4">
@@ -132,6 +138,7 @@ export function EmailPasswordFields({
         disabled={disabled}
         id={passwordId}
         autocomplete={passwordAutocomplete}
+        showRequirements={showPasswordRequirements}
       />
     </div>
   )

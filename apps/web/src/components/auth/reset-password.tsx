@@ -6,9 +6,6 @@ import { Link, useSearchParams } from "react-router-dom"
 import { AuthShell } from "./auth-shell"
 import { PasswordField } from "./email-password-fields"
 
-const PASSWORD_HELP =
-  "Use at least 8 characters with uppercase, lowercase, and a number."
-
 function getResetError(error: unknown): string {
   if (!(error instanceof AuthRequestError)) {
     return "Error connecting to the server."
@@ -106,8 +103,8 @@ export default function ResetPassword() {
             id="new-password"
             autocomplete="new-password"
             disabled={loading}
+            showRequirements
           />
-          <p className="text-xs text-muted-foreground">{PASSWORD_HELP}</p>
           <PasswordField
             password={confirmation}
             onPasswordChange={setConfirmation}

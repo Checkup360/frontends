@@ -39,6 +39,7 @@ export default function Invite() {
   const [password, setPassword] = useState("")
   const [formError, setFormError] = useState("")
   const [formLoading, setFormLoading] = useState(false)
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
 
   useEffect(() => {
     if (!token) return
@@ -123,6 +124,15 @@ export default function Invite() {
 
       if (!response.ok) {
         const detail = await readFastApiErrorDetail(response)
+        if (
+          detail &&
+          typeof detail === "object" &&
+          "code" in detail &&
+          (detail as { code?: string }).code === "REGISTER_INVALID_PASSWORD"
+        ) {
+          setShowPasswordRequirements(true)
+          return
+        }
         setFormError(formatAuthFormError(detail))
         return
       }
@@ -264,6 +274,7 @@ export default function Invite() {
           emailId="invite-email"
           passwordId="invite-password"
           passwordAutocomplete="new-password"
+          showPasswordRequirements={showPasswordRequirements}
         />
 
         <Button
