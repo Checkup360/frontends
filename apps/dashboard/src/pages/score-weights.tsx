@@ -8,13 +8,16 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card"
 import { Slider } from "@workspace/ui/components/slider"
+import { Switch } from "@workspace/ui/components/switch"
 import { toast } from "@workspace/ui/components/sonner"
+import { cn } from "@workspace/ui/lib/utils"
 import {
   Activity,
   HeartPulse,
   Moon,
   RotateCcw,
   Save,
+  Sparkles,
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
@@ -85,15 +88,28 @@ const SCORE_TOPICS: ScoreTopic[] = [
   },
 ]
 
-function computeBalancedWeights(topics: ScoreTopic[]): Record<string, number> {
-  const count = topics.length
+function computeBalancedWeights(
+  topics: ScoreTopic[],
+  currentWeights?: Record<string, number>
+): Record<string, number> {
+  const activeTopics = currentWeights
+    ? topics.filter((t) => (currentWeights[t.id] ?? 0) > 0)
+    : topics
+  const targets = activeTopics.length > 0 ? activeTopics : topics
+  const count = targets.length
   if (count === 0) return {}
+
   const base = Math.floor(100 / count)
   const remainder = 100 % count
 
   const weights: Record<string, number> = {}
-  topics.forEach((topic, index) => {
-    weights[topic.id] = base + (index < remainder ? 1 : 0)
+  topics.forEach((topic) => {
+    const targetIdx = targets.findIndex((t) => t.id === topic.id)
+    if (targetIdx !== -1) {
+      weights[topic.id] = base + (targetIdx < remainder ? 1 : 0)
+    } else {
+      weights[topic.id] = 0
+    }
   })
   return weights
 }
@@ -106,6 +122,7 @@ export function ScoreWeightsPage() {
     computeBalancedWeights(SCORE_TOPICS)
   )
 
+  const [filterMode, setFilterMode] = useState<"all" | "active" | "disabled">("all")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -148,6 +165,12 @@ export function ScoreWeightsPage() {
     )
   }, [weights])
 
+  const activeCount = useMemo(() => {
+    return SCORE_TOPICS.filter((topic) => (weights[topic.id] || 0) > 0).length
+  }, [weights])
+
+  const disabledCount = SCORE_TOPICS.length - activeCount
+
   const isValid = totalWeight > 0
 
   const handleSliderChange = (id: string, val: number[]) => {
@@ -165,10 +188,36 @@ export function ScoreWeightsPage() {
     }))
   }
 
+  const handleToggleModule = (id: string, enabled: boolean) => {
+    if (enabled) {
+      const otherSum = SCORE_TOPICS.reduce(
+        (sum, topic) => (topic.id === id ? sum : sum + (weights[topic.id] || 0)),
+        0
+      )
+      const available = Math.max(0, 100 - otherSum)
+      const defaultWeight = available > 0 ? Math.min(available, 10) : 0
+      setWeights((prev) => ({
+        ...prev,
+        [id]: defaultWeight,
+      }))
+    } else {
+      setWeights((prev) => ({
+        ...prev,
+        [id]: 0,
+      }))
+    }
+  }
+
   const handleApplyBalanced = () => {
-    const balanced = computeBalancedWeights(SCORE_TOPICS)
+    const balanced = computeBalancedWeights(SCORE_TOPICS, weights)
     setWeights(balanced)
-    toast.info("Balanced weights applied across all score categories")
+    toast.info("Balanced weights applied across active score categories")
+  }
+
+  const handleEnableAll = () => {
+    const balancedAll = computeBalancedWeights(SCORE_TOPICS)
+    setWeights(balancedAll)
+    toast.info("All health modules enabled and balanced")
   }
 
   const handleSave = async () => {
@@ -192,6 +241,15 @@ export function ScoreWeightsPage() {
     }
   }
 
+  const filteredTopics = useMemo(() => {
+    return SCORE_TOPICS.filter((topic) => {
+      const weight = weights[topic.id] ?? 0
+      if (filterMode === "active") return weight > 0
+      if (filterMode === "disabled") return weight <= 0
+      return true
+    })
+  }, [filterMode, weights])
+
   return (
     <div className="mx-auto w-full max-w-4xl space-y-5">
       {/* Header */}
@@ -201,29 +259,17 @@ export function ScoreWeightsPage() {
             Score weights
           </h2>
           <p className="text-sm text-muted-foreground">
-            Adjust the weight percentage each health evaluation contributes to
-            the overall score.
+            Adjust module enablement and weight percentages for employee evaluations.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleApplyBalanced}
-            disabled={loading || saving}
-            className="gap-1.5"
-          >
-            <RotateCcw className="size-3.5" />
-            Reset to balanced
-          </Button>
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             type="button"
             size="sm"
             onClick={handleSave}
             disabled={!isValid || loading || saving}
-            className="gap-1.5"
+            className="gap-1.5 whitespace-nowrap"
           >
             <Save className="size-3.5" />
             {saving ? "Saving..." : "Save changes"}
@@ -240,7 +286,7 @@ export function ScoreWeightsPage() {
                 Total allocated
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground">
-                Combined weight distribution across modules (must equal 100%)
+                Combined weight distribution across active modules (must equal 100%)
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -255,7 +301,7 @@ export function ScoreWeightsPage() {
                     : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-xs"
                 }
               >
-                {isValid ? `${totalWeight}% Allocated` : "At least 1 score required"}
+                {isValid ? `${totalWeight}% Allocated` : "At least 1 active score required"}
               </Badge>
             </div>
           </div>
@@ -281,67 +327,202 @@ export function ScoreWeightsPage() {
 
           {/* Compact Legend */}
           <div className="flex flex-wrap items-center gap-4 text-xs">
-            {SCORE_TOPICS.map((topic) => (
-              <div key={topic.id} className="flex items-center gap-1.5">
-                <span
-                  className={`size-2 rounded-full ${topic.color}`}
-                  aria-hidden="true"
-                />
-                <span className="text-muted-foreground">{topic.name}:</span>
-                <span className="font-semibold tabular-nums text-foreground">
-                  {weights[topic.id] || 0}%
-                </span>
-              </div>
-            ))}
+            {SCORE_TOPICS.map((topic) => {
+              const weight = weights[topic.id] || 0
+              return (
+                <div key={topic.id} className="flex items-center gap-1.5">
+                  <span
+                    className={cn(
+                      "size-2 rounded-full",
+                      weight > 0 ? topic.color : "bg-muted-foreground/30"
+                    )}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className={cn(
+                      weight > 0 ? "text-muted-foreground" : "text-muted-foreground/50 line-through"
+                    )}
+                  >
+                    {topic.name}:
+                  </span>
+                  <span
+                    className={cn(
+                      "font-semibold tabular-nums",
+                      weight > 0 ? "text-foreground" : "text-muted-foreground/50"
+                    )}
+                  >
+                    {weight}%
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </CardContent>
       </Card>
 
-      {/* Topic Cards (Compact) */}
+      {/* Toolbar & Filter Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        {/* Left: Action buttons (Reset first, then Enable all) */}
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleApplyBalanced}
+            disabled={loading || saving}
+            className="gap-1.5 whitespace-nowrap"
+          >
+            <RotateCcw className="size-3.5" />
+            Reset to balanced
+          </Button>
+          {disabledCount > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleEnableAll}
+              disabled={loading || saving}
+              className="gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 font-medium whitespace-nowrap"
+            >
+              <Sparkles className="size-3.5 text-emerald-500" />
+              Enable all
+            </Button>
+          )}
+        </div>
+
+        {/* Right: Filter tabs */}
+        <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-1 text-xs">
+          <button
+            type="button"
+            onClick={() => setFilterMode("all")}
+            className={cn(
+              "rounded-md px-3 py-1 font-medium transition-colors cursor-pointer",
+              filterMode === "all"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            All ({SCORE_TOPICS.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterMode("active")}
+            className={cn(
+              "rounded-md px-3 py-1 font-medium transition-colors cursor-pointer",
+              filterMode === "active"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Active ({activeCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterMode("disabled")}
+            className={cn(
+              "rounded-md px-3 py-1 font-medium transition-colors cursor-pointer",
+              filterMode === "disabled"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Disabled ({disabledCount})
+          </button>
+        </div>
+      </div>
+
+      {/* Topic Cards Grid */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {SCORE_TOPICS.map((topic) => {
+        {filteredTopics.map((topic) => {
           const value = weights[topic.id] ?? 0
+          const isEnabled = value > 0
           const Icon = topic.icon
 
           return (
             <Card
               key={topic.id}
-              className="border-border/60 shadow-xs transition-colors hover:border-border"
+              className={cn(
+                "border-border/60 shadow-xs transition-all",
+                isEnabled ? "hover:border-border bg-card" : "bg-muted/15 border-dashed border-border/40 opacity-90"
+              )}
             >
               <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+                    <div
+                      className={cn(
+                        "flex size-7 items-center justify-center rounded-md transition-colors",
+                        isEnabled
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
                       <Icon className="size-3.5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-foreground">
-                        {topic.name}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3
+                          className={cn(
+                            "text-sm font-semibold",
+                            isEnabled ? "text-foreground" : "text-muted-foreground"
+                          )}
+                        >
+                          {topic.name}
+                        </h3>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] px-1.5 py-0 font-medium",
+                            isEnabled
+                              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              : "border-muted-foreground/30 bg-muted/30 text-muted-foreground"
+                          )}
+                        >
+                          {isEnabled ? "Active" : "Disabled"}
+                        </Badge>
+                      </div>
                       <p className="text-[11px] text-muted-foreground">
                         {topic.subtitle}
                       </p>
                     </div>
                   </div>
-                  <span className="text-base font-bold tabular-nums text-foreground">
-                    {value}%
-                  </span>
-                </div>
 
-                <div className="space-y-1">
-                  <Slider
-                    value={[value]}
-                    min={0}
-                    max={100}
-                    step={1}
-                    onValueChange={(val) => handleSliderChange(topic.id, val)}
-                    className="py-1"
-                  />
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>0%</span>
-                    <span>100%</span>
+                  <div className="flex items-center gap-3">
+                    {isEnabled && (
+                      <span className="text-base font-bold tabular-nums text-foreground">
+                        {value}%
+                      </span>
+                    )}
+                    <Switch
+                      checked={isEnabled}
+                      onCheckedChange={(checked) =>
+                        handleToggleModule(topic.id, checked)
+                      }
+                      title={isEnabled ? "Disable module" : "Enable module"}
+                    />
                   </div>
                 </div>
+
+                {isEnabled ? (
+                  <div className="space-y-1 pt-1">
+                    <Slider
+                      value={[value]}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onValueChange={(val) => handleSliderChange(topic.id, val)}
+                      className="py-1"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>0%</span>
+                      <span>100%</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-md border border-dashed border-border/50 bg-muted/30 p-2.5 text-center text-xs text-muted-foreground">
+                    Module disabled (forms won't be requested from employees)
+                  </div>
+                )}
               </CardContent>
             </Card>
           )
