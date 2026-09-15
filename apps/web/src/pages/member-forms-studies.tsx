@@ -30,6 +30,7 @@ import {
 import { toast } from "@workspace/ui/components/sonner"
 import { cn } from "@workspace/ui/lib/utils"
 import {
+  fetchActiveMemberForms,
   fetchMemberForm,
   submitMemberForm,
 } from "@workspace/api"
@@ -53,6 +54,9 @@ type StudiesData = {
   eoss_physical_health_stage: string
   eoss_mental_health_stage: string
   eoss_functional_stage: string
+  // Laboratory & Metabolic additions
+  statins: string
+  lab_study_date: string
   // Sleep
   snoring: string
   tired: string
@@ -88,6 +92,8 @@ const initialData: StudiesData = {
   diastolic_blood_pressure: "",
   fasting_glucose: "",
   glucose_lowering_medication: "",
+  statins: "",
+  lab_study_date: "",
   eoss_physical_health_stage: "",
   eoss_mental_health_stage: "",
   eoss_functional_stage: "",
@@ -123,6 +129,15 @@ const PHQ9_QUESTIONS: Array<{ field: keyof StudiesData; prompt: string }> = [
   { field: "self_harm_thoughts", prompt: "Thoughts that you would be better off dead or of hurting yourself in some way?" },
 ]
 
+const isLabStudyObsolete = (dateStr: string): boolean => {
+  if (!dateStr) return false
+  const studyDate = new Date(dateStr)
+  if (isNaN(studyDate.getTime())) return false
+  const twelveMonthsAgo = new Date()
+  twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1)
+  return studyDate < twelveMonthsAgo
+}
+
 export function MemberFormsStudiesPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -132,16 +147,25 @@ export function MemberFormsStudiesPage() {
     "biometrics"
 
   const [data, setData] = useState<StudiesData>(initialData)
+  const [activeFormsMap, setActiveFormsMap] = useState<Record<string, Set<string>>>({})
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [globalError, setGlobalError] = useState<string | null>(null)
 
+  const isFieldActive = (form: FormType, field: string): boolean => {
+    if (activeFormsMap[form]) {
+      return activeFormsMap[form].has(field)
+    }
+    return true
+  }
+
   useEffect(() => {
     let cancelled = false
     async function loadData() {
       setIsLoadingData(true)
-      const [biometricsForm, sleepForm, habitsForm, moodForm, metabolicForm, eossForm] = await Promise.all([
+      const [activeFormsRes, biometricsForm, sleepForm, habitsForm, moodForm, metabolicForm, eossForm] = await Promise.all([
+        fetchActiveMemberForms(),
         fetchMemberForm("biometrics"),
         fetchMemberForm("sleep"),
         fetchMemberForm("habits"),
@@ -151,6 +175,13 @@ export function MemberFormsStudiesPage() {
       ])
 
       if (!cancelled) {
+        if (activeFormsRes?.active_forms) {
+          const map: Record<string, Set<string>> = {}
+          for (const formDef of activeFormsRes.active_forms) {
+            map[formDef.form_type] = new Set(formDef.fields)
+          }
+          setActiveFormsMap(map)
+        }
         const bioData = biometricsForm?.data || {}
         const sleepData = sleepForm?.data || {}
         const habitsData = habitsForm?.data || {}
@@ -176,6 +207,8 @@ export function MemberFormsStudiesPage() {
           diastolic_blood_pressure: metabolicData.diastolic_blood_pressure !== undefined ? String(metabolicData.diastolic_blood_pressure) : "",
           fasting_glucose: metabolicData.fasting_glucose !== undefined ? String(metabolicData.fasting_glucose) : "",
           glucose_lowering_medication: metabolicData.glucose_lowering_medication !== undefined ? String(metabolicData.glucose_lowering_medication) : "",
+          statins: metabolicData.statins !== undefined ? String(metabolicData.statins) : "",
+          lab_study_date: (metabolicData.lab_study_date as string) || "",
           eoss_physical_health_stage: eossData.eoss_physical_health_stage !== undefined ? String(eossData.eoss_physical_health_stage) : "",
           eoss_mental_health_stage: eossData.eoss_mental_health_stage !== undefined ? String(eossData.eoss_mental_health_stage) : "",
           eoss_functional_stage: eossData.eoss_functional_stage !== undefined ? String(eossData.eoss_functional_stage) : "",
@@ -276,9 +309,10 @@ export function MemberFormsStudiesPage() {
       errors.weight = "Please enter a valid weight in kilograms (kg)."
     }
     if (
-      !data.neck_circumference ||
-      isNaN(Number(data.neck_circumference)) ||
-      Number(data.neck_circumference) <= 0
+      isFieldActive("biometrics", "neck_circumference") &&
+      (!data.neck_circumference ||
+        isNaN(Number(data.neck_circumference)) ||
+        Number(data.neck_circumference) <= 0)
     ) {
       errors.neck_circumference = "Please enter a valid neck circumference (cm)."
     }
@@ -297,13 +331,17 @@ export function MemberFormsStudiesPage() {
     }
 
     setIsSubmitting(true)
-    const res = await submitMemberForm("biometrics", {
+    const payload: Record<string, string | number | boolean | null | undefined> = {
       biological_sex: data.biological_sex,
       height: Number(data.height),
       weight: Number(data.weight),
-      neck_circumference: Number(data.neck_circumference),
       waist_circumference: Number(data.waist_circumference),
-    })
+    }
+    if (isFieldActive("biometrics", "neck_circumference")) {
+      payload.neck_circumference = Number(data.neck_circumference)
+    }
+
+    const res = await submitMemberForm("biometrics", payload)
     setIsSubmitting(false)
 
     if (res.error) {
@@ -448,8 +486,23 @@ export function MemberFormsStudiesPage() {
         errors[field] = "Please enter a valid value."
       }
     }
+    // Validation: Systolic blood pressure strictly greater than diastolic
+    if (
+      data.systolic_blood_pressure &&
+      data.diastolic_blood_pressure &&
+      Number(data.systolic_blood_pressure) <= Number(data.diastolic_blood_pressure)
+    ) {
+      errors.systolic_blood_pressure =
+        "Systolic blood pressure must be strictly greater than diastolic blood pressure."
+    }
     if (!data.glucose_lowering_medication) {
       errors.glucose_lowering_medication = "Please select an option."
+    }
+    if (!data.statins) {
+      errors.statins = "Please select an option for statin (cholesterol medication) usage."
+    }
+    if (!data.lab_study_date) {
+      errors.lab_study_date = "Please enter the date of your laboratory study."
     }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
@@ -466,6 +519,8 @@ export function MemberFormsStudiesPage() {
       diastolic_blood_pressure: Number(data.diastolic_blood_pressure),
       fasting_glucose: Number(data.fasting_glucose),
       glucose_lowering_medication: data.glucose_lowering_medication === "true",
+      statins: data.statins === "true",
+      lab_study_date: data.lab_study_date,
     })
     setIsSubmitting(false)
 
@@ -647,8 +702,15 @@ export function MemberFormsStudiesPage() {
                 )}
               </div>
 
-              {/* Height and Weight */}
-              <div className="grid gap-6 md:grid-cols-2">
+              {/* Biometrics Measurements */}
+              <div
+                className={cn(
+                  "grid gap-6",
+                  isFieldActive("biometrics", "neck_circumference")
+                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+                    : "grid-cols-1 md:grid-cols-3"
+                )}
+              >
                 <div
                   id="field-group-height"
                   className={cn(
@@ -718,44 +780,43 @@ export function MemberFormsStudiesPage() {
                     </p>
                   )}
                 </div>
-              </div>
 
-              {/* Neck and Waist Circumference */}
-              <div className="grid gap-6 md:grid-cols-2">
-                <div
-                  id="field-group-neck_circumference"
-                  className={cn(
-                    "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
-                    fieldErrors.neck_circumference &&
-                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
-                  )}
-                >
-                  <Label htmlFor="neck_circumference" className="font-medium">
-                    Neck Circumference (cm)
-                  </Label>
-                  <div className="relative">
-                    <Ruler className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="neck_circumference"
-                      type="number"
-                      placeholder="38"
-                      value={data.neck_circumference}
-                      onChange={(e) => updateField("neck_circumference", e.target.value)}
-                      disabled={isSubmitting || isLoadingData}
-                      className={cn(
-                        "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
-                        fieldErrors.neck_circumference &&
-                          "border-destructive focus-visible:ring-destructive"
-                      )}
-                    />
+                {isFieldActive("biometrics", "neck_circumference") && (
+                  <div
+                    id="field-group-neck_circumference"
+                    className={cn(
+                      "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                      fieldErrors.neck_circumference &&
+                        "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                    )}
+                  >
+                    <Label htmlFor="neck_circumference" className="font-medium">
+                      Neck Circumference (cm)
+                    </Label>
+                    <div className="relative">
+                      <Ruler className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="neck_circumference"
+                        type="number"
+                        placeholder="38"
+                        value={data.neck_circumference}
+                        onChange={(e) => updateField("neck_circumference", e.target.value)}
+                        disabled={isSubmitting || isLoadingData}
+                        className={cn(
+                          "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
+                          fieldErrors.neck_circumference &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                    </div>
+                    {fieldErrors.neck_circumference && (
+                      <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                        <AlertCircle className="size-3.5 shrink-0" />
+                        {fieldErrors.neck_circumference}
+                      </p>
+                    )}
                   </div>
-                  {fieldErrors.neck_circumference && (
-                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
-                      <AlertCircle className="size-3.5 shrink-0" />
-                      {fieldErrors.neck_circumference}
-                    </p>
-                  )}
-                </div>
+                )}
 
                 <div
                   id="field-group-waist_circumference"
@@ -1357,6 +1418,36 @@ export function MemberFormsStudiesPage() {
                   </div>
                 ))}
               </div>
+              {/* Laboratory Study Date & Obsolescence Control */}
+              <div id="field-group-lab_study_date" className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="lab_study_date" className="font-medium">
+                    Date of Laboratory Study (Fecha del estudio) *
+                  </Label>
+                  {data.lab_study_date && isLabStudyObsolete(data.lab_study_date) && (
+                    <span className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive flex items-center gap-1">
+                      <AlertCircle className="size-3.5" /> Dato obsoleto (&gt; 12 meses)
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="lab_study_date"
+                  type="date"
+                  value={data.lab_study_date}
+                  onChange={(e) => updateField("lab_study_date", e.target.value)}
+                  disabled={isSubmitting || isLoadingData}
+                  className={cn(fieldErrors.lab_study_date && "border-destructive")}
+                />
+                {data.lab_study_date && isLabStudyObsolete(data.lab_study_date) && (
+                  <p className="text-xs font-medium text-destructive flex items-center gap-1">
+                    <AlertCircle className="size-3.5 shrink-0" />
+                    El estudio supera los 12 meses de antigüedad. Por favor, actualizá los datos con un estudio reciente.
+                  </p>
+                )}
+                {fieldErrors.lab_study_date && <p className="text-xs font-medium text-destructive">{fieldErrors.lab_study_date}</p>}
+              </div>
+
+              {/* Glucose-lowering medication */}
               <div id="field-group-glucose_lowering_medication" className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
                 <Label>Are you taking glucose-lowering medication?</Label>
                 <RadioGroup value={data.glucose_lowering_medication} onValueChange={(value) => updateField("glucose_lowering_medication", value)} disabled={isSubmitting || isLoadingData} className="flex gap-6">
@@ -1364,6 +1455,16 @@ export function MemberFormsStudiesPage() {
                   <div className="flex items-center gap-2"><RadioGroupItem value="false" id="metabolic-glucose-no" /><Label htmlFor="metabolic-glucose-no">No</Label></div>
                 </RadioGroup>
                 {fieldErrors.glucose_lowering_medication && <p className="text-xs font-medium text-destructive">{fieldErrors.glucose_lowering_medication}</p>}
+              </div>
+
+              {/* Statins (Cholesterol Medication) */}
+              <div id="field-group-statins" className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
+                <Label>Are you currently taking statins (medication for cholesterol)?</Label>
+                <RadioGroup value={data.statins} onValueChange={(value) => updateField("statins", value)} disabled={isSubmitting || isLoadingData} className="flex gap-6">
+                  <div className="flex items-center gap-2"><RadioGroupItem value="true" id="statins-yes" /><Label htmlFor="statins-yes">Yes</Label></div>
+                  <div className="flex items-center gap-2"><RadioGroupItem value="false" id="statins-no" /><Label htmlFor="statins-no">No</Label></div>
+                </RadioGroup>
+                {fieldErrors.statins && <p className="text-xs font-medium text-destructive">{fieldErrors.statins}</p>}
               </div>
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
