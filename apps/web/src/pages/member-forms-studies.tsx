@@ -138,6 +138,250 @@ const isLabStudyObsolete = (dateStr: string): boolean => {
   return studyDate < twelveMonthsAgo
 }
 
+const EOSS_SECTIONS = [
+  {
+    field: "eoss_physical_health_stage" as keyof StudiesData,
+    title: "Physical Health",
+    subtitle: "Select the statement that best describes your current physical health and symptoms:",
+    options: [
+      { value: "0", description: "I have no physical pain or health issues." },
+      { value: "1", description: "I experience mild pain or slight shortness of breath with effort, but it does not prevent me from working." },
+      { value: "2", description: "I have chronic pain (e.g., knee, back) or symptoms that make daily tasks difficult." },
+      { value: "3", description: "I have significant physical problems or medical complications that prevent me from working normally." },
+      { value: "4", description: "I have severe physical limitations or incapacity to perform my daily activities." },
+    ],
+  },
+  {
+    field: "eoss_mental_health_stage" as keyof StudiesData,
+    title: "Mental & Emotional Health",
+    subtitle: "Select the statement that best describes your psychological well-being and stress levels:",
+    options: [
+      { value: "0", description: "I feel good, with no psychological distress or anxiety about my body or health." },
+      { value: "1", description: "I sometimes feel mild dissatisfaction or emotional distress, but it does not affect my daily life." },
+      { value: "2", description: "I feel frequent emotional distress, stress, or low mood regarding my health or body." },
+      { value: "3", description: "I feel significant anxiety or low mood that affects my well-being and work/family environment." },
+      { value: "4", description: "I feel severe psychological distress that seriously compromises my personal and work life." },
+    ],
+  },
+  {
+    field: "eoss_functional_stage" as keyof StudiesData,
+    title: "Daily Function & Work Capacity",
+    subtitle: "Select the statement that best describes your mobility, stamina, and daily performance:",
+    options: [
+      { value: "0", description: "I perform all my daily and work tasks without any difficulty." },
+      { value: "1", description: "I can fulfill all my tasks, although I tire a bit more than usual." },
+      { value: "2", description: "I find it difficult to perform intense physical activities or demanding tasks at work." },
+      { value: "3", description: "I have significant difficulty completing my work shift or household chores." },
+      { value: "4", description: "I am unable or severely limited in performing my daily and work activities." },
+    ],
+  },
+]
+
+type StopBangParameterResult = {
+  key: string
+  label: string
+  sourceForm: "sleep" | "biometrics" | "metabolic" | "profile"
+  value: boolean | null
+  description: string
+}
+
+type StopBangResult = {
+  score: number
+  maxScore: number
+  riskLevel: "low" | "intermediate" | "high"
+  riskLabel: string
+  bmi: number | null
+  parameters: StopBangParameterResult[]
+}
+
+function useStopBangState(data: StudiesData): StopBangResult {
+  const isSnoring =
+    data.snoring === "true" || data.snoring === "1"
+      ? true
+      : data.snoring === "false" || data.snoring === "0"
+        ? false
+        : null
+
+  const isTired =
+    data.tired === "true" || data.tired === "1"
+      ? true
+      : data.tired === "false" || data.tired === "0"
+        ? false
+        : null
+
+  const isObserved =
+    data.observed_apnea === "true" || data.observed_apnea === "1"
+      ? true
+      : data.observed_apnea === "false" || data.observed_apnea === "0"
+        ? false
+        : null
+
+  const sys = Number(data.systolic_blood_pressure)
+  const dia = Number(data.diastolic_blood_pressure)
+  const hasMedication =
+    data.hypertension_medication === "true" || data.hypertension_medication === "1"
+  const hasHighBPNumbers = (sys > 0 && sys >= 140) || (dia > 0 && dia >= 90)
+  let isHighBP: boolean | null = null
+  if (hasMedication || hasHighBPNumbers) {
+    isHighBP = true
+  } else if (
+    data.hypertension_medication === "false" &&
+    (!sys || sys < 140) &&
+    (!dia || dia < 90)
+  ) {
+    isHighBP = false
+  }
+
+  const heightCm = Number(data.height)
+  const weightKg = Number(data.weight)
+  let bmi: number | null = null
+  let isBmiOver35: boolean | null = null
+  if (heightCm > 0 && weightKg > 0) {
+    const heightMeters = heightCm / 100
+    bmi = Math.round((weightKg / (heightMeters * heightMeters)) * 10) / 10
+    isBmiOver35 = bmi > 35
+  }
+
+  const isAgeOver50: boolean | null = null
+  const neckCm = Number(data.neck_circumference)
+  const isNeckOver40 = neckCm > 0 ? neckCm > 40 : null
+  const isMale = data.biological_sex
+    ? data.biological_sex.toUpperCase() === "M"
+    : null
+
+  const parameters: StopBangParameterResult[] = [
+    {
+      key: "S",
+      label: "S - Snoring",
+      sourceForm: "sleep",
+      value: isSnoring,
+      description: isSnoring ? "Reports loud snoring" : "No loud snoring reported",
+    },
+    {
+      key: "T",
+      label: "T - Tiredness",
+      sourceForm: "sleep",
+      value: isTired,
+      description: isTired ? "Reports daytime fatigue" : "No significant daytime fatigue",
+    },
+    {
+      key: "O",
+      label: "O - Observed Apnea",
+      sourceForm: "sleep",
+      value: isObserved,
+      description: isObserved ? "Observed breathing pauses" : "No observed apneas",
+    },
+    {
+      key: "P",
+      label: "P - High Blood Pressure",
+      sourceForm: "metabolic",
+      value: isHighBP,
+      description: isHighBP ? "High blood pressure (≥140/90 or treated)" : "Normal blood pressure",
+    },
+    {
+      key: "B",
+      label: "B - BMI (>35 kg/m²)",
+      sourceForm: "biometrics",
+      value: isBmiOver35,
+      description: bmi ? `Current BMI: ${bmi} kg/m² (${isBmiOver35 ? "> 35" : "≤ 35"})` : "Missing height/weight",
+    },
+    {
+      key: "A",
+      label: "A - Age (>50 yrs)",
+      sourceForm: "profile",
+      value: isAgeOver50,
+      description: isAgeOver50 === null ? "Age not recorded" : isAgeOver50 ? "Over 50 years" : "50 years or under",
+    },
+    {
+      key: "N",
+      label: "N - Neck (>40 cm)",
+      sourceForm: "biometrics",
+      value: isNeckOver40,
+      description: neckCm > 0 ? `Neck: ${neckCm} cm (${isNeckOver40 ? "> 40 cm" : "≤ 40 cm"})` : "Missing neck measure",
+    },
+    {
+      key: "G",
+      label: "G - Gender (Male)",
+      sourceForm: "biometrics",
+      value: isMale,
+      description: isMale === null ? "Gender unspecified" : isMale ? "Male sex (+1 pt)" : "Female sex (0 pt)",
+    },
+  ]
+
+  let score = 0
+  for (const param of parameters) {
+    if (param.value === true) {
+      score += 1
+    }
+  }
+
+  let riskLevel: "low" | "intermediate" | "high" = "low"
+  let riskLabel = "Low Sleep Apnea Risk"
+  if (score >= 5) {
+    riskLevel = "high"
+    riskLabel = "High Sleep Apnea Risk"
+  } else if (score >= 3) {
+    riskLevel = "intermediate"
+    riskLabel = "Intermediate Sleep Apnea Risk"
+  }
+
+  return {
+    score,
+    maxScore: 8,
+    riskLevel,
+    riskLabel,
+    bmi,
+    parameters,
+  }
+}
+
+function StopBangLiveCard({ stopBang }: { stopBang: StopBangResult }) {
+  return (
+    <div className="space-y-3 rounded-xl border border-primary/25 bg-primary/5 p-4 backdrop-blur-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Moon className="size-4 text-primary" />
+          <span className="text-sm font-semibold">STOP-BANG Engine (Sleep Apnea Risk)</span>
+        </div>
+        <div
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs font-semibold transition-all",
+            stopBang.riskLevel === "high" && "border-destructive/40 bg-destructive/15 text-destructive",
+            stopBang.riskLevel === "intermediate" && "border-amber-500/40 bg-amber-500/15 text-amber-600 dark:text-amber-400",
+            stopBang.riskLevel === "low" && "border-emerald-500/40 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+          )}
+        >
+          {stopBang.riskLabel} ({stopBang.score}/{stopBang.maxScore} pts)
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        This indicator automatically consolidates your responses from <strong>Sleep (S, T, O)</strong>, <strong>Biometrics (B, N, G)</strong>, and <strong>Metabolism (P)</strong> in real time without asking duplicate questions.
+      </p>
+      <div className="grid grid-cols-2 gap-2 pt-1 sm:grid-cols-4">
+        {stopBang.parameters.map((param) => (
+          <div
+            key={param.key}
+            className={cn(
+              "flex flex-col justify-between rounded-lg border p-2 text-xs transition-colors",
+              param.value === true && "border-primary/40 bg-primary/10 text-primary font-medium",
+              param.value === false && "border-border/30 bg-background/50 text-muted-foreground",
+              param.value === null && "border-border/20 bg-background/20 text-muted-foreground/60 italic"
+            )}
+          >
+            <div className="flex items-center justify-between font-bold text-[11px]">
+              <span>{param.key}</span>
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground">({param.sourceForm})</span>
+            </div>
+            <div className="mt-1 text-[11px] font-normal" title={param.description}>
+              {param.value === true ? "✓ Yes" : param.value === false ? "✗ No" : "Pending"}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function MemberFormsStudiesPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -147,6 +391,7 @@ export function MemberFormsStudiesPage() {
     "biometrics"
 
   const [data, setData] = useState<StudiesData>(initialData)
+  const stopBangResult = useStopBangState(data)
   const [activeFormsMap, setActiveFormsMap] = useState<Record<string, Set<string>>>({})
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -503,6 +748,8 @@ export function MemberFormsStudiesPage() {
     }
     if (!data.lab_study_date) {
       errors.lab_study_date = "Please enter the date of your laboratory study."
+    } else if (isLabStudyObsolete(data.lab_study_date)) {
+      errors.lab_study_date = "Laboratory study results are obsolete (older than 12 months). Please provide recent lab test results."
     }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
@@ -853,6 +1100,10 @@ export function MemberFormsStudiesPage() {
                   )}
                 </div>
               </div>
+
+              {isFieldActive("biometrics", "neck_circumference") && (
+                <StopBangLiveCard stopBang={stopBangResult} />
+              )}
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
               <Button variant="ghost" asChild>
@@ -877,6 +1128,7 @@ export function MemberFormsStudiesPage() {
           </CardHeader>
           <form onSubmit={(e) => void handleSaveSleep(e)}>
             <CardContent className="space-y-6">
+              <StopBangLiveCard stopBang={stopBangResult} />
               {/* Question 1 */}
               <div
                 id="field-group-snoring"
@@ -1478,52 +1730,64 @@ export function MemberFormsStudiesPage() {
       {formType === "eoss" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Obesity-related Health Impact</CardTitle>
+            <CardTitle className="text-lg">Obesity-related Health Impact (EOSS)</CardTitle>
             <CardDescription>
-              Choose the statement that best describes each area today. This is a self-assessment, not a diagnosis.
+              Choose the statement that best describes your daily situation in each area. This functional assessment is a self-evaluation, not a medical diagnosis.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveEoss(e)}>
             <CardContent className="space-y-6">
-              {([
-                ["eoss_physical_health_stage", "Physical health", "chronic conditions, symptoms, or medical complications"],
-                ["eoss_mental_health_stage", "Mental health", "mood, distress, or other psychological impact"],
-                ["eoss_functional_stage", "Daily function", "mobility, activities, or participation in daily life"],
-              ] as Array<[keyof StudiesData, string, string]>).map(([field, title, context]) => (
-                <div key={field} id={`field-group-${field}`} className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
+              {EOSS_SECTIONS.map((section) => (
+                <div
+                  key={section.field}
+                  id={`field-group-${section.field}`}
+                  className={cn(
+                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors[section.field] &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  )}
+                >
                   <div>
-                    <Label className="text-sm font-medium">{title}</Label>
-                    <p className="mt-1 text-xs text-muted-foreground">Select the level of {context}.</p>
+                    <Label className="text-sm font-medium">{section.title}</Label>
+                    <p className="mt-1 text-xs text-muted-foreground">{section.subtitle}</p>
                   </div>
                   <RadioGroup
-                    value={data[field]}
-                    onValueChange={(value) => updateField(field, value)}
+                    value={data[section.field]}
+                    onValueChange={(value) => updateField(section.field, value)}
                     disabled={isSubmitting || isLoadingData}
-                    className="space-y-2"
+                    className="space-y-2.5 pt-1"
                   >
-                    {[
-                      ["0", "Stage 0", "No risk factors or impairment"],
-                      ["1", "Stage 1", "Mild or subclinical impact"],
-                      ["2", "Stage 2", "Established or moderate impact"],
-                      ["3", "Stage 3", "Significant impact or complications"],
-                      ["4", "Stage 4", "Severe or end-stage impact"],
-                    ].map(([value, label, description]) => (
-                      <div key={value} className="flex items-start gap-2 rounded-md border border-border/20 p-2">
-                        <RadioGroupItem value={value} id={`${field}-${value}`} className="mt-0.5" />
-                        <Label htmlFor={`${field}-${value}`} className="cursor-pointer font-normal">
-                          <span className="font-medium">{label}</span>
-                          <span className="ml-2 text-xs text-muted-foreground">{description}</span>
+                    {section.options.map((option) => (
+                      <div
+                        key={option.value}
+                        className={cn(
+                          "flex items-start gap-3 rounded-lg border border-border/30 bg-background/30 p-3 transition-all hover:bg-background/60",
+                          data[section.field] === option.value && "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                        )}
+                      >
+                        <RadioGroupItem value={option.value} id={`${section.field}-${option.value}`} className="mt-1" />
+                        <Label htmlFor={`${section.field}-${option.value}`} className="cursor-pointer font-normal text-sm text-foreground leading-snug">
+                          {option.description}
                         </Label>
                       </div>
                     ))}
                   </RadioGroup>
-                  {fieldErrors[field] && <p className="text-xs font-medium text-destructive">{fieldErrors[field]}</p>}
+                  {fieldErrors[section.field] && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      {fieldErrors[section.field]}
+                    </p>
+                  )}
                 </div>
               ))}
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild><Link to="/forms">Cancel</Link></Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>{isSubmitting ? "Saving..." : "Save Health Impact"}</Button>
+              <Button variant="ghost" asChild>
+                <Link to="/forms">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+                {isSubmitting ? "Saving..." : "Save Health Impact"}
+              </Button>
             </CardFooter>
           </form>
         </Card>
