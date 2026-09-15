@@ -1,73 +1,61 @@
-# React + TypeScript + Vite
+# Checkup360 Backoffice (Platform Administration Console)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Administration console for **System Administrators (Sysadmins)** of the **Checkup360** multi-tenant platform.
 
-Currently, two official plugins are available:
+It manages platform-wide resources: onboarding and maintaining client organizations, assigning sysadmin privileges, monitoring global invitation queues, and inspecting system logs.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Organization Management:** Provisioning, configuration, and inspection of all client companies registered on the platform.
+- **Sysadmin Administration:** Granting and revoking superuser roles and platform-level privileges.
+- **Global Invitation Tracking:** Auditing, searching, and managing pending member and administrator invitations.
+- **System Event Logs:** Live inspection of operational logs and audit events for technical support and troubleshooting.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Tech Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Framework:** [React 19](https://react.dev/) + [Vite](https://vitejs.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Styling & Components:** [Tailwind CSS](https://tailwindcss.com/) + Shadcn UI (via `@workspace/ui`)
+- **Internal Packages:**
+  - `@workspace/api`: Sysadmin-protected API endpoints (`/admin/*`).
+  - `@workspace/auth`: Access control guarded strictly by `is_sysadmin`.
+  - `@workspace/ui`: Reusable design system primitives.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Getting Started
+
+From the monorepo root (`frontends/`):
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run the backoffice console in development mode
+pnpm --filter backoffice dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The application will run at:
+`http://localhost:5175`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Available Scripts
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# Start development server
+pnpm --filter backoffice dev
+
+# Type check
+pnpm --filter backoffice typecheck
+
+# Lint
+pnpm --filter backoffice lint
+
+# Production build
+pnpm --filter backoffice build
+
+# Preview production build (port 4175)
+pnpm --filter backoffice preview
 ```

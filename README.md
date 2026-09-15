@@ -1,105 +1,141 @@
-# Frontends
+# Checkup360 Frontends Monorepo
 
-## Requisitos
+Frontend applications and shared packages for **Checkup360**, organized as a monorepo powered by [pnpm Workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turbo.build/).
 
-Si no tenés pnpm instalado:
+---
+
+## Monorepo Structure
+
+```text
+frontends/
+├── apps/
+│   ├── web/           # Member/patient portal (PWA) - Port 5173
+│   ├── dashboard/     # Corporate HR & occupational health portal - Port 5174
+│   └── backoffice/    # Sysadmin administration console - Port 5175
+└── packages/
+    ├── api/           # API client and typed schema definitions
+    ├── auth/          # Authentication provider, session context, and hooks
+    ├── components/    # Reusable cross-application business components
+    └── ui/            # Design system primitives (Shadcn UI + Tailwind CSS)
+```
+
+### Applications (`apps/`)
+
+| Application | Description | Default Dev Port |
+|---|---|---|
+| **`web`** | Member/patient portal. Health questionnaires, medical onboarding, clinical studies review, and preventive health news from the CMS. | `5173` |
+| **`dashboard`** | Enterprise portal for HR and Occupational Health managers. Aggregated health analytics, department management, risk model weighting, and employee invitations. | `5174` |
+| **`backoffice`** | Platform-level console for Sysadmins. Organization management, sysadmin role assignment, invitation tracking, and system logs. | `5175` |
+
+---
+
+## Prerequisites
+
+- **Node.js**: `>=20.0.0`
+- **pnpm**: `^9.0.0` (or higher)
+
+Install `pnpm` if not already present:
 
 ```bash
 npm install -g pnpm
 ```
 
-## Setup del proyecto
+---
 
-### Instalar dependencias
+## Getting Started
 
-```bash
-pnpm install
-```
+1. Navigate to the `frontends` directory:
+   ```bash
+   cd frontends
+   ```
 
-## Correr en desarrollo
+2. Configure environment variables (optional for local development; defaults are sourced from `apps.config.ts`):
+   ```bash
+   cp .env.example .env
+   ```
 
-### Todas las apps en paralelo
+3. Install workspace dependencies:
+   ```bash
+   pnpm install
+   ```
+
+---
+
+## Development
+
+### Run All Applications in Parallel (Turborepo)
 
 ```bash
 pnpm dev
 ```
 
-### Una app específica
+### Run a Single Application
+
+You can target any app using the `--filter` flag:
 
 ```bash
+# Member portal (web)
 pnpm --filter web dev
-pnpm --filter admin dev
+
+# Corporate dashboard (dashboard)
+pnpm --filter dashboard dev
+
+# Sysadmin console (backoffice)
+pnpm --filter backoffice dev
 ```
 
-## Agregar componentes de shadcn
+---
 
-Los componentes de shadcn se agregan **siempre desde `packages/ui`**:
+## UI Design System and Shadcn
+
+Shared UI primitives reside in `@workspace/ui` (`packages/ui`).
+
+### Adding Shadcn UI Components
+
+Always add components from within `packages/ui`:
 
 ```bash
 cd packages/ui
 pnpm dlx shadcn@latest add button
-pnpm dlx shadcn@latest add card input dialog  # varios a la vez
+pnpm dlx shadcn@latest add card input dialog # Multiple components
 ```
 
-Luego exportarlos desde `packages/ui/src/index.ts`:
+Export them in `packages/ui/src/index.ts`:
 
 ```ts
 export * from "./components/ui/button"
 export * from "./components/ui/card"
 ```
 
-Y usarlos en cualquier app:
+And import them anywhere across the workspace:
 
 ```tsx
 import { Button } from "@workspace/ui/components/button"
 import { Card } from "@workspace/ui/components/card"
 ```
 
-### Dónde ubicar cada componente
+### Component Placement Guidelines
 
-- `packages/ui/src/components/`: primitives de shadcn, instalados con su CLI y sin lógica de negocio.
-- `packages/components/src/components/`: composiciones reutilizables entre varias aplicaciones.
-- `apps/<app>/src/features/`: componentes propios de una funcionalidad de una aplicación.
-- `apps/<app>/src/pages/`: páginas que conectan rutas y funcionalidades.
-
-No copies componentes de aplicación dentro de `packages/ui`. Si un componente de
-shadcn necesita personalización, revisá el diff generado por la CLI y mantenelo
-como primitive genérico, accesible y sin dependencias de una aplicación.
-
-## Agregar una nueva app
-
-```bash
-cd apps
-pnpm create vite nueva-app --template react-ts
-cd nueva-app
-```
-
-Agregar la dependencia al paquete UI en su `package.json`:
-
-```json
-{
-  "dependencies": {
-    "@repo/ui": "workspace:*"
-  }
-}
-```
-
-Volver a la raíz e instalar:
-
-```bash
-cd ../..
-pnpm install
-```
+- `packages/ui/src/components/`: Shadcn UI primitives, free of business domain logic.
+- `packages/components/src/`: Composed components shared across multiple applications.
+- `apps/<app>/src/components/`: Application-specific components.
+- `apps/<app>/src/pages/`: Top-level page views linked to application routes.
 
 ---
 
-## Scripts disponibles
+## Available Scripts
 
-| Comando                        | Descripción                          |
-|-------------------------------|--------------------------------------|
-| `pnpm install`                | Instala todas las dependencias       |
-| `pnpm dev`                    | Levanta todas las apps en paralelo   |
-| `pnpm --filter web dev`       | Levanta solo la app `web`            |
-| `pnpm --filter admin dev`     | Levanta solo la app `admin`          |
-| `pnpm --filter web build`     | Build de producción de `web`         |
-| `pnpm -r build`               | Build de todas las apps              |
+| Command | Description |
+|---|---|
+| `pnpm dev` | Run all apps in parallel with Fast Refresh (HMR) |
+| `pnpm build` | Build all packages and applications for production |
+| `pnpm lint` | Run ESLint across all workspaces |
+| `pnpm typecheck` | Run static type checking with TypeScript across all workspaces |
+| `pnpm format` | Format code using Prettier and Tailwind CSS plugin |
+| `pnpm precommit` | Run lint, typecheck, and build validation before commit |
+
+---
+
+## Releases
+
+Tagging a commit with a semantic version (e.g., `git tag v0.6.0 && git push origin v0.6.0`) automatically triggers the GitHub Actions workflow to build and publish the frontend container images to GitHub Container Registry (GHCR).
