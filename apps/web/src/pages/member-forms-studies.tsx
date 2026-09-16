@@ -35,7 +35,16 @@ import {
   submitMemberForm,
 } from "@workspace/api"
 
- type FormType = "biometrics" | "sleep" | "habits" | "mood" | "metabolic" | "eoss"
+type FormType =
+  | "biometrics"
+  | "sleep"
+  | "habits"
+  | "mood"
+  | "metabolic"
+  | "eoss"
+  | "nordic_nmq"
+  | "audit_c"
+  | "pss10"
 
 type StudiesData = {
   // Biometrics
@@ -77,6 +86,49 @@ type StudiesData = {
   concentration: string
   psychomotor: string
   self_harm_thoughts: string
+  // Nordic NMQ ergonomics fields (9 zones x 3 questions)
+  nmq_neck_12m: string
+  nmq_neck_prevent_12m: string
+  nmq_neck_7d: string
+  nmq_shoulders_12m: string
+  nmq_shoulders_prevent_12m: string
+  nmq_shoulders_7d: string
+  nmq_upper_back_12m: string
+  nmq_upper_back_prevent_12m: string
+  nmq_upper_back_7d: string
+  nmq_lower_back_12m: string
+  nmq_lower_back_prevent_12m: string
+  nmq_lower_back_7d: string
+  nmq_elbows_12m: string
+  nmq_elbows_prevent_12m: string
+  nmq_elbows_7d: string
+  nmq_wrists_hands_12m: string
+  nmq_wrists_hands_prevent_12m: string
+  nmq_wrists_hands_7d: string
+  nmq_hips_thighs_12m: string
+  nmq_hips_thighs_prevent_12m: string
+  nmq_hips_thighs_7d: string
+  nmq_knees_12m: string
+  nmq_knees_prevent_12m: string
+  nmq_knees_7d: string
+  nmq_ankles_feet_12m: string
+  nmq_ankles_feet_prevent_12m: string
+  nmq_ankles_feet_7d: string
+  // AUDIT-C alcohol risk
+  audit_c_frequency: string
+  audit_c_quantity: string
+  audit_c_heavy_drinking: string
+  // PSS-10 perceived stress scale (10 questions)
+  pss10_q1: string
+  pss10_q2: string
+  pss10_q3: string
+  pss10_q4: string
+  pss10_q5: string
+  pss10_q6: string
+  pss10_q7: string
+  pss10_q8: string
+  pss10_q9: string
+  pss10_q10: string
 }
 
 const initialData: StudiesData = {
@@ -106,16 +158,130 @@ const initialData: StudiesData = {
   previous_high_glucose: "",
   smoker: "",
   family_diabetes: "",
-   little_interest: "",
-   feeling_down: "",
-   sleep_trouble: "",
-   tired_energy: "",
-   appetite: "",
-   feeling_bad: "",
-   concentration: "",
-   psychomotor: "",
-   self_harm_thoughts: "",
+  little_interest: "",
+  feeling_down: "",
+  sleep_trouble: "",
+  tired_energy: "",
+  appetite: "",
+  feeling_bad: "",
+  concentration: "",
+  psychomotor: "",
+  self_harm_thoughts: "",
+  nmq_neck_12m: "",
+  nmq_neck_prevent_12m: "",
+  nmq_neck_7d: "",
+  nmq_shoulders_12m: "",
+  nmq_shoulders_prevent_12m: "",
+  nmq_shoulders_7d: "",
+  nmq_upper_back_12m: "",
+  nmq_upper_back_prevent_12m: "",
+  nmq_upper_back_7d: "",
+  nmq_lower_back_12m: "",
+  nmq_lower_back_prevent_12m: "",
+  nmq_lower_back_7d: "",
+  nmq_elbows_12m: "",
+  nmq_elbows_prevent_12m: "",
+  nmq_elbows_7d: "",
+  nmq_wrists_hands_12m: "",
+  nmq_wrists_hands_prevent_12m: "",
+  nmq_wrists_hands_7d: "",
+  nmq_hips_thighs_12m: "",
+  nmq_hips_thighs_prevent_12m: "",
+  nmq_hips_thighs_7d: "",
+  nmq_knees_12m: "",
+  nmq_knees_prevent_12m: "",
+  nmq_knees_7d: "",
+  nmq_ankles_feet_12m: "",
+  nmq_ankles_feet_prevent_12m: "",
+  nmq_ankles_feet_7d: "",
+  audit_c_frequency: "",
+  audit_c_quantity: "",
+  audit_c_heavy_drinking: "",
+  pss10_q1: "",
+  pss10_q2: "",
+  pss10_q3: "",
+  pss10_q4: "",
+  pss10_q5: "",
+  pss10_q6: "",
+  pss10_q7: "",
+  pss10_q8: "",
+  pss10_q9: "",
+  pss10_q10: "",
 }
+
+const NMQ_ANATOMICAL_ZONES = [
+  { id: "neck", name: "Neck" },
+  { id: "shoulders", name: "Shoulders" },
+  { id: "upper_back", name: "Upper Back" },
+  { id: "lower_back", name: "Lower Back" },
+  { id: "elbows", name: "Elbows" },
+  { id: "wrists_hands", name: "Wrists / Hands" },
+  { id: "hips_thighs", name: "Hips / Thighs" },
+  { id: "knees", name: "Knees" },
+  { id: "ankles_feet", name: "Ankles / Feet" },
+] as const
+
+const AUDIT_C_QUESTIONS = [
+  {
+    field: "audit_c_frequency" as keyof StudiesData,
+    title: "1. How often do you have a drink containing alcohol?",
+    options: [
+      { value: "0", label: "Never" },
+      { value: "1", label: "Monthly or less" },
+      { value: "2", label: "2 to 4 times a month" },
+      { value: "3", label: "2 to 3 times a week" },
+      { value: "4", label: "4 or more times a week" },
+    ],
+  },
+  {
+    field: "audit_c_quantity" as keyof StudiesData,
+    title: "2. How many drinks containing alcohol do you have on a typical day when you are drinking?",
+    options: [
+      { value: "0", label: "1 or 2" },
+      { value: "1", label: "3 or 4" },
+      { value: "2", label: "5 or 6" },
+      { value: "3", label: "7 to 9" },
+      { value: "4", label: "10 or more" },
+    ],
+  },
+  {
+    field: "audit_c_heavy_drinking" as keyof StudiesData,
+    title: "3. How often do you have six or more drinks on one occasion?",
+    options: [
+      { value: "0", label: "Never" },
+      { value: "1", label: "Less than monthly" },
+      { value: "2", label: "Monthly" },
+      { value: "3", label: "Weekly" },
+      { value: "4", label: "Daily or almost daily" },
+    ],
+  },
+]
+
+const PSS10_LIKERT_OPTIONS = [
+  { value: "0", label: "Never" },
+  { value: "1", label: "Almost never" },
+  { value: "2", label: "Sometimes" },
+  { value: "3", label: "Fairly often" },
+  { value: "4", label: "Very often" },
+]
+
+const PSS10_QUESTIONS: Array<{
+  field: keyof StudiesData
+  prompt: string
+  isReversed?: boolean
+}> = [
+  { field: "pss10_q1", prompt: "1. In the last month, how often have you been upset because of something that happened unexpectedly?" },
+  { field: "pss10_q2", prompt: "2. In the last month, how often have you felt that you were unable to control the important things in your life?" },
+  { field: "pss10_q3", prompt: "3. In the last month, how often have you felt nervous and stressed?" },
+  { field: "pss10_q4", prompt: "4. In the last month, how often have you felt confident about your ability to handle your personal problems?", isReversed: true },
+  { field: "pss10_q5", prompt: "5. In the last month, how often have you felt that things were going your way?", isReversed: true },
+  { field: "pss10_q6", prompt: "6. In the last month, how often have you found that you could not cope with all the things that you had to do?" },
+  { field: "pss10_q7", prompt: "7. In the last month, how often have you been able to control irritations in your life?", isReversed: true },
+  { field: "pss10_q8", prompt: "8. In the last month, how often have you felt that you were on top of things?", isReversed: true },
+  { field: "pss10_q9", prompt: "9. In the last month, how often have you been angered because of things that were outside of your control?" },
+  { field: "pss10_q10", prompt: "10. In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?" },
+]
+
 
 const PHQ9_QUESTIONS: Array<{ field: keyof StudiesData; prompt: string }> = [
   { field: "little_interest", prompt: "Little interest or pleasure in doing things?" },
@@ -409,7 +575,18 @@ export function MemberFormsStudiesPage() {
     let cancelled = false
     async function loadData() {
       setIsLoadingData(true)
-      const [activeFormsRes, biometricsForm, sleepForm, habitsForm, moodForm, metabolicForm, eossForm] = await Promise.all([
+      const [
+        activeFormsRes,
+        biometricsForm,
+        sleepForm,
+        habitsForm,
+        moodForm,
+        metabolicForm,
+        eossForm,
+        nmqForm,
+        auditForm,
+        pssForm,
+      ] = await Promise.all([
         fetchActiveMemberForms(),
         fetchMemberForm("biometrics"),
         fetchMemberForm("sleep"),
@@ -417,6 +594,9 @@ export function MemberFormsStudiesPage() {
         fetchMemberForm("mood"),
         fetchMemberForm("metabolic"),
         fetchMemberForm("eoss"),
+        fetchMemberForm("nordic_nmq"),
+        fetchMemberForm("audit_c"),
+        fetchMemberForm("pss10"),
       ])
 
       if (!cancelled) {
@@ -430,13 +610,41 @@ export function MemberFormsStudiesPage() {
         const bioData = biometricsForm?.data || {}
         const sleepData = sleepForm?.data || {}
         const habitsData = habitsForm?.data || {}
-      const moodData = moodForm?.data || {}
-      const metabolicData = metabolicForm?.data || {}
+        const moodData = moodForm?.data || {}
+        const metabolicData = metabolicForm?.data || {}
         const eossData = eossForm?.data || {}
+        const nmqData = (nmqForm?.data?.nordic_nmq_data as Record<string, Record<string, boolean>>) || {}
+        const auditData = auditForm?.data || {}
+        const pssData = pssForm?.data || {}
 
         const biologicalSex = (bioData.biological_sex as string) || ""
         const heightVal = bioData.height ? String(bioData.height) : ""
         const weightVal = bioData.weight ? String(bioData.weight) : ""
+
+        const extractedNmq: Record<string, string> = {}
+        const zonesList = [
+          "neck",
+          "shoulders",
+          "upper_back",
+          "lower_back",
+          "elbows",
+          "wrists_hands",
+          "hips_thighs",
+          "knees",
+          "ankles_feet",
+        ] as const
+        for (const z of zonesList) {
+          const zObj = nmqData[z] || {}
+          extractedNmq[`nmq_${z}_12m`] = zObj.trouble_last_12_months !== undefined ? String(zObj.trouble_last_12_months) : ""
+          extractedNmq[`nmq_${z}_prevent_12m`] = zObj.prevented_work_last_12_months !== undefined ? String(zObj.prevented_work_last_12_months) : ""
+          extractedNmq[`nmq_${z}_7d`] = zObj.trouble_last_7_days !== undefined ? String(zObj.trouble_last_7_days) : ""
+        }
+
+        const extractedPss: Record<string, string> = {}
+        for (let i = 1; i <= 10; i++) {
+          const key = `pss10_q${i}`
+          extractedPss[key] = pssData[key] !== undefined ? String(pssData[key]) : ""
+        }
 
         setData({
           biological_sex: biologicalSex,
@@ -498,7 +706,13 @@ export function MemberFormsStudiesPage() {
           concentration: moodData.concentration !== undefined ? String(moodData.concentration) : "",
           psychomotor: moodData.psychomotor !== undefined ? String(moodData.psychomotor) : "",
           self_harm_thoughts: moodData.self_harm_thoughts !== undefined ? String(moodData.self_harm_thoughts) : "",
-        })
+          audit_c_frequency: auditData.audit_c_frequency !== undefined ? String(auditData.audit_c_frequency) : "",
+          audit_c_quantity: auditData.audit_c_quantity !== undefined ? String(auditData.audit_c_quantity) : "",
+          ...extractedNmq,
+          ...extractedPss,
+        } as StudiesData)
+
+
         setIsLoadingData(false)
       }
     }
@@ -812,6 +1026,124 @@ export function MemberFormsStudiesPage() {
     }
   }
 
+  const handleSaveNordicNmq = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const errors: Record<string, string> = {}
+    const zones = [
+      "neck",
+      "shoulders",
+      "upper_back",
+      "lower_back",
+      "elbows",
+      "wrists_hands",
+      "hips_thighs",
+      "knees",
+      "ankles_feet",
+    ] as const
+
+    for (const z of zones) {
+      if ((data as Record<string, string>)[`nmq_${z}_12m`] === "") {
+        errors[`nmq_${z}_12m`] = "Please select an option for 12-month trouble."
+      }
+      if ((data as Record<string, string>)[`nmq_${z}_prevent_12m`] === "") {
+        errors[`nmq_${z}_prevent_12m`] = "Please select an option for work prevention."
+      }
+      if ((data as Record<string, string>)[`nmq_${z}_7d`] === "") {
+        errors[`nmq_${z}_7d`] = "Please select an option for 7-day trouble."
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      scrollToFirstError(errors)
+      return
+    }
+
+    setIsSubmitting(true)
+    const formattedZones: Record<string, { trouble_last_12_months: boolean; prevented_work_last_12_months: boolean; trouble_last_7_days: boolean }> = {}
+    for (const z of zones) {
+      formattedZones[z] = {
+        trouble_last_12_months: (data as Record<string, string>)[`nmq_${z}_12m`] === "true",
+        prevented_work_last_12_months: (data as Record<string, string>)[`nmq_${z}_prevent_12m`] === "true",
+        trouble_last_7_days: (data as Record<string, string>)[`nmq_${z}_7d`] === "true",
+      }
+    }
+
+    const res = await submitMemberForm("nordic_nmq", {
+      nordic_nmq_data: formattedZones,
+    })
+    setIsSubmitting(false)
+
+    if (res.error) {
+      setGlobalError(res.error.message || "Failed to save Nordic ergonomics questionnaire.")
+    } else {
+      toast.success("Nordic ergonomics questionnaire saved successfully.")
+      navigate("/forms")
+    }
+  }
+
+  const handleSaveAuditC = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const errors: Record<string, string> = {}
+    if (data.audit_c_frequency === "") errors.audit_c_frequency = "Please select drinking frequency."
+    if (data.audit_c_quantity === "") errors.audit_c_quantity = "Please select typical drinking quantity."
+    if (data.audit_c_heavy_drinking === "") errors.audit_c_heavy_drinking = "Please select heavy drinking frequency."
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      scrollToFirstError(errors)
+      return
+    }
+
+    setIsSubmitting(true)
+    const res = await submitMemberForm("audit_c", {
+      audit_c_frequency: Number(data.audit_c_frequency),
+      audit_c_quantity: Number(data.audit_c_quantity),
+      audit_c_heavy_drinking: Number(data.audit_c_heavy_drinking),
+    })
+    setIsSubmitting(false)
+
+    if (res.error) {
+      setGlobalError(res.error.message || "Failed to save AUDIT-C assessment.")
+    } else {
+      toast.success("AUDIT-C alcohol risk assessment saved successfully.")
+      navigate("/forms")
+    }
+  }
+
+  const handleSavePss10 = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const errors: Record<string, string> = {}
+    for (let i = 1; i <= 10; i++) {
+      const field = `pss10_q${i}` as keyof StudiesData
+      if (data[field] === "") {
+        errors[field] = "Please select an answer."
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      scrollToFirstError(errors)
+      return
+    }
+
+    setIsSubmitting(true)
+    const payload: Record<string, number> = {}
+    for (let i = 1; i <= 10; i++) {
+      payload[`pss10_q${i}`] = Number((data as Record<string, string>)[`pss10_q${i}`])
+    }
+
+    const res = await submitMemberForm("pss10", payload)
+    setIsSubmitting(false)
+
+    if (res.error) {
+      setGlobalError(res.error.message || "Failed to save PSS-10 perceived stress scale.")
+    } else {
+      toast.success("Perceived Stress & Burnout (PSS-10) saved successfully.")
+      navigate("/forms")
+    }
+  }
+
   const titlesMap: Record<
     FormType,
     { title: string; description: string; icon: typeof Activity }
@@ -848,7 +1180,23 @@ export function MemberFormsStudiesPage() {
       description: "Reflect on how your health, mood, and daily function are affected.",
       icon: HeartPulse,
     },
+    nordic_nmq: {
+      title: "Musculoskeletal Risk (NMQ)",
+      description: "Standardized Nordic Questionnaire evaluating body regions for trouble and work impact.",
+      icon: Activity,
+    },
+    audit_c: {
+      title: "Alcohol Risk Assessment (AUDIT-C)",
+      description: "WHO 3-item questionnaire evaluating alcohol consumption and risk behaviors.",
+      icon: HeartPulse,
+    },
+    pss10: {
+      title: "Perceived Stress & Burnout (PSS-10)",
+      description: "10-item scale assessing perceived stress and coping capacity over the past month.",
+      icon: HeartPulse,
+    },
   }
+
 
   const currentTitle = titlesMap[formType] || titlesMap.biometrics
   const TitleIcon = currentTitle.icon
@@ -1792,6 +2140,240 @@ export function MemberFormsStudiesPage() {
           </form>
         </Card>
       )}
+
+      {formType === "nordic_nmq" && (
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-lg">Standardized Nordic Questionnaire (NMQ)</CardTitle>
+            <CardDescription>
+              Evaluate musculoskeletal trouble and work capacity across 9 body regions over the past 12 months and 7 days.
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={(e) => void handleSaveNordicNmq(e)}>
+            <CardContent className="space-y-6">
+              <div className="overflow-x-auto rounded-xl border border-border/30 bg-background/40 p-4">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-border/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      <th className="py-3 px-2">Body Region</th>
+                      <th className="py-3 px-2 text-center">Trouble in last 12m?</th>
+                      <th className="py-3 px-2 text-center">Prevented work in last 12m?</th>
+                      <th className="py-3 px-2 text-center">Trouble in last 7 days?</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/20">
+                    {NMQ_ANATOMICAL_ZONES.map((zone) => {
+                      const f12m = `nmq_${zone.id}_12m` as keyof StudiesData
+                      const fPrev = `nmq_${zone.id}_prevent_12m` as keyof StudiesData
+                      const f7d = `nmq_${zone.id}_7d` as keyof StudiesData
+                      const hasErr = fieldErrors[f12m] || fieldErrors[fPrev] || fieldErrors[f7d]
+
+                      return (
+                        <tr key={zone.id} id={`field-group-${f12m}`} className={cn("hover:bg-muted/20 transition-colors", hasErr && "bg-destructive/10")}>
+                          <td className="py-3 px-2 font-medium text-foreground">{zone.name}</td>
+                          <td className="py-3 px-2 text-center">
+                            <RadioGroup
+                              value={data[f12m]}
+                              onValueChange={(val) => updateField(f12m, val)}
+                              disabled={isSubmitting || isLoadingData}
+                              className="inline-flex gap-4 justify-center"
+                            >
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="true" id={`${f12m}-yes`} />
+                                <Label htmlFor={`${f12m}-yes`} className="cursor-pointer text-xs">Yes</Label>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="false" id={`${f12m}-no`} />
+                                <Label htmlFor={`${f12m}-no`} className="cursor-pointer text-xs">No</Label>
+                              </div>
+                            </RadioGroup>
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <RadioGroup
+                              value={data[fPrev]}
+                              onValueChange={(val) => updateField(fPrev, val)}
+                              disabled={isSubmitting || isLoadingData}
+                              className="inline-flex gap-4 justify-center"
+                            >
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="true" id={`${fPrev}-yes`} />
+                                <Label htmlFor={`${fPrev}-yes`} className="cursor-pointer text-xs">Yes</Label>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="false" id={`${fPrev}-no`} />
+                                <Label htmlFor={`${fPrev}-no`} className="cursor-pointer text-xs">No</Label>
+                              </div>
+                            </RadioGroup>
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <RadioGroup
+                              value={data[f7d]}
+                              onValueChange={(val) => updateField(f7d, val)}
+                              disabled={isSubmitting || isLoadingData}
+                              className="inline-flex gap-4 justify-center"
+                            >
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="true" id={`${f7d}-yes`} />
+                                <Label htmlFor={`${f7d}-yes`} className="cursor-pointer text-xs">Yes</Label>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="false" id={`${f7d}-no`} />
+                                <Label htmlFor={`${f7d}-no`} className="cursor-pointer text-xs">No</Label>
+                              </div>
+                            </RadioGroup>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
+              <Button variant="ghost" asChild>
+                <Link to="/forms">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+                {isSubmitting ? "Saving..." : "Save Ergonomics Assessment"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+
+      {formType === "audit_c" && (
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-lg">AUDIT-C Alcohol Risk Assessment</CardTitle>
+            <CardDescription>
+              WHO standardized 3-question survey evaluating alcohol consumption habits and risk patterns.
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={(e) => void handleSaveAuditC(e)}>
+            <CardContent className="space-y-6">
+              {AUDIT_C_QUESTIONS.map((q) => (
+                <div
+                  key={q.field}
+                  id={`field-group-${q.field}`}
+                  className={cn(
+                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors[q.field] &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  )}
+                >
+                  <Label className="text-sm font-medium">{q.title}</Label>
+                  <RadioGroup
+                    value={data[q.field]}
+                    onValueChange={(val) => updateField(q.field, val)}
+                    disabled={isSubmitting || isLoadingData}
+                    className="grid gap-2.5 sm:grid-cols-2"
+                  >
+                    {q.options.map((opt) => (
+                      <div
+                        key={opt.value}
+                        className={cn(
+                          "flex items-center space-x-2.5 rounded-lg border border-border/30 bg-background/30 p-3 transition-all hover:bg-background/60",
+                          data[q.field] === opt.value && "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                        )}
+                      >
+                        <RadioGroupItem value={opt.value} id={`${q.field}-${opt.value}`} />
+                        <Label htmlFor={`${q.field}-${opt.value}`} className="cursor-pointer text-sm font-normal">
+                          {opt.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  {fieldErrors[q.field] && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      {fieldErrors[q.field]}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
+              <Button variant="ghost" asChild>
+                <Link to="/forms">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+                {isSubmitting ? "Saving..." : "Save Alcohol Assessment"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+
+      {formType === "pss10" && (
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-lg">Perceived Stress & Burnout (PSS-10)</CardTitle>
+            <CardDescription>
+              Read each item and indicate how often you felt or thought that way during the last month.
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={(e) => void handleSavePss10(e)}>
+            <CardContent className="space-y-4">
+              {PSS10_QUESTIONS.map(({ field, prompt, isReversed }) => (
+                <div
+                  key={field}
+                  id={`field-group-${field}`}
+                  className={cn(
+                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors[field] &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-sm font-medium">{prompt}</Label>
+                    {isReversed && (
+                      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                        Coping Factor
+                      </span>
+                    )}
+                  </div>
+                  <RadioGroup
+                    value={data[field]}
+                    onValueChange={(val) => updateField(field, val)}
+                    disabled={isSubmitting || isLoadingData}
+                    className="grid gap-2 sm:grid-cols-5"
+                  >
+                    {PSS10_LIKERT_OPTIONS.map((opt) => (
+                      <div
+                        key={opt.value}
+                        className={cn(
+                          "flex flex-col items-center justify-center rounded-lg border border-border/30 bg-background/30 p-2 text-center transition-all hover:bg-background/60",
+                          data[field] === opt.value && "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                        )}
+                      >
+                        <RadioGroupItem value={opt.value} id={`${field}-${opt.value}`} className="mb-1" />
+                        <Label htmlFor={`${field}-${opt.value}`} className="cursor-pointer text-xs font-normal">
+                          {opt.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  {fieldErrors[field] && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      {fieldErrors[field]}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
+              <Button variant="ghost" asChild>
+                <Link to="/forms">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+                {isSubmitting ? "Saving..." : "Save Perceived Stress Scale"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
     </div>
   )
 }
+

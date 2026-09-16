@@ -74,6 +74,30 @@ const ALL_FORMS: FormCardDef[] = [
     editLabel: "Edit Metabolic Data",
     completeLabel: "Complete Metabolic Data",
   },
+  {
+    type: "nordic_nmq",
+    title: "Musculoskeletal Risk (NMQ)",
+    description: "Standardized Nordic Questionnaire evaluating body regions for trouble and work impact.",
+    icon: Activity,
+    editLabel: "Edit Ergonomics Questionnaire",
+    completeLabel: "Complete Ergonomics Questionnaire",
+  },
+  {
+    type: "audit_c",
+    title: "Alcohol Risk Assessment (AUDIT-C)",
+    description: "WHO standardized survey evaluating alcohol consumption frequency and habits.",
+    icon: HeartPulse,
+    editLabel: "Edit AUDIT-C Assessment",
+    completeLabel: "Complete AUDIT-C Assessment",
+  },
+  {
+    type: "pss10",
+    title: "Perceived Stress & Burnout (PSS-10)",
+    description: "10-item scale assessing feelings and stress control over the past month.",
+    icon: HeartPulse,
+    editLabel: "Edit PSS-10 Scale",
+    completeLabel: "Complete PSS-10 Scale",
+  },
 ]
 
 export function MemberFormsPage() {
@@ -87,7 +111,7 @@ export function MemberFormsPage() {
     let cancelled = false
     async function loadFormStatuses() {
       setIsLoading(true)
-      const [activeRes, bio, sleep, habits, mood, metabolic, eoss] =
+      const [activeRes, bio, sleep, habits, mood, metabolic, eoss, nmq, audit, pss] =
         await Promise.all([
           fetchActiveMemberForms(),
           fetchMemberForm("biometrics"),
@@ -96,6 +120,9 @@ export function MemberFormsPage() {
           fetchMemberForm("mood"),
           fetchMemberForm("metabolic"),
           fetchMemberForm("eoss"),
+          fetchMemberForm("nordic_nmq"),
+          fetchMemberForm("audit_c"),
+          fetchMemberForm("pss10"),
         ])
 
       if (!cancelled) {
@@ -131,6 +158,9 @@ export function MemberFormsPage() {
           metabolic?.data && Object.keys(metabolic.data).length > 0
         )
         const hasEoss = Boolean(eoss?.data && Object.keys(eoss.data).length > 0)
+        const hasNmq = Boolean(nmq?.data && Object.keys(nmq.data).length > 0)
+        const hasAudit = Boolean(audit?.data && Object.keys(audit.data).length > 0)
+        const hasPss = Boolean(pss?.data && Object.keys(pss.data).length > 0)
 
         setFormStatuses({
           biometrics: hasBio,
@@ -139,6 +169,9 @@ export function MemberFormsPage() {
           mood: hasMood,
           metabolic: hasMetabolic,
           eoss: hasEoss,
+          nordic_nmq: hasNmq,
+          audit_c: hasAudit,
+          pss10: hasPss,
         })
         setIsLoading(false)
       }
