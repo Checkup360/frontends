@@ -6,6 +6,7 @@ import {
   resolveCmsUrl,
   resolveDashboardUrl,
   resolveWebUrl,
+  type AuthMeResponse,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
@@ -31,15 +32,128 @@ import {
   LayoutGrid,
   ShieldCheck,
   User,
+  type LucideIcon,
 } from "lucide-react"
 
+export type AppId = "web" | "dashboard" | "backoffice" | "cms"
+
 export interface AppOption {
-  id: "web" | "dashboard" | "backoffice" | "cms"
+  id: AppId
   name: string
   label: string
   description: string
   url: string
-  icon: typeof User
+  icon: LucideIcon
+}
+
+export interface AppDefinition {
+  name: string
+  label: string
+  description: string
+  getUrl: () => string
+  icon: LucideIcon
+  isActive?: (origin: string, pathname: string) => boolean
+}
+
+export const APP_DEFINITIONS: Record<AppId, AppDefinition> = {
+  web: {
+    name: "CheckUp360",
+    label: "Employee PWA",
+    description: "Health & wellness portal",
+    getUrl: resolveWebUrl,
+    icon: User,
+    isActive: (origin) => origin.includes("5173") || origin === resolveWebUrl(),
+  },
+  dashboard: {
+    name: "CheckUp360",
+    label: "Employer Dashboard",
+    description: "Organization & analytics management",
+    getUrl: resolveDashboardUrl,
+    icon: Building2,
+    isActive: (origin) =>
+      origin.includes("5174") || origin === resolveDashboardUrl(),
+  },
+  backoffice: {
+    name: "CheckUp360",
+    label: "Backoffice",
+    description: "Global system administration",
+    getUrl: resolveBackofficeUrl,
+    icon: ShieldCheck,
+    isActive: (origin) =>
+      origin.includes("5175") || origin === resolveBackofficeUrl(),
+  },
+  cms: {
+    name: "CheckUp360",
+    label: "CMS",
+    description: "Content & article management",
+    getUrl: () => `${resolveCmsUrl()}/admin`,
+    icon: FileText,
+    isActive: (origin, pathname) =>
+      origin.includes("3000") || pathname.startsWith("/admin"),
+  },
+}
+
+export const ROLE_APPS_MAP: Record<string, readonly AppId[]> = {
+  member: ["web"],
+  admin: ["dashboard", "cms"],
+  sysadmin: ["backoffice"],
+  content_manager: ["cms"],
+}
+
+export function getUserRoles(user: AuthMeResponse | null | undefined): string[] {
+  if (!user) return []
+  const roles: string[] = []
+
+  if (user.is_sysadmin) {
+    roles.push("sysadmin")
+  }
+
+  if (user.membership?.roles) {
+    roles.push(...user.membership.roles)
+  }
+
+  return roles
+}
+
+export function getAvailableApps(
+  user: AuthMeResponse | null | undefined,
+  roleMap: Record<string, readonly AppId[]> = ROLE_APPS_MAP,
+  appDefs: Record<AppId, AppDefinition> = APP_DEFINITIONS
+): AppOption[] {
+  const roles = getUserRoles(user)
+  const appIds = new Set<AppId>()
+
+  for (const role of roles) {
+    const mappedApps = roleMap[role]
+    if (mappedApps) {
+      for (const appId of mappedApps) {
+        appIds.add(appId)
+      }
+    }
+  }
+
+  return Array.from(appIds).map((appId) => {
+    const app = appDefs[appId]
+    return {
+      id: appId,
+      name: app.name,
+      label: app.label,
+      description: app.description,
+      url: app.getUrl(),
+      icon: app.icon,
+    }
+  })
+}
+
+export function getActiveAppId(
+  origin: string,
+  pathname: string,
+  appDefs: Record<AppId, AppDefinition> = APP_DEFINITIONS
+): AppId {
+  const matchingAppEntry = Object.entries(appDefs).find(([, def]) =>
+    def.isActive ? def.isActive(origin, pathname) : false
+  )
+  return (matchingAppEntry ? matchingAppEntry[0] : "web") as AppId
 }
 
 export interface AppSwitcherProps {
@@ -55,81 +169,14 @@ export function AppSwitcher({
 }: AppSwitcherProps = {}) {
   const { user } = useCurrentUser()
 
-  const availableApps = useMemo<AppOption[]>(() => {
-    const webUrl = resolveWebUrl()
-    const dashboardUrl = resolveDashboardUrl()
-    const backofficeUrl = resolveBackofficeUrl()
-    const cmsUrl = `${resolveCmsUrl()}/admin`
-
-    const isSysadmin = Boolean(user?.is_sysadmin)
-    const userRoles = user?.membership?.roles || []
-    const isOrgAdmin = userRoles.includes("admin")
-    const isContentManager = userRoles.includes("content_manager")
-
-    const apps: AppOption[] = []
-
-    if (!isSysadmin) {
-      apps.push({
-        id: "web",
-        name: "CheckUp360",
-        label: "Employee PWA",
-        description: "Health & wellness portal",
-        url: webUrl,
-        icon: User,
-      })
-    }
-
-    if (isOrgAdmin) {
-      apps.push({
-        id: "dashboard",
-        name: "CheckUp360",
-        label: "Employer Dashboard",
-        description: "Organization & analytics management",
-        url: dashboardUrl,
-        icon: Building2,
-      })
-    }
-
-    if (isSysadmin) {
-      apps.push({
-        id: "backoffice",
-        name: "CheckUp360",
-        label: "Backoffice",
-        description: "Global system administration",
-        url: backofficeUrl,
-        icon: ShieldCheck,
-      })
-    }
-
-    if (isOrgAdmin || isContentManager) {
-      apps.push({
-        id: "cms",
-        name: "CheckUp360",
-        label: "CMS",
-        description: "Content & article management",
-        url: cmsUrl,
-        icon: FileText,
-      })
-    }
-
-    return apps
-  }, [user])
+  const availableApps = useMemo<AppOption[]>(
+    () => getAvailableApps(user),
+    [user]
+  )
 
   const activeAppId = useMemo(() => {
     if (typeof window === "undefined") return "web"
-    const currentOrigin = window.location.origin
-    const currentPath = window.location.pathname
-
-    if (currentOrigin.includes("3000") || currentPath.startsWith("/admin")) {
-      return "cms"
-    }
-    if (currentOrigin.includes("5175") || currentOrigin === resolveBackofficeUrl()) {
-      return "backoffice"
-    }
-    if (currentOrigin.includes("5174") || currentOrigin === resolveDashboardUrl()) {
-      return "dashboard"
-    }
-    return "web"
+    return getActiveAppId(window.location.origin, window.location.pathname)
   }, [])
 
   const handleAppSwitch = (url: string) => {
@@ -182,7 +229,9 @@ export function AppSwitcher({
                       </span>
                     </div>
                   </div>
-                  {isCurrent && <Check className="size-4 text-primary shrink-0 ml-2" />}
+                  {isCurrent && (
+                    <Check className="size-4 text-primary shrink-0 ml-2" />
+                  )}
                 </DropdownMenuItem>
               )
             })}
@@ -191,6 +240,7 @@ export function AppSwitcher({
       </DropdownMenu>
     )
   }
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
