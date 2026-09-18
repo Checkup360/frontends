@@ -1139,7 +1139,7 @@ export function MemberFormsStudiesPage() {
     if (res.error) {
       setGlobalError(res.error.message || "Failed to save PSS-10 perceived stress scale.")
     } else {
-      toast.success("Perceived Stress & Burnout (PSS-10) saved successfully.")
+      toast.success("Perceived Stress & Burnout saved successfully.")
       navigate("/forms")
     }
   }
@@ -1181,17 +1181,17 @@ export function MemberFormsStudiesPage() {
       icon: HeartPulse,
     },
     nordic_nmq: {
-      title: "Musculoskeletal Risk (NMQ)",
-      description: "Standardized Nordic Questionnaire evaluating body regions for trouble and work impact.",
+      title: "Musculoskeletal Risk",
+      description: "Standardized questionnaire evaluating body regions for discomfort and work impact.",
       icon: Activity,
     },
     audit_c: {
-      title: "Alcohol Risk Assessment (AUDIT-C)",
-      description: "WHO 3-item questionnaire evaluating alcohol consumption and risk behaviors.",
+      title: "Alcohol Risk Assessment",
+      description: "Standardized questionnaire evaluating alcohol consumption and risk behaviors.",
       icon: HeartPulse,
     },
     pss10: {
-      title: "Perceived Stress & Burnout (PSS-10)",
+      title: "Perceived Stress & Burnout",
       description: "10-item scale assessing perceived stress and coping capacity over the past month.",
       icon: HeartPulse,
     },
@@ -2078,7 +2078,7 @@ export function MemberFormsStudiesPage() {
       {formType === "eoss" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Obesity-related Health Impact (EOSS)</CardTitle>
+            <CardTitle className="text-lg">Obesity-related Health Impact</CardTitle>
             <CardDescription>
               Choose the statement that best describes your daily situation in each area. This functional assessment is a self-evaluation, not a medical diagnosis.
             </CardDescription>
@@ -2144,7 +2144,7 @@ export function MemberFormsStudiesPage() {
       {formType === "nordic_nmq" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Standardized Nordic Questionnaire (NMQ)</CardTitle>
+            <CardTitle className="text-lg">Musculoskeletal Risk Assessment</CardTitle>
             <CardDescription>
               Evaluate musculoskeletal trouble and work capacity across 9 body regions over the past 12 months and 7 days.
             </CardDescription>
@@ -2244,9 +2244,9 @@ export function MemberFormsStudiesPage() {
       {formType === "audit_c" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">AUDIT-C Alcohol Risk Assessment</CardTitle>
+            <CardTitle className="text-lg">Alcohol Risk Assessment</CardTitle>
             <CardDescription>
-              WHO standardized 3-question survey evaluating alcohol consumption habits and risk patterns.
+              Standardized 3-question survey evaluating alcohol consumption habits and risk patterns.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveAuditC(e)}>
@@ -2307,7 +2307,7 @@ export function MemberFormsStudiesPage() {
       {formType === "pss10" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Perceived Stress & Burnout (PSS-10)</CardTitle>
+            <CardTitle className="text-lg">Perceived Stress & Burnout</CardTitle>
             <CardDescription>
               Read each item and indicate how often you felt or thought that way during the last month.
             </CardDescription>

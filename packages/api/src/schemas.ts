@@ -244,7 +244,7 @@ export type AssessmentSubmissionListResponse = {
 }
 
 export type AssessmentSubmissionDetail = AssessmentSubmissionSummary & {
-  answers: Record<string, string | number | boolean | null>
+  answers: Record<string, unknown>
   scores: AssessmentResultResponse[]
 }
 

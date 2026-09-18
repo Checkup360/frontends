@@ -138,7 +138,7 @@ export function getAssessmentDisplayName(
   const safeName = scoreName || ""
   const text = `${safeId} ${safeName}`.toLowerCase()
   if (text.includes("phq") || text.includes("depression") || text.includes("mood")) {
-    return "Mood and Emotional Well-being"
+    return "Mood & Well-being"
   }
   if (text.includes("findrisc") || text.includes("diabetes")) return "Diabetes"
   if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
@@ -153,16 +153,16 @@ export function getAssessmentDisplayName(
   }
   if (text.includes("eoss") || text.includes("obesity")) return "Obesity-related Health Impact"
   if (text.includes("score2") || text.includes("cardiovascular")) {
-    return "Cardiovascular Health"
+    return "Cardiovascular Risk"
   }
   if (text.includes("nordic") || text.includes("nmq") || text.includes("musculoskeletal")) {
-    return "Musculoskeletal Risk (NMQ)"
+    return "Musculoskeletal Risk"
   }
   if (text.includes("audit") || text.includes("alcohol")) {
-    return "Alcohol Risk Assessment (AUDIT-C)"
+    return "Alcohol Risk Assessment"
   }
   if (text.includes("pss") || text.includes("stress")) {
-    return "Perceived Stress (PSS-10)"
+    return "Perceived Stress & Burnout"
   }
   return safeName || safeId || "Clinical Assessment"
 }

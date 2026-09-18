@@ -88,7 +88,7 @@ const SCORE_TOPICS: ScoreTopic[] = [
   },
   {
     id: "nordic_nmq",
-    name: "Musculoskeletal Risk (NMQ)",
+    name: "Musculoskeletal Risk",
     subtitle: "Ergonomics & physical load",
     description: "Evaluates trouble and work impairment across 9 anatomical body regions.",
     icon: Activity,
@@ -96,7 +96,7 @@ const SCORE_TOPICS: ScoreTopic[] = [
   },
   {
     id: "audit_c",
-    name: "Alcohol Risk Assessment (AUDIT-C)",
+    name: "Alcohol Risk Assessment",
     subtitle: "Occupational safety & consumption",
     description: "Evaluates alcohol consumption frequency, daily quantity, and binge drinking patterns.",
     icon: HeartPulse,
@@ -104,7 +104,7 @@ const SCORE_TOPICS: ScoreTopic[] = [
   },
   {
     id: "pss10",
-    name: "Perceived Stress & Burnout (PSS-10)",
+    name: "Perceived Stress & Burnout",
     subtitle: "Psychological resilience & burnout",
     description: "Evaluates perceived stress levels, control over life events, and coping capacity.",
     icon: HeartPulse,

@@ -75,65 +75,211 @@ const FORM_FIELDS: Record<string, string[]> = {
     "eoss_mental_health_stage",
     "eoss_functional_stage",
   ],
+  audit_c: [
+    "audit_c_frequency",
+    "audit_c_quantity",
+    "audit_c_heavy_drinking",
+  ],
+  pss10: [
+    "pss10_q1",
+    "pss10_q2",
+    "pss10_q3",
+    "pss10_q4",
+    "pss10_q5",
+    "pss10_q6",
+    "pss10_q7",
+    "pss10_q8",
+    "pss10_q9",
+    "pss10_q10",
+  ],
+  nordic_nmq: ["nordic_nmq_data"],
+}
+
+const NMQ_ZONE_LABELS: Record<string, string> = {
+  neck: "Neck",
+  shoulders: "Shoulders",
+  elbows: "Elbows",
+  wrists_hands: "Wrists & Hands",
+  upper_back: "Upper Back",
+  lower_back: "Lower Back",
+  hips_thighs: "Hips & Thighs",
+  knees: "Knees",
+  ankles_feet: "Ankles & Feet",
 }
 
 const FORM_LABELS: Record<string, string> = {
-  biometrics: "Physical biometrics",
-  sleep: "Sleep quality",
-  habits: "Lifestyle and habits",
-  mood: "Mood and emotional well-being",
-  metabolic: "Metabolic health",
+  biometrics: "Physical Biometrics",
+  sleep: "Sleep Quality",
+  habits: "Lifestyle & Habits",
+  mood: "Mood & Well-being",
+  metabolic: "Metabolic Health",
   eoss: "Obesity-related Health Impact",
-  clinical_assessment: "Clinical assessment",
-  eoss_physical_health_stage: "EOSS physical health stage",
-  eoss_mental_health_stage: "EOSS mental health stage",
-  eoss_functional_stage: "EOSS functional stage",
+  audit_c: "Alcohol Risk Assessment",
+  pss10: "Perceived Stress & Burnout",
+  nordic_nmq: "Musculoskeletal Risk",
+  clinical_assessment: "Clinical Assessment",
+  eoss_physical_health_stage: "Physical health stage",
+  eoss_mental_health_stage: "Mental health stage",
+  eoss_functional_stage: "Functional daily living stage",
   sex: "Biological sex",
-  height: "Height",
-  weight: "Weight",
-  waist_circumference: "Waist circumference",
-  triglycerides: "Triglycerides",
-  total_cholesterol: "Total cholesterol",
-  hdl_cholesterol: "HDL cholesterol",
-  systolic_blood_pressure: "Systolic blood pressure",
-  diastolic_blood_pressure: "Diastolic blood pressure",
-  fasting_glucose: "Fasting glucose",
+  height: "Height (cm)",
+  weight: "Weight (kg)",
+  waist_circumference: "Waist circumference (cm)",
+  triglycerides: "Triglycerides (mg/dL)",
+  total_cholesterol: "Total cholesterol (mg/dL)",
+  hdl_cholesterol: "HDL cholesterol (mg/dL)",
+  systolic_blood_pressure: "Systolic blood pressure (mmHg)",
+  diastolic_blood_pressure: "Diastolic blood pressure (mmHg)",
+  fasting_glucose: "Fasting blood glucose (mg/dL)",
   glucose_lowering_medication: "Glucose-lowering medication",
-  neck_circumference: "Neck circumference",
+  neck_circumference: "Neck circumference (cm)",
   snoring: "Snoring",
   tired: "Daytime fatigue",
   observed_apnea: "Observed apnea",
-  daily_physical_activity: "Daily physical activity",
-  fruits_vegetables: "Fruit and vegetable intake",
+  daily_physical_activity: "Daily physical activity (30+ min)",
+  fruits_vegetables: "Daily fruit & vegetables intake",
   hypertension_medication: "Blood pressure medication",
   previous_high_glucose: "Previous high blood glucose",
   smoker: "Current smoking status",
   family_diabetes: "Family history of diabetes",
-  little_interest: "Interest or pleasure",
-  feeling_down: "Feeling down or hopeless",
-  sleep_trouble: "Sleep trouble",
-  tired_energy: "Energy level",
-  appetite: "Appetite",
-  feeling_bad: "Feeling bad about yourself",
-  concentration: "Concentration",
-  psychomotor: "Movement or restlessness",
-  self_harm_thoughts: "Thoughts of self-harm",
+  little_interest: "1. Little interest or pleasure in doing things",
+  feeling_down: "2. Feeling down, depressed, or hopeless",
+  sleep_trouble: "3. Trouble falling/staying asleep, or sleeping too much",
+  tired_energy: "4. Feeling tired or having little energy",
+  appetite: "5. Poor appetite or overeating",
+  feeling_bad: "6. Feeling bad about yourself",
+  concentration: "7. Trouble concentrating on things",
+  psychomotor: "8. Moving/speaking slowly or being restless",
+  self_harm_thoughts: "9. Thoughts of self-harm or being better off dead",
+  audit_c_frequency: "1. How often do you have a drink containing alcohol?",
+  audit_c_quantity: "2. How many standard drinks on a typical drinking day?",
+  audit_c_heavy_drinking: "3. How often do you have 6+ drinks on one occasion?",
+  pss10_q1: "1. Upset because of something that happened unexpectedly",
+  pss10_q2: "2. Felt unable to control important things in your life",
+  pss10_q3: "3. Felt nervous and stressed",
+  pss10_q4: "4. Felt confident about ability to handle personal problems",
+  pss10_q5: "5. Felt that things were going your way",
+  pss10_q6: "6. Found that you could not cope with all things to do",
+  pss10_q7: "7. Able to control irritations in your life",
+  pss10_q8: "8. Felt that you were on top of things",
+  pss10_q9: "9. Angered because of things outside your control",
+  pss10_q10: "10. Difficulties piling up so high you could not overcome them",
 }
 
 function getFormLabel(value: string): string {
   return FORM_LABELS[value] || value.replaceAll("_", " ")
 }
 
-function formatAnswer(field: string, value: string | number | boolean | null): string {
-  if (value === null) return "Not provided"
+function formatAnswer(field: string, value: unknown): string {
+  if (value === null || value === undefined) return "Not provided"
   if (typeof value === "boolean") return value ? "Yes" : "No"
+
   if (field === "family_diabetes") {
-    return {
-      no: "No family history",
-      yes_2nd_degree: "Yes, second-degree relative",
-      yes_1st_degree: "Yes, first-degree relative",
-    }[String(value)] || String(value)
+    return (
+      {
+        no: "No family history",
+        second_degree: "Yes, second-degree relative (grandparent, aunt, etc.)",
+        first_degree: "Yes, first-degree relative (parent, sibling, child)",
+        yes_2nd_degree: "Yes, second-degree relative",
+        yes_1st_degree: "Yes, first-degree relative",
+      }[String(value)] || String(value)
+    )
   }
+
+  if (field === "sex") {
+    if (value === "M" || value === "male") return "Male"
+    if (value === "F" || value === "female") return "Female"
+  }
+
+  if (field.startsWith("eoss_")) {
+    const num = Number(value)
+    return (
+      {
+        0: "Stage 0 (No risk factors / normal)",
+        1: "Stage 1 (Subclinical risk factors)",
+        2: "Stage 2 (Established comorbidities)",
+        3: "Stage 3 (Significant end-organ damage)",
+        4: "Stage 4 (Severe disability / end-stage)",
+      }[num] || `Stage ${num}`
+    )
+  }
+
+  if (
+    [
+      "little_interest",
+      "feeling_down",
+      "sleep_trouble",
+      "tired_energy",
+      "appetite",
+      "feeling_bad",
+      "concentration",
+      "psychomotor",
+      "self_harm_thoughts",
+    ].includes(field)
+  ) {
+    const num = Number(value)
+    return (
+      {
+        0: "0 - Not at all",
+        1: "1 - Several days",
+        2: "2 - More than half the days",
+        3: "3 - Nearly every day",
+      }[num] || String(value)
+    )
+  }
+
+  if (field === "audit_c_frequency") {
+    const num = Number(value)
+    return (
+      {
+        0: "Never",
+        1: "Monthly or less",
+        2: "2 to 4 times a month",
+        3: "2 to 3 times a week",
+        4: "4 or more times a week",
+      }[num] || String(value)
+    )
+  }
+
+  if (field === "audit_c_quantity") {
+    const num = Number(value)
+    return (
+      {
+        0: "1 or 2 standard drinks",
+        1: "3 or 4 standard drinks",
+        2: "5 or 6 standard drinks",
+        3: "7 to 9 standard drinks",
+        4: "10 or more standard drinks",
+      }[num] || String(value)
+    )
+  }
+
+  if (field === "audit_c_heavy_drinking") {
+    const num = Number(value)
+    return (
+      {
+        0: "Never",
+        1: "Less than monthly",
+        2: "Monthly",
+        3: "Weekly",
+        4: "Daily or almost daily",
+      }[num] || String(value)
+    )
+  }
+
+  if (field.startsWith("pss10_q")) {
+    const num = Number(value)
+    return (
+      {
+        0: "0 - Never",
+        1: "1 - Almost never",
+        2: "2 - Sometimes",
+        3: "3 - Fairly often",
+        4: "4 - Very often",
+      }[num] || String(value)
+    )
+  }
+
   return String(value)
 }
 
@@ -160,6 +306,10 @@ export function AssessmentSubmissionHistory({
     onSelect(submission)
   }
 
+  const isNmq =
+    selected?.form_type === "nordic_nmq" ||
+    Boolean(selected?.answers?.nordic_nmq_data)
+
   return (
     <Card>
       <CardHeader>
@@ -183,7 +333,7 @@ export function AssessmentSubmissionHistory({
                   key={submission.id}
                   type="button"
                   onClick={() => handleSelect(submission)}
-                  className="flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/40"
+                  className="flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/40 cursor-pointer"
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium">
@@ -216,7 +366,7 @@ export function AssessmentSubmissionHistory({
           </>
         )}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-          <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
             {selected && (
               <>
                 <DialogHeader>
@@ -230,25 +380,115 @@ export function AssessmentSubmissionHistory({
                     <Loader2 className="size-4 animate-spin" /> Loading details...
                   </div>
                 ) : (
-                  <>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {getVisibleAnswers(selected).map(([field, value]) => (
-                        <div key={field} className="rounded-md bg-muted/40 px-3 py-2">
-                          <p className="text-[11px] text-muted-foreground">{getFormLabel(field)}</p>
-                          <p className="text-sm font-medium">{formatAnswer(field, value)}</p>
+                  <div className="space-y-5">
+                    {/* Questionnaire Answers Display */}
+                    <div>
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2.5">
+                        Submitted Questionnaire Responses
+                      </h4>
+
+                      {isNmq ? (
+                        <div className="rounded-xl border overflow-hidden">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-muted/60 text-[11px] text-muted-foreground uppercase border-b">
+                              <tr>
+                                <th className="py-2.5 px-3 font-semibold">Anatomical Region</th>
+                                <th className="py-2.5 px-2 text-center font-semibold">12m Trouble</th>
+                                <th className="py-2.5 px-2 text-center font-semibold">Work Impact</th>
+                                <th className="py-2.5 px-2 text-center font-semibold">7d Trouble</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/50">
+                              {Object.entries(NMQ_ZONE_LABELS).map(([zoneKey, zoneLabel]) => {
+                                const zoneData =
+                                  ((selected.answers.nordic_nmq_data as Record<string, any>)?.[zoneKey]) || {}
+                                const hasTrouble12m = Boolean(zoneData.trouble_last_12_months)
+                                const hasPreventWork = Boolean(zoneData.prevented_work_last_12_months)
+                                const hasTrouble7d = Boolean(zoneData.trouble_last_7_days)
+                                const hasAny = hasTrouble12m || hasPreventWork || hasTrouble7d
+
+                                return (
+                                  <tr key={zoneKey} className={hasAny ? "bg-muted/20" : ""}>
+                                    <td className="py-2 px-3 font-medium text-foreground">
+                                      {zoneLabel}
+                                    </td>
+                                    <td className="py-2 px-2 text-center">
+                                      {hasTrouble12m ? (
+                                        <Badge variant="warning-light" size="xs">Yes</Badge>
+                                      ) : (
+                                        <span className="text-muted-foreground text-[11px]">No</span>
+                                      )}
+                                    </td>
+                                    <td className="py-2 px-2 text-center">
+                                      {hasPreventWork ? (
+                                        <Badge variant="destructive" size="xs">Yes</Badge>
+                                      ) : (
+                                        <span className="text-muted-foreground text-[11px]">No</span>
+                                      )}
+                                    </td>
+                                    <td className="py-2 px-2 text-center">
+                                      {hasTrouble7d ? (
+                                        <Badge variant="warning-light" size="xs">Yes</Badge>
+                                      ) : (
+                                        <span className="text-muted-foreground text-[11px]">No</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
                         </div>
-                      ))}
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-semibold">Risk results</h3>
-                      {selected.scores.map((score) => (
-                        <div key={score.score_id} className="flex items-center justify-between rounded-md border px-3 py-2">
-                          <span className="text-sm">{getAssessmentDisplayName(score.score_id, score.score_name)}</span>
-                          <Badge variant="outline">{score.risk_level || "Calculated"}</Badge>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {getVisibleAnswers(selected).map(([field, value]) => (
+                            <div
+                              key={field}
+                              className="flex flex-col justify-between rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5 transition-all hover:bg-muted/30"
+                            >
+                              <p className="text-[11px] font-medium text-muted-foreground leading-snug">
+                                {getFormLabel(field)}
+                              </p>
+                              <p className="text-xs font-semibold text-foreground mt-1.5">
+                                {formatAnswer(field, value)}
+                              </p>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </>
+
+                    {/* Resulting Evaluated Scores */}
+                    {selected.scores && selected.scores.length > 0 && (
+                      <div className="space-y-2.5 pt-3 border-t">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Calculated Clinical Risk Results
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {selected.scores.map((score) => (
+                            <div
+                              key={score.score_id}
+                              className="flex items-center justify-between rounded-lg border border-border/60 bg-card px-3 py-2.5 shadow-xs"
+                            >
+                              <div className="min-w-0 pr-2">
+                                <span className="block truncate text-xs font-semibold text-foreground">
+                                  {getAssessmentDisplayName(score.score_id, score.score_name)}
+                                </span>
+                                {score.normalized_value !== null && score.normalized_value !== undefined && (
+                                  <span className="text-[11px] text-muted-foreground">
+                                    Score: {Math.round(score.normalized_value)}%
+                                  </span>
+                                )}
+                              </div>
+                              <Badge variant="outline" className="shrink-0 capitalize text-xs">
+                                {score.risk_level || "Calculated"}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </>
             )}
