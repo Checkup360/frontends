@@ -82,7 +82,7 @@ const PALETTE = [
   "oklch(0.58 0.20 10)",  // Rose
 ]
 
-/** Standard score topics reusing identical icons from score-weights.tsx */
+/** Standard score topics reusing identical icons and metadata from score-weights.tsx */
 const SCORE_TOPICS = [
   {
     id: "diabetes",
@@ -99,10 +99,52 @@ const SCORE_TOPICS = [
     icon: Moon,
   },
   {
-    id: "mood",
-    matchKey: "phq9",
+    id: "depression",
+    matchKey: "phq",
     name: "Mood & Well-being",
     subtitle: "Emotional well-being",
+    icon: HeartPulse,
+  },
+  {
+    id: "metabolic_syndrome",
+    matchKey: "metabolic",
+    name: "Metabolic Health",
+    subtitle: "Cardiometabolic risk",
+    icon: Activity,
+  },
+  {
+    id: "eoss",
+    matchKey: "eoss",
+    name: "Obesity-related Health Impact",
+    subtitle: "Health impact staging",
+    icon: HeartPulse,
+  },
+  {
+    id: "cardiovascular",
+    matchKey: "score2",
+    name: "Cardiovascular Risk",
+    subtitle: "Heart health & 10-year CVD risk",
+    icon: HeartPulse,
+  },
+  {
+    id: "nordic_nmq",
+    matchKey: "nordic",
+    name: "Musculoskeletal Risk (NMQ)",
+    subtitle: "Ergonomics & physical load",
+    icon: Activity,
+  },
+  {
+    id: "audit_c",
+    matchKey: "audit",
+    name: "Alcohol Risk Assessment (AUDIT-C)",
+    subtitle: "Occupational safety & consumption",
+    icon: HeartPulse,
+  },
+  {
+    id: "pss10",
+    matchKey: "pss",
+    name: "Perceived Stress & Burnout (PSS-10)",
+    subtitle: "Psychological resilience & burnout",
     icon: HeartPulse,
   },
 ]
@@ -356,41 +398,47 @@ export function EmployeeDetailPage() {
   const dynamicIndicators: HealthScoreRow[] = useMemo(() => {
     const results = activeSession?.results || []
 
-    return SCORE_TOPICS.map((topic) => {
-      const match = results.find(
-        (r) =>
-          (r.score_id &&
-            (r.score_id.toLowerCase().includes(topic.id) ||
-              r.score_id.toLowerCase().includes(topic.matchKey))) ||
-          (r.score_name &&
-            r.score_name.toLowerCase().includes(topic.name.toLowerCase()))
-      )
+    if (results.length > 0) {
+      return results.map((result) => {
+        const topic = SCORE_TOPICS.find(
+          (t) =>
+            (result.score_id &&
+              (result.score_id.toLowerCase().includes(t.id) ||
+                result.score_id.toLowerCase().includes(t.matchKey))) ||
+            (result.score_name &&
+              (result.score_name.toLowerCase().includes(t.name.toLowerCase()) ||
+                result.score_name.toLowerCase().includes(t.id) ||
+                result.score_name.toLowerCase().includes(t.matchKey)))
+        )
 
-      if (
-        !match ||
-        match.normalized_value === null ||
-        match.normalized_value === undefined
-      ) {
+        const val =
+          result.normalized_value !== null && result.normalized_value !== undefined
+            ? Math.round(result.normalized_value)
+            : null
+
+        const riskMeta = getRiskTone(result.risk_level, val)
+        const displayName = getAssessmentDisplayName(
+          result.score_id,
+          result.score_name || topic?.name
+        )
+
         return {
-          label: topic.name,
-          value: null,
-          icon: topic.icon,
-          tone: "muted" as const,
-          isPending: true,
+          label: displayName,
+          value: val,
+          icon: topic?.icon || Activity,
+          tone: riskMeta.tone,
+          isPending: val === null,
         }
-      }
+      })
+    }
 
-      const val = Math.round(match.normalized_value)
-      const riskMeta = getRiskTone(match.risk_level, val)
-
-      return {
-        label: match.score_name || topic.name,
-        value: val,
-        icon: topic.icon,
-        tone: riskMeta.tone,
-        isPending: false,
-      }
-    })
+    return SCORE_TOPICS.slice(0, 3).map((topic) => ({
+      label: topic.name,
+      value: null,
+      icon: topic.icon,
+      tone: "muted" as const,
+      isPending: true,
+    }))
   }, [activeSession])
 
   const hasAnyEvaluated = dynamicIndicators.some(
@@ -748,33 +796,92 @@ export function EmployeeDetailPage() {
 
                 {/* Assessment Modules Grid: Neutral Card styling, color ONLY on the percentage badge */}
                 <div className="grid gap-4 md:grid-cols-2">
-                  {SCORE_TOPICS.map((topic) => {
-                    const result = activeSession?.results.find(
-                      (r) =>
-                        (r.score_id &&
-                          (r.score_id.toLowerCase().includes(topic.id) ||
-                            r.score_id.toLowerCase().includes(topic.matchKey))) ||
-                        (r.score_name &&
-                          r.score_name
-                            .toLowerCase()
-                            .includes(topic.name.toLowerCase()))
-                    )
+                  {activeSession?.results && activeSession.results.length > 0 ? (
+                    activeSession.results.map((result) => {
+                      const topic = SCORE_TOPICS.find(
+                        (t) =>
+                          (result.score_id &&
+                            (result.score_id.toLowerCase().includes(t.id) ||
+                              result.score_id.toLowerCase().includes(t.matchKey))) ||
+                          (result.score_name &&
+                            (result.score_name
+                              .toLowerCase()
+                              .includes(t.name.toLowerCase()) ||
+                              result.score_name.toLowerCase().includes(t.id) ||
+                              result.score_name.toLowerCase().includes(t.matchKey)))
+                      )
 
-                    const Icon = topic.icon
-                    const isEvaluated =
-                      result &&
-                      result.normalized_value !== null &&
-                      result.normalized_value !== undefined
+                      const Icon = topic?.icon || Activity
+                      const isEvaluated =
+                        result.normalized_value !== null &&
+                        result.normalized_value !== undefined
 
-                    const val = isEvaluated
-                      ? Math.round(result.normalized_value as number)
-                      : null
-                    const riskMeta = getRiskTone(
-                      result?.risk_level,
-                      val
-                    )
+                      const val = isEvaluated
+                        ? Math.round(result.normalized_value as number)
+                        : null
+                      const riskMeta = getRiskTone(
+                        result?.risk_level,
+                        val
+                      )
 
-                    if (!isEvaluated) {
+                      const hasCustomExplanation =
+                        result?.explanation &&
+                        result.explanation.trim() !== "" &&
+                        result.explanation.toLowerCase() !==
+                          "no explanation provided."
+
+                      const displayName = getAssessmentDisplayName(
+                        result.score_id,
+                        result.score_name || topic?.name
+                      )
+
+                      return (
+                        <div
+                          key={result.score_id || displayName}
+                          className="flex flex-col justify-between rounded-2xl border border-border/60 bg-card p-5 transition-all hover:shadow-xs"
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-3">
+                                <div className="flex size-8 items-center justify-center rounded-lg bg-muted text-foreground">
+                                  <Icon className="size-4" />
+                                </div>
+                                <div>
+                                  <span className="font-semibold text-foreground text-sm">
+                                    {displayName}
+                                  </span>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    {topic?.subtitle || "Clinical risk assessment"}
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className={`text-xs font-semibold ${riskMeta.badgeClass}`}
+                              >
+                                {val !== null ? `${val}%` : "N/A"}
+                              </Badge>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground">Risk Level:</span>
+                              <span className="font-semibold text-foreground capitalize">
+                                {result.risk_level || riskMeta.label}
+                              </span>
+                            </div>
+
+                            {hasCustomExplanation && (
+                              <p className="text-xs text-muted-foreground leading-relaxed pt-1">
+                                {result.explanation}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    SCORE_TOPICS.map((topic) => {
+                      const Icon = topic.icon
                       return (
                         <div
                           key={topic.id}
@@ -808,58 +915,8 @@ export function EmployeeDetailPage() {
                           </div>
                         </div>
                       )
-                    }
-
-                    const hasCustomExplanation =
-                      result?.explanation &&
-                      result.explanation.trim() !== "" &&
-                      result.explanation.toLowerCase() !==
-                        "no explanation provided."
-
-                    return (
-                      <div
-                        key={topic.id}
-                        className="flex flex-col justify-between rounded-2xl border border-border/60 bg-card p-5 transition-all hover:shadow-xs"
-                      >
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-3">
-                              <div className="flex size-8 items-center justify-center rounded-lg bg-muted text-foreground">
-                                <Icon className="size-4" />
-                              </div>
-                              <div>
-                                <span className="font-semibold text-foreground text-sm">
-                                  {getAssessmentDisplayName(result.score_id, result.score_name || topic.name)}
-                                </span>
-                                <p className="text-[11px] text-muted-foreground">
-                                  {topic.subtitle}
-                                </p>
-                              </div>
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className={`text-xs font-semibold ${riskMeta.badgeClass}`}
-                            >
-                              {val}%
-                            </Badge>
-                          </div>
-
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-muted-foreground">Risk Level:</span>
-                            <span className="font-semibold text-foreground capitalize">
-                              {result.risk_level || riskMeta.label}
-                            </span>
-                          </div>
-
-                          {hasCustomExplanation && (
-                            <p className="text-xs text-muted-foreground leading-relaxed pt-1">
-                              {result.explanation}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
+                    })
+                  )}
                 </div>
               </div>
             )}

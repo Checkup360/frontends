@@ -130,8 +130,13 @@ export interface ComputedHealthScore {
   recommendations: Recommendation[]
 }
 
-export function getAssessmentDisplayName(scoreId: string, scoreName: string): string {
-  const text = `${scoreId} ${scoreName}`.toLowerCase()
+export function getAssessmentDisplayName(
+  scoreId?: string | null,
+  scoreName?: string | null
+): string {
+  const safeId = scoreId || ""
+  const safeName = scoreName || ""
+  const text = `${safeId} ${safeName}`.toLowerCase()
   if (text.includes("phq") || text.includes("depression") || text.includes("mood")) {
     return "Mood and Emotional Well-being"
   }
@@ -139,14 +144,27 @@ export function getAssessmentDisplayName(scoreId: string, scoreName: string): st
   if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
     return "Sleep Apnea"
   }
-  if (text.includes("metabolic_syndrome") || text.includes("metabolic syndrome")) {
+  if (
+    text.includes("metabolic_syndrome") ||
+    text.includes("metabolic syndrome") ||
+    text.includes("metabolic")
+  ) {
     return "Metabolic Health"
   }
   if (text.includes("eoss") || text.includes("obesity")) return "Obesity-related Health Impact"
   if (text.includes("score2") || text.includes("cardiovascular")) {
     return "Cardiovascular Health"
   }
-  return scoreName
+  if (text.includes("nordic") || text.includes("nmq") || text.includes("musculoskeletal")) {
+    return "Musculoskeletal Risk (NMQ)"
+  }
+  if (text.includes("audit") || text.includes("alcohol")) {
+    return "Alcohol Risk Assessment (AUDIT-C)"
+  }
+  if (text.includes("pss") || text.includes("stress")) {
+    return "Perceived Stress (PSS-10)"
+  }
+  return safeName || safeId || "Clinical Assessment"
 }
 
 export function computeOverallHealthScore(
