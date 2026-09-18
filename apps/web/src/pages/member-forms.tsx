@@ -4,6 +4,7 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Progress } from "@workspace/ui/components/progress"
+import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
   Activity,
   ArrowRight,
@@ -103,7 +104,7 @@ const ALL_FORMS: FormCardDef[] = [
 export function MemberFormsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeFormTypes, setActiveFormTypes] = useState<Set<string>>(
-    () => new Set(ALL_FORMS.map((f) => f.type))
+    () => new Set()
   )
   const [formStatuses, setFormStatuses] = useState<Record<string, boolean>>({})
 
@@ -219,9 +220,7 @@ export function MemberFormsPage() {
               </div>
             </div>
             {isLoading ? (
-              <Badge variant="outline" className="animate-pulse">
-                Checking...
-              </Badge>
+              <Skeleton className="h-6 w-32 rounded-full" />
             ) : allCompleted ? (
               <Badge
                 variant="default"
@@ -239,15 +238,25 @@ export function MemberFormsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-medium text-muted-foreground">
-              <span>Form Completion</span>
-              <span>
-                {progressPercent}% ({completedCount} of {totalCount} active sections filled)
-              </span>
+          {isLoading ? (
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <Skeleton className="h-2.5 w-full rounded-full" />
             </div>
-            <Progress value={progressPercent} className="h-2.5" />
-          </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-medium text-muted-foreground">
+                <span>Form Completion</span>
+                <span>
+                  {progressPercent}% ({completedCount} of {totalCount} active sections filled)
+                </span>
+              </div>
+              <Progress value={progressPercent} className="h-2.5" />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -260,58 +269,96 @@ export function MemberFormsPage() {
           </h3>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {visibleForms.map((form) => {
-            const isFilled = Boolean(formStatuses[form.type])
-            const Icon = form.icon
-
-            return (
+        {isLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {[1, 2, 3].map((i) => (
               <Card
-                key={form.type}
-                className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs"
+                key={i}
+                className="flex flex-col justify-between p-5"
               >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
-                    <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
-                      <Icon className="size-5" />
-                    </div>
-                    {isFilled ? (
-                      <Badge
-                        variant="outline"
-                        className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                      >
-                        <CheckCircle2 className="mr-1 size-3" /> Completed
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">Pending</Badge>
-                    )}
+                    <Skeleton className="size-10 rounded-xl" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
                   </div>
-                  <div>
-                    <h4 className="text-base font-semibold text-foreground">
-                      {form.title}
-                    </h4>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {form.description}
-                    </p>
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
                   </div>
                 </div>
                 <div className="mt-6 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                    className="w-full justify-between gap-1"
-                  >
-                    <Link to={`/forms/studies?form=${form.type}`}>
-                      {isFilled ? form.editLabel : form.completeLabel}
-                      <ArrowRight className="size-4" />
-                    </Link>
-                  </Button>
+                  <Skeleton className="h-9 w-full rounded-md" />
                 </div>
               </Card>
-            )
-          })}
-        </div>
+            ))}
+          </div>
+        ) : visibleForms.length === 0 ? (
+          <Card className="border-dashed border-border/80 bg-muted/10">
+            <CardContent className="flex flex-col items-center justify-center p-10 text-center">
+              <div className="flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground mb-3">
+                <FileText className="size-6" />
+              </div>
+              <h3 className="text-base font-semibold text-foreground">No Health Forms Required</h3>
+              <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                There are currently no active health forms assigned to your profile based on your organization's configuration.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {visibleForms.map((form) => {
+              const isFilled = Boolean(formStatuses[form.type])
+              const Icon = form.icon
+
+              return (
+                <Card
+                  key={form.type}
+                  className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground/80">
+                        <Icon className="size-5" />
+                      </div>
+                      {isFilled ? (
+                        <Badge
+                          variant="outline"
+                          className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                        >
+                          <CheckCircle2 className="mr-1 size-3" /> Completed
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">Pending</Badge>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-base font-semibold text-foreground">
+                        {form.title}
+                      </h4>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {form.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-6 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="w-full justify-between gap-1"
+                    >
+                      <Link to={`/forms/studies?form=${form.type}`}>
+                        {isFilled ? form.editLabel : form.completeLabel}
+                        <ArrowRight className="size-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+        )}
       </section>
     </div>
   )
