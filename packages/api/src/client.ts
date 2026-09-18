@@ -468,6 +468,7 @@ export async function deleteMemberAvatar(): Promise<
 export interface ActiveFormDefinition {
   form_type: string
   fields: string[]
+  is_completed?: boolean
 }
 
 export interface ActiveFormsResponse {

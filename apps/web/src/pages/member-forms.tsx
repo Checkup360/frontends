@@ -15,7 +15,7 @@ import {
   Moon,
   Sparkles,
 } from "lucide-react"
-import { fetchActiveMemberForms, fetchMemberForm } from "@workspace/api"
+import { fetchActiveMemberForms } from "@workspace/api"
 
 interface FormCardDef {
   type: string
@@ -101,82 +101,55 @@ const ALL_FORMS: FormCardDef[] = [
   },
 ]
 
+interface CachedFormsState {
+  activeFormTypes: Set<string>
+  formStatuses: Record<string, boolean>
+}
+
+let formsCache: CachedFormsState | null = null
+
 export function MemberFormsPage() {
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(() => !formsCache)
   const [activeFormTypes, setActiveFormTypes] = useState<Set<string>>(
-    () => new Set()
+    () => formsCache?.activeFormTypes ?? new Set()
   )
-  const [formStatuses, setFormStatuses] = useState<Record<string, boolean>>({})
+  const [formStatuses, setFormStatuses] = useState<Record<string, boolean>>(
+    () => formsCache?.formStatuses ?? {}
+  )
 
   useEffect(() => {
     let cancelled = false
     async function loadFormStatuses() {
-      setIsLoading(true)
-      const [activeRes, bio, sleep, habits, mood, metabolic, eoss, nmq, audit, pss] =
-        await Promise.all([
-          fetchActiveMemberForms(),
-          fetchMemberForm("biometrics"),
-          fetchMemberForm("sleep"),
-          fetchMemberForm("habits"),
-          fetchMemberForm("mood"),
-          fetchMemberForm("metabolic"),
-          fetchMemberForm("eoss"),
-          fetchMemberForm("nordic_nmq"),
-          fetchMemberForm("audit_c"),
-          fetchMemberForm("pss10"),
-        ])
+      if (!formsCache) {
+        setIsLoading(true)
+      }
+      try {
+        const activeRes = await fetchActiveMemberForms()
+        if (!cancelled && activeRes?.active_forms) {
+          const newActiveTypes = new Set<string>()
+          const newStatuses: Record<string, boolean> = {}
 
-      if (!cancelled) {
-        if (activeRes?.active_forms) {
-          setActiveFormTypes(
-            new Set(activeRes.active_forms.map((f) => f.form_type))
-          )
+          for (const form of activeRes.active_forms) {
+            newActiveTypes.add(form.form_type)
+            newStatuses[form.form_type] = Boolean(form.is_completed)
+          }
+
+          formsCache = {
+            activeFormTypes: newActiveTypes,
+            formStatuses: newStatuses,
+          }
+          setActiveFormTypes(newActiveTypes)
+          setFormStatuses(newStatuses)
         }
-
-        const hasBio = Boolean(
-          bio?.data &&
-            (bio.data.waist_circumference !== undefined ||
-              bio.data.neck_circumference !== undefined)
-        )
-        const hasSleep = Boolean(
-          sleep?.data &&
-            (sleep.data.snoring !== undefined ||
-              sleep.data.tired !== undefined ||
-              sleep.data.observed_apnea !== undefined)
-        )
-        const hasHabits = Boolean(
-          habits?.data &&
-            (habits.data.daily_physical_activity !== undefined ||
-              habits.data.fruits_vegetables !== undefined ||
-              habits.data.hypertension_medication !== undefined ||
-              habits.data.previous_high_glucose !== undefined ||
-              habits.data.family_diabetes !== undefined)
-        )
-        const hasMood = Boolean(
-          mood?.data && Object.keys(mood.data).length > 0
-        )
-        const hasMetabolic = Boolean(
-          metabolic?.data && Object.keys(metabolic.data).length > 0
-        )
-        const hasEoss = Boolean(eoss?.data && Object.keys(eoss.data).length > 0)
-        const hasNmq = Boolean(nmq?.data && Object.keys(nmq.data).length > 0)
-        const hasAudit = Boolean(audit?.data && Object.keys(audit.data).length > 0)
-        const hasPss = Boolean(pss?.data && Object.keys(pss.data).length > 0)
-
-        setFormStatuses({
-          biometrics: hasBio,
-          sleep: hasSleep,
-          habits: hasHabits,
-          mood: hasMood,
-          metabolic: hasMetabolic,
-          eoss: hasEoss,
-          nordic_nmq: hasNmq,
-          audit_c: hasAudit,
-          pss10: hasPss,
-        })
-        setIsLoading(false)
+      } catch (err) {
+        console.error("Error loading active forms:", err)
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
       }
     }
+
     void loadFormStatuses()
     return () => {
       cancelled = true
