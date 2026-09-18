@@ -86,7 +86,32 @@ const SCORE_TOPICS: ScoreTopic[] = [
     icon: HeartPulse,
     color: "bg-red-500",
   },
+  {
+    id: "nordic_nmq",
+    name: "Musculoskeletal Risk (NMQ)",
+    subtitle: "Ergonomics & physical load",
+    description: "Evaluates trouble and work impairment across 9 anatomical body regions.",
+    icon: Activity,
+    color: "bg-cyan-500",
+  },
+  {
+    id: "audit_c",
+    name: "Alcohol Risk Assessment (AUDIT-C)",
+    subtitle: "Occupational safety & consumption",
+    description: "Evaluates alcohol consumption frequency, daily quantity, and binge drinking patterns.",
+    icon: HeartPulse,
+    color: "bg-orange-500",
+  },
+  {
+    id: "pss10",
+    name: "Perceived Stress & Burnout (PSS-10)",
+    subtitle: "Psychological resilience & burnout",
+    description: "Evaluates perceived stress levels, control over life events, and coping capacity.",
+    icon: HeartPulse,
+    color: "bg-fuchsia-500",
+  },
 ]
+
 
 function computeBalancedWeights(
   topics: ScoreTopic[],

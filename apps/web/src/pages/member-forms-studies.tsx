@@ -30,11 +30,21 @@ import {
 import { toast } from "@workspace/ui/components/sonner"
 import { cn } from "@workspace/ui/lib/utils"
 import {
+  fetchActiveMemberForms,
   fetchMemberForm,
   submitMemberForm,
 } from "@workspace/api"
 
- type FormType = "biometrics" | "sleep" | "habits" | "mood" | "metabolic" | "eoss"
+type FormType =
+  | "biometrics"
+  | "sleep"
+  | "habits"
+  | "mood"
+  | "metabolic"
+  | "eoss"
+  | "nordic_nmq"
+  | "audit_c"
+  | "pss10"
 
 type StudiesData = {
   // Biometrics
@@ -53,6 +63,9 @@ type StudiesData = {
   eoss_physical_health_stage: string
   eoss_mental_health_stage: string
   eoss_functional_stage: string
+  // Laboratory & Metabolic additions
+  statins: string
+  lab_study_date: string
   // Sleep
   snoring: string
   tired: string
@@ -73,6 +86,49 @@ type StudiesData = {
   concentration: string
   psychomotor: string
   self_harm_thoughts: string
+  // Nordic NMQ ergonomics fields (9 zones x 3 questions)
+  nmq_neck_12m: string
+  nmq_neck_prevent_12m: string
+  nmq_neck_7d: string
+  nmq_shoulders_12m: string
+  nmq_shoulders_prevent_12m: string
+  nmq_shoulders_7d: string
+  nmq_upper_back_12m: string
+  nmq_upper_back_prevent_12m: string
+  nmq_upper_back_7d: string
+  nmq_lower_back_12m: string
+  nmq_lower_back_prevent_12m: string
+  nmq_lower_back_7d: string
+  nmq_elbows_12m: string
+  nmq_elbows_prevent_12m: string
+  nmq_elbows_7d: string
+  nmq_wrists_hands_12m: string
+  nmq_wrists_hands_prevent_12m: string
+  nmq_wrists_hands_7d: string
+  nmq_hips_thighs_12m: string
+  nmq_hips_thighs_prevent_12m: string
+  nmq_hips_thighs_7d: string
+  nmq_knees_12m: string
+  nmq_knees_prevent_12m: string
+  nmq_knees_7d: string
+  nmq_ankles_feet_12m: string
+  nmq_ankles_feet_prevent_12m: string
+  nmq_ankles_feet_7d: string
+  // AUDIT-C alcohol risk
+  audit_c_frequency: string
+  audit_c_quantity: string
+  audit_c_heavy_drinking: string
+  // PSS-10 perceived stress scale (10 questions)
+  pss10_q1: string
+  pss10_q2: string
+  pss10_q3: string
+  pss10_q4: string
+  pss10_q5: string
+  pss10_q6: string
+  pss10_q7: string
+  pss10_q8: string
+  pss10_q9: string
+  pss10_q10: string
 }
 
 const initialData: StudiesData = {
@@ -88,6 +144,8 @@ const initialData: StudiesData = {
   diastolic_blood_pressure: "",
   fasting_glucose: "",
   glucose_lowering_medication: "",
+  statins: "",
+  lab_study_date: "",
   eoss_physical_health_stage: "",
   eoss_mental_health_stage: "",
   eoss_functional_stage: "",
@@ -100,16 +158,130 @@ const initialData: StudiesData = {
   previous_high_glucose: "",
   smoker: "",
   family_diabetes: "",
-   little_interest: "",
-   feeling_down: "",
-   sleep_trouble: "",
-   tired_energy: "",
-   appetite: "",
-   feeling_bad: "",
-   concentration: "",
-   psychomotor: "",
-   self_harm_thoughts: "",
+  little_interest: "",
+  feeling_down: "",
+  sleep_trouble: "",
+  tired_energy: "",
+  appetite: "",
+  feeling_bad: "",
+  concentration: "",
+  psychomotor: "",
+  self_harm_thoughts: "",
+  nmq_neck_12m: "",
+  nmq_neck_prevent_12m: "",
+  nmq_neck_7d: "",
+  nmq_shoulders_12m: "",
+  nmq_shoulders_prevent_12m: "",
+  nmq_shoulders_7d: "",
+  nmq_upper_back_12m: "",
+  nmq_upper_back_prevent_12m: "",
+  nmq_upper_back_7d: "",
+  nmq_lower_back_12m: "",
+  nmq_lower_back_prevent_12m: "",
+  nmq_lower_back_7d: "",
+  nmq_elbows_12m: "",
+  nmq_elbows_prevent_12m: "",
+  nmq_elbows_7d: "",
+  nmq_wrists_hands_12m: "",
+  nmq_wrists_hands_prevent_12m: "",
+  nmq_wrists_hands_7d: "",
+  nmq_hips_thighs_12m: "",
+  nmq_hips_thighs_prevent_12m: "",
+  nmq_hips_thighs_7d: "",
+  nmq_knees_12m: "",
+  nmq_knees_prevent_12m: "",
+  nmq_knees_7d: "",
+  nmq_ankles_feet_12m: "",
+  nmq_ankles_feet_prevent_12m: "",
+  nmq_ankles_feet_7d: "",
+  audit_c_frequency: "",
+  audit_c_quantity: "",
+  audit_c_heavy_drinking: "",
+  pss10_q1: "",
+  pss10_q2: "",
+  pss10_q3: "",
+  pss10_q4: "",
+  pss10_q5: "",
+  pss10_q6: "",
+  pss10_q7: "",
+  pss10_q8: "",
+  pss10_q9: "",
+  pss10_q10: "",
 }
+
+const NMQ_ANATOMICAL_ZONES = [
+  { id: "neck", name: "Neck" },
+  { id: "shoulders", name: "Shoulders" },
+  { id: "upper_back", name: "Upper Back" },
+  { id: "lower_back", name: "Lower Back" },
+  { id: "elbows", name: "Elbows" },
+  { id: "wrists_hands", name: "Wrists / Hands" },
+  { id: "hips_thighs", name: "Hips / Thighs" },
+  { id: "knees", name: "Knees" },
+  { id: "ankles_feet", name: "Ankles / Feet" },
+] as const
+
+const AUDIT_C_QUESTIONS = [
+  {
+    field: "audit_c_frequency" as keyof StudiesData,
+    title: "1. How often do you have a drink containing alcohol?",
+    options: [
+      { value: "0", label: "Never" },
+      { value: "1", label: "Monthly or less" },
+      { value: "2", label: "2 to 4 times a month" },
+      { value: "3", label: "2 to 3 times a week" },
+      { value: "4", label: "4 or more times a week" },
+    ],
+  },
+  {
+    field: "audit_c_quantity" as keyof StudiesData,
+    title: "2. How many drinks containing alcohol do you have on a typical day when you are drinking?",
+    options: [
+      { value: "0", label: "1 or 2" },
+      { value: "1", label: "3 or 4" },
+      { value: "2", label: "5 or 6" },
+      { value: "3", label: "7 to 9" },
+      { value: "4", label: "10 or more" },
+    ],
+  },
+  {
+    field: "audit_c_heavy_drinking" as keyof StudiesData,
+    title: "3. How often do you have six or more drinks on one occasion?",
+    options: [
+      { value: "0", label: "Never" },
+      { value: "1", label: "Less than monthly" },
+      { value: "2", label: "Monthly" },
+      { value: "3", label: "Weekly" },
+      { value: "4", label: "Daily or almost daily" },
+    ],
+  },
+]
+
+const PSS10_LIKERT_OPTIONS = [
+  { value: "0", label: "Never" },
+  { value: "1", label: "Almost never" },
+  { value: "2", label: "Sometimes" },
+  { value: "3", label: "Fairly often" },
+  { value: "4", label: "Very often" },
+]
+
+const PSS10_QUESTIONS: Array<{
+  field: keyof StudiesData
+  prompt: string
+  isReversed?: boolean
+}> = [
+  { field: "pss10_q1", prompt: "1. In the last month, how often have you been upset because of something that happened unexpectedly?" },
+  { field: "pss10_q2", prompt: "2. In the last month, how often have you felt that you were unable to control the important things in your life?" },
+  { field: "pss10_q3", prompt: "3. In the last month, how often have you felt nervous and stressed?" },
+  { field: "pss10_q4", prompt: "4. In the last month, how often have you felt confident about your ability to handle your personal problems?", isReversed: true },
+  { field: "pss10_q5", prompt: "5. In the last month, how often have you felt that things were going your way?", isReversed: true },
+  { field: "pss10_q6", prompt: "6. In the last month, how often have you found that you could not cope with all the things that you had to do?" },
+  { field: "pss10_q7", prompt: "7. In the last month, how often have you been able to control irritations in your life?", isReversed: true },
+  { field: "pss10_q8", prompt: "8. In the last month, how often have you felt that you were on top of things?", isReversed: true },
+  { field: "pss10_q9", prompt: "9. In the last month, how often have you been angered because of things that were outside of your control?" },
+  { field: "pss10_q10", prompt: "10. In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?" },
+]
+
 
 const PHQ9_QUESTIONS: Array<{ field: keyof StudiesData; prompt: string }> = [
   { field: "little_interest", prompt: "Little interest or pleasure in doing things?" },
@@ -123,6 +295,259 @@ const PHQ9_QUESTIONS: Array<{ field: keyof StudiesData; prompt: string }> = [
   { field: "self_harm_thoughts", prompt: "Thoughts that you would be better off dead or of hurting yourself in some way?" },
 ]
 
+const isLabStudyObsolete = (dateStr: string): boolean => {
+  if (!dateStr) return false
+  const studyDate = new Date(dateStr)
+  if (isNaN(studyDate.getTime())) return false
+  const twelveMonthsAgo = new Date()
+  twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1)
+  return studyDate < twelveMonthsAgo
+}
+
+const EOSS_SECTIONS = [
+  {
+    field: "eoss_physical_health_stage" as keyof StudiesData,
+    title: "Physical Health",
+    subtitle: "Select the statement that best describes your current physical health and symptoms:",
+    options: [
+      { value: "0", description: "I have no physical pain or health issues." },
+      { value: "1", description: "I experience mild pain or slight shortness of breath with effort, but it does not prevent me from working." },
+      { value: "2", description: "I have chronic pain (e.g., knee, back) or symptoms that make daily tasks difficult." },
+      { value: "3", description: "I have significant physical problems or medical complications that prevent me from working normally." },
+      { value: "4", description: "I have severe physical limitations or incapacity to perform my daily activities." },
+    ],
+  },
+  {
+    field: "eoss_mental_health_stage" as keyof StudiesData,
+    title: "Mental & Emotional Health",
+    subtitle: "Select the statement that best describes your psychological well-being and stress levels:",
+    options: [
+      { value: "0", description: "I feel good, with no psychological distress or anxiety about my body or health." },
+      { value: "1", description: "I sometimes feel mild dissatisfaction or emotional distress, but it does not affect my daily life." },
+      { value: "2", description: "I feel frequent emotional distress, stress, or low mood regarding my health or body." },
+      { value: "3", description: "I feel significant anxiety or low mood that affects my well-being and work/family environment." },
+      { value: "4", description: "I feel severe psychological distress that seriously compromises my personal and work life." },
+    ],
+  },
+  {
+    field: "eoss_functional_stage" as keyof StudiesData,
+    title: "Daily Function & Work Capacity",
+    subtitle: "Select the statement that best describes your mobility, stamina, and daily performance:",
+    options: [
+      { value: "0", description: "I perform all my daily and work tasks without any difficulty." },
+      { value: "1", description: "I can fulfill all my tasks, although I tire a bit more than usual." },
+      { value: "2", description: "I find it difficult to perform intense physical activities or demanding tasks at work." },
+      { value: "3", description: "I have significant difficulty completing my work shift or household chores." },
+      { value: "4", description: "I am unable or severely limited in performing my daily and work activities." },
+    ],
+  },
+]
+
+type StopBangParameterResult = {
+  key: string
+  label: string
+  sourceForm: "sleep" | "biometrics" | "metabolic" | "profile"
+  value: boolean | null
+  description: string
+}
+
+type StopBangResult = {
+  score: number
+  maxScore: number
+  riskLevel: "low" | "intermediate" | "high"
+  riskLabel: string
+  bmi: number | null
+  parameters: StopBangParameterResult[]
+}
+
+function useStopBangState(data: StudiesData): StopBangResult {
+  const isSnoring =
+    data.snoring === "true" || data.snoring === "1"
+      ? true
+      : data.snoring === "false" || data.snoring === "0"
+        ? false
+        : null
+
+  const isTired =
+    data.tired === "true" || data.tired === "1"
+      ? true
+      : data.tired === "false" || data.tired === "0"
+        ? false
+        : null
+
+  const isObserved =
+    data.observed_apnea === "true" || data.observed_apnea === "1"
+      ? true
+      : data.observed_apnea === "false" || data.observed_apnea === "0"
+        ? false
+        : null
+
+  const sys = Number(data.systolic_blood_pressure)
+  const dia = Number(data.diastolic_blood_pressure)
+  const hasMedication =
+    data.hypertension_medication === "true" || data.hypertension_medication === "1"
+  const hasHighBPNumbers = (sys > 0 && sys >= 140) || (dia > 0 && dia >= 90)
+  let isHighBP: boolean | null = null
+  if (hasMedication || hasHighBPNumbers) {
+    isHighBP = true
+  } else if (
+    data.hypertension_medication === "false" &&
+    (!sys || sys < 140) &&
+    (!dia || dia < 90)
+  ) {
+    isHighBP = false
+  }
+
+  const heightCm = Number(data.height)
+  const weightKg = Number(data.weight)
+  let bmi: number | null = null
+  let isBmiOver35: boolean | null = null
+  if (heightCm > 0 && weightKg > 0) {
+    const heightMeters = heightCm / 100
+    bmi = Math.round((weightKg / (heightMeters * heightMeters)) * 10) / 10
+    isBmiOver35 = bmi > 35
+  }
+
+  const isAgeOver50: boolean | null = null
+  const neckCm = Number(data.neck_circumference)
+  const isNeckOver40 = neckCm > 0 ? neckCm > 40 : null
+  const isMale = data.biological_sex
+    ? data.biological_sex.toUpperCase() === "M"
+    : null
+
+  const parameters: StopBangParameterResult[] = [
+    {
+      key: "S",
+      label: "S - Snoring",
+      sourceForm: "sleep",
+      value: isSnoring,
+      description: isSnoring ? "Reports loud snoring" : "No loud snoring reported",
+    },
+    {
+      key: "T",
+      label: "T - Tiredness",
+      sourceForm: "sleep",
+      value: isTired,
+      description: isTired ? "Reports daytime fatigue" : "No significant daytime fatigue",
+    },
+    {
+      key: "O",
+      label: "O - Observed Apnea",
+      sourceForm: "sleep",
+      value: isObserved,
+      description: isObserved ? "Observed breathing pauses" : "No observed apneas",
+    },
+    {
+      key: "P",
+      label: "P - High Blood Pressure",
+      sourceForm: "metabolic",
+      value: isHighBP,
+      description: isHighBP ? "High blood pressure (≥140/90 or treated)" : "Normal blood pressure",
+    },
+    {
+      key: "B",
+      label: "B - BMI (>35 kg/m²)",
+      sourceForm: "biometrics",
+      value: isBmiOver35,
+      description: bmi ? `Current BMI: ${bmi} kg/m² (${isBmiOver35 ? "> 35" : "≤ 35"})` : "Missing height/weight",
+    },
+    {
+      key: "A",
+      label: "A - Age (>50 yrs)",
+      sourceForm: "profile",
+      value: isAgeOver50,
+      description: isAgeOver50 === null ? "Age not recorded" : isAgeOver50 ? "Over 50 years" : "50 years or under",
+    },
+    {
+      key: "N",
+      label: "N - Neck (>40 cm)",
+      sourceForm: "biometrics",
+      value: isNeckOver40,
+      description: neckCm > 0 ? `Neck: ${neckCm} cm (${isNeckOver40 ? "> 40 cm" : "≤ 40 cm"})` : "Missing neck measure",
+    },
+    {
+      key: "G",
+      label: "G - Gender (Male)",
+      sourceForm: "biometrics",
+      value: isMale,
+      description: isMale === null ? "Gender unspecified" : isMale ? "Male sex (+1 pt)" : "Female sex (0 pt)",
+    },
+  ]
+
+  let score = 0
+  for (const param of parameters) {
+    if (param.value === true) {
+      score += 1
+    }
+  }
+
+  let riskLevel: "low" | "intermediate" | "high" = "low"
+  let riskLabel = "Low Sleep Apnea Risk"
+  if (score >= 5) {
+    riskLevel = "high"
+    riskLabel = "High Sleep Apnea Risk"
+  } else if (score >= 3) {
+    riskLevel = "intermediate"
+    riskLabel = "Intermediate Sleep Apnea Risk"
+  }
+
+  return {
+    score,
+    maxScore: 8,
+    riskLevel,
+    riskLabel,
+    bmi,
+    parameters,
+  }
+}
+
+function StopBangLiveCard({ stopBang }: { stopBang: StopBangResult }) {
+  return (
+    <div className="space-y-3 rounded-xl border border-primary/25 bg-primary/5 p-4 backdrop-blur-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Moon className="size-4 text-primary" />
+          <span className="text-sm font-semibold">STOP-BANG Engine (Sleep Apnea Risk)</span>
+        </div>
+        <div
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs font-semibold transition-all",
+            stopBang.riskLevel === "high" && "border-destructive/40 bg-destructive/15 text-destructive",
+            stopBang.riskLevel === "intermediate" && "border-amber-500/40 bg-amber-500/15 text-amber-600 dark:text-amber-400",
+            stopBang.riskLevel === "low" && "border-emerald-500/40 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+          )}
+        >
+          {stopBang.riskLabel} ({stopBang.score}/{stopBang.maxScore} pts)
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        This indicator automatically consolidates your responses from <strong>Sleep (S, T, O)</strong>, <strong>Biometrics (B, N, G)</strong>, and <strong>Metabolism (P)</strong> in real time without asking duplicate questions.
+      </p>
+      <div className="grid grid-cols-2 gap-2 pt-1 sm:grid-cols-4">
+        {stopBang.parameters.map((param) => (
+          <div
+            key={param.key}
+            className={cn(
+              "flex flex-col justify-between rounded-lg border p-2 text-xs transition-colors",
+              param.value === true && "border-primary/40 bg-primary/10 text-primary font-medium",
+              param.value === false && "border-border/30 bg-background/50 text-muted-foreground",
+              param.value === null && "border-border/20 bg-background/20 text-muted-foreground/60 italic"
+            )}
+          >
+            <div className="flex items-center justify-between font-bold text-[11px]">
+              <span>{param.key}</span>
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground">({param.sourceForm})</span>
+            </div>
+            <div className="mt-1 text-[11px] font-normal" title={param.description}>
+              {param.value === true ? "✓ Yes" : param.value === false ? "✗ No" : "Pending"}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function MemberFormsStudiesPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -132,35 +557,94 @@ export function MemberFormsStudiesPage() {
     "biometrics"
 
   const [data, setData] = useState<StudiesData>(initialData)
+  const stopBangResult = useStopBangState(data)
+  const [activeFormsMap, setActiveFormsMap] = useState<Record<string, Set<string>>>({})
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [globalError, setGlobalError] = useState<string | null>(null)
 
+  const isFieldActive = (form: FormType, field: string): boolean => {
+    if (activeFormsMap[form]) {
+      return activeFormsMap[form].has(field)
+    }
+    return true
+  }
+
   useEffect(() => {
     let cancelled = false
     async function loadData() {
       setIsLoadingData(true)
-      const [biometricsForm, sleepForm, habitsForm, moodForm, metabolicForm, eossForm] = await Promise.all([
+      const [
+        activeFormsRes,
+        biometricsForm,
+        sleepForm,
+        habitsForm,
+        moodForm,
+        metabolicForm,
+        eossForm,
+        nmqForm,
+        auditForm,
+        pssForm,
+      ] = await Promise.all([
+        fetchActiveMemberForms(),
         fetchMemberForm("biometrics"),
         fetchMemberForm("sleep"),
         fetchMemberForm("habits"),
         fetchMemberForm("mood"),
         fetchMemberForm("metabolic"),
         fetchMemberForm("eoss"),
+        fetchMemberForm("nordic_nmq"),
+        fetchMemberForm("audit_c"),
+        fetchMemberForm("pss10"),
       ])
 
       if (!cancelled) {
+        if (activeFormsRes?.active_forms) {
+          const map: Record<string, Set<string>> = {}
+          for (const formDef of activeFormsRes.active_forms) {
+            map[formDef.form_type] = new Set(formDef.fields)
+          }
+          setActiveFormsMap(map)
+        }
         const bioData = biometricsForm?.data || {}
         const sleepData = sleepForm?.data || {}
         const habitsData = habitsForm?.data || {}
-      const moodData = moodForm?.data || {}
-      const metabolicData = metabolicForm?.data || {}
+        const moodData = moodForm?.data || {}
+        const metabolicData = metabolicForm?.data || {}
         const eossData = eossForm?.data || {}
+        const nmqData = (nmqForm?.data?.nordic_nmq_data as Record<string, Record<string, boolean>>) || {}
+        const auditData = auditForm?.data || {}
+        const pssData = pssForm?.data || {}
 
         const biologicalSex = (bioData.biological_sex as string) || ""
         const heightVal = bioData.height ? String(bioData.height) : ""
         const weightVal = bioData.weight ? String(bioData.weight) : ""
+
+        const extractedNmq: Record<string, string> = {}
+        const zonesList = [
+          "neck",
+          "shoulders",
+          "upper_back",
+          "lower_back",
+          "elbows",
+          "wrists_hands",
+          "hips_thighs",
+          "knees",
+          "ankles_feet",
+        ] as const
+        for (const z of zonesList) {
+          const zObj = nmqData[z] || {}
+          extractedNmq[`nmq_${z}_12m`] = zObj.trouble_last_12_months !== undefined ? String(zObj.trouble_last_12_months) : ""
+          extractedNmq[`nmq_${z}_prevent_12m`] = zObj.prevented_work_last_12_months !== undefined ? String(zObj.prevented_work_last_12_months) : ""
+          extractedNmq[`nmq_${z}_7d`] = zObj.trouble_last_7_days !== undefined ? String(zObj.trouble_last_7_days) : ""
+        }
+
+        const extractedPss: Record<string, string> = {}
+        for (let i = 1; i <= 10; i++) {
+          const key = `pss10_q${i}`
+          extractedPss[key] = pssData[key] !== undefined ? String(pssData[key]) : ""
+        }
 
         setData({
           biological_sex: biologicalSex,
@@ -176,6 +660,8 @@ export function MemberFormsStudiesPage() {
           diastolic_blood_pressure: metabolicData.diastolic_blood_pressure !== undefined ? String(metabolicData.diastolic_blood_pressure) : "",
           fasting_glucose: metabolicData.fasting_glucose !== undefined ? String(metabolicData.fasting_glucose) : "",
           glucose_lowering_medication: metabolicData.glucose_lowering_medication !== undefined ? String(metabolicData.glucose_lowering_medication) : "",
+          statins: metabolicData.statins !== undefined ? String(metabolicData.statins) : "",
+          lab_study_date: (metabolicData.lab_study_date as string) || "",
           eoss_physical_health_stage: eossData.eoss_physical_health_stage !== undefined ? String(eossData.eoss_physical_health_stage) : "",
           eoss_mental_health_stage: eossData.eoss_mental_health_stage !== undefined ? String(eossData.eoss_mental_health_stage) : "",
           eoss_functional_stage: eossData.eoss_functional_stage !== undefined ? String(eossData.eoss_functional_stage) : "",
@@ -220,7 +706,13 @@ export function MemberFormsStudiesPage() {
           concentration: moodData.concentration !== undefined ? String(moodData.concentration) : "",
           psychomotor: moodData.psychomotor !== undefined ? String(moodData.psychomotor) : "",
           self_harm_thoughts: moodData.self_harm_thoughts !== undefined ? String(moodData.self_harm_thoughts) : "",
-        })
+          audit_c_frequency: auditData.audit_c_frequency !== undefined ? String(auditData.audit_c_frequency) : "",
+          audit_c_quantity: auditData.audit_c_quantity !== undefined ? String(auditData.audit_c_quantity) : "",
+          ...extractedNmq,
+          ...extractedPss,
+        } as StudiesData)
+
+
         setIsLoadingData(false)
       }
     }
@@ -276,9 +768,10 @@ export function MemberFormsStudiesPage() {
       errors.weight = "Please enter a valid weight in kilograms (kg)."
     }
     if (
-      !data.neck_circumference ||
-      isNaN(Number(data.neck_circumference)) ||
-      Number(data.neck_circumference) <= 0
+      isFieldActive("biometrics", "neck_circumference") &&
+      (!data.neck_circumference ||
+        isNaN(Number(data.neck_circumference)) ||
+        Number(data.neck_circumference) <= 0)
     ) {
       errors.neck_circumference = "Please enter a valid neck circumference (cm)."
     }
@@ -297,13 +790,17 @@ export function MemberFormsStudiesPage() {
     }
 
     setIsSubmitting(true)
-    const res = await submitMemberForm("biometrics", {
+    const payload: Record<string, string | number | boolean | null | undefined> = {
       biological_sex: data.biological_sex,
       height: Number(data.height),
       weight: Number(data.weight),
-      neck_circumference: Number(data.neck_circumference),
       waist_circumference: Number(data.waist_circumference),
-    })
+    }
+    if (isFieldActive("biometrics", "neck_circumference")) {
+      payload.neck_circumference = Number(data.neck_circumference)
+    }
+
+    const res = await submitMemberForm("biometrics", payload)
     setIsSubmitting(false)
 
     if (res.error) {
@@ -448,8 +945,25 @@ export function MemberFormsStudiesPage() {
         errors[field] = "Please enter a valid value."
       }
     }
+    // Validation: Systolic blood pressure strictly greater than diastolic
+    if (
+      data.systolic_blood_pressure &&
+      data.diastolic_blood_pressure &&
+      Number(data.systolic_blood_pressure) <= Number(data.diastolic_blood_pressure)
+    ) {
+      errors.systolic_blood_pressure =
+        "Systolic blood pressure must be strictly greater than diastolic blood pressure."
+    }
     if (!data.glucose_lowering_medication) {
       errors.glucose_lowering_medication = "Please select an option."
+    }
+    if (!data.statins) {
+      errors.statins = "Please select an option for statin (cholesterol medication) usage."
+    }
+    if (!data.lab_study_date) {
+      errors.lab_study_date = "Please enter the date of your laboratory study."
+    } else if (isLabStudyObsolete(data.lab_study_date)) {
+      errors.lab_study_date = "Laboratory study results are obsolete (older than 12 months). Please provide recent lab test results."
     }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
@@ -466,6 +980,8 @@ export function MemberFormsStudiesPage() {
       diastolic_blood_pressure: Number(data.diastolic_blood_pressure),
       fasting_glucose: Number(data.fasting_glucose),
       glucose_lowering_medication: data.glucose_lowering_medication === "true",
+      statins: data.statins === "true",
+      lab_study_date: data.lab_study_date,
     })
     setIsSubmitting(false)
 
@@ -510,6 +1026,124 @@ export function MemberFormsStudiesPage() {
     }
   }
 
+  const handleSaveNordicNmq = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const errors: Record<string, string> = {}
+    const zones = [
+      "neck",
+      "shoulders",
+      "upper_back",
+      "lower_back",
+      "elbows",
+      "wrists_hands",
+      "hips_thighs",
+      "knees",
+      "ankles_feet",
+    ] as const
+
+    for (const z of zones) {
+      if ((data as Record<string, string>)[`nmq_${z}_12m`] === "") {
+        errors[`nmq_${z}_12m`] = "Please select an option for 12-month trouble."
+      }
+      if ((data as Record<string, string>)[`nmq_${z}_prevent_12m`] === "") {
+        errors[`nmq_${z}_prevent_12m`] = "Please select an option for work prevention."
+      }
+      if ((data as Record<string, string>)[`nmq_${z}_7d`] === "") {
+        errors[`nmq_${z}_7d`] = "Please select an option for 7-day trouble."
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      scrollToFirstError(errors)
+      return
+    }
+
+    setIsSubmitting(true)
+    const formattedZones: Record<string, { trouble_last_12_months: boolean; prevented_work_last_12_months: boolean; trouble_last_7_days: boolean }> = {}
+    for (const z of zones) {
+      formattedZones[z] = {
+        trouble_last_12_months: (data as Record<string, string>)[`nmq_${z}_12m`] === "true",
+        prevented_work_last_12_months: (data as Record<string, string>)[`nmq_${z}_prevent_12m`] === "true",
+        trouble_last_7_days: (data as Record<string, string>)[`nmq_${z}_7d`] === "true",
+      }
+    }
+
+    const res = await submitMemberForm("nordic_nmq", {
+      nordic_nmq_data: formattedZones,
+    })
+    setIsSubmitting(false)
+
+    if (res.error) {
+      setGlobalError(res.error.message || "Failed to save Nordic ergonomics questionnaire.")
+    } else {
+      toast.success("Nordic ergonomics questionnaire saved successfully.")
+      navigate("/forms")
+    }
+  }
+
+  const handleSaveAuditC = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const errors: Record<string, string> = {}
+    if (data.audit_c_frequency === "") errors.audit_c_frequency = "Please select drinking frequency."
+    if (data.audit_c_quantity === "") errors.audit_c_quantity = "Please select typical drinking quantity."
+    if (data.audit_c_heavy_drinking === "") errors.audit_c_heavy_drinking = "Please select heavy drinking frequency."
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      scrollToFirstError(errors)
+      return
+    }
+
+    setIsSubmitting(true)
+    const res = await submitMemberForm("audit_c", {
+      audit_c_frequency: Number(data.audit_c_frequency),
+      audit_c_quantity: Number(data.audit_c_quantity),
+      audit_c_heavy_drinking: Number(data.audit_c_heavy_drinking),
+    })
+    setIsSubmitting(false)
+
+    if (res.error) {
+      setGlobalError(res.error.message || "Failed to save AUDIT-C assessment.")
+    } else {
+      toast.success("AUDIT-C alcohol risk assessment saved successfully.")
+      navigate("/forms")
+    }
+  }
+
+  const handleSavePss10 = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const errors: Record<string, string> = {}
+    for (let i = 1; i <= 10; i++) {
+      const field = `pss10_q${i}` as keyof StudiesData
+      if (data[field] === "") {
+        errors[field] = "Please select an answer."
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      scrollToFirstError(errors)
+      return
+    }
+
+    setIsSubmitting(true)
+    const payload: Record<string, number> = {}
+    for (let i = 1; i <= 10; i++) {
+      payload[`pss10_q${i}`] = Number((data as Record<string, string>)[`pss10_q${i}`])
+    }
+
+    const res = await submitMemberForm("pss10", payload)
+    setIsSubmitting(false)
+
+    if (res.error) {
+      setGlobalError(res.error.message || "Failed to save PSS-10 perceived stress scale.")
+    } else {
+      toast.success("Perceived Stress & Burnout (PSS-10) saved successfully.")
+      navigate("/forms")
+    }
+  }
+
   const titlesMap: Record<
     FormType,
     { title: string; description: string; icon: typeof Activity }
@@ -546,7 +1180,23 @@ export function MemberFormsStudiesPage() {
       description: "Reflect on how your health, mood, and daily function are affected.",
       icon: HeartPulse,
     },
+    nordic_nmq: {
+      title: "Musculoskeletal Risk (NMQ)",
+      description: "Standardized Nordic Questionnaire evaluating body regions for trouble and work impact.",
+      icon: Activity,
+    },
+    audit_c: {
+      title: "Alcohol Risk Assessment (AUDIT-C)",
+      description: "WHO 3-item questionnaire evaluating alcohol consumption and risk behaviors.",
+      icon: HeartPulse,
+    },
+    pss10: {
+      title: "Perceived Stress & Burnout (PSS-10)",
+      description: "10-item scale assessing perceived stress and coping capacity over the past month.",
+      icon: HeartPulse,
+    },
   }
+
 
   const currentTitle = titlesMap[formType] || titlesMap.biometrics
   const TitleIcon = currentTitle.icon
@@ -647,8 +1297,15 @@ export function MemberFormsStudiesPage() {
                 )}
               </div>
 
-              {/* Height and Weight */}
-              <div className="grid gap-6 md:grid-cols-2">
+              {/* Biometrics Measurements */}
+              <div
+                className={cn(
+                  "grid gap-6",
+                  isFieldActive("biometrics", "neck_circumference")
+                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+                    : "grid-cols-1 md:grid-cols-3"
+                )}
+              >
                 <div
                   id="field-group-height"
                   className={cn(
@@ -718,44 +1375,43 @@ export function MemberFormsStudiesPage() {
                     </p>
                   )}
                 </div>
-              </div>
 
-              {/* Neck and Waist Circumference */}
-              <div className="grid gap-6 md:grid-cols-2">
-                <div
-                  id="field-group-neck_circumference"
-                  className={cn(
-                    "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
-                    fieldErrors.neck_circumference &&
-                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
-                  )}
-                >
-                  <Label htmlFor="neck_circumference" className="font-medium">
-                    Neck Circumference (cm)
-                  </Label>
-                  <div className="relative">
-                    <Ruler className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="neck_circumference"
-                      type="number"
-                      placeholder="38"
-                      value={data.neck_circumference}
-                      onChange={(e) => updateField("neck_circumference", e.target.value)}
-                      disabled={isSubmitting || isLoadingData}
-                      className={cn(
-                        "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
-                        fieldErrors.neck_circumference &&
-                          "border-destructive focus-visible:ring-destructive"
-                      )}
-                    />
+                {isFieldActive("biometrics", "neck_circumference") && (
+                  <div
+                    id="field-group-neck_circumference"
+                    className={cn(
+                      "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                      fieldErrors.neck_circumference &&
+                        "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                    )}
+                  >
+                    <Label htmlFor="neck_circumference" className="font-medium">
+                      Neck Circumference (cm)
+                    </Label>
+                    <div className="relative">
+                      <Ruler className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="neck_circumference"
+                        type="number"
+                        placeholder="38"
+                        value={data.neck_circumference}
+                        onChange={(e) => updateField("neck_circumference", e.target.value)}
+                        disabled={isSubmitting || isLoadingData}
+                        className={cn(
+                          "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
+                          fieldErrors.neck_circumference &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                    </div>
+                    {fieldErrors.neck_circumference && (
+                      <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                        <AlertCircle className="size-3.5 shrink-0" />
+                        {fieldErrors.neck_circumference}
+                      </p>
+                    )}
                   </div>
-                  {fieldErrors.neck_circumference && (
-                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
-                      <AlertCircle className="size-3.5 shrink-0" />
-                      {fieldErrors.neck_circumference}
-                    </p>
-                  )}
-                </div>
+                )}
 
                 <div
                   id="field-group-waist_circumference"
@@ -792,6 +1448,10 @@ export function MemberFormsStudiesPage() {
                   )}
                 </div>
               </div>
+
+              {isFieldActive("biometrics", "neck_circumference") && (
+                <StopBangLiveCard stopBang={stopBangResult} />
+              )}
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
               <Button variant="ghost" asChild>
@@ -816,6 +1476,7 @@ export function MemberFormsStudiesPage() {
           </CardHeader>
           <form onSubmit={(e) => void handleSaveSleep(e)}>
             <CardContent className="space-y-6">
+              <StopBangLiveCard stopBang={stopBangResult} />
               {/* Question 1 */}
               <div
                 id="field-group-snoring"
@@ -1357,6 +2018,36 @@ export function MemberFormsStudiesPage() {
                   </div>
                 ))}
               </div>
+              {/* Laboratory Study Date & Obsolescence Control */}
+              <div id="field-group-lab_study_date" className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="lab_study_date" className="font-medium">
+                    Date of Laboratory Study (Fecha del estudio) *
+                  </Label>
+                  {data.lab_study_date && isLabStudyObsolete(data.lab_study_date) && (
+                    <span className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive flex items-center gap-1">
+                      <AlertCircle className="size-3.5" /> Dato obsoleto (&gt; 12 meses)
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="lab_study_date"
+                  type="date"
+                  value={data.lab_study_date}
+                  onChange={(e) => updateField("lab_study_date", e.target.value)}
+                  disabled={isSubmitting || isLoadingData}
+                  className={cn(fieldErrors.lab_study_date && "border-destructive")}
+                />
+                {data.lab_study_date && isLabStudyObsolete(data.lab_study_date) && (
+                  <p className="text-xs font-medium text-destructive flex items-center gap-1">
+                    <AlertCircle className="size-3.5 shrink-0" />
+                    El estudio supera los 12 meses de antigüedad. Por favor, actualizá los datos con un estudio reciente.
+                  </p>
+                )}
+                {fieldErrors.lab_study_date && <p className="text-xs font-medium text-destructive">{fieldErrors.lab_study_date}</p>}
+              </div>
+
+              {/* Glucose-lowering medication */}
               <div id="field-group-glucose_lowering_medication" className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
                 <Label>Are you taking glucose-lowering medication?</Label>
                 <RadioGroup value={data.glucose_lowering_medication} onValueChange={(value) => updateField("glucose_lowering_medication", value)} disabled={isSubmitting || isLoadingData} className="flex gap-6">
@@ -1364,6 +2055,16 @@ export function MemberFormsStudiesPage() {
                   <div className="flex items-center gap-2"><RadioGroupItem value="false" id="metabolic-glucose-no" /><Label htmlFor="metabolic-glucose-no">No</Label></div>
                 </RadioGroup>
                 {fieldErrors.glucose_lowering_medication && <p className="text-xs font-medium text-destructive">{fieldErrors.glucose_lowering_medication}</p>}
+              </div>
+
+              {/* Statins (Cholesterol Medication) */}
+              <div id="field-group-statins" className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
+                <Label>Are you currently taking statins (medication for cholesterol)?</Label>
+                <RadioGroup value={data.statins} onValueChange={(value) => updateField("statins", value)} disabled={isSubmitting || isLoadingData} className="flex gap-6">
+                  <div className="flex items-center gap-2"><RadioGroupItem value="true" id="statins-yes" /><Label htmlFor="statins-yes">Yes</Label></div>
+                  <div className="flex items-center gap-2"><RadioGroupItem value="false" id="statins-no" /><Label htmlFor="statins-no">No</Label></div>
+                </RadioGroup>
+                {fieldErrors.statins && <p className="text-xs font-medium text-destructive">{fieldErrors.statins}</p>}
               </div>
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
@@ -1377,52 +2078,297 @@ export function MemberFormsStudiesPage() {
       {formType === "eoss" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Obesity-related Health Impact</CardTitle>
+            <CardTitle className="text-lg">Obesity-related Health Impact (EOSS)</CardTitle>
             <CardDescription>
-              Choose the statement that best describes each area today. This is a self-assessment, not a diagnosis.
+              Choose the statement that best describes your daily situation in each area. This functional assessment is a self-evaluation, not a medical diagnosis.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveEoss(e)}>
             <CardContent className="space-y-6">
-              {([
-                ["eoss_physical_health_stage", "Physical health", "chronic conditions, symptoms, or medical complications"],
-                ["eoss_mental_health_stage", "Mental health", "mood, distress, or other psychological impact"],
-                ["eoss_functional_stage", "Daily function", "mobility, activities, or participation in daily life"],
-              ] as Array<[keyof StudiesData, string, string]>).map(([field, title, context]) => (
-                <div key={field} id={`field-group-${field}`} className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
+              {EOSS_SECTIONS.map((section) => (
+                <div
+                  key={section.field}
+                  id={`field-group-${section.field}`}
+                  className={cn(
+                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors[section.field] &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  )}
+                >
                   <div>
-                    <Label className="text-sm font-medium">{title}</Label>
-                    <p className="mt-1 text-xs text-muted-foreground">Select the level of {context}.</p>
+                    <Label className="text-sm font-medium">{section.title}</Label>
+                    <p className="mt-1 text-xs text-muted-foreground">{section.subtitle}</p>
                   </div>
                   <RadioGroup
-                    value={data[field]}
-                    onValueChange={(value) => updateField(field, value)}
+                    value={data[section.field]}
+                    onValueChange={(value) => updateField(section.field, value)}
                     disabled={isSubmitting || isLoadingData}
-                    className="space-y-2"
+                    className="space-y-2.5 pt-1"
                   >
-                    {[
-                      ["0", "Stage 0", "No risk factors or impairment"],
-                      ["1", "Stage 1", "Mild or subclinical impact"],
-                      ["2", "Stage 2", "Established or moderate impact"],
-                      ["3", "Stage 3", "Significant impact or complications"],
-                      ["4", "Stage 4", "Severe or end-stage impact"],
-                    ].map(([value, label, description]) => (
-                      <div key={value} className="flex items-start gap-2 rounded-md border border-border/20 p-2">
-                        <RadioGroupItem value={value} id={`${field}-${value}`} className="mt-0.5" />
-                        <Label htmlFor={`${field}-${value}`} className="cursor-pointer font-normal">
-                          <span className="font-medium">{label}</span>
-                          <span className="ml-2 text-xs text-muted-foreground">{description}</span>
+                    {section.options.map((option) => (
+                      <div
+                        key={option.value}
+                        className={cn(
+                          "flex items-start gap-3 rounded-lg border border-border/30 bg-background/30 p-3 transition-all hover:bg-background/60",
+                          data[section.field] === option.value && "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                        )}
+                      >
+                        <RadioGroupItem value={option.value} id={`${section.field}-${option.value}`} className="mt-1" />
+                        <Label htmlFor={`${section.field}-${option.value}`} className="cursor-pointer font-normal text-sm text-foreground leading-snug">
+                          {option.description}
                         </Label>
                       </div>
                     ))}
                   </RadioGroup>
-                  {fieldErrors[field] && <p className="text-xs font-medium text-destructive">{fieldErrors[field]}</p>}
+                  {fieldErrors[section.field] && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      {fieldErrors[section.field]}
+                    </p>
+                  )}
                 </div>
               ))}
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild><Link to="/forms">Cancel</Link></Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>{isSubmitting ? "Saving..." : "Save Health Impact"}</Button>
+              <Button variant="ghost" asChild>
+                <Link to="/forms">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+                {isSubmitting ? "Saving..." : "Save Health Impact"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+
+      {formType === "nordic_nmq" && (
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-lg">Standardized Nordic Questionnaire (NMQ)</CardTitle>
+            <CardDescription>
+              Evaluate musculoskeletal trouble and work capacity across 9 body regions over the past 12 months and 7 days.
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={(e) => void handleSaveNordicNmq(e)}>
+            <CardContent className="space-y-6">
+              <div className="overflow-x-auto rounded-xl border border-border/30 bg-background/40 p-4">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-border/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      <th className="py-3 px-2">Body Region</th>
+                      <th className="py-3 px-2 text-center">Trouble in last 12m?</th>
+                      <th className="py-3 px-2 text-center">Prevented work in last 12m?</th>
+                      <th className="py-3 px-2 text-center">Trouble in last 7 days?</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/20">
+                    {NMQ_ANATOMICAL_ZONES.map((zone) => {
+                      const f12m = `nmq_${zone.id}_12m` as keyof StudiesData
+                      const fPrev = `nmq_${zone.id}_prevent_12m` as keyof StudiesData
+                      const f7d = `nmq_${zone.id}_7d` as keyof StudiesData
+                      const hasErr = fieldErrors[f12m] || fieldErrors[fPrev] || fieldErrors[f7d]
+
+                      return (
+                        <tr key={zone.id} id={`field-group-${f12m}`} className={cn("hover:bg-muted/20 transition-colors", hasErr && "bg-destructive/10")}>
+                          <td className="py-3 px-2 font-medium text-foreground">{zone.name}</td>
+                          <td className="py-3 px-2 text-center">
+                            <RadioGroup
+                              value={data[f12m]}
+                              onValueChange={(val) => updateField(f12m, val)}
+                              disabled={isSubmitting || isLoadingData}
+                              className="inline-flex gap-4 justify-center"
+                            >
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="true" id={`${f12m}-yes`} />
+                                <Label htmlFor={`${f12m}-yes`} className="cursor-pointer text-xs">Yes</Label>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="false" id={`${f12m}-no`} />
+                                <Label htmlFor={`${f12m}-no`} className="cursor-pointer text-xs">No</Label>
+                              </div>
+                            </RadioGroup>
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <RadioGroup
+                              value={data[fPrev]}
+                              onValueChange={(val) => updateField(fPrev, val)}
+                              disabled={isSubmitting || isLoadingData}
+                              className="inline-flex gap-4 justify-center"
+                            >
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="true" id={`${fPrev}-yes`} />
+                                <Label htmlFor={`${fPrev}-yes`} className="cursor-pointer text-xs">Yes</Label>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="false" id={`${fPrev}-no`} />
+                                <Label htmlFor={`${fPrev}-no`} className="cursor-pointer text-xs">No</Label>
+                              </div>
+                            </RadioGroup>
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <RadioGroup
+                              value={data[f7d]}
+                              onValueChange={(val) => updateField(f7d, val)}
+                              disabled={isSubmitting || isLoadingData}
+                              className="inline-flex gap-4 justify-center"
+                            >
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="true" id={`${f7d}-yes`} />
+                                <Label htmlFor={`${f7d}-yes`} className="cursor-pointer text-xs">Yes</Label>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <RadioGroupItem value="false" id={`${f7d}-no`} />
+                                <Label htmlFor={`${f7d}-no`} className="cursor-pointer text-xs">No</Label>
+                              </div>
+                            </RadioGroup>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
+              <Button variant="ghost" asChild>
+                <Link to="/forms">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+                {isSubmitting ? "Saving..." : "Save Ergonomics Assessment"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+
+      {formType === "audit_c" && (
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-lg">AUDIT-C Alcohol Risk Assessment</CardTitle>
+            <CardDescription>
+              WHO standardized 3-question survey evaluating alcohol consumption habits and risk patterns.
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={(e) => void handleSaveAuditC(e)}>
+            <CardContent className="space-y-6">
+              {AUDIT_C_QUESTIONS.map((q) => (
+                <div
+                  key={q.field}
+                  id={`field-group-${q.field}`}
+                  className={cn(
+                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors[q.field] &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  )}
+                >
+                  <Label className="text-sm font-medium">{q.title}</Label>
+                  <RadioGroup
+                    value={data[q.field]}
+                    onValueChange={(val) => updateField(q.field, val)}
+                    disabled={isSubmitting || isLoadingData}
+                    className="grid gap-2.5 sm:grid-cols-2"
+                  >
+                    {q.options.map((opt) => (
+                      <div
+                        key={opt.value}
+                        className={cn(
+                          "flex items-center space-x-2.5 rounded-lg border border-border/30 bg-background/30 p-3 transition-all hover:bg-background/60",
+                          data[q.field] === opt.value && "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                        )}
+                      >
+                        <RadioGroupItem value={opt.value} id={`${q.field}-${opt.value}`} />
+                        <Label htmlFor={`${q.field}-${opt.value}`} className="cursor-pointer text-sm font-normal">
+                          {opt.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  {fieldErrors[q.field] && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      {fieldErrors[q.field]}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
+              <Button variant="ghost" asChild>
+                <Link to="/forms">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+                {isSubmitting ? "Saving..." : "Save Alcohol Assessment"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+
+      {formType === "pss10" && (
+        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-lg">Perceived Stress & Burnout (PSS-10)</CardTitle>
+            <CardDescription>
+              Read each item and indicate how often you felt or thought that way during the last month.
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={(e) => void handleSavePss10(e)}>
+            <CardContent className="space-y-4">
+              {PSS10_QUESTIONS.map(({ field, prompt, isReversed }) => (
+                <div
+                  key={field}
+                  id={`field-group-${field}`}
+                  className={cn(
+                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    fieldErrors[field] &&
+                      "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-sm font-medium">{prompt}</Label>
+                    {isReversed && (
+                      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                        Coping Factor
+                      </span>
+                    )}
+                  </div>
+                  <RadioGroup
+                    value={data[field]}
+                    onValueChange={(val) => updateField(field, val)}
+                    disabled={isSubmitting || isLoadingData}
+                    className="grid gap-2 sm:grid-cols-5"
+                  >
+                    {PSS10_LIKERT_OPTIONS.map((opt) => (
+                      <div
+                        key={opt.value}
+                        className={cn(
+                          "flex flex-col items-center justify-center rounded-lg border border-border/30 bg-background/30 p-2 text-center transition-all hover:bg-background/60",
+                          data[field] === opt.value && "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                        )}
+                      >
+                        <RadioGroupItem value={opt.value} id={`${field}-${opt.value}`} className="mb-1" />
+                        <Label htmlFor={`${field}-${opt.value}`} className="cursor-pointer text-xs font-normal">
+                          {opt.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  {fieldErrors[field] && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      {fieldErrors[field]}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
+              <Button variant="ghost" asChild>
+                <Link to="/forms">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+                {isSubmitting ? "Saving..." : "Save Perceived Stress Scale"}
+              </Button>
             </CardFooter>
           </form>
         </Card>
@@ -1430,3 +2376,4 @@ export function MemberFormsStudiesPage() {
     </div>
   )
 }
+
