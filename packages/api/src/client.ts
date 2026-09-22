@@ -737,7 +737,11 @@ export interface DepartmentResponse {
   slug: string
 }
 
-export type OrganizationEmployeeRole = "admin" | "member" | "content_manager"
+export type OrganizationEmployeeRole =
+  | "superadmin"
+  | "admin"
+  | "member"
+  | "content_manager"
 
 export interface OrganizationEmployee {
   id: string
@@ -749,6 +753,27 @@ export interface OrganizationEmployee {
   department: DepartmentResponse | null
   status: string
   last_assessment?: string | null
+}
+
+export interface SuperadminRemovalVote {
+  id: string
+  request_id: string
+  voter_user_id: string
+  decision: "approve" | "reject"
+  voted_at: string
+}
+
+export interface SuperadminRemovalRequest {
+  id: string
+  organization_id: string
+  target_user_id: string
+  requester_user_id: string
+  status: "pending" | "approved" | "rejected" | "cancelled"
+  required_votes: number
+  reason?: string | null
+  created_at: string
+  updated_at: string
+  votes: SuperadminRemovalVote[]
 }
 
 export interface PaginatedResponse<T> {
@@ -1481,6 +1506,192 @@ export async function assignEmployeeDepartment(
   } catch (error) {
     console.error("Error assigning employee department:", error)
     return null
+  }
+}
+
+export async function updateEmployeeRoles(
+  organizationId: string,
+  userId: string,
+  roles: OrganizationEmployeeRole[]
+): Promise<
+  | { success: OrganizationEmployee; error?: never }
+  | { success?: never; error: { code: string; message: string } }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationEmployeeRoles(organizationId, userId)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ roles }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        error: {
+          code: String(response.status),
+          message: errorData.detail || "Error al actualizar roles del empleado",
+        },
+      }
+    }
+
+    return { success: (await response.json()) as OrganizationEmployee }
+  } catch (error) {
+    console.error("Error updating employee roles:", error)
+    return {
+      error: {
+        code: "NETWORK_ERROR",
+        message: "Error de conexión al actualizar roles",
+      },
+    }
+  }
+}
+
+export async function removeEmployee(
+  organizationId: string,
+  userId: string
+): Promise<
+  | { success: true; error?: never }
+  | { success?: never; error: { code: string; message: string } }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationEmployee(organizationId, userId)}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        error: {
+          code: String(response.status),
+          message: errorData.detail || "Error al desvincular al empleado",
+        },
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error removing employee:", error)
+    return {
+      error: {
+        code: "NETWORK_ERROR",
+        message: "Error de conexión al desvincular al empleado",
+      },
+    }
+  }
+}
+
+export async function createSuperadminRemovalRequest(
+  organizationId: string,
+  userId: string,
+  reason?: string
+): Promise<
+  | { success: SuperadminRemovalRequest; error?: never }
+  | { success?: never; error: { code: string; message: string } }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationSuperadminRemovalRequestCreate(organizationId, userId)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reason: reason || null }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        error: {
+          code: String(response.status),
+          message:
+            errorData.detail ||
+            "Error al iniciar la solicitud de remoción de superadmin",
+        },
+      }
+    }
+
+    return { success: (await response.json()) as SuperadminRemovalRequest }
+  } catch (error) {
+    console.error("Error creating superadmin removal request:", error)
+    return {
+      error: {
+        code: "NETWORK_ERROR",
+        message: "Error de conexión al iniciar la solicitud",
+      },
+    }
+  }
+}
+
+export async function listSuperadminRemovalRequests(
+  organizationId: string,
+  status?: string
+): Promise<SuperadminRemovalRequest[]> {
+  try {
+    let url = `${resolveApiBaseUrl()}${apiRoutes.organizationSuperadminRemovalRequests(organizationId)}`
+    if (status) {
+      url += `?status=${encodeURIComponent(status)}`
+    }
+    const response = await fetchWithAuth(url, {
+      method: "GET",
+      credentials: "include",
+    })
+
+    if (!response.ok) return []
+    return (await response.json()) as SuperadminRemovalRequest[]
+  } catch (error) {
+    console.error("Error listing superadmin removal requests:", error)
+    return []
+  }
+}
+
+export async function voteSuperadminRemovalRequest(
+  organizationId: string,
+  requestId: string,
+  decision: "approve" | "reject"
+): Promise<
+  | { success: SuperadminRemovalRequest; error?: never }
+  | { success?: never; error: { code: string; message: string } }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationSuperadminRemovalRequestVote(organizationId, requestId)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ decision }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        error: {
+          code: String(response.status),
+          message:
+            errorData.detail || "Error al registrar el voto de remoción",
+        },
+      }
+    }
+
+    return { success: (await response.json()) as SuperadminRemovalRequest }
+  } catch (error) {
+    console.error("Error voting superadmin removal request:", error)
+    return {
+      error: {
+        code: "NETWORK_ERROR",
+        message: "Error de conexión al votar",
+      },
+    }
   }
 }
 

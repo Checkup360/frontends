@@ -33,8 +33,18 @@ export const apiRoutes = {
     `/organizations/${encodeURIComponent(organizationId)}/departments/${encodeURIComponent(departmentId)}`,
   organizationEmployeeDepartment: (organizationId: string, userId: string) =>
     `/organizations/${encodeURIComponent(organizationId)}/employees/${encodeURIComponent(userId)}/department`,
+  organizationEmployeeRoles: (organizationId: string, userId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/employees/${encodeURIComponent(userId)}/roles`,
+  organizationEmployee: (organizationId: string, userId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/employees/${encodeURIComponent(userId)}`,
   organizationEmployees: (organizationId: string) =>
     `/organizations/${encodeURIComponent(organizationId)}/employees`,
+  organizationSuperadminRemovalRequests: (organizationId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/superadmin-removal-requests`,
+  organizationSuperadminRemovalRequestCreate: (organizationId: string, userId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/superadmins/${encodeURIComponent(userId)}/removal-requests`,
+  organizationSuperadminRemovalRequestVote: (organizationId: string, requestId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/superadmin-removal-requests/${encodeURIComponent(requestId)}/votes`,
   organizationScoreWeights: (organizationId: string) =>
     `/organizations/${encodeURIComponent(organizationId)}/score-weights`,
   organizationAnalyticsTrends: (organizationId: string, months = 12, departmentId?: string) => {
