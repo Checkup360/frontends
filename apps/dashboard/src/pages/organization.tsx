@@ -24,6 +24,7 @@ import {
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { EmployeesTable } from "@/components/employees-table"
+import { QuorumRequestsCard } from "@/components/quorum-requests-card"
 
 export function OrganizationPage() {
   const { user, refresh } = useCurrentUser()
@@ -33,6 +34,7 @@ export function OrganizationPage() {
   // ── Overall Stats Data ──
   const [allMembers, setAllMembers] = useState<OrganizationEmployee[]>([])
   const [loadingMeta, setLoadingMeta] = useState(true)
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0)
 
   // ── Organization Profile Edit Modal State ──
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -92,7 +94,7 @@ export function OrganizationPage() {
     return () => {
       active = false
     }
-  }, [organizationId])
+  }, [organizationId, statsRefreshKey])
 
   const roleCounts = useMemo(() => {
     let superadmins = 0
@@ -220,12 +222,27 @@ export function OrganizationPage() {
         )}
       </section>
 
+      {/* ── Superadmin Quorum Requests Section ── */}
+      {organizationId && (
+        <QuorumRequestsCard
+          organizationId={organizationId}
+          employees={allMembers}
+          onRequestUpdated={() => {
+            setStatsRefreshKey((k) => k + 1)
+          }}
+        />
+      )}
+
       {/* ── Reusable Employees / Members Table ── */}
       <EmployeesTable
         organizationId={organizationId}
         roles={undefined}
         showRoleFilter={true}
         showRolesColumn={true}
+        allowRoleManagement={true}
+        onDataChanged={() => {
+          setStatsRefreshKey((k) => k + 1)
+        }}
         title="Organization Members & Roles"
         description="Detailed list of all accounts registered in this organization and their assigned roles."
       />
