@@ -345,8 +345,7 @@ export function EmployeesTable({
         setQuorumDialogOpen(false)
         setQuorumTargetEmployee(null)
         setQuorumReason("")
-        setRefreshKey((k) => k + 1)
-        onDataChanged?.()
+        window.location.reload()
       }
     } catch {
       toast.error("Failed to submit quorum request")
@@ -677,7 +676,9 @@ export function EmployeesTable({
                 }
                 onCheckedChange={(checked) => {
                   if (checked) {
-                    setSelectedRoles([...selectedRoles, "superadmin"])
+                    setSelectedRoles(
+                      Array.from(new Set([...selectedRoles, "superadmin", "admin"]))
+                    )
                   } else {
                     setSelectedRoles(
                       selectedRoles.filter((r) => r !== "superadmin")
@@ -708,7 +709,7 @@ export function EmployeesTable({
               <Checkbox
                 id="role-admin"
                 checked={selectedRoles.includes("admin")}
-                disabled={!isCurrentUserSuperadmin}
+                disabled={!isCurrentUserSuperadmin || selectedRoles.includes("superadmin")}
                 onCheckedChange={(checked) => {
                   if (checked) {
                     setSelectedRoles([...selectedRoles, "admin"])
@@ -728,10 +729,16 @@ export function EmployeesTable({
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   Organizational management, employee onboarding and dashboard access.
-                  {!isCurrentUserSuperadmin && (
-                    <span className="block mt-0.5 text-muted-foreground/80 italic">
-                      * Only Superadmins can assign/remove Admin roles.
+                  {selectedRoles.includes("superadmin") ? (
+                    <span className="block mt-0.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                      * Required while Superadmin is active.
                     </span>
+                  ) : (
+                    !isCurrentUserSuperadmin && (
+                      <span className="block mt-0.5 text-muted-foreground/80 italic">
+                        * Only Superadmins can assign/remove Admin roles.
+                      </span>
+                    )
                   )}
                 </p>
               </div>
@@ -893,14 +900,22 @@ export function EmployeesTable({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 py-2">
-            <Label htmlFor="quorum-reason">Reason for removal (optional)</Label>
-            <Input
+          <div className="space-y-2 py-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="quorum-reason">Reason for removal (optional)</Label>
+              <span className="text-xs text-muted-foreground">
+                {quorumReason.length}/500
+              </span>
+            </div>
+            <textarea
               id="quorum-reason"
               placeholder="e.g. Employee leaving organization or role transition"
               value={quorumReason}
-              onChange={(e) => setQuorumReason(e.target.value)}
+              onChange={(e) => setQuorumReason(e.target.value.slice(0, 500))}
               disabled={actionLoading}
+              maxLength={500}
+              rows={3}
+              className="w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 resize-none break-all"
             />
           </div>
 
