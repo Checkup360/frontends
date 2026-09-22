@@ -1,5 +1,5 @@
 import {
-  listSuperadminRemovalRequests,
+  listSuperadminRemovalRequestsPage,
   voteSuperadminRemovalRequest,
   type OrganizationEmployee,
   type SuperadminRemovalRequest,
@@ -23,11 +23,28 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableRowsSkeleton,
 } from "@workspace/ui/components/table"
+import { TablePagination } from "@workspace/components/components/table-pagination"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import { toast } from "@workspace/ui/components/sonner"
 import { formatEmployeeName } from "@workspace/components/components/employee-profile-card"
-import { ShieldAlert, Check, X, Clock } from "lucide-react"
+import { ShieldAlert, Check, X } from "lucide-react"
 import { useEffect, useState } from "react"
+
+const quorumSkeletonColumns = [
+  { skeletonClassName: "h-4 w-32" },
+  { skeletonClassName: "h-4 w-28" },
+  { lines: ["h-4 w-24", "h-3 w-16"] },
+  { skeletonClassName: "h-6 w-20 rounded-full" },
+  { skeletonClassName: "h-8 w-28 ml-auto rounded-md" },
+]
 
 interface QuorumRequestsCardProps {
   organizationId: string
@@ -48,6 +65,12 @@ export function QuorumRequestsCard({
   const [selectedRequest, setSelectedRequest] =
     useState<SuperadminRemovalRequest | null>(null)
 
+  // Filters & Pagination State
+  const [selectedStatus, setSelectedStatus] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalItems, setTotalItems] = useState(0)
+
   const currentEmployee = employees.find((e) => e.email === user?.email)
   const isSuperadmin =
     currentEmployee?.roles?.includes("superadmin") ||
@@ -66,9 +89,14 @@ export function QuorumRequestsCard({
     async function fetchRequests() {
       setLoading(true)
       try {
-        const data = await listSuperadminRemovalRequests(organizationId)
+        const data = await listSuperadminRemovalRequestsPage(organizationId, {
+          status: selectedStatus !== "all" ? selectedStatus : undefined,
+          page: currentPage,
+          pageSize,
+        })
         if (!active) return
-        setRequests(data)
+        setRequests(data.items)
+        setTotalItems(data.total)
       } catch (err) {
         console.error("Failed to load quorum requests:", err)
       } finally {
@@ -81,7 +109,14 @@ export function QuorumRequestsCard({
     return () => {
       active = false
     }
-  }, [organizationId, isSuperadmin, refreshKey])
+  }, [
+    organizationId,
+    isSuperadmin,
+    selectedStatus,
+    currentPage,
+    pageSize,
+    refreshKey,
+  ])
 
   if (!isSuperadmin) {
     return null
@@ -164,6 +199,25 @@ export function QuorumRequestsCard({
             </p>
           </div>
         </div>
+
+        <div className="flex items-center gap-2">
+          <Select
+            value={selectedStatus}
+            onValueChange={(val) => {
+              setSelectedStatus(val)
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-[170px] bg-background">
+              <SelectValue placeholder="All Quorums" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Quorums</SelectItem>
+              <SelectItem value="active">Active Quorums</SelectItem>
+              <SelectItem value="inactive">Closed / Resolved</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
@@ -179,15 +233,16 @@ export function QuorumRequestsCard({
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  <Clock className="mx-auto mb-1 size-5 animate-spin text-muted-foreground" />
-                  Loading quorum requests...
-                </TableCell>
-              </TableRow>
+              <TableRowsSkeleton
+                columns={quorumSkeletonColumns}
+                rows={pageSize > 5 ? 5 : pageSize}
+              />
             ) : requests.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={5}
+                  className="h-32 text-center text-muted-foreground"
+                >
                   No active or past superadmin removal requests found.
                 </TableCell>
               </TableRow>
@@ -279,6 +334,22 @@ export function QuorumRequestsCard({
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalItems > 0 && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(totalItems / pageSize) || 1}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={(page) => setCurrentPage(page)}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+          pageSizeOptions={[5, 10, 20]}
+        />
+      )}
 
       {/* ── Quorum Request Details Modal ── */}
       {modalRequest && (

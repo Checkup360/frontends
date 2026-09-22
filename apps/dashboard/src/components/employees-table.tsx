@@ -654,20 +654,22 @@ export function EmployeesTable({
         </Table>
       </div>
 
-      {/* Pagination Controls */}
-      <TablePagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        pageSize={pageSize}
-        onPageChange={setCurrentPage}
-        onPageSizeChange={(newSize) => {
-          setPageSize(newSize)
-          setCurrentPage(1)
-        }}
-        itemLabel="members"
-        loading={loading}
-      />
+      {/* Pagination Controls — only show once we have data */}
+      {!loading && totalItems > 0 && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize)
+            setCurrentPage(1)
+          }}
+          itemLabel="members"
+          loading={loading}
+        />
+      )}
 
       {/* ── Manage Roles Dialog ── */}
       <Dialog open={manageRolesOpen} onOpenChange={setManageRolesOpen}>

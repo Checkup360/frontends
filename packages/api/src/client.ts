@@ -1653,6 +1653,57 @@ export async function listSuperadminRemovalRequests(
   }
 }
 
+export async function listSuperadminRemovalRequestsPage(
+  organizationId: string,
+  filters?: {
+    status?: string
+    page?: number
+    pageSize?: number
+  }
+): Promise<PaginatedResponse<SuperadminRemovalRequest>> {
+  const fallbackPage = filters?.page ?? 1
+  const fallbackPageSize = filters?.pageSize ?? 10
+  try {
+    const url = new URL(
+      `${resolveApiBaseUrl()}${apiRoutes.organizationSuperadminRemovalRequests(organizationId)}`
+    )
+    if (filters?.status) {
+      url.searchParams.append("status", filters.status)
+    }
+    if (filters?.page) {
+      url.searchParams.append("page", filters.page.toString())
+    }
+    if (filters?.pageSize) {
+      url.searchParams.append("page_size", filters.pageSize.toString())
+    }
+
+    const response = await fetchWithAuth(url.toString(), {
+      method: "GET",
+      credentials: "include",
+    })
+
+    if (response.status === 401 || !response.ok) {
+      return {
+        items: [],
+        total: 0,
+        page: fallbackPage,
+        page_size: fallbackPageSize,
+      }
+    }
+
+    const items = (await response.json()) as SuperadminRemovalRequest[]
+    return paginatedFromHeaders(response, items, fallbackPage, fallbackPageSize)
+  } catch (error) {
+    console.error("Error listing paginated superadmin removal requests:", error)
+    return {
+      items: [],
+      total: 0,
+      page: fallbackPage,
+      page_size: fallbackPageSize,
+    }
+  }
+}
+
 export async function voteSuperadminRemovalRequest(
   organizationId: string,
   requestId: string,
