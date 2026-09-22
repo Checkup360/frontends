@@ -36,6 +36,8 @@ const statusClasses: Record<string, string> = {
     "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 capitalize",
   onboarding:
     "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 capitalize",
+  inactive:
+    "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border-zinc-500/20 capitalize",
 }
 
 const MEMBER_ROLES: OrganizationEmployeeRole[] = ["member"]
@@ -48,23 +50,34 @@ const employeeTableSkeletonColumns = [
   { skeletonClassName: "h-4 w-24" },
 ]
 
-function getRoleBadgeVariant(
+function getRoleBadgeProps(
   role: string
-): "info-light" | "warning-light" | "outline" | "secondary" {
+): {
+  variant: "info-light" | "warning-light" | "outline" | "secondary"
+  className?: string
+} {
   switch (role) {
+    case "superadmin":
+      return {
+        variant: "secondary",
+        className:
+          "bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30 font-semibold",
+      }
     case "admin":
-      return "info-light"
+      return { variant: "info-light" }
     case "content_manager":
-      return "warning-light"
+      return { variant: "warning-light" }
     case "member":
-      return "outline"
+      return { variant: "outline" }
     default:
-      return "secondary"
+      return { variant: "secondary" }
   }
 }
 
 function formatRoleName(role: string) {
   switch (role) {
+    case "superadmin":
+      return "Superadmin"
     case "admin":
       return "Admin"
     case "content_manager":
@@ -246,6 +259,7 @@ export function EmployeesTable({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="superadmin">Superadmin</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="content_manager">
                     Content Manager
@@ -367,15 +381,19 @@ export function EmployeesTable({
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {w.roles && w.roles.length > 0 ? (
-                          w.roles.map((role) => (
-                            <Badge
-                              key={role}
-                              variant={getRoleBadgeVariant(role)}
-                              size="xs"
-                            >
-                              {formatRoleName(role)}
-                            </Badge>
-                          ))
+                          w.roles.map((role) => {
+                            const badgeProps = getRoleBadgeProps(role)
+                            return (
+                              <Badge
+                                key={role}
+                                variant={badgeProps.variant}
+                                className={badgeProps.className}
+                                size="xs"
+                              >
+                                {formatRoleName(role)}
+                              </Badge>
+                            )
+                          })
                         ) : (
                           <Badge variant="outline" size="xs">
                             No roles

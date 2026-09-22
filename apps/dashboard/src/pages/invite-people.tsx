@@ -96,10 +96,16 @@ export function InvitePeoplePage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
+  const isSuperadmin = useMemo(
+    () => user?.membership?.roles?.includes("superadmin") ?? false,
+    [user]
+  )
+
   const organization = useMemo(() => {
-    const membership = user?.membership?.roles?.includes("admin")
-      ? user.membership
-      : undefined
+    const hasAccess =
+      user?.membership?.roles?.includes("admin") ||
+      user?.membership?.roles?.includes("superadmin")
+    const membership = hasAccess ? user?.membership : undefined
     if (!membership) return null
 
     return {
@@ -282,6 +288,7 @@ export function InvitePeoplePage() {
           <CardContent className="py-6 md:px-8">
             <OrgInvitationForm
               fixedOrganization={organization}
+              canInviteSuperadmin={isSuperadmin}
               title="Create invite"
               description="Create an invitation link for this organization."
               onBack={() => setShowCreateForm(false)}
@@ -396,9 +403,10 @@ export function InvitePeoplePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="member">Member</SelectItem>
+                  <SelectItem value="superadmin">Superadmin</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="content_manager">Content Manager</SelectItem>
+                  <SelectItem value="member">Member</SelectItem>
                 </SelectContent>
               </Select>
             </div>

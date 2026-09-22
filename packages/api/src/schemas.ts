@@ -35,7 +35,7 @@ export type InviteCreateResponse = {
   invite_url: string
 }
 
-export type OrgRole = "admin" | "member" | "content_manager"
+export type OrgRole = "superadmin" | "admin" | "member" | "content_manager"
 
 export type OrganizationInvite = {
   id: string

@@ -95,17 +95,19 @@ export function OrganizationPage() {
   }, [organizationId])
 
   const roleCounts = useMemo(() => {
+    let superadmins = 0
     let admins = 0
     let contentManagers = 0
     let regularMembers = 0
 
     allMembers.forEach((m) => {
+      if (m.roles.includes("superadmin")) superadmins++
       if (m.roles.includes("admin")) admins++
       if (m.roles.includes("content_manager")) contentManagers++
       if (m.roles.includes("member")) regularMembers++
     })
 
-    return { admins, contentManagers, regularMembers }
+    return { superadmins, admins, contentManagers, regularMembers }
   }, [allMembers])
 
   return (
@@ -194,9 +196,9 @@ export function OrganizationPage() {
               icon={ShieldCheck}
               iconVariant="icon"
               tone="success"
-              label="Administrators"
-              value={roleCounts.admins.toString()}
-              hint="Full access users"
+              label="Admins & Superadmins"
+              value={(roleCounts.admins + roleCounts.superadmins).toString()}
+              hint={`${roleCounts.superadmins} superadmin${roleCounts.superadmins === 1 ? "" : "s"}, ${roleCounts.admins} admin${roleCounts.admins === 1 ? "" : "s"}`}
             />
             <OverviewStatCard
               icon={FileText}

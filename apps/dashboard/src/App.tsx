@@ -23,7 +23,7 @@ import { ThemeProvider } from "./components/theme-provider"
 
 function ProtectedLayout() {
   return (
-    <RequireOrgRole allowedRoles={["admin"]} fallback={<DashboardLoadingSkeleton />}>
+    <RequireOrgRole allowedRoles={["admin", "superadmin"]} fallback={<DashboardLoadingSkeleton />}>
       <Outlet />
     </RequireOrgRole>
   )

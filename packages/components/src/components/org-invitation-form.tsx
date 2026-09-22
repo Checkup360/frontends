@@ -35,6 +35,7 @@ interface OrgInvitationFormProps {
   onSuccessChange?: (success: boolean) => void
   fixedOrganization?: OrganizationResponse
   initialOrganizationId?: string
+  canInviteSuperadmin?: boolean
   title?: string
   description?: string
 }
@@ -44,6 +45,7 @@ export function OrgInvitationForm({
   onSuccessChange,
   fixedOrganization,
   initialOrganizationId,
+  canInviteSuperadmin = false,
   title = "Organization registration",
   description = "Create an invitation for a user in an existing organization.",
 }: OrgInvitationFormProps) {
@@ -68,11 +70,13 @@ export function OrgInvitationForm({
   const [generatedEmail, setGeneratedEmail] = useState("")
   const [copied, setCopied] = useState(false)
 
+  const isSuperadminRole = role === "superadmin"
   const isAdminRole = role === "admin"
   const isMemberRole = role === "member"
   const isContentManagerRole = role === "content_manager"
   const isEmailFilled = email.trim().length > 0
-  const shouldBeSingleUse = isAdminRole || isContentManagerRole || isEmailFilled
+  const shouldBeSingleUse =
+    isSuperadminRole || isAdminRole || isContentManagerRole || isEmailFilled
   const selectedOrganization = fixedOrganization ?? selected
   const selectedOrganizationId = selected?.id ?? fixedOrganization?.id ?? ""
 
@@ -418,22 +422,29 @@ export function OrgInvitationForm({
                 <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="content_manager">Content Manager</SelectItem>
+                {canInviteSuperadmin && (
+                  <SelectItem value="superadmin">Superadmin</SelectItem>
+                )}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              {isAdminRole
-                ? "Admins can manage organization settings, invite members, and have full access to organization data."
-                : isContentManagerRole
-                  ? "Content managers can log in to the CMS and publish news articles for the organization."
-                  : "Members can access organization data and collaborate with the team."}
+              {isSuperadminRole
+                ? "Superadmins have full governance over the organization, including roles, quorum decisions, and security settings."
+                : isAdminRole
+                  ? "Admins can manage organization settings, invite members, and have full access to organization data."
+                  : isContentManagerRole
+                    ? "Content managers can log in to the CMS and publish news articles for the organization."
+                    : "Members can access organization data and collaborate with the team."}
             </p>
-            {(isAdminRole || isContentManagerRole) && (
+            {(isSuperadminRole || isAdminRole || isContentManagerRole) && (
               <div className="flex gap-2 rounded-lg border border-border/60 bg-muted/40 p-3 text-sm text-muted-foreground">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[color:var(--warning)]" />
                 <p>
-                  {isAdminRole
-                    ? "Admin invitations are single-use."
-                    : "Content manager invitations are single-use."}
+                  {isSuperadminRole
+                    ? "Superadmin invitations are single-use."
+                    : isAdminRole
+                      ? "Admin invitations are single-use."
+                      : "Content manager invitations are single-use."}
                 </p>
               </div>
             )}
