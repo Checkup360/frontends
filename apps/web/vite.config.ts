@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
-import { appsConfig } from "../../apps.config"
+import { appsConfig, apiProxyConfig } from "../../apps.config"
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -39,10 +39,16 @@ export default defineConfig({
   server: {
     port: appsConfig.web.devPort,
     strictPort: appsConfig.web.strictPort,
+    proxy: {
+      ...apiProxyConfig,
+    },
   },
   preview: {
     port: appsConfig.web.previewPort,
     strictPort: appsConfig.web.strictPort,
+    proxy: {
+      ...apiProxyConfig,
+    },
   },
   resolve: {
     alias: {

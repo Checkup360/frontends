@@ -13,7 +13,9 @@ export function resolveUrl(configKey: string, defaultValue: string): string {
 }
 
 export function resolveApiBaseUrl(): string {
-  return resolveUrl("apiOrigin", publicDevDefaults.apiOrigin)
+  const defaultBase =
+    typeof window !== "undefined" ? `${window.location.origin}/api` : "/api"
+  return resolveUrl("apiBaseUrl", defaultBase)
 }
 
 export function resolveMediaUrl(url: string | null | undefined): string | null {

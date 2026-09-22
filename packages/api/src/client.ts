@@ -1274,18 +1274,18 @@ export async function listOrganizationEmployees(
   }
 ): Promise<OrganizationEmployee[]> {
   try {
-    const url = new URL(
-      `${resolveApiBaseUrl()}${apiRoutes.organizationEmployees(organizationId)}`
-    )
-    roles?.forEach((role) => url.searchParams.append("role", role))
+    const queryParams = new URLSearchParams()
+    roles?.forEach((role) => queryParams.append("role", role))
     if (filters?.departmentId) {
-      url.searchParams.append("department_id", filters.departmentId)
+      queryParams.append("department_id", filters.departmentId)
     }
     if (filters?.status) {
-      url.searchParams.append("status", filters.status)
+      queryParams.append("status", filters.status)
     }
+    const queryString = queryParams.toString()
+    const url = `${resolveApiBaseUrl()}${apiRoutes.organizationEmployees(organizationId)}${queryString ? `?${queryString}` : ""}`
 
-    const response = await fetchWithAuth(url.toString(), {
+    const response = await fetchWithAuth(url, {
       credentials: "include",
     })
 
@@ -1317,23 +1317,23 @@ export async function listOrganizationEmployeesPage(
   }
 ): Promise<PaginatedResponse<OrganizationEmployee>> {
   try {
-    const url = new URL(
-      `${resolveApiBaseUrl()}${apiRoutes.organizationEmployees(organizationId)}`
-    )
-    roles?.forEach((role) => url.searchParams.append("role", role))
+    const queryParams = new URLSearchParams()
+    roles?.forEach((role) => queryParams.append("role", role))
     if (filters.departmentId) {
-      url.searchParams.append("department_id", filters.departmentId)
+      queryParams.append("department_id", filters.departmentId)
     }
     if (filters.status) {
-      url.searchParams.append("status", filters.status)
+      queryParams.append("status", filters.status)
     }
     if (filters.search?.trim()) {
-      url.searchParams.append("search", filters.search.trim())
+      queryParams.append("search", filters.search.trim())
     }
-    url.searchParams.append("page", filters.page.toString())
-    url.searchParams.append("page_size", filters.pageSize.toString())
+    queryParams.append("page", filters.page.toString())
+    queryParams.append("page_size", filters.pageSize.toString())
+    const queryString = queryParams.toString()
+    const url = `${resolveApiBaseUrl()}${apiRoutes.organizationEmployees(organizationId)}${queryString ? `?${queryString}` : ""}`
 
-    const response = await fetchWithAuth(url.toString(), {
+    const response = await fetchWithAuth(url, {
       credentials: "include",
     })
 
@@ -1392,16 +1392,16 @@ export async function listDepartmentsPage(
   }
 ): Promise<PaginatedResponse<DepartmentResponse>> {
   try {
-    const url = new URL(
-      `${resolveApiBaseUrl()}${apiRoutes.organizationDepartments(organizationId)}`
-    )
+    const queryParams = new URLSearchParams()
     if (filters.search?.trim()) {
-      url.searchParams.append("search", filters.search.trim())
+      queryParams.append("search", filters.search.trim())
     }
-    url.searchParams.append("page", filters.page.toString())
-    url.searchParams.append("page_size", filters.pageSize.toString())
+    queryParams.append("page", filters.page.toString())
+    queryParams.append("page_size", filters.pageSize.toString())
+    const queryString = queryParams.toString()
+    const url = `${resolveApiBaseUrl()}${apiRoutes.organizationDepartments(organizationId)}${queryString ? `?${queryString}` : ""}`
 
-    const response = await fetchWithAuth(url.toString(), {
+    const response = await fetchWithAuth(url, {
       credentials: "include",
     })
 
@@ -1664,20 +1664,20 @@ export async function listSuperadminRemovalRequestsPage(
   const fallbackPage = filters?.page ?? 1
   const fallbackPageSize = filters?.pageSize ?? 10
   try {
-    const url = new URL(
-      `${resolveApiBaseUrl()}${apiRoutes.organizationSuperadminRemovalRequests(organizationId)}`
-    )
+    const queryParams = new URLSearchParams()
     if (filters?.status) {
-      url.searchParams.append("status", filters.status)
+      queryParams.append("status", filters.status)
     }
     if (filters?.page) {
-      url.searchParams.append("page", filters.page.toString())
+      queryParams.append("page", filters.page.toString())
     }
     if (filters?.pageSize) {
-      url.searchParams.append("page_size", filters.pageSize.toString())
+      queryParams.append("page_size", filters.pageSize.toString())
     }
+    const queryString = queryParams.toString()
+    const url = `${resolveApiBaseUrl()}${apiRoutes.organizationSuperadminRemovalRequests(organizationId)}${queryString ? `?${queryString}` : ""}`
 
-    const response = await fetchWithAuth(url.toString(), {
+    const response = await fetchWithAuth(url, {
       method: "GET",
       credentials: "include",
     })

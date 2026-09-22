@@ -27,8 +27,20 @@ export const appsConfig: Record<AppName, AppRuntimeConfig> = {
 const API_DEV_PORT = 8000
 const CMS_DEV_PORT = 3000
 
+export const apiProxyConfig = {
+  "/api": {
+    target: `http://localhost:${API_DEV_PORT}`,
+    changeOrigin: true,
+    rewrite: (path: string) => path.replace(/^\/api/, ""),
+    headers: {
+      "X-Forwarded-Prefix": "/api",
+    },
+  },
+}
+
 export const publicDevDefaults = {
   apiOrigin: `http://localhost:${API_DEV_PORT}`,
+  apiBaseUrl: "/api",
   webOrigin: `http://localhost:${appsConfig.web.devPort}`,
   dashboardOrigin: `http://localhost:${appsConfig.dashboard.devPort}`,
   backofficeOrigin: `http://localhost:${appsConfig.backoffice.devPort}`,

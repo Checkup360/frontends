@@ -2,7 +2,7 @@ import path from "path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
-import { appsConfig } from "../../apps.config"
+import { appsConfig, apiProxyConfig } from "../../apps.config"
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,6 +12,7 @@ export default defineConfig({
     port: appsConfig.backoffice.devPort,
     strictPort: appsConfig.backoffice.strictPort,
     proxy: {
+      ...apiProxyConfig,
       "/dozzle": {
         target: "http://localhost:8080",
         ws: true,
@@ -21,6 +22,9 @@ export default defineConfig({
   preview: {
     port: appsConfig.backoffice.previewPort,
     strictPort: appsConfig.backoffice.strictPort,
+    proxy: {
+      ...apiProxyConfig,
+    },
   },
   resolve: {
     dedupe: ["react", "react-dom"],
