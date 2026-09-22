@@ -59,13 +59,11 @@ export function QuorumRequestsCard({
   useEffect(() => {
     let active = true
 
-    async function fetchRequests() {
-      if (!organizationId) {
-        setRequests([])
-        setLoading(false)
-        return
-      }
+    if (!isSuperadmin || !organizationId) {
+      return
+    }
 
+    async function fetchRequests() {
       setLoading(true)
       try {
         const data = await listSuperadminRemovalRequests(organizationId)
@@ -83,9 +81,9 @@ export function QuorumRequestsCard({
     return () => {
       active = false
     }
-  }, [organizationId, refreshKey])
+  }, [organizationId, isSuperadmin, refreshKey])
 
-  if (!isSuperadmin && requests.length === 0) {
+  if (!isSuperadmin) {
     return null
   }
 

@@ -112,6 +112,13 @@ export function OrganizationPage() {
     return { superadmins, admins, contentManagers, regularMembers }
   }, [allMembers])
 
+  const isSuperadmin = useMemo(() => {
+    if (user?.is_sysadmin) return true
+    if (user?.membership?.roles?.includes("superadmin")) return true
+    const currentMember = allMembers.find((m) => m.email === user?.email)
+    return currentMember?.roles.includes("superadmin") ?? false
+  }, [user, allMembers])
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       {/* ── Organization Information Header Card ── */}
@@ -223,7 +230,7 @@ export function OrganizationPage() {
       </section>
 
       {/* ── Superadmin Quorum Requests Section ── */}
-      {organizationId && (
+      {organizationId && isSuperadmin && (
         <QuorumRequestsCard
           organizationId={organizationId}
           employees={allMembers}

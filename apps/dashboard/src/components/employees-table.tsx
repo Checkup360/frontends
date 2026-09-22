@@ -49,7 +49,7 @@ import {
 import { TablePagination } from "@workspace/components/components/table-pagination"
 import { formatEmployeeName } from "@workspace/components/components/employee-profile-card"
 import { toast } from "@workspace/ui/components/sonner"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { X, MoreVertical, UserCog, UserMinus, ShieldAlert } from "lucide-react"
 
@@ -140,15 +140,25 @@ export function EmployeesTable({
   const navigate = useNavigate()
   const { user } = useCurrentUser()
 
-  const isCurrentUserSuperadmin =
-    user?.membership?.roles?.includes("superadmin") ?? false
-  const isCurrentUserAdmin = user?.membership?.roles?.includes("admin") ?? false
-
   // State for raw data
   const [employees, setEmployees] = useState<OrganizationEmployee[]>([])
   const [departments, setDepartments] = useState<DepartmentResponse[]>([])
   const [totalItems, setTotalItems] = useState(0)
   const [loading, setLoading] = useState(true)
+
+  const isCurrentUserSuperadmin = useMemo(() => {
+    if (user?.is_sysadmin) return true
+    if (user?.membership?.roles?.includes("superadmin")) return true
+    const me = employees.find((e) => e.email === user?.email)
+    return me?.roles.includes("superadmin") ?? false
+  }, [user, employees])
+
+  const isCurrentUserAdmin = useMemo(() => {
+    if (user?.is_sysadmin) return true
+    if (user?.membership?.roles?.includes("admin")) return true
+    const me = employees.find((e) => e.email === user?.email)
+    return me?.roles.includes("admin") ?? false
+  }, [user, employees])
 
   // Filters State
   const [search, setSearch] = useState("")
@@ -276,6 +286,10 @@ export function EmployeesTable({
   }
 
   const handleOpenQuorumRequest = (emp: OrganizationEmployee) => {
+    if (!isCurrentUserSuperadmin) {
+      toast.error("Only superadmins can initiate a quorum removal request.")
+      return
+    }
     setQuorumTargetEmployee(emp)
     setQuorumReason("")
     setQuorumDialogOpen(true)
@@ -604,24 +618,30 @@ export function EmployeesTable({
                               <UserCog className="mr-2 size-4" />
                               Manage Roles
                             </DropdownMenuItem>
-                            {isTargetSuperadmin &&
-                              isCurrentUserSuperadmin &&
-                              !isSelf && (
+                            {isTargetSuperadmin ? (
+                              isCurrentUserSuperadmin && !isSelf && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleOpenQuorumRequest(w)}
+                                  >
+                                    <ShieldAlert className="mr-2 size-4 text-amber-600 dark:text-amber-400" />
+                                    Request Removal (Quorum)
+                                  </DropdownMenuItem>
+                                </>
+                              )
+                            ) : (
+                              <>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  onClick={() => handleOpenQuorumRequest(w)}
+                                  variant="destructive"
+                                  onClick={() => handleOpenDeactivate(w)}
                                 >
-                                  <ShieldAlert className="mr-2 size-4 text-amber-600 dark:text-amber-400" />
-                                  Request Removal (Quorum)
+                                  <UserMinus className="mr-2 size-4" />
+                                  Deactivate Employee
                                 </DropdownMenuItem>
-                              )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onClick={() => handleOpenDeactivate(w)}
-                            >
-                              <UserMinus className="mr-2 size-4" />
-                              Deactivate Employee
-                            </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -856,16 +876,18 @@ export function EmployeesTable({
               Cancel
             </Button>
             {deactivatingEmployee?.roles?.includes("superadmin") ? (
-              <Button
-                variant="default"
-                onClick={() => {
-                  const emp = deactivatingEmployee
-                  setDeactivateOpen(false)
-                  if (emp) handleOpenQuorumRequest(emp)
-                }}
-              >
-                Initiate Quorum Request
-              </Button>
+              isCurrentUserSuperadmin ? (
+                <Button
+                  variant="default"
+                  onClick={() => {
+                    const emp = deactivatingEmployee
+                    setDeactivateOpen(false)
+                    if (emp) handleOpenQuorumRequest(emp)
+                  }}
+                >
+                  Initiate Quorum Request
+                </Button>
+              ) : null
             ) : (
               <Button
                 variant="destructive"
@@ -880,7 +902,8 @@ export function EmployeesTable({
       </Dialog>
 
       {/* ── Quorum Request Dialog ── */}
-      <Dialog open={quorumDialogOpen} onOpenChange={setQuorumDialogOpen}>
+      {isCurrentUserSuperadmin && (
+        <Dialog open={quorumDialogOpen} onOpenChange={setQuorumDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -937,6 +960,7 @@ export function EmployeesTable({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      )}
     </Card>
   )
 }
