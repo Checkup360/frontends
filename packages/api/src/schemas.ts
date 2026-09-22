@@ -73,6 +73,7 @@ export interface CreateOrgInvitationPayload {
   organization_id?: string
   department_id?: string
   role: OrgRole
+  is_superadmin?: boolean
   email?: string
   max_uses?: number
   expires_in_hours?: number

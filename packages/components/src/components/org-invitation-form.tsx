@@ -14,6 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select"
+import { Checkbox } from "@workspace/ui/components/checkbox"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   Copy,
   Check,
@@ -70,8 +72,14 @@ export function OrgInvitationForm({
   const [generatedEmail, setGeneratedEmail] = useState("")
   const [copied, setCopied] = useState(false)
 
-  const isSuperadminRole = role === "superadmin"
-  const isAdminRole = role === "admin"
+  const { user } = useCurrentUser()
+  const isSysadmin = user?.is_sysadmin ?? false
+  const isUserSuperadmin = user?.membership?.roles?.includes("superadmin") ?? false
+  const canGrantSuperadmin = isSysadmin || isUserSuperadmin || canInviteSuperadmin
+
+  const [isSuperadmin, setIsSuperadmin] = useState(false)
+  const isSuperadminRole = role === "admin" && isSuperadmin
+  const isAdminRole = role === "admin" && !isSuperadmin
   const isMemberRole = role === "member"
   const isContentManagerRole = role === "content_manager"
   const isEmailFilled = email.trim().length > 0
@@ -181,6 +189,7 @@ export function OrgInvitationForm({
     }
 
     setLoading(true)
+    const effectiveRole = isSuperadmin ? "superadmin" : role
     try {
       const result = await createOrgInvitation(
         !fixedOrganization
@@ -190,13 +199,15 @@ export function OrgInvitationForm({
                 isMemberRole && selectedDepartmentId
                   ? selectedDepartmentId
                   : undefined,
-              role,
+              role: effectiveRole,
+              is_superadmin: isSuperadmin,
               email: email.trim() || undefined,
               max_uses: shouldBeSingleUse ? 1 : maxUsesNum,
               expires_in_hours: expiresInHoursNum,
             }
           : {
-              role,
+              role: effectiveRole,
+              is_superadmin: isSuperadmin,
               department_id:
                 isMemberRole && selectedDepartmentId
                   ? selectedDepartmentId
@@ -218,12 +229,13 @@ export function OrgInvitationForm({
       onSuccessChange?.(true)
       setInviteUrl(result.success.invite_url)
       setGeneratedOrganization(selectedOrganization)
-      setGeneratedRole(role)
+      setGeneratedRole(effectiveRole)
       setGeneratedEmail(email.trim())
       if (!fixedOrganization) {
         setSelected(null)
       }
       setRole("member")
+      setIsSuperadmin(false)
       setSelectedDepartmentId("")
       setEmail("")
       setMaxUses("1")
@@ -254,6 +266,7 @@ export function OrgInvitationForm({
       setSelected(null)
     }
     setRole("member")
+    setIsSuperadmin(false)
     setSelectedDepartmentId("")
     setEmail("")
     setMaxUses("1")
@@ -412,7 +425,13 @@ export function OrgInvitationForm({
             <Label htmlFor="role">Role</Label>
             <Select
               value={role}
-              onValueChange={(val: string) => setRole(val as OrgRole)}
+              onValueChange={(val: string) => {
+                const nextRole = val as OrgRole
+                setRole(nextRole)
+                if (nextRole !== "admin") {
+                  setIsSuperadmin(false)
+                }
+              }}
               disabled={loading}
             >
               <SelectTrigger id="role">
@@ -422,9 +441,6 @@ export function OrgInvitationForm({
                 <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="content_manager">Content Manager</SelectItem>
-                {canInviteSuperadmin && (
-                  <SelectItem value="superadmin">Superadmin</SelectItem>
-                )}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
@@ -436,16 +452,26 @@ export function OrgInvitationForm({
                     ? "Content managers can log in to the CMS and publish news articles for the organization."
                     : "Members can access organization data and collaborate with the team."}
             </p>
-            {(isSuperadminRole || isAdminRole || isContentManagerRole) && (
-              <div className="flex gap-2 rounded-lg border border-border/60 bg-muted/40 p-3 text-sm text-muted-foreground">
-                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[color:var(--warning)]" />
-                <p>
-                  {isSuperadminRole
-                    ? "Superadmin invitations are single-use."
-                    : isAdminRole
-                      ? "Admin invitations are single-use."
-                      : "Content manager invitations are single-use."}
-                </p>
+
+            {canGrantSuperadmin && role === "admin" && (
+              <div className="flex items-start space-x-3 rounded-lg border border-border/60 bg-muted/20 p-3.5">
+                <Checkbox
+                  id="invite-superadmin"
+                  checked={isSuperadmin}
+                  onCheckedChange={(checked) => setIsSuperadmin(checked === true)}
+                  disabled={loading}
+                />
+                <div className="grid gap-1">
+                  <Label
+                    htmlFor="invite-superadmin"
+                    className="font-semibold cursor-pointer text-sm text-foreground"
+                  >
+                    Superadmin
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Grants highest authority in the organization, including managing other administrators and participating in removal quorums.
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -515,7 +541,7 @@ export function OrgInvitationForm({
             <p className="text-xs text-muted-foreground">
               Leave empty to allow any email to use the link.
             </p>
-            {(isAdminRole || isEmailFilled) && (
+            {shouldBeSingleUse && (
               <div className="flex gap-2 rounded-lg border border-border/60 bg-muted/40 p-3 text-sm text-muted-foreground">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
                 <p>This link will be single-use.</p>
