@@ -343,210 +343,7 @@ const EOSS_SECTIONS = [
   },
 ]
 
-type StopBangParameterResult = {
-  key: string
-  label: string
-  sourceForm: "sleep" | "biometrics" | "metabolic" | "profile"
-  value: boolean | null
-  description: string
-}
 
-type StopBangResult = {
-  score: number
-  maxScore: number
-  riskLevel: "low" | "intermediate" | "high"
-  riskLabel: string
-  bmi: number | null
-  parameters: StopBangParameterResult[]
-}
-
-function useStopBangState(data: StudiesData): StopBangResult {
-  const isSnoring =
-    data.snoring === "true" || data.snoring === "1"
-      ? true
-      : data.snoring === "false" || data.snoring === "0"
-        ? false
-        : null
-
-  const isTired =
-    data.tired === "true" || data.tired === "1"
-      ? true
-      : data.tired === "false" || data.tired === "0"
-        ? false
-        : null
-
-  const isObserved =
-    data.observed_apnea === "true" || data.observed_apnea === "1"
-      ? true
-      : data.observed_apnea === "false" || data.observed_apnea === "0"
-        ? false
-        : null
-
-  const sys = Number(data.systolic_blood_pressure)
-  const dia = Number(data.diastolic_blood_pressure)
-  const hasMedication =
-    data.hypertension_medication === "true" || data.hypertension_medication === "1"
-  const hasHighBPNumbers = (sys > 0 && sys >= 140) || (dia > 0 && dia >= 90)
-  let isHighBP: boolean | null = null
-  if (hasMedication || hasHighBPNumbers) {
-    isHighBP = true
-  } else if (
-    data.hypertension_medication === "false" &&
-    (!sys || sys < 140) &&
-    (!dia || dia < 90)
-  ) {
-    isHighBP = false
-  }
-
-  const heightCm = Number(data.height)
-  const weightKg = Number(data.weight)
-  let bmi: number | null = null
-  let isBmiOver35: boolean | null = null
-  if (heightCm > 0 && weightKg > 0) {
-    const heightMeters = heightCm / 100
-    bmi = Math.round((weightKg / (heightMeters * heightMeters)) * 10) / 10
-    isBmiOver35 = bmi > 35
-  }
-
-  const isAgeOver50: boolean | null = null
-  const neckCm = Number(data.neck_circumference)
-  const isNeckOver40 = neckCm > 0 ? neckCm > 40 : null
-  const isMale = data.biological_sex
-    ? data.biological_sex.toUpperCase() === "M"
-    : null
-
-  const parameters: StopBangParameterResult[] = [
-    {
-      key: "S",
-      label: "S - Snoring",
-      sourceForm: "sleep",
-      value: isSnoring,
-      description: isSnoring ? "Reports loud snoring" : "No loud snoring reported",
-    },
-    {
-      key: "T",
-      label: "T - Tiredness",
-      sourceForm: "sleep",
-      value: isTired,
-      description: isTired ? "Reports daytime fatigue" : "No significant daytime fatigue",
-    },
-    {
-      key: "O",
-      label: "O - Observed Apnea",
-      sourceForm: "sleep",
-      value: isObserved,
-      description: isObserved ? "Observed breathing pauses" : "No observed apneas",
-    },
-    {
-      key: "P",
-      label: "P - High Blood Pressure",
-      sourceForm: "metabolic",
-      value: isHighBP,
-      description: isHighBP ? "High blood pressure (≥140/90 or treated)" : "Normal blood pressure",
-    },
-    {
-      key: "B",
-      label: "B - BMI (>35 kg/m²)",
-      sourceForm: "biometrics",
-      value: isBmiOver35,
-      description: bmi ? `Current BMI: ${bmi} kg/m² (${isBmiOver35 ? "> 35" : "≤ 35"})` : "Missing height/weight",
-    },
-    {
-      key: "A",
-      label: "A - Age (>50 yrs)",
-      sourceForm: "profile",
-      value: isAgeOver50,
-      description: isAgeOver50 === null ? "Age not recorded" : isAgeOver50 ? "Over 50 years" : "50 years or under",
-    },
-    {
-      key: "N",
-      label: "N - Neck (>40 cm)",
-      sourceForm: "biometrics",
-      value: isNeckOver40,
-      description: neckCm > 0 ? `Neck: ${neckCm} cm (${isNeckOver40 ? "> 40 cm" : "≤ 40 cm"})` : "Missing neck measure",
-    },
-    {
-      key: "G",
-      label: "G - Gender (Male)",
-      sourceForm: "biometrics",
-      value: isMale,
-      description: isMale === null ? "Gender unspecified" : isMale ? "Male sex (+1 pt)" : "Female sex (0 pt)",
-    },
-  ]
-
-  let score = 0
-  for (const param of parameters) {
-    if (param.value === true) {
-      score += 1
-    }
-  }
-
-  let riskLevel: "low" | "intermediate" | "high" = "low"
-  let riskLabel = "Low Sleep Apnea Risk"
-  if (score >= 5) {
-    riskLevel = "high"
-    riskLabel = "High Sleep Apnea Risk"
-  } else if (score >= 3) {
-    riskLevel = "intermediate"
-    riskLabel = "Intermediate Sleep Apnea Risk"
-  }
-
-  return {
-    score,
-    maxScore: 8,
-    riskLevel,
-    riskLabel,
-    bmi,
-    parameters,
-  }
-}
-
-function StopBangLiveCard({ stopBang }: { stopBang: StopBangResult }) {
-  return (
-    <div className="space-y-3 rounded-xl border border-primary/25 bg-primary/5 p-4 backdrop-blur-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Moon className="size-4 text-primary" />
-          <span className="text-sm font-semibold">STOP-BANG Engine (Sleep Apnea Risk)</span>
-        </div>
-        <div
-          className={cn(
-            "rounded-full border px-3 py-1 text-xs font-semibold transition-all",
-            stopBang.riskLevel === "high" && "border-destructive/40 bg-destructive/15 text-destructive",
-            stopBang.riskLevel === "intermediate" && "border-amber-500/40 bg-amber-500/15 text-amber-600 dark:text-amber-400",
-            stopBang.riskLevel === "low" && "border-emerald-500/40 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-          )}
-        >
-          {stopBang.riskLabel} ({stopBang.score}/{stopBang.maxScore} pts)
-        </div>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        This indicator automatically consolidates your responses from <strong>Sleep (S, T, O)</strong>, <strong>Biometrics (B, N, G)</strong>, and <strong>Metabolism (P)</strong> in real time without asking duplicate questions.
-      </p>
-      <div className="grid grid-cols-2 gap-2 pt-1 sm:grid-cols-4">
-        {stopBang.parameters.map((param) => (
-          <div
-            key={param.key}
-            className={cn(
-              "flex flex-col justify-between rounded-lg border p-2 text-xs transition-colors",
-              param.value === true && "border-primary/40 bg-primary/10 text-primary font-medium",
-              param.value === false && "border-border/30 bg-background/50 text-muted-foreground",
-              param.value === null && "border-border/20 bg-background/20 text-muted-foreground/60 italic"
-            )}
-          >
-            <div className="flex items-center justify-between font-bold text-[11px]">
-              <span>{param.key}</span>
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground">({param.sourceForm})</span>
-            </div>
-            <div className="mt-1 text-[11px] font-normal" title={param.description}>
-              {param.value === true ? "✓ Yes" : param.value === false ? "✗ No" : "Pending"}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 export function MemberFormsStudiesPage() {
   const [searchParams] = useSearchParams()
@@ -557,7 +354,6 @@ export function MemberFormsStudiesPage() {
     "biometrics"
 
   const [data, setData] = useState<StudiesData>(initialData)
-  const stopBangResult = useStopBangState(data)
   const [activeFormsMap, setActiveFormsMap] = useState<Record<string, Set<string>>>({})
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -1448,10 +1244,6 @@ export function MemberFormsStudiesPage() {
                   )}
                 </div>
               </div>
-
-              {isFieldActive("biometrics", "neck_circumference") && (
-                <StopBangLiveCard stopBang={stopBangResult} />
-              )}
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
               <Button variant="ghost" asChild>
@@ -1476,7 +1268,6 @@ export function MemberFormsStudiesPage() {
           </CardHeader>
           <form onSubmit={(e) => void handleSaveSleep(e)}>
             <CardContent className="space-y-6">
-              <StopBangLiveCard stopBang={stopBangResult} />
               {/* Question 1 */}
               <div
                 id="field-group-snoring"
