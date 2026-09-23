@@ -49,7 +49,7 @@ import {
 import { TablePagination } from "@workspace/components/components/table-pagination"
 import { formatEmployeeName } from "@workspace/components/components/employee-profile-card"
 import { toast } from "@workspace/ui/components/sonner"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { X, MoreVertical, UserCog, UserMinus, ShieldAlert } from "lucide-react"
 
@@ -144,7 +144,8 @@ export function EmployeesTable({
   const [employees, setEmployees] = useState<OrganizationEmployee[]>([])
   const [departments, setDepartments] = useState<DepartmentResponse[]>([])
   const [totalItems, setTotalItems] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true)   // true only on initial mount
+  const [isFetching, setIsFetching] = useState(false) // true on filter/page re-fetches
 
   const isCurrentUserSuperadmin = useMemo(() => {
     if (user?.is_sysadmin) return true
@@ -165,6 +166,7 @@ export function EmployeesTable({
   const [selectedDept, setSelectedDept] = useState("all")
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [selectedRole, setSelectedRole] = useState("all")
+  const [selectedScore, setSelectedScore] = useState("all")
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
@@ -189,6 +191,8 @@ export function EmployeesTable({
 
   const [actionLoading, setActionLoading] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  // Tracks whether we've ever completed a fetch for the current org
+  const isInitialLoad = useRef(true)
 
   // Load Departments and Employees
   useEffect(() => {
@@ -202,7 +206,12 @@ export function EmployeesTable({
         return
       }
 
-      setLoading(true)
+      // First load ever: show full skeleton. Subsequent fetches: keep rows visible.
+      if (isInitialLoad.current) {
+        setLoading(true)
+      } else {
+        setIsFetching(true)
+      }
       try {
         const depts = await listDepartments(organizationId)
         if (!active) return
@@ -211,12 +220,14 @@ export function EmployeesTable({
         const apiFilters: {
           departmentId?: string
           status?: string
+          score?: string
           search?: string
           page: number
           pageSize: number
         } = { page: currentPage, pageSize }
         if (selectedDept !== "all") apiFilters.departmentId = selectedDept
         if (selectedStatus !== "all") apiFilters.status = selectedStatus
+        if (selectedScore !== "all") apiFilters.score = selectedScore
         if (search.trim()) apiFilters.search = search.trim()
 
         const effectiveRoles = showRoleFilter
@@ -233,10 +244,14 @@ export function EmployeesTable({
         if (!active) return
         setEmployees(data.items)
         setTotalItems(data.total)
+        isInitialLoad.current = false
       } catch (err) {
         console.error("Failed to load employees:", err)
       } finally {
-        if (active) setLoading(false)
+        if (active) {
+          setLoading(false)
+          setIsFetching(false)
+        }
       }
     }
 
@@ -252,6 +267,7 @@ export function EmployeesTable({
     selectedRole,
     selectedDept,
     selectedStatus,
+    selectedScore,
     search,
     currentPage,
     pageSize,
@@ -264,13 +280,15 @@ export function EmployeesTable({
     search !== "" ||
     selectedDept !== "all" ||
     selectedStatus !== "all" ||
-    selectedRole !== "all"
+    selectedRole !== "all" ||
+    selectedScore !== "all"
 
   const handleResetFilters = () => {
     setSearch("")
     setSelectedDept("all")
     setSelectedStatus("all")
     setSelectedRole("all")
+    setSelectedScore("all")
     setCurrentPage(1)
   }
 
@@ -475,6 +493,25 @@ export function EmployeesTable({
             </Select>
           </div>
 
+          <div className="w-[160px]">
+            <Select
+              value={selectedScore}
+              onValueChange={(val) => {
+                setSelectedScore(val)
+                setCurrentPage(1)
+              }}
+            >
+              <SelectTrigger className="h-9 bg-background">
+                <SelectValue placeholder="All Scores" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Scores</SelectItem>
+                <SelectItem value="scored">With Score</SelectItem>
+                <SelectItem value="unscored">Without Score</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {hasActiveFilters && (
             <Button
               variant="ghost"
@@ -520,7 +557,9 @@ export function EmployeesTable({
               )}
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody
+            className={isFetching ? "pointer-events-none opacity-50 transition-opacity" : "transition-opacity"}
+          >
             {loading ? (
               <TableRowsSkeleton columns={renderSkeletonColumns} />
             ) : employees.length === 0 ? (
@@ -580,7 +619,9 @@ export function EmployeesTable({
                       {w.department?.name ?? "Unassigned"}
                     </TableCell>
                     <TableCell className="font-semibold text-foreground tabular-nums">
-                      N/A
+                      {typeof w.overall_score === "number"
+                        ? `${Math.round(w.overall_score)}%`
+                        : "—"}
                     </TableCell>
                     <TableCell>
                       <Badge

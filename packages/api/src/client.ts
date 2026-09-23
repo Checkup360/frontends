@@ -753,6 +753,7 @@ export interface OrganizationEmployee {
   department: DepartmentResponse | null
   status: string
   last_assessment?: string | null
+  overall_score?: number | null
 }
 
 export interface SuperadminRemovalVote {
@@ -1311,6 +1312,7 @@ export async function listOrganizationEmployeesPage(
   filters: {
     departmentId?: string
     status?: string
+    score?: string
     search?: string
     page: number
     pageSize: number
@@ -1324,6 +1326,9 @@ export async function listOrganizationEmployeesPage(
     }
     if (filters.status) {
       queryParams.append("status", filters.status)
+    }
+    if (filters.score) {
+      queryParams.append("score", filters.score)
     }
     if (filters.search?.trim()) {
       queryParams.append("search", filters.search.trim())
