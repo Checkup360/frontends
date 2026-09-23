@@ -198,39 +198,110 @@ export function ScoreWeightsPage() {
 
   const isValid = totalWeight > 0
 
+  const roundWeightsTo100 = (weights: Record<string, number>, fixedId?: string) => {
+    const result = { ...weights }
+    const activeIds = Object.keys(result).filter(k => result[k] > 0 || k === fixedId)
+    if (activeIds.length === 0) return result
+    
+    let totalFloor = 0
+    const fractions: { id: string; frac: number }[] = []
+    
+    for (const id of Object.keys(result)) {
+      if (result[id] > 0 || id === fixedId) {
+        let floored = Math.floor(result[id])
+        if (id === fixedId) {
+          floored = Math.round(result[id])
+        }
+        totalFloor += floored
+        if (id !== fixedId) {
+          fractions.push({ id, frac: result[id] - Math.floor(result[id]) })
+        }
+        result[id] = floored
+      } else {
+        result[id] = 0
+      }
+    }
+    
+    const remainder = 100 - totalFloor
+    
+    if (remainder > 0) {
+      fractions.sort((a, b) => b.frac - a.frac)
+      for (let i = 0; i < remainder && i < fractions.length; i++) {
+        result[fractions[i].id] += 1
+      }
+    } else if (remainder < 0) {
+      fractions.sort((a, b) => a.frac - b.frac)
+      const absRem = -remainder
+      for (let i = 0; i < absRem && i < fractions.length; i++) {
+        if (result[fractions[i].id] > 0) {
+          result[fractions[i].id] -= 1
+        }
+      }
+    }
+    
+    return result
+  }
+
   const handleSliderChange = (id: string, val: number[]) => {
     const rawVal = val[0] ?? 0
-    const otherSum = SCORE_TOPICS.reduce(
-      (sum, topic) => (topic.id === id ? sum : sum + (weights[topic.id] || 0)),
-      0
-    )
-    const maxAllowed = Math.max(0, 100 - otherSum)
-    const clampedVal = Math.max(0, Math.min(maxAllowed, rawVal))
+    setWeights((prev) => {
+      const otherSum = SCORE_TOPICS.reduce(
+        (sum, topic) => (topic.id === id ? sum : sum + (prev[topic.id] || 0)),
+        0
+      )
+      const maxAllowed = Math.max(0, 100 - otherSum)
+      const clampedVal = Math.max(0, Math.min(maxAllowed, rawVal))
 
-    setWeights((prev) => ({
-      ...prev,
-      [id]: clampedVal,
-    }))
+      return {
+        ...prev,
+        [id]: clampedVal,
+      }
+    })
   }
 
   const handleToggleModule = (id: string, enabled: boolean) => {
-    if (enabled) {
-      const otherSum = SCORE_TOPICS.reduce(
-        (sum, topic) => (topic.id === id ? sum : sum + (weights[topic.id] || 0)),
-        0
-      )
-      const available = Math.max(0, 100 - otherSum)
-      const defaultWeight = available > 0 ? Math.min(available, 10) : 0
-      setWeights((prev) => ({
-        ...prev,
-        [id]: defaultWeight,
-      }))
-    } else {
-      setWeights((prev) => ({
-        ...prev,
-        [id]: 0,
-      }))
-    }
+    setWeights((prev) => {
+      const next = { ...prev }
+      if (enabled) {
+        const activeIds = Object.keys(next).filter((k) => next[k] > 0)
+        const newCount = activeIds.length + 1
+        const fairShare = 100 / newCount
+        
+        const delta = fairShare
+        const otherSum = activeIds.reduce((sum, k) => sum + next[k], 0)
+        
+        next[id] = fairShare
+        
+        if (otherSum > 0) {
+          for (const activeId of activeIds) {
+            const proportion = next[activeId] / otherSum
+            next[activeId] = Math.max(0, next[activeId] - delta * proportion)
+          }
+        }
+        return roundWeightsTo100(next, id)
+      } else {
+        const disabledVal = next[id] || 0
+        next[id] = 0
+        
+        const otherActiveIds = Object.keys(next).filter((k) => next[k] > 0)
+        const otherSum = otherActiveIds.reduce((sum, k) => sum + next[k], 0)
+        
+        if (otherActiveIds.length > 0) {
+          if (otherSum === 0) {
+            const eqVal = disabledVal / otherActiveIds.length
+            for (const activeId of otherActiveIds) {
+              next[activeId] += eqVal
+            }
+          } else {
+            for (const activeId of otherActiveIds) {
+              const proportion = next[activeId] / otherSum
+              next[activeId] += disabledVal * proportion
+            }
+          }
+        }
+        return roundWeightsTo100(next)
+      }
+    })
   }
 
   const handleApplyBalanced = () => {
