@@ -196,7 +196,8 @@ export function ScoreWeightsPage() {
 
   const disabledCount = SCORE_TOPICS.length - activeCount
 
-  const isValid = totalWeight > 0
+  const is100Percent = totalWeight === 100 || totalWeight === 0
+  const isValid = true
 
   const roundWeightsTo100 = (weights: Record<string, number>, fixedId?: string) => {
     const result = { ...weights }
@@ -304,6 +305,7 @@ export function ScoreWeightsPage() {
     })
   }
 
+
   const handleApplyBalanced = () => {
     const balanced = computeBalancedWeights(SCORE_TOPICS, weights)
     setWeights(balanced)
@@ -317,7 +319,11 @@ export function ScoreWeightsPage() {
   }
 
   const handleSave = async () => {
-    if (!isValid || !organizationId) return
+    if (totalWeight > 0 && totalWeight !== 100) {
+      toast.error("Total weight must equal exactly 100%")
+      return
+    }
+    if (!organizationId) return
     setSaving(true)
     try {
       const res = await updateOrganizationScoreWeights(
@@ -390,14 +396,14 @@ export function ScoreWeightsPage() {
                 {totalWeight}%
               </span>
               <Badge
-                variant={isValid ? "outline" : "secondary"}
+                variant={is100Percent ? "outline" : "secondary"}
                 className={
-                  isValid
+                  is100Percent
                     ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold text-xs"
                     : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-xs"
                 }
               >
-                {isValid ? `${totalWeight}% Allocated` : "At least 1 active score required"}
+                {totalWeight === 0 ? "All Modules Disabled" : `${totalWeight}% Allocated`}
               </Badge>
             </div>
           </div>
