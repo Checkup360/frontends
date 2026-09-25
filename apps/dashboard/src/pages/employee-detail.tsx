@@ -107,10 +107,27 @@ const SCORE_TOPICS = [
   },
 ]
 
+function getTopicMeta(scoreId: string, scoreName: string) {
+  const sid = (scoreId || "").toLowerCase()
+  const sn = (scoreName || "").toLowerCase()
+  
+  for (const topic of SCORE_TOPICS) {
+    if (sid.includes(topic.id) || sid.includes(topic.matchKey) || sn.includes(topic.name.toLowerCase())) {
+      return topic
+    }
+  }
+  
+  return {
+    name: scoreName || scoreId || "Clinical Evaluation",
+    subtitle: "Medical assessment",
+    icon: Activity
+  }
+}
+
 function getRiskTone(riskLevel?: string | null, value?: number | null) {
   const normRisk = (riskLevel || "").toLowerCase()
 
-  if (normRisk.includes("high") || (typeof value === "number" && value < 60)) {
+  if (normRisk.includes("high")) {
     return {
       tone: "red" as const,
       riskLevel: "high" as const,
@@ -120,11 +137,7 @@ function getRiskTone(riskLevel?: string | null, value?: number | null) {
     }
   }
 
-  if (
-    normRisk.includes("moderate") ||
-    normRisk.includes("elevated") ||
-    (typeof value === "number" && value < 80)
-  ) {
+  if (normRisk.includes("moderate") || normRisk.includes("elevated")) {
     return {
       tone: "amber" as const,
       riskLevel: "moderate" as const,
@@ -134,7 +147,36 @@ function getRiskTone(riskLevel?: string | null, value?: number | null) {
     }
   }
 
-  if (typeof value === "number" || normRisk.includes("low")) {
+  if (normRisk.includes("low")) {
+    return {
+      tone: "green" as const,
+      riskLevel: "low" as const,
+      label: "Low risk",
+      badgeClass:
+        "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    }
+  }
+
+  // Fallbacks for when no explicit string risk level is provided (e.g. overall health score)
+  if (typeof value === "number") {
+    if (value < 60) {
+      return {
+        tone: "red" as const,
+        riskLevel: "high" as const,
+        label: "High risk",
+        badgeClass:
+          "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+      }
+    }
+    if (value < 80) {
+      return {
+        tone: "amber" as const,
+        riskLevel: "moderate" as const,
+        label: "Moderate risk",
+        badgeClass:
+          "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      }
+    }
     return {
       tone: "green" as const,
       riskLevel: "low" as const,
@@ -352,45 +394,46 @@ export function EmployeeDetailPage() {
 
   const isViewingLatest = activeSession?.isLatest ?? true
 
-  // Indicators: map each score topic with risk-based tone and color
+  // Indicators: sort all results by severity and get top 3
   const dynamicIndicators: HealthScoreRow[] = useMemo(() => {
     const results = activeSession?.results || []
 
-    return SCORE_TOPICS.map((topic) => {
-      const match = results.find(
-        (r) =>
-          (r.score_id &&
-            (r.score_id.toLowerCase().includes(topic.id) ||
-              r.score_id.toLowerCase().includes(topic.matchKey))) ||
-          (r.score_name &&
-            r.score_name.toLowerCase().includes(topic.name.toLowerCase()))
-      )
+    const allIndicators = results.map((res) => {
+      const isEvaluated = res.normalized_value !== null && res.normalized_value !== undefined
+      const val = isEvaluated ? Math.round(res.normalized_value as number) : null
+      const riskMeta = getRiskTone(res.risk_level, val ?? undefined)
+      const topicMeta = getTopicMeta(res.score_id || "", res.score_name || "")
 
-      if (
-        !match ||
-        match.normalized_value === null ||
-        match.normalized_value === undefined
-      ) {
-        return {
-          label: topic.name,
-          value: null,
-          icon: topic.icon,
-          tone: "muted" as const,
-          isPending: true,
-        }
-      }
-
-      const val = Math.round(match.normalized_value)
-      const riskMeta = getRiskTone(match.risk_level, val)
+      let severityScore = 0
+      if (riskMeta.riskLevel === "high") severityScore = 3
+      else if (riskMeta.riskLevel === "moderate") severityScore = 2
+      else if (riskMeta.riskLevel === "low") severityScore = 1
 
       return {
-        label: match.score_name || topic.name,
+        label: res.score_name || topicMeta.name,
         value: val,
-        icon: topic.icon,
+        icon: topicMeta.icon,
         tone: riskMeta.tone,
-        isPending: false,
+        isPending: !isEvaluated,
+        _severityScore: severityScore,
+        _val: val ?? 100 // lower is worse, 100 is best
       }
     })
+
+    allIndicators.sort((a, b) => {
+      if (a._severityScore !== b._severityScore) {
+        return b._severityScore - a._severityScore
+      }
+      return a._val - b._val
+    })
+
+    return allIndicators.slice(0, 3).map(indicator => ({
+      label: indicator.label,
+      value: indicator.value,
+      icon: indicator.icon,
+      tone: indicator.tone,
+      isPending: indicator.isPending
+    }))
   }, [activeSession])
 
   const hasAnyEvaluated = dynamicIndicators.some(
@@ -748,21 +791,11 @@ export function EmployeeDetailPage() {
 
                 {/* Assessment Modules Grid: Neutral Card styling, color ONLY on the percentage badge */}
                 <div className="grid gap-4 md:grid-cols-2">
-                  {SCORE_TOPICS.map((topic) => {
-                    const result = activeSession?.results.find(
-                      (r) =>
-                        (r.score_id &&
-                          (r.score_id.toLowerCase().includes(topic.id) ||
-                            r.score_id.toLowerCase().includes(topic.matchKey))) ||
-                        (r.score_name &&
-                          r.score_name
-                            .toLowerCase()
-                            .includes(topic.name.toLowerCase()))
-                    )
-
+                  {(activeSession?.results || []).map((result, idx) => {
+                    const topic = getTopicMeta(result.score_id || "", result.score_name || "")
                     const Icon = topic.icon
+
                     const isEvaluated =
-                      result &&
                       result.normalized_value !== null &&
                       result.normalized_value !== undefined
 
@@ -770,14 +803,14 @@ export function EmployeeDetailPage() {
                       ? Math.round(result.normalized_value as number)
                       : null
                     const riskMeta = getRiskTone(
-                      result?.risk_level,
+                      result.risk_level,
                       val
                     )
 
                     if (!isEvaluated) {
                       return (
                         <div
-                          key={topic.id}
+                          key={result.score_id || `pending-${idx}`}
                           className="flex flex-col justify-between rounded-2xl border border-dashed border-border/60 bg-muted/15 p-5 opacity-60"
                         >
                           <div className="space-y-2">
@@ -788,7 +821,7 @@ export function EmployeeDetailPage() {
                                 </div>
                                 <div>
                                   <span className="font-semibold text-muted-foreground text-sm">
-                                    {topic.name}
+                                    {getAssessmentDisplayName(result.score_id, result.score_name || topic.name)}
                                   </span>
                                   <p className="text-[11px] text-muted-foreground">
                                     {topic.subtitle}
@@ -811,14 +844,14 @@ export function EmployeeDetailPage() {
                     }
 
                     const hasCustomExplanation =
-                      result?.explanation &&
+                      result.explanation &&
                       result.explanation.trim() !== "" &&
                       result.explanation.toLowerCase() !==
                         "no explanation provided."
 
                     return (
                       <div
-                        key={topic.id}
+                        key={result.score_id || `eval-${idx}`}
                         className="flex flex-col justify-between rounded-2xl border border-border/60 bg-card p-5 transition-all hover:shadow-xs"
                       >
                         <div className="space-y-3">
