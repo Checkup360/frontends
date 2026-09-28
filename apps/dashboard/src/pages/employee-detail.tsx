@@ -596,7 +596,11 @@ export function EmployeeDetailPage() {
           res.normalized_value !== null &&
           res.normalized_value !== undefined
         ) {
-          foundKeys.add(res.score_name.trim())
+          const topic = getTopicMeta(res.score_id || "", res.score_name)
+          const isDeactivated = scoreWeights !== null && (scoreWeights[topic.id] ?? 0) <= 0
+          if (!isDeactivated) {
+            foundKeys.add(res.score_name.trim())
+          }
         }
       })
     })
@@ -612,7 +616,7 @@ export function EmployeeDetailPage() {
     })
 
     return list
-  }, [sessions])
+  }, [sessions, scoreWeights])
 
   // Multi-curve evolution data from session history
   const evolutionData = useMemo(() => {
@@ -639,13 +643,17 @@ export function EmployeeDetailPage() {
           r.normalized_value !== null &&
           r.normalized_value !== undefined
         ) {
-          row[r.score_name.trim()] = Math.round(r.normalized_value)
+          const topic = getTopicMeta(r.score_id || "", r.score_name)
+          const isDeactivated = scoreWeights !== null && (scoreWeights[topic.id] ?? 0) <= 0
+          if (!isDeactivated) {
+            row[r.score_name.trim()] = Math.round(r.normalized_value)
+          }
         }
       })
 
       return row
     })
-  }, [sessions, assessments])
+  }, [sessions, assessments, scoreWeights])
 
   const sortedBottomResults = useMemo(() => {
     if (!activeSession) return []

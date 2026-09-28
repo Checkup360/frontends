@@ -148,6 +148,7 @@ function getScoreIcon(scoreId: string, scoreName?: string) {
   return HeartPulse
 }
 
+
 /** Formats technical score names for clean user-facing view */
 function formatUserScoreName(result: AssessmentResultResponse) {
   return getAssessmentDisplayName(result.score_id, result.score_name)
@@ -402,14 +403,15 @@ export function MemberStatusPage() {
                   Risk scores evaluated per domain category
                 </p>
               </div>
-              <span className="text-xs font-medium text-muted-foreground">
+                            <span className="text-xs font-medium text-muted-foreground">
                 {activeSession?.results.length} category evaluation(s)
               </span>
             </div>
 
             {/* Horizontal Layout Cards */}
             <div className="space-y-3">
-              {activeSession?.results.map((result) => {
+                            {activeSession?.results
+                .map((result) => {
                 const normScore = getNormalizedScore(result)
                 const config = getRiskLevelConfig(result.risk_level, normScore)
                 const Icon = getScoreIcon(result.score_id, result.score_name)
