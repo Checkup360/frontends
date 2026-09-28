@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react"
+import { cn } from "@workspace/ui/lib/utils"
 import { useParams, useNavigate } from "react-router-dom"
 import {
   listOrganizationEmployees,
@@ -27,7 +28,13 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@workspace/ui/components/avatar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
@@ -75,11 +82,11 @@ const OVERALL_SERIES_CONFIG: ChartSeries = {
 const PALETTE = [
   "oklch(0.62 0.20 145)", // Green / Emerald
   "oklch(0.60 0.22 320)", // Purple / Violet
-  "oklch(0.68 0.20 55)",  // Amber / Yellow
+  "oklch(0.68 0.20 55)", // Amber / Yellow
   "oklch(0.62 0.18 195)", // Cyan / Teal
-  "oklch(0.60 0.20 30)",  // Orange
+  "oklch(0.60 0.20 30)", // Orange
   "oklch(0.55 0.18 280)", // Indigo
-  "oklch(0.58 0.20 10)",  // Rose
+  "oklch(0.58 0.20 10)", // Rose
 ]
 
 /** Standard score topics reusing identical icons and metadata from score-weights.tsx */
@@ -149,10 +156,33 @@ const SCORE_TOPICS = [
   },
 ]
 
+function getTopicMeta(scoreId: string, scoreName: string) {
+  const sid = (scoreId || "").toLowerCase()
+  const sn = (scoreName || "").toLowerCase()
+
+  for (const topic of SCORE_TOPICS) {
+    if (
+      sid.includes(topic.id) ||
+      sid.includes(topic.matchKey) ||
+      sn.includes(topic.name.toLowerCase())
+    ) {
+      return topic
+    }
+  }
+
+  return {
+    id: scoreId || scoreName || "unknown",
+    matchKey: "unknown",
+    name: scoreName || scoreId || "Clinical Evaluation",
+    subtitle: "Medical assessment",
+    icon: Activity,
+  }
+}
+
 function getRiskTone(riskLevel?: string | null, value?: number | null) {
   const normRisk = (riskLevel || "").toLowerCase()
 
-  if (normRisk.includes("high") || (typeof value === "number" && value < 60)) {
+  if (normRisk.includes("high")) {
     return {
       tone: "red" as const,
       riskLevel: "high" as const,
@@ -162,11 +192,7 @@ function getRiskTone(riskLevel?: string | null, value?: number | null) {
     }
   }
 
-  if (
-    normRisk.includes("moderate") ||
-    normRisk.includes("elevated") ||
-    (typeof value === "number" && value < 80)
-  ) {
+  if (normRisk.includes("moderate") || normRisk.includes("elevated")) {
     return {
       tone: "amber" as const,
       riskLevel: "moderate" as const,
@@ -176,7 +202,36 @@ function getRiskTone(riskLevel?: string | null, value?: number | null) {
     }
   }
 
-  if (typeof value === "number" || normRisk.includes("low")) {
+  if (normRisk.includes("low")) {
+    return {
+      tone: "green" as const,
+      riskLevel: "low" as const,
+      label: "Low risk",
+      badgeClass:
+        "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    }
+  }
+
+  // Fallbacks for when no explicit string risk level is provided (e.g. overall health score)
+  if (typeof value === "number") {
+    if (value < 60) {
+      return {
+        tone: "red" as const,
+        riskLevel: "high" as const,
+        label: "High risk",
+        badgeClass:
+          "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+      }
+    }
+    if (value < 80) {
+      return {
+        tone: "amber" as const,
+        riskLevel: "moderate" as const,
+        label: "Moderate risk",
+        badgeClass:
+          "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      }
+    }
     return {
       tone: "green" as const,
       riskLevel: "low" as const,
@@ -259,21 +314,64 @@ export function EmployeeDetailPage() {
   const organizationId = user?.membership?.organization_id
 
   const [employee, setEmployee] = useState<OrganizationEmployee | null>(null)
+  const [scoreWeights, setScoreWeights] = useState<Record<
+    string,
+    number
+  > | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   // Assessments state
-  const [assessments, setAssessments] = useState<AssessmentsResponse | null>(null)
+  const [assessments, setAssessments] = useState<AssessmentsResponse | null>(
+    null
+  )
   const [loadingAssessments, setLoadingAssessments] = useState(true)
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null
+  )
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
-  const [submissions, setSubmissions] = useState<AssessmentSubmissionSummary[]>([])
+  const [submissions, setSubmissions] = useState<AssessmentSubmissionSummary[]>(
+    []
+  )
   const [submissionPage, setSubmissionPage] = useState(1)
   const [submissionHasNext, setSubmissionHasNext] = useState(false)
   const [submissionsLoading, setSubmissionsLoading] = useState(true)
-  const [selectedSubmission, setSelectedSubmission] = useState<AssessmentSubmissionDetail | null>(null)
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<AssessmentSubmissionDetail | null>(null)
   const [submissionDetailLoading, setSubmissionDetailLoading] = useState(false)
+
+  // Load weights
+  useEffect(() => {
+    if (!organizationId) return
+
+    async function loadWeights() {
+      try {
+        const { getOrganizationScoreWeights } = await import("@workspace/api")
+        const weights = await getOrganizationScoreWeights(
+          organizationId as string
+        )
+
+        if (
+          weights &&
+          weights.score_weights &&
+          Object.keys(weights.score_weights).length > 0
+        ) {
+          setScoreWeights(weights.score_weights)
+        } else {
+          const defaults: Record<string, number> = {}
+          for (const t of SCORE_TOPICS) defaults[t.id] = 1
+          setScoreWeights(defaults)
+        }
+      } catch (err) {
+        console.error("Failed to load score weights:", err)
+        const defaults: Record<string, number> = {}
+        for (const t of SCORE_TOPICS) defaults[t.id] = 1
+        setScoreWeights(defaults)
+      }
+    }
+    void loadWeights()
+  }, [organizationId])
 
   const loadEmployee = async () => {
     if (!organizationId || !id) return
@@ -394,52 +492,66 @@ export function EmployeeDetailPage() {
 
   const isViewingLatest = activeSession?.isLatest ?? true
 
-  // Indicators: map each score topic with risk-based tone and color
+  // Indicators: sort all results by severity and get top 3
   const dynamicIndicators: HealthScoreRow[] = useMemo(() => {
     const results = activeSession?.results || []
 
-    if (results.length > 0) {
-      return results.map((result) => {
-        const topic = SCORE_TOPICS.find(
-          (t) =>
-            (result.score_id &&
-              (result.score_id.toLowerCase().includes(t.id) ||
-                result.score_id.toLowerCase().includes(t.matchKey))) ||
-            (result.score_name &&
-              (result.score_name.toLowerCase().includes(t.name.toLowerCase()) ||
-                result.score_name.toLowerCase().includes(t.id) ||
-                result.score_name.toLowerCase().includes(t.matchKey)))
-        )
+    const allIndicators = results.map((res) => {
+      const topicMeta = getTopicMeta(res.score_id || "", res.score_name || "")
+      const isDeactivated =
+        scoreWeights !== null && (scoreWeights[topicMeta.id] ?? 0) <= 0
+      const isEvaluated =
+        res.normalized_value !== null && res.normalized_value !== undefined
+      const val = isEvaluated
+        ? Math.round(res.normalized_value as number)
+        : null
+      const riskMeta = getRiskTone(res.risk_level, val ?? undefined)
 
-        const val =
-          result.normalized_value !== null && result.normalized_value !== undefined
-            ? Math.round(result.normalized_value)
-            : null
+      let severityScore = 0
+      if (riskMeta.riskLevel === "high") severityScore = 3
+      else if (riskMeta.riskLevel === "moderate") severityScore = 2
+      else if (riskMeta.riskLevel === "low") severityScore = 1
 
-        const riskMeta = getRiskTone(result.risk_level, val)
-        const displayName = getAssessmentDisplayName(
-          result.score_id,
-          result.score_name || topic?.name
-        )
+      return {
+        label: getAssessmentDisplayName(
+          res.score_id || "",
+          res.score_name || topicMeta.name
+        ),
+        value: val,
+        icon: topicMeta.icon,
+        tone: isDeactivated ? "muted" : riskMeta.tone,
+        isPending: !isEvaluated,
+        isDeactivated: isDeactivated,
+        _severityScore: severityScore,
+        _val: val ?? 100, // lower is worse, 100 is best
+        _weight: scoreWeights ? (scoreWeights[topicMeta.id] ?? 0) : 1,
+      }
+    })
 
-        return {
-          label: displayName,
-          value: val,
-          icon: topic?.icon || Activity,
-          tone: riskMeta.tone,
-          isPending: val === null,
-        }
-      })
-    }
+    allIndicators.sort((a, b) => {
+      const aActive = !a.isDeactivated
+      const bActive = !b.isDeactivated
+      if (aActive !== bActive) return aActive ? -1 : 1
 
-    return SCORE_TOPICS.slice(0, 3).map((topic) => ({
-      label: topic.name,
-      value: null,
-      icon: topic.icon,
-      tone: "muted" as const,
-      isPending: true,
+      if (aActive) {
+        if (a._weight !== b._weight) return b._weight - a._weight
+      }
+
+      if (a._severityScore !== b._severityScore) {
+        return b._severityScore - a._severityScore
+      }
+      return a._val - b._val
+    })
+
+    return allIndicators.slice(0, 3).map((indicator) => ({
+      label: indicator.label,
+      value: indicator.value,
+      icon: indicator.icon,
+      tone: indicator.tone,
+      isPending: indicator.isPending,
+      isDeactivated: indicator.isDeactivated,
     }))
-  }, [activeSession])
+  }, [activeSession, scoreWeights])
 
   const hasAnyEvaluated = dynamicIndicators.some(
     (i) => !i.isPending && i.value !== null
@@ -505,37 +617,71 @@ export function EmployeeDetailPage() {
   // Multi-curve evolution data from session history
   const evolutionData = useMemo(() => {
     if (!sessions.length) return []
-    return [...sessions]
-      .reverse()
-      .map((session, idx, arr) => {
-        const isLatestInArray = idx === arr.length - 1
-        const overallScore =
-          isLatestInArray && typeof assessments?.overall_score === "number"
-            ? Math.round(assessments.overall_score)
-            : typeof session.overallScore === "number"
+    return [...sessions].reverse().map((session, idx, arr) => {
+      const isLatestInArray = idx === arr.length - 1
+      const overallScore =
+        isLatestInArray && typeof assessments?.overall_score === "number"
+          ? Math.round(assessments.overall_score)
+          : typeof session.overallScore === "number"
             ? Math.round(session.overallScore)
             : null
 
-        const row: Record<string, string | number> = {
-          month: session.formattedDate.split(" ")[0] || `Eval #${idx + 1}`,
-        }
-        if (typeof overallScore === "number") {
-          row.overall = overallScore
-        }
+      const row: Record<string, string | number> = {
+        month: session.formattedDate.split(" ")[0] || `Eval #${idx + 1}`,
+      }
+      if (typeof overallScore === "number") {
+        row.overall = overallScore
+      }
 
-        session.results.forEach((r) => {
-          if (
-            r.score_name &&
-            r.normalized_value !== null &&
-            r.normalized_value !== undefined
-          ) {
-            row[r.score_name.trim()] = Math.round(r.normalized_value)
-          }
-        })
-
-        return row
+      session.results.forEach((r) => {
+        if (
+          r.score_name &&
+          r.normalized_value !== null &&
+          r.normalized_value !== undefined
+        ) {
+          row[r.score_name.trim()] = Math.round(r.normalized_value)
+        }
       })
+
+      return row
+    })
   }, [sessions, assessments])
+
+  const sortedBottomResults = useMemo(() => {
+    if (!activeSession) return []
+
+    const results = [...(activeSession.results || [])]
+    const seenTopicIds = new Set<string>()
+
+    for (const r of results) {
+      const topic = getTopicMeta(r.score_id || "", r.score_name || "")
+      seenTopicIds.add(topic.id)
+    }
+
+    for (const topic of SCORE_TOPICS) {
+      if (!seenTopicIds.has(topic.id)) {
+        results.push({
+          score_id: topic.matchKey,
+          score_name: topic.name,
+          normalized_value: null,
+          risk_level: null,
+          explanation: null,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any)
+      }
+    }
+
+    return results.sort((a, b) => {
+      const topicA = getTopicMeta(a.score_id || "", a.score_name || "")
+      const topicB = getTopicMeta(b.score_id || "", b.score_name || "")
+      const isDeactA =
+        scoreWeights !== null && (scoreWeights[topicA.id] ?? 0) <= 0
+      const isDeactB =
+        scoreWeights !== null && (scoreWeights[topicB.id] ?? 0) <= 0
+      if (isDeactA !== isDeactB) return isDeactA ? 1 : -1
+      return 0
+    })
+  }, [activeSession, scoreWeights])
 
   if (loading) {
     return <EmployeeDetailSkeleton />
@@ -576,14 +722,14 @@ export function EmployeeDetailPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 animate-in duration-300 fade-in">
+    <div className="mx-auto w-full max-w-7xl animate-in space-y-6 duration-300 fade-in">
       {/* Back button */}
       <div>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate(-1)}
-          className="size-9 rounded-lg border border-border/40 hover:bg-muted/50 cursor-pointer"
+          className="size-9 cursor-pointer rounded-lg border border-border/40 hover:bg-muted/50"
           aria-label="Back"
         >
           <ArrowLeft className="size-4 text-muted-foreground" />
@@ -604,12 +750,12 @@ export function EmployeeDetailPage() {
                 alt={fullName}
                 className="object-cover"
               />
-              <AvatarFallback className="text-xl font-bold bg-primary/10 text-primary md:text-2xl">
+              <AvatarFallback className="bg-primary/10 text-xl font-bold text-primary md:text-2xl">
                 {initials}
               </AvatarFallback>
             </Avatar>
 
-            <div className="space-y-2 min-w-0">
+            <div className="min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   {fullName}
@@ -618,13 +764,16 @@ export function EmployeeDetailPage() {
                   variant="outline"
                   className={
                     employee.status === "active"
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 capitalize px-2.5 py-0.5"
-                      : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 capitalize px-2.5 py-0.5"
+                      ? "border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-emerald-600 capitalize dark:text-emerald-400"
+                      : "border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-amber-600 capitalize dark:text-amber-400"
                   }
                 >
                   {employee.status}
                 </Badge>
-                <Badge variant="secondary" className="px-2.5 py-0.5 text-xs font-normal">
+                <Badge
+                  variant="secondary"
+                  className="px-2.5 py-0.5 text-xs font-normal"
+                >
                   {roleLabel}
                 </Badge>
               </div>
@@ -632,7 +781,9 @@ export function EmployeeDetailPage() {
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <Mail className="size-4 text-muted-foreground/70" />
-                  <span className="font-medium text-foreground">{employee.email}</span>
+                  <span className="font-medium text-foreground">
+                    {employee.email}
+                  </span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Building2 className="size-4 text-muted-foreground/70" />
@@ -641,7 +792,9 @@ export function EmployeeDetailPage() {
                       {employee.department.name}
                     </span>
                   ) : (
-                    <span className="italic text-muted-foreground">Unassigned department</span>
+                    <span className="text-muted-foreground italic">
+                      Unassigned department
+                    </span>
                   )}
                 </span>
               </div>
@@ -655,10 +808,12 @@ export function EmployeeDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsDialogOpen(true)}
-                className="gap-2 text-xs rounded-xl cursor-pointer shadow-2xs h-9 px-3.5"
+                className="h-9 cursor-pointer gap-2 rounded-xl px-3.5 text-xs shadow-2xs"
               >
                 <Edit3 className="size-3.5" />
-                {employee.department ? "Change department" : "Assign department"}
+                {employee.department
+                  ? "Change department"
+                  : "Assign department"}
               </Button>
             )}
 
@@ -667,7 +822,7 @@ export function EmployeeDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsHistoryOpen(true)}
-                className="gap-2 text-xs rounded-xl cursor-pointer shadow-2xs h-9 px-3.5"
+                className="h-9 cursor-pointer gap-2 rounded-xl px-3.5 text-xs shadow-2xs"
               >
                 <History className="size-3.5" />
                 Assessment history ({sessions.length})
@@ -694,7 +849,7 @@ export function EmployeeDetailPage() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2 items-stretch">
+        <div className="grid items-stretch gap-6 lg:grid-cols-2">
           {/* Health Score Overview Card */}
           <HealthScoreCard
             title="Health score"
@@ -726,7 +881,7 @@ export function EmployeeDetailPage() {
       {/* Clinical Study Assessments - Only shown if not in onboarding */}
       {employee.status !== "onboarding" && (
         <Card className="rounded-3xl border-border/80 bg-card/85 shadow-sm">
-          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3">
+          <CardHeader className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <FileText className="size-4" />
@@ -746,7 +901,7 @@ export function EmployeeDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedSessionId(sessions[0]?.id || null)}
-                className="gap-1 text-xs cursor-pointer"
+                className="cursor-pointer gap-1 text-xs"
               >
                 <RotateCcw className="size-3.5" />
                 View latest
@@ -780,11 +935,19 @@ export function EmployeeDetailPage() {
                       Assessment from {activeSession?.formattedDate}
                     </span>
                     {isViewingLatest ? (
-                      <Badge variant="success-light" size="sm" className="text-[10px]">
+                      <Badge
+                        variant="success-light"
+                        size="sm"
+                        className="text-[10px]"
+                      >
                         Latest
                       </Badge>
                     ) : (
-                      <Badge variant="warning-light" size="sm" className="text-[10px]">
+                      <Badge
+                        variant="warning-light"
+                        size="sm"
+                        className="text-[10px]"
+                      >
                         History
                       </Badge>
                     )}
@@ -796,95 +959,29 @@ export function EmployeeDetailPage() {
 
                 {/* Assessment Modules Grid: Neutral Card styling, color ONLY on the percentage badge */}
                 <div className="grid gap-4 md:grid-cols-2">
-                  {activeSession?.results && activeSession.results.length > 0 ? (
-                    activeSession.results.map((result) => {
-                      const topic = SCORE_TOPICS.find(
-                        (t) =>
-                          (result.score_id &&
-                            (result.score_id.toLowerCase().includes(t.id) ||
-                              result.score_id.toLowerCase().includes(t.matchKey))) ||
-                          (result.score_name &&
-                            (result.score_name
-                              .toLowerCase()
-                              .includes(t.name.toLowerCase()) ||
-                              result.score_name.toLowerCase().includes(t.id) ||
-                              result.score_name.toLowerCase().includes(t.matchKey)))
-                      )
+                  {sortedBottomResults.map((result, idx) => {
+                    const topic = getTopicMeta(
+                      result.score_id || "",
+                      result.score_name || ""
+                    )
+                    const Icon = topic.icon
+                    const isDeactivated =
+                      scoreWeights !== null &&
+                      (scoreWeights[topic.id] ?? 0) <= 0
 
-                      const Icon = topic?.icon || Activity
-                      const isEvaluated =
-                        result.normalized_value !== null &&
-                        result.normalized_value !== undefined
+                    const isEvaluated =
+                      result.normalized_value !== null &&
+                      result.normalized_value !== undefined
 
-                      const val = isEvaluated
-                        ? Math.round(result.normalized_value as number)
-                        : null
-                      const riskMeta = getRiskTone(
-                        result?.risk_level,
-                        val
-                      )
+                    const val = isEvaluated
+                      ? Math.round(result.normalized_value as number)
+                      : null
+                    const riskMeta = getRiskTone(result.risk_level, val)
 
-                      const hasCustomExplanation =
-                        result?.explanation &&
-                        result.explanation.trim() !== "" &&
-                        result.explanation.toLowerCase() !==
-                          "no explanation provided."
-
-                      const displayName = getAssessmentDisplayName(
-                        result.score_id,
-                        result.score_name || topic?.name
-                      )
-
+                    if (!isEvaluated) {
                       return (
                         <div
-                          key={result.score_id || displayName}
-                          className="flex flex-col justify-between rounded-2xl border border-border/60 bg-card p-5 transition-all hover:shadow-xs"
-                        >
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-3">
-                                <div className="flex size-8 items-center justify-center rounded-lg bg-muted text-foreground">
-                                  <Icon className="size-4" />
-                                </div>
-                                <div>
-                                  <span className="font-semibold text-foreground text-sm">
-                                    {displayName}
-                                  </span>
-                                  <p className="text-[11px] text-muted-foreground">
-                                    {topic?.subtitle || "Clinical risk assessment"}
-                                  </p>
-                                </div>
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className={`text-xs font-semibold ${riskMeta.badgeClass}`}
-                              >
-                                {val !== null ? `${val}%` : "N/A"}
-                              </Badge>
-                            </div>
-
-                            <div className="flex items-center gap-2 text-xs">
-                              <span className="text-muted-foreground">Risk Level:</span>
-                              <span className="font-semibold text-foreground capitalize">
-                                {result.risk_level || riskMeta.label}
-                              </span>
-                            </div>
-
-                            {hasCustomExplanation && (
-                              <p className="text-xs text-muted-foreground leading-relaxed pt-1">
-                                {result.explanation}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    SCORE_TOPICS.map((topic) => {
-                      const Icon = topic.icon
-                      return (
-                        <div
-                          key={topic.id}
+                          key={result.score_id || `pending-${idx}`}
                           className="flex flex-col justify-between rounded-2xl border border-dashed border-border/60 bg-muted/15 p-5 opacity-60"
                         >
                           <div className="space-y-2">
@@ -894,8 +991,11 @@ export function EmployeeDetailPage() {
                                   <Icon className="size-4" />
                                 </div>
                                 <div>
-                                  <span className="font-semibold text-muted-foreground text-sm">
-                                    {topic.name}
+                                  <span className="text-sm font-semibold text-muted-foreground">
+                                    {getAssessmentDisplayName(
+                                      result.score_id,
+                                      result.score_name || topic.name
+                                    )}
                                   </span>
                                   <p className="text-[11px] text-muted-foreground">
                                     {topic.subtitle}
@@ -906,17 +1006,107 @@ export function EmployeeDetailPage() {
                                 variant="outline"
                                 className="border-border/60 text-[10px] text-muted-foreground"
                               >
-                                Pending form
+                                {isDeactivated
+                                  ? "Disabled form"
+                                  : "Pending form"}
                               </Badge>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                              Evaluation has not been completed or calculated yet.
+                              {isDeactivated
+                                ? "This evaluation is currently disabled."
+                                : "Evaluation has not been completed or calculated yet."}
                             </p>
                           </div>
                         </div>
                       )
-                    })
-                  )}
+                    }
+
+                    const hasCustomExplanation =
+                      result.explanation &&
+                      result.explanation.trim() !== "" &&
+                      result.explanation.toLowerCase() !==
+                        "no explanation provided."
+
+                    return (
+                      <div
+                        key={result.score_id || `eval-${idx}`}
+                        className={cn(
+                          "flex flex-col justify-between rounded-2xl border border-border/60 bg-card p-5 transition-all hover:shadow-xs",
+                          isDeactivated && "opacity-60"
+                        )}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={cn(
+                                  "flex size-8 items-center justify-center rounded-lg bg-muted",
+                                  isDeactivated
+                                    ? "text-muted-foreground"
+                                    : "text-foreground"
+                                )}
+                              >
+                                <Icon className="size-4" />
+                              </div>
+                              <div>
+                                <span
+                                  className={cn(
+                                    "text-sm font-semibold",
+                                    isDeactivated
+                                      ? "text-muted-foreground"
+                                      : "text-foreground"
+                                  )}
+                                >
+                                  {getAssessmentDisplayName(
+                                    result.score_id,
+                                    result.score_name || topic.name
+                                  )}
+                                </span>
+                                <p className="text-[11px] text-muted-foreground">
+                                  {topic.subtitle}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <Badge
+                                variant="outline"
+                                className={`text-xs font-semibold ${isDeactivated ? "border-border/60 bg-muted/40 text-muted-foreground" : riskMeta.badgeClass}`}
+                              >
+                                {val}%
+                              </Badge>
+                              {isDeactivated && (
+                                <span className="text-[9px] font-medium text-muted-foreground/80 uppercase">
+                                  Disabled
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-muted-foreground">
+                              Risk Level:
+                            </span>
+                            <span
+                              className={cn(
+                                "font-semibold capitalize",
+                                isDeactivated
+                                  ? "text-muted-foreground"
+                                  : "text-foreground"
+                              )}
+                            >
+                              {result.risk_level || riskMeta.label}
+                            </span>
+                          </div>
+
+                          {hasCustomExplanation && (
+                            <p className="pt-1 text-xs leading-relaxed text-muted-foreground">
+                              {result.explanation}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}

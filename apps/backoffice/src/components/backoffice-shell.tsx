@@ -5,7 +5,13 @@ import {
   WorkspaceShell,
   type WorkspaceShellNavItem,
 } from "@workspace/components/components/workspace-shell"
-import { Building2, MailPlus, Settings, ShieldCheck, Terminal } from "lucide-react"
+import {
+  Building2,
+  MailPlus,
+  Settings,
+  ShieldCheck,
+  Terminal,
+} from "lucide-react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
 
 const navigation: WorkspaceShellNavItem[] = [

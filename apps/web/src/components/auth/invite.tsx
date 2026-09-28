@@ -39,7 +39,8 @@ export default function Invite() {
   const [password, setPassword] = useState("")
   const [formError, setFormError] = useState("")
   const [formLoading, setFormLoading] = useState(false)
-  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
+  const [showPasswordRequirements, setShowPasswordRequirements] =
+    useState(false)
 
   useEffect(() => {
     if (!token) return

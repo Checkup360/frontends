@@ -401,7 +401,11 @@ export function DepartmentsPage() {
             tone={averageScore !== null ? "success" : "primary"}
             label="Average department score"
             value={averageScore !== null ? `${averageScore}%` : "—"}
-            hint={averageScore !== null ? "Aggregated health index" : "No evaluations recorded"}
+            hint={
+              averageScore !== null
+                ? "Aggregated health index"
+                : "No evaluations recorded"
+            }
           />
         )}
       </section>
@@ -491,7 +495,7 @@ export function DepartmentsPage() {
                   <div
                     key={dept.id}
                     data-slot="item"
-                    className="group relative flex flex-col justify-between rounded-xl border border-border/70 bg-card/60 p-3.5 shadow-xs transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/95 hover:shadow-md cursor-pointer"
+                    className="group relative flex cursor-pointer flex-col justify-between rounded-xl border border-border/70 bg-card/60 p-3.5 shadow-xs transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/95 hover:shadow-md"
                     onClick={() => navigate(`/departments/${dept.slug}`)}
                   >
                     {/* Header: Name + slug on left, risk/score badge + 3 dots on right */}
@@ -499,16 +503,16 @@ export function DepartmentsPage() {
                       <div className="min-w-0 flex-1">
                         <h4
                           data-slot="item-title"
-                          className="text-sm font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-primary"
+                          className="line-clamp-1 text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary"
                         >
                           {dept.name}
                         </h4>
-                        <p className="mt-0.5 font-mono text-[11px] text-muted-foreground truncate">
+                        <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">
                           /{dept.slug}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex shrink-0 items-center gap-1.5">
                         <Badge
                           variant={tone.variant}
                           size="xs"
@@ -532,7 +536,7 @@ export function DepartmentsPage() {
                               <Button
                                 variant="ghost"
                                 size="icon-xs"
-                                className="size-6 rounded-md text-muted-foreground opacity-70 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
+                                className="size-6 rounded-md text-muted-foreground opacity-70 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-foreground"
                               >
                                 <MoreHorizontal className="size-3.5" />
                                 <span className="sr-only">Open menu</span>
@@ -567,12 +571,16 @@ export function DepartmentsPage() {
 
                     {/* Footer: Member avatars + count + arrow */}
                     <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5">
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex min-w-0 items-center gap-2">
                         <AvatarGroup>
                           {deptMembers.slice(0, 3).map((member) => {
                             const initials = getInitials(member)
                             return (
-                              <Avatar key={member.id} size="sm" className="size-6 text-[10px]">
+                              <Avatar
+                                key={member.id}
+                                size="sm"
+                                className="size-6 text-[10px]"
+                              >
                                 {member.avatar_url && (
                                   <AvatarImage
                                     src={member.avatar_url}
@@ -732,8 +740,8 @@ export function DepartmentsPage() {
               <span className="font-semibold text-foreground">
                 {deleteTarget?.name}
               </span>
-              ? This action cannot be undone. Departments with assigned employees
-              cannot be deleted.
+              ? This action cannot be undone. Departments with assigned
+              employees cannot be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError && (
@@ -747,7 +755,7 @@ export function DepartmentsPage() {
                 void handleDeleteLocal()
               }}
               disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
             >
               {deleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>

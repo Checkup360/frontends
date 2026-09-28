@@ -19,11 +19,12 @@ import { ScoreWeightsPage } from "@/pages/score-weights"
 import { SettingsPage } from "@/pages/settings"
 import { ThemeProvider } from "./components/theme-provider"
 
-
-
 function ProtectedLayout() {
   return (
-    <RequireOrgRole allowedRoles={["admin", "superadmin"]} fallback={<DashboardLoadingSkeleton />}>
+    <RequireOrgRole
+      allowedRoles={["admin", "superadmin"]}
+      fallback={<DashboardLoadingSkeleton />}
+    >
       <Outlet />
     </RequireOrgRole>
   )
@@ -45,7 +46,7 @@ function AccessDenied() {
         You don't have permission to access this area. Only organization admins
         can access the dashboard.
       </p>
-      <div className="mt-8 flex flex-col sm:flex-row gap-3">
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Button asChild>
           <a href={mainPageUrl}>Go to main page</a>
         </Button>

@@ -71,7 +71,9 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
     } catch (err) {
       console.error("Error fetching recommended articles from CMS:", err)
       setError(
-        err instanceof Error ? err.message : "Failed to load recommended articles"
+        err instanceof Error
+          ? err.message
+          : "Failed to load recommended articles"
       )
       setArticles([])
     } finally {

@@ -15,7 +15,11 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@workspace/ui/components/radio-group"
-import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@workspace/ui/components/alert"
 import {
   Activity,
   AlertCircle,
@@ -235,7 +239,8 @@ const AUDIT_C_QUESTIONS = [
   },
   {
     field: "audit_c_quantity" as keyof StudiesData,
-    title: "2. How many drinks containing alcohol do you have on a typical day when you are drinking?",
+    title:
+      "2. How many drinks containing alcohol do you have on a typical day when you are drinking?",
     options: [
       { value: "0", label: "1 or 2" },
       { value: "1", label: "3 or 4" },
@@ -270,29 +275,89 @@ const PSS10_QUESTIONS: Array<{
   prompt: string
   isReversed?: boolean
 }> = [
-  { field: "pss10_q1", prompt: "1. In the last month, how often have you been upset because of something that happened unexpectedly?" },
-  { field: "pss10_q2", prompt: "2. In the last month, how often have you felt that you were unable to control the important things in your life?" },
-  { field: "pss10_q3", prompt: "3. In the last month, how often have you felt nervous and stressed?" },
-  { field: "pss10_q4", prompt: "4. In the last month, how often have you felt confident about your ability to handle your personal problems?", isReversed: true },
-  { field: "pss10_q5", prompt: "5. In the last month, how often have you felt that things were going your way?", isReversed: true },
-  { field: "pss10_q6", prompt: "6. In the last month, how often have you found that you could not cope with all the things that you had to do?" },
-  { field: "pss10_q7", prompt: "7. In the last month, how often have you been able to control irritations in your life?", isReversed: true },
-  { field: "pss10_q8", prompt: "8. In the last month, how often have you felt that you were on top of things?", isReversed: true },
-  { field: "pss10_q9", prompt: "9. In the last month, how often have you been angered because of things that were outside of your control?" },
-  { field: "pss10_q10", prompt: "10. In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?" },
+  {
+    field: "pss10_q1",
+    prompt:
+      "1. In the last month, how often have you been upset because of something that happened unexpectedly?",
+  },
+  {
+    field: "pss10_q2",
+    prompt:
+      "2. In the last month, how often have you felt that you were unable to control the important things in your life?",
+  },
+  {
+    field: "pss10_q3",
+    prompt:
+      "3. In the last month, how often have you felt nervous and stressed?",
+  },
+  {
+    field: "pss10_q4",
+    prompt:
+      "4. In the last month, how often have you felt confident about your ability to handle your personal problems?",
+    isReversed: true,
+  },
+  {
+    field: "pss10_q5",
+    prompt:
+      "5. In the last month, how often have you felt that things were going your way?",
+    isReversed: true,
+  },
+  {
+    field: "pss10_q6",
+    prompt:
+      "6. In the last month, how often have you found that you could not cope with all the things that you had to do?",
+  },
+  {
+    field: "pss10_q7",
+    prompt:
+      "7. In the last month, how often have you been able to control irritations in your life?",
+    isReversed: true,
+  },
+  {
+    field: "pss10_q8",
+    prompt:
+      "8. In the last month, how often have you felt that you were on top of things?",
+    isReversed: true,
+  },
+  {
+    field: "pss10_q9",
+    prompt:
+      "9. In the last month, how often have you been angered because of things that were outside of your control?",
+  },
+  {
+    field: "pss10_q10",
+    prompt:
+      "10. In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?",
+  },
 ]
 
-
 const PHQ9_QUESTIONS: Array<{ field: keyof StudiesData; prompt: string }> = [
-  { field: "little_interest", prompt: "Little interest or pleasure in doing things?" },
+  {
+    field: "little_interest",
+    prompt: "Little interest or pleasure in doing things?",
+  },
   { field: "feeling_down", prompt: "Feeling down, depressed, or hopeless?" },
-  { field: "sleep_trouble", prompt: "Trouble falling or staying asleep, or sleeping too much?" },
+  {
+    field: "sleep_trouble",
+    prompt: "Trouble falling or staying asleep, or sleeping too much?",
+  },
   { field: "tired_energy", prompt: "Feeling tired or having little energy?" },
   { field: "appetite", prompt: "Poor appetite or overeating?" },
-  { field: "feeling_bad", prompt: "Feeling bad about yourself, or that you are a failure?" },
+  {
+    field: "feeling_bad",
+    prompt: "Feeling bad about yourself, or that you are a failure?",
+  },
   { field: "concentration", prompt: "Trouble concentrating on things?" },
-  { field: "psychomotor", prompt: "Moving or speaking so slowly that others could notice, or being unusually fidgety?" },
-  { field: "self_harm_thoughts", prompt: "Thoughts that you would be better off dead or of hurting yourself in some way?" },
+  {
+    field: "psychomotor",
+    prompt:
+      "Moving or speaking so slowly that others could notice, or being unusually fidgety?",
+  },
+  {
+    field: "self_harm_thoughts",
+    prompt:
+      "Thoughts that you would be better off dead or of hurting yourself in some way?",
+  },
 ]
 
 const isLabStudyObsolete = (dateStr: string): boolean => {
@@ -308,245 +373,99 @@ const EOSS_SECTIONS = [
   {
     field: "eoss_physical_health_stage" as keyof StudiesData,
     title: "Physical Health",
-    subtitle: "Select the statement that best describes your current physical health and symptoms:",
+    subtitle:
+      "Select the statement that best describes your current physical health and symptoms:",
     options: [
       { value: "0", description: "I have no physical pain or health issues." },
-      { value: "1", description: "I experience mild pain or slight shortness of breath with effort, but it does not prevent me from working." },
-      { value: "2", description: "I have chronic pain (e.g., knee, back) or symptoms that make daily tasks difficult." },
-      { value: "3", description: "I have significant physical problems or medical complications that prevent me from working normally." },
-      { value: "4", description: "I have severe physical limitations or incapacity to perform my daily activities." },
+      {
+        value: "1",
+        description:
+          "I experience mild pain or slight shortness of breath with effort, but it does not prevent me from working.",
+      },
+      {
+        value: "2",
+        description:
+          "I have chronic pain (e.g., knee, back) or symptoms that make daily tasks difficult.",
+      },
+      {
+        value: "3",
+        description:
+          "I have significant physical problems or medical complications that prevent me from working normally.",
+      },
+      {
+        value: "4",
+        description:
+          "I have severe physical limitations or incapacity to perform my daily activities.",
+      },
     ],
   },
   {
     field: "eoss_mental_health_stage" as keyof StudiesData,
     title: "Mental & Emotional Health",
-    subtitle: "Select the statement that best describes your psychological well-being and stress levels:",
+    subtitle:
+      "Select the statement that best describes your psychological well-being and stress levels:",
     options: [
-      { value: "0", description: "I feel good, with no psychological distress or anxiety about my body or health." },
-      { value: "1", description: "I sometimes feel mild dissatisfaction or emotional distress, but it does not affect my daily life." },
-      { value: "2", description: "I feel frequent emotional distress, stress, or low mood regarding my health or body." },
-      { value: "3", description: "I feel significant anxiety or low mood that affects my well-being and work/family environment." },
-      { value: "4", description: "I feel severe psychological distress that seriously compromises my personal and work life." },
+      {
+        value: "0",
+        description:
+          "I feel good, with no psychological distress or anxiety about my body or health.",
+      },
+      {
+        value: "1",
+        description:
+          "I sometimes feel mild dissatisfaction or emotional distress, but it does not affect my daily life.",
+      },
+      {
+        value: "2",
+        description:
+          "I feel frequent emotional distress, stress, or low mood regarding my health or body.",
+      },
+      {
+        value: "3",
+        description:
+          "I feel significant anxiety or low mood that affects my well-being and work/family environment.",
+      },
+      {
+        value: "4",
+        description:
+          "I feel severe psychological distress that seriously compromises my personal and work life.",
+      },
     ],
   },
   {
     field: "eoss_functional_stage" as keyof StudiesData,
     title: "Daily Function & Work Capacity",
-    subtitle: "Select the statement that best describes your mobility, stamina, and daily performance:",
+    subtitle:
+      "Select the statement that best describes your mobility, stamina, and daily performance:",
     options: [
-      { value: "0", description: "I perform all my daily and work tasks without any difficulty." },
-      { value: "1", description: "I can fulfill all my tasks, although I tire a bit more than usual." },
-      { value: "2", description: "I find it difficult to perform intense physical activities or demanding tasks at work." },
-      { value: "3", description: "I have significant difficulty completing my work shift or household chores." },
-      { value: "4", description: "I am unable or severely limited in performing my daily and work activities." },
+      {
+        value: "0",
+        description:
+          "I perform all my daily and work tasks without any difficulty.",
+      },
+      {
+        value: "1",
+        description:
+          "I can fulfill all my tasks, although I tire a bit more than usual.",
+      },
+      {
+        value: "2",
+        description:
+          "I find it difficult to perform intense physical activities or demanding tasks at work.",
+      },
+      {
+        value: "3",
+        description:
+          "I have significant difficulty completing my work shift or household chores.",
+      },
+      {
+        value: "4",
+        description:
+          "I am unable or severely limited in performing my daily and work activities.",
+      },
     ],
   },
 ]
-
-type StopBangParameterResult = {
-  key: string
-  label: string
-  sourceForm: "sleep" | "biometrics" | "metabolic" | "profile"
-  value: boolean | null
-  description: string
-}
-
-type StopBangResult = {
-  score: number
-  maxScore: number
-  riskLevel: "low" | "intermediate" | "high"
-  riskLabel: string
-  bmi: number | null
-  parameters: StopBangParameterResult[]
-}
-
-function useStopBangState(data: StudiesData): StopBangResult {
-  const isSnoring =
-    data.snoring === "true" || data.snoring === "1"
-      ? true
-      : data.snoring === "false" || data.snoring === "0"
-        ? false
-        : null
-
-  const isTired =
-    data.tired === "true" || data.tired === "1"
-      ? true
-      : data.tired === "false" || data.tired === "0"
-        ? false
-        : null
-
-  const isObserved =
-    data.observed_apnea === "true" || data.observed_apnea === "1"
-      ? true
-      : data.observed_apnea === "false" || data.observed_apnea === "0"
-        ? false
-        : null
-
-  const sys = Number(data.systolic_blood_pressure)
-  const dia = Number(data.diastolic_blood_pressure)
-  const hasMedication =
-    data.hypertension_medication === "true" || data.hypertension_medication === "1"
-  const hasHighBPNumbers = (sys > 0 && sys >= 140) || (dia > 0 && dia >= 90)
-  let isHighBP: boolean | null = null
-  if (hasMedication || hasHighBPNumbers) {
-    isHighBP = true
-  } else if (
-    data.hypertension_medication === "false" &&
-    (!sys || sys < 140) &&
-    (!dia || dia < 90)
-  ) {
-    isHighBP = false
-  }
-
-  const heightCm = Number(data.height)
-  const weightKg = Number(data.weight)
-  let bmi: number | null = null
-  let isBmiOver35: boolean | null = null
-  if (heightCm > 0 && weightKg > 0) {
-    const heightMeters = heightCm / 100
-    bmi = Math.round((weightKg / (heightMeters * heightMeters)) * 10) / 10
-    isBmiOver35 = bmi > 35
-  }
-
-  const isAgeOver50: boolean | null = null
-  const neckCm = Number(data.neck_circumference)
-  const isNeckOver40 = neckCm > 0 ? neckCm > 40 : null
-  const isMale = data.biological_sex
-    ? data.biological_sex.toUpperCase() === "M"
-    : null
-
-  const parameters: StopBangParameterResult[] = [
-    {
-      key: "S",
-      label: "S - Snoring",
-      sourceForm: "sleep",
-      value: isSnoring,
-      description: isSnoring ? "Reports loud snoring" : "No loud snoring reported",
-    },
-    {
-      key: "T",
-      label: "T - Tiredness",
-      sourceForm: "sleep",
-      value: isTired,
-      description: isTired ? "Reports daytime fatigue" : "No significant daytime fatigue",
-    },
-    {
-      key: "O",
-      label: "O - Observed Apnea",
-      sourceForm: "sleep",
-      value: isObserved,
-      description: isObserved ? "Observed breathing pauses" : "No observed apneas",
-    },
-    {
-      key: "P",
-      label: "P - High Blood Pressure",
-      sourceForm: "metabolic",
-      value: isHighBP,
-      description: isHighBP ? "High blood pressure (≥140/90 or treated)" : "Normal blood pressure",
-    },
-    {
-      key: "B",
-      label: "B - BMI (>35 kg/m²)",
-      sourceForm: "biometrics",
-      value: isBmiOver35,
-      description: bmi ? `Current BMI: ${bmi} kg/m² (${isBmiOver35 ? "> 35" : "≤ 35"})` : "Missing height/weight",
-    },
-    {
-      key: "A",
-      label: "A - Age (>50 yrs)",
-      sourceForm: "profile",
-      value: isAgeOver50,
-      description: isAgeOver50 === null ? "Age not recorded" : isAgeOver50 ? "Over 50 years" : "50 years or under",
-    },
-    {
-      key: "N",
-      label: "N - Neck (>40 cm)",
-      sourceForm: "biometrics",
-      value: isNeckOver40,
-      description: neckCm > 0 ? `Neck: ${neckCm} cm (${isNeckOver40 ? "> 40 cm" : "≤ 40 cm"})` : "Missing neck measure",
-    },
-    {
-      key: "G",
-      label: "G - Gender (Male)",
-      sourceForm: "biometrics",
-      value: isMale,
-      description: isMale === null ? "Gender unspecified" : isMale ? "Male sex (+1 pt)" : "Female sex (0 pt)",
-    },
-  ]
-
-  let score = 0
-  for (const param of parameters) {
-    if (param.value === true) {
-      score += 1
-    }
-  }
-
-  let riskLevel: "low" | "intermediate" | "high" = "low"
-  let riskLabel = "Low Sleep Apnea Risk"
-  if (score >= 5) {
-    riskLevel = "high"
-    riskLabel = "High Sleep Apnea Risk"
-  } else if (score >= 3) {
-    riskLevel = "intermediate"
-    riskLabel = "Intermediate Sleep Apnea Risk"
-  }
-
-  return {
-    score,
-    maxScore: 8,
-    riskLevel,
-    riskLabel,
-    bmi,
-    parameters,
-  }
-}
-
-function StopBangLiveCard({ stopBang }: { stopBang: StopBangResult }) {
-  return (
-    <div className="space-y-3 rounded-xl border border-primary/25 bg-primary/5 p-4 backdrop-blur-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Moon className="size-4 text-primary" />
-          <span className="text-sm font-semibold">STOP-BANG Engine (Sleep Apnea Risk)</span>
-        </div>
-        <div
-          className={cn(
-            "rounded-full border px-3 py-1 text-xs font-semibold transition-all",
-            stopBang.riskLevel === "high" && "border-destructive/40 bg-destructive/15 text-destructive",
-            stopBang.riskLevel === "intermediate" && "border-amber-500/40 bg-amber-500/15 text-amber-600 dark:text-amber-400",
-            stopBang.riskLevel === "low" && "border-emerald-500/40 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-          )}
-        >
-          {stopBang.riskLabel} ({stopBang.score}/{stopBang.maxScore} pts)
-        </div>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        This indicator automatically consolidates your responses from <strong>Sleep (S, T, O)</strong>, <strong>Biometrics (B, N, G)</strong>, and <strong>Metabolism (P)</strong> in real time without asking duplicate questions.
-      </p>
-      <div className="grid grid-cols-2 gap-2 pt-1 sm:grid-cols-4">
-        {stopBang.parameters.map((param) => (
-          <div
-            key={param.key}
-            className={cn(
-              "flex flex-col justify-between rounded-lg border p-2 text-xs transition-colors",
-              param.value === true && "border-primary/40 bg-primary/10 text-primary font-medium",
-              param.value === false && "border-border/30 bg-background/50 text-muted-foreground",
-              param.value === null && "border-border/20 bg-background/20 text-muted-foreground/60 italic"
-            )}
-          >
-            <div className="flex items-center justify-between font-bold text-[11px]">
-              <span>{param.key}</span>
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground">({param.sourceForm})</span>
-            </div>
-            <div className="mt-1 text-[11px] font-normal" title={param.description}>
-              {param.value === true ? "✓ Yes" : param.value === false ? "✗ No" : "Pending"}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 export function MemberFormsStudiesPage() {
   const [searchParams] = useSearchParams()
@@ -557,8 +476,9 @@ export function MemberFormsStudiesPage() {
     "biometrics"
 
   const [data, setData] = useState<StudiesData>(initialData)
-  const stopBangResult = useStopBangState(data)
-  const [activeFormsMap, setActiveFormsMap] = useState<Record<string, Set<string>>>({})
+  const [activeFormsMap, setActiveFormsMap] = useState<
+    Record<string, Set<string>>
+  >({})
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -613,7 +533,11 @@ export function MemberFormsStudiesPage() {
         const moodData = moodForm?.data || {}
         const metabolicData = metabolicForm?.data || {}
         const eossData = eossForm?.data || {}
-        const nmqData = (nmqForm?.data?.nordic_nmq_data as Record<string, Record<string, boolean>>) || {}
+        const nmqData =
+          (nmqForm?.data?.nordic_nmq_data as Record<
+            string,
+            Record<string, boolean>
+          >) || {}
         const auditData = auditForm?.data || {}
         const pssData = pssForm?.data || {}
 
@@ -635,15 +559,25 @@ export function MemberFormsStudiesPage() {
         ] as const
         for (const z of zonesList) {
           const zObj = nmqData[z] || {}
-          extractedNmq[`nmq_${z}_12m`] = zObj.trouble_last_12_months !== undefined ? String(zObj.trouble_last_12_months) : ""
-          extractedNmq[`nmq_${z}_prevent_12m`] = zObj.prevented_work_last_12_months !== undefined ? String(zObj.prevented_work_last_12_months) : ""
-          extractedNmq[`nmq_${z}_7d`] = zObj.trouble_last_7_days !== undefined ? String(zObj.trouble_last_7_days) : ""
+          extractedNmq[`nmq_${z}_12m`] =
+            zObj.trouble_last_12_months !== undefined
+              ? String(zObj.trouble_last_12_months)
+              : ""
+          extractedNmq[`nmq_${z}_prevent_12m`] =
+            zObj.prevented_work_last_12_months !== undefined
+              ? String(zObj.prevented_work_last_12_months)
+              : ""
+          extractedNmq[`nmq_${z}_7d`] =
+            zObj.trouble_last_7_days !== undefined
+              ? String(zObj.trouble_last_7_days)
+              : ""
         }
 
         const extractedPss: Record<string, string> = {}
         for (let i = 1; i <= 10; i++) {
           const key = `pss10_q${i}`
-          extractedPss[key] = pssData[key] !== undefined ? String(pssData[key]) : ""
+          extractedPss[key] =
+            pssData[key] !== undefined ? String(pssData[key]) : ""
         }
 
         setData({
@@ -653,24 +587,58 @@ export function MemberFormsStudiesPage() {
           waist_circumference: bioData.waist_circumference
             ? String(bioData.waist_circumference)
             : "",
-          triglycerides: metabolicData.triglycerides !== undefined ? String(metabolicData.triglycerides) : "",
-          total_cholesterol: metabolicData.total_cholesterol !== undefined ? String(metabolicData.total_cholesterol) : "",
-          hdl_cholesterol: metabolicData.hdl_cholesterol !== undefined ? String(metabolicData.hdl_cholesterol) : "",
-          systolic_blood_pressure: metabolicData.systolic_blood_pressure !== undefined ? String(metabolicData.systolic_blood_pressure) : "",
-          diastolic_blood_pressure: metabolicData.diastolic_blood_pressure !== undefined ? String(metabolicData.diastolic_blood_pressure) : "",
-          fasting_glucose: metabolicData.fasting_glucose !== undefined ? String(metabolicData.fasting_glucose) : "",
-          glucose_lowering_medication: metabolicData.glucose_lowering_medication !== undefined ? String(metabolicData.glucose_lowering_medication) : "",
-          statins: metabolicData.statins !== undefined ? String(metabolicData.statins) : "",
+          triglycerides:
+            metabolicData.triglycerides !== undefined
+              ? String(metabolicData.triglycerides)
+              : "",
+          total_cholesterol:
+            metabolicData.total_cholesterol !== undefined
+              ? String(metabolicData.total_cholesterol)
+              : "",
+          hdl_cholesterol:
+            metabolicData.hdl_cholesterol !== undefined
+              ? String(metabolicData.hdl_cholesterol)
+              : "",
+          systolic_blood_pressure:
+            metabolicData.systolic_blood_pressure !== undefined
+              ? String(metabolicData.systolic_blood_pressure)
+              : "",
+          diastolic_blood_pressure:
+            metabolicData.diastolic_blood_pressure !== undefined
+              ? String(metabolicData.diastolic_blood_pressure)
+              : "",
+          fasting_glucose:
+            metabolicData.fasting_glucose !== undefined
+              ? String(metabolicData.fasting_glucose)
+              : "",
+          glucose_lowering_medication:
+            metabolicData.glucose_lowering_medication !== undefined
+              ? String(metabolicData.glucose_lowering_medication)
+              : "",
+          statins:
+            metabolicData.statins !== undefined
+              ? String(metabolicData.statins)
+              : "",
           lab_study_date: (metabolicData.lab_study_date as string) || "",
-          eoss_physical_health_stage: eossData.eoss_physical_health_stage !== undefined ? String(eossData.eoss_physical_health_stage) : "",
-          eoss_mental_health_stage: eossData.eoss_mental_health_stage !== undefined ? String(eossData.eoss_mental_health_stage) : "",
-          eoss_functional_stage: eossData.eoss_functional_stage !== undefined ? String(eossData.eoss_functional_stage) : "",
+          eoss_physical_health_stage:
+            eossData.eoss_physical_health_stage !== undefined
+              ? String(eossData.eoss_physical_health_stage)
+              : "",
+          eoss_mental_health_stage:
+            eossData.eoss_mental_health_stage !== undefined
+              ? String(eossData.eoss_mental_health_stage)
+              : "",
+          eoss_functional_stage:
+            eossData.eoss_functional_stage !== undefined
+              ? String(eossData.eoss_functional_stage)
+              : "",
           neck_circumference: sleepData.neck_circumference
             ? String(sleepData.neck_circumference)
             : bioData.neck_circumference
-            ? String(bioData.neck_circumference)
-            : "",
-          snoring: sleepData.snoring !== undefined ? String(sleepData.snoring) : "",
+              ? String(bioData.neck_circumference)
+              : "",
+          snoring:
+            sleepData.snoring !== undefined ? String(sleepData.snoring) : "",
           tired: sleepData.tired !== undefined ? String(sleepData.tired) : "",
           observed_apnea:
             sleepData.observed_apnea !== undefined
@@ -693,25 +661,53 @@ export function MemberFormsStudiesPage() {
               ? String(habitsData.previous_high_glucose)
               : "",
           smoker:
-            habitsData.smoker !== undefined
-              ? String(habitsData.smoker)
-              : "",
+            habitsData.smoker !== undefined ? String(habitsData.smoker) : "",
           family_diabetes: (habitsData.family_diabetes as string) || "",
-          little_interest: moodData.little_interest !== undefined ? String(moodData.little_interest) : "",
-          feeling_down: moodData.feeling_down !== undefined ? String(moodData.feeling_down) : "",
-          sleep_trouble: moodData.sleep_trouble !== undefined ? String(moodData.sleep_trouble) : "",
-          tired_energy: moodData.tired_energy !== undefined ? String(moodData.tired_energy) : "",
-          appetite: moodData.appetite !== undefined ? String(moodData.appetite) : "",
-          feeling_bad: moodData.feeling_bad !== undefined ? String(moodData.feeling_bad) : "",
-          concentration: moodData.concentration !== undefined ? String(moodData.concentration) : "",
-          psychomotor: moodData.psychomotor !== undefined ? String(moodData.psychomotor) : "",
-          self_harm_thoughts: moodData.self_harm_thoughts !== undefined ? String(moodData.self_harm_thoughts) : "",
-          audit_c_frequency: auditData.audit_c_frequency !== undefined ? String(auditData.audit_c_frequency) : "",
-          audit_c_quantity: auditData.audit_c_quantity !== undefined ? String(auditData.audit_c_quantity) : "",
+          little_interest:
+            moodData.little_interest !== undefined
+              ? String(moodData.little_interest)
+              : "",
+          feeling_down:
+            moodData.feeling_down !== undefined
+              ? String(moodData.feeling_down)
+              : "",
+          sleep_trouble:
+            moodData.sleep_trouble !== undefined
+              ? String(moodData.sleep_trouble)
+              : "",
+          tired_energy:
+            moodData.tired_energy !== undefined
+              ? String(moodData.tired_energy)
+              : "",
+          appetite:
+            moodData.appetite !== undefined ? String(moodData.appetite) : "",
+          feeling_bad:
+            moodData.feeling_bad !== undefined
+              ? String(moodData.feeling_bad)
+              : "",
+          concentration:
+            moodData.concentration !== undefined
+              ? String(moodData.concentration)
+              : "",
+          psychomotor:
+            moodData.psychomotor !== undefined
+              ? String(moodData.psychomotor)
+              : "",
+          self_harm_thoughts:
+            moodData.self_harm_thoughts !== undefined
+              ? String(moodData.self_harm_thoughts)
+              : "",
+          audit_c_frequency:
+            auditData.audit_c_frequency !== undefined
+              ? String(auditData.audit_c_frequency)
+              : "",
+          audit_c_quantity:
+            auditData.audit_c_quantity !== undefined
+              ? String(auditData.audit_c_quantity)
+              : "",
           ...extractedNmq,
           ...extractedPss,
         } as StudiesData)
-
 
         setIsLoadingData(false)
       }
@@ -773,14 +769,16 @@ export function MemberFormsStudiesPage() {
         isNaN(Number(data.neck_circumference)) ||
         Number(data.neck_circumference) <= 0)
     ) {
-      errors.neck_circumference = "Please enter a valid neck circumference (cm)."
+      errors.neck_circumference =
+        "Please enter a valid neck circumference (cm)."
     }
     if (
       !data.waist_circumference ||
       isNaN(Number(data.waist_circumference)) ||
       Number(data.waist_circumference) <= 0
     ) {
-      errors.waist_circumference = "Please enter a valid waist circumference (cm)."
+      errors.waist_circumference =
+        "Please enter a valid waist circumference (cm)."
     }
 
     if (Object.keys(errors).length > 0) {
@@ -790,7 +788,10 @@ export function MemberFormsStudiesPage() {
     }
 
     setIsSubmitting(true)
-    const payload: Record<string, string | number | boolean | null | undefined> = {
+    const payload: Record<
+      string,
+      string | number | boolean | null | undefined
+    > = {
       biological_sex: data.biological_sex,
       height: Number(data.height),
       weight: Number(data.weight),
@@ -815,9 +816,11 @@ export function MemberFormsStudiesPage() {
     e.preventDefault()
     const errors: Record<string, string> = {}
     if (!data.snoring) errors.snoring = "Please select an option for snoring."
-    if (!data.tired) errors.tired = "Please select an option for daytime fatigue."
+    if (!data.tired)
+      errors.tired = "Please select an option for daytime fatigue."
     if (!data.observed_apnea)
-      errors.observed_apnea = "Please select an option for sleep apnea observation."
+      errors.observed_apnea =
+        "Please select an option for sleep apnea observation."
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
@@ -860,7 +863,8 @@ export function MemberFormsStudiesPage() {
     if (!data.smoker)
       errors.smoker = "Please select an option for smoking status."
     if (!data.family_diabetes)
-      errors.family_diabetes = "Please select an option for family history of diabetes."
+      errors.family_diabetes =
+        "Please select an option for family history of diabetes."
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
@@ -941,7 +945,11 @@ export function MemberFormsStudiesPage() {
       "fasting_glucose",
     ]
     for (const field of numericFields) {
-      if (!data[field] || Number(data[field]) <= 0 || Number.isNaN(Number(data[field]))) {
+      if (
+        !data[field] ||
+        Number(data[field]) <= 0 ||
+        Number.isNaN(Number(data[field]))
+      ) {
         errors[field] = "Please enter a valid value."
       }
     }
@@ -949,7 +957,8 @@ export function MemberFormsStudiesPage() {
     if (
       data.systolic_blood_pressure &&
       data.diastolic_blood_pressure &&
-      Number(data.systolic_blood_pressure) <= Number(data.diastolic_blood_pressure)
+      Number(data.systolic_blood_pressure) <=
+        Number(data.diastolic_blood_pressure)
     ) {
       errors.systolic_blood_pressure =
         "Systolic blood pressure must be strictly greater than diastolic blood pressure."
@@ -958,12 +967,14 @@ export function MemberFormsStudiesPage() {
       errors.glucose_lowering_medication = "Please select an option."
     }
     if (!data.statins) {
-      errors.statins = "Please select an option for statin (cholesterol medication) usage."
+      errors.statins =
+        "Please select an option for statin (cholesterol medication) usage."
     }
     if (!data.lab_study_date) {
       errors.lab_study_date = "Please enter the date of your laboratory study."
     } else if (isLabStudyObsolete(data.lab_study_date)) {
-      errors.lab_study_date = "Laboratory study results are obsolete (older than 12 months). Please provide recent lab test results."
+      errors.lab_study_date =
+        "Laboratory study results are obsolete (older than 12 months). Please provide recent lab test results."
     }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
@@ -986,7 +997,9 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(res.error.message || "Failed to save metabolic health data.")
+      setGlobalError(
+        res.error.message || "Failed to save metabolic health data."
+      )
     } else {
       toast.success("Metabolic health data saved successfully.")
       navigate("/forms")
@@ -1019,7 +1032,9 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(res.error.message || "Failed to save obesity-related health impact.")
+      setGlobalError(
+        res.error.message || "Failed to save obesity-related health impact."
+      )
     } else {
       toast.success("Obesity-related health impact saved successfully.")
       navigate("/forms")
@@ -1046,7 +1061,8 @@ export function MemberFormsStudiesPage() {
         errors[`nmq_${z}_12m`] = "Please select an option for 12-month trouble."
       }
       if ((data as Record<string, string>)[`nmq_${z}_prevent_12m`] === "") {
-        errors[`nmq_${z}_prevent_12m`] = "Please select an option for work prevention."
+        errors[`nmq_${z}_prevent_12m`] =
+          "Please select an option for work prevention."
       }
       if ((data as Record<string, string>)[`nmq_${z}_7d`] === "") {
         errors[`nmq_${z}_7d`] = "Please select an option for 7-day trouble."
@@ -1060,12 +1076,22 @@ export function MemberFormsStudiesPage() {
     }
 
     setIsSubmitting(true)
-    const formattedZones: Record<string, { trouble_last_12_months: boolean; prevented_work_last_12_months: boolean; trouble_last_7_days: boolean }> = {}
+    const formattedZones: Record<
+      string,
+      {
+        trouble_last_12_months: boolean
+        prevented_work_last_12_months: boolean
+        trouble_last_7_days: boolean
+      }
+    > = {}
     for (const z of zones) {
       formattedZones[z] = {
-        trouble_last_12_months: (data as Record<string, string>)[`nmq_${z}_12m`] === "true",
-        prevented_work_last_12_months: (data as Record<string, string>)[`nmq_${z}_prevent_12m`] === "true",
-        trouble_last_7_days: (data as Record<string, string>)[`nmq_${z}_7d`] === "true",
+        trouble_last_12_months:
+          (data as Record<string, string>)[`nmq_${z}_12m`] === "true",
+        prevented_work_last_12_months:
+          (data as Record<string, string>)[`nmq_${z}_prevent_12m`] === "true",
+        trouble_last_7_days:
+          (data as Record<string, string>)[`nmq_${z}_7d`] === "true",
       }
     }
 
@@ -1075,7 +1101,9 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(res.error.message || "Failed to save Nordic ergonomics questionnaire.")
+      setGlobalError(
+        res.error.message || "Failed to save Nordic ergonomics questionnaire."
+      )
     } else {
       toast.success("Nordic ergonomics questionnaire saved successfully.")
       navigate("/forms")
@@ -1085,9 +1113,12 @@ export function MemberFormsStudiesPage() {
   const handleSaveAuditC = async (e: React.FormEvent) => {
     e.preventDefault()
     const errors: Record<string, string> = {}
-    if (data.audit_c_frequency === "") errors.audit_c_frequency = "Please select drinking frequency."
-    if (data.audit_c_quantity === "") errors.audit_c_quantity = "Please select typical drinking quantity."
-    if (data.audit_c_heavy_drinking === "") errors.audit_c_heavy_drinking = "Please select heavy drinking frequency."
+    if (data.audit_c_frequency === "")
+      errors.audit_c_frequency = "Please select drinking frequency."
+    if (data.audit_c_quantity === "")
+      errors.audit_c_quantity = "Please select typical drinking quantity."
+    if (data.audit_c_heavy_drinking === "")
+      errors.audit_c_heavy_drinking = "Please select heavy drinking frequency."
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
@@ -1130,14 +1161,18 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(true)
     const payload: Record<string, number> = {}
     for (let i = 1; i <= 10; i++) {
-      payload[`pss10_q${i}`] = Number((data as Record<string, string>)[`pss10_q${i}`])
+      payload[`pss10_q${i}`] = Number(
+        (data as Record<string, string>)[`pss10_q${i}`]
+      )
     }
 
     const res = await submitMemberForm("pss10", payload)
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(res.error.message || "Failed to save PSS-10 perceived stress scale.")
+      setGlobalError(
+        res.error.message || "Failed to save PSS-10 perceived stress scale."
+      )
     } else {
       toast.success("Perceived Stress & Burnout saved successfully.")
       navigate("/forms")
@@ -1156,7 +1191,8 @@ export function MemberFormsStudiesPage() {
     },
     sleep: {
       title: "Sleep Quality Form",
-      description: "Answer questions regarding your daily sleep habits and rest.",
+      description:
+        "Answer questions regarding your daily sleep habits and rest.",
       icon: Moon,
     },
     habits: {
@@ -1167,7 +1203,8 @@ export function MemberFormsStudiesPage() {
     },
     mood: {
       title: "Mood & Well-being Form",
-      description: "Answer questions about how you have felt during the last two weeks.",
+      description:
+        "Answer questions about how you have felt during the last two weeks.",
       icon: HeartPulse,
     },
     metabolic: {
@@ -1177,26 +1214,29 @@ export function MemberFormsStudiesPage() {
     },
     eoss: {
       title: "Obesity-related Health Impact",
-      description: "Reflect on how your health, mood, and daily function are affected.",
+      description:
+        "Reflect on how your health, mood, and daily function are affected.",
       icon: HeartPulse,
     },
     nordic_nmq: {
       title: "Musculoskeletal Risk",
-      description: "Standardized questionnaire evaluating body regions for discomfort and work impact.",
+      description:
+        "Standardized questionnaire evaluating body regions for discomfort and work impact.",
       icon: Activity,
     },
     audit_c: {
       title: "Alcohol Risk Assessment",
-      description: "Standardized questionnaire evaluating alcohol consumption and risk behaviors.",
+      description:
+        "Standardized questionnaire evaluating alcohol consumption and risk behaviors.",
       icon: HeartPulse,
     },
     pss10: {
       title: "Perceived Stress & Burnout",
-      description: "10-item scale assessing perceived stress and coping capacity over the past month.",
+      description:
+        "10-item scale assessing perceived stress and coping capacity over the past month.",
       icon: HeartPulse,
     },
   }
-
 
   const currentTitle = titlesMap[formType] || titlesMap.biometrics
   const TitleIcon = currentTitle.icon
@@ -1247,7 +1287,9 @@ export function MemberFormsStudiesPage() {
               <Alert variant="info" className="border-primary/20 bg-primary/5">
                 <Info className="h-4 w-4 text-primary" />
                 <AlertDescription className="text-xs text-muted-foreground">
-                  Height, weight, and biological sex are pre-filled from your onboarding profile. Updating them here keeps your health biometrics up to date.
+                  Height, weight, and biological sex are pre-filled from your
+                  onboarding profile. Updating them here keeps your health
+                  biometrics up to date.
                 </AlertDescription>
               </Alert>
 
@@ -1395,7 +1437,9 @@ export function MemberFormsStudiesPage() {
                         type="number"
                         placeholder="38"
                         value={data.neck_circumference}
-                        onChange={(e) => updateField("neck_circumference", e.target.value)}
+                        onChange={(e) =>
+                          updateField("neck_circumference", e.target.value)
+                        }
                         disabled={isSubmitting || isLoadingData}
                         className={cn(
                           "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
@@ -1431,7 +1475,9 @@ export function MemberFormsStudiesPage() {
                       type="number"
                       placeholder="85"
                       value={data.waist_circumference}
-                      onChange={(e) => updateField("waist_circumference", e.target.value)}
+                      onChange={(e) =>
+                        updateField("waist_circumference", e.target.value)
+                      }
                       disabled={isSubmitting || isLoadingData}
                       className={cn(
                         "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
@@ -1448,10 +1494,6 @@ export function MemberFormsStudiesPage() {
                   )}
                 </div>
               </div>
-
-              {isFieldActive("biometrics", "neck_circumference") && (
-                <StopBangLiveCard stopBang={stopBangResult} />
-              )}
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
               <Button variant="ghost" asChild>
@@ -1476,7 +1518,6 @@ export function MemberFormsStudiesPage() {
           </CardHeader>
           <form onSubmit={(e) => void handleSaveSleep(e)}>
             <CardContent className="space-y-6">
-              <StopBangLiveCard stopBang={stopBangResult} />
               {/* Question 1 */}
               <div
                 id="field-group-snoring"
@@ -1487,7 +1528,8 @@ export function MemberFormsStudiesPage() {
                 )}
               >
                 <Label className="text-sm font-medium">
-                  Do you snore loudly (loud enough to be heard through closed doors or your partner elbows you for snoring at night)?
+                  Do you snore loudly (loud enough to be heard through closed
+                  doors or your partner elbows you for snoring at night)?
                 </Label>
                 <RadioGroup
                   value={data.snoring}
@@ -1532,7 +1574,8 @@ export function MemberFormsStudiesPage() {
                 )}
               >
                 <Label className="text-sm font-medium">
-                  Do you often feel tired, fatigued, or sleepy during daytime (such as falling asleep during driving or talking to someone)?
+                  Do you often feel tired, fatigued, or sleepy during daytime
+                  (such as falling asleep during driving or talking to someone)?
                 </Label>
                 <RadioGroup
                   value={data.tired}
@@ -1577,7 +1620,8 @@ export function MemberFormsStudiesPage() {
                 )}
               >
                 <Label className="text-sm font-medium">
-                  Has anyone observed you stop breathing, choking or gasping during your sleep?
+                  Has anyone observed you stop breathing, choking or gasping
+                  during your sleep?
                 </Label>
                 <RadioGroup
                   value={data.observed_apnea}
@@ -1630,7 +1674,8 @@ export function MemberFormsStudiesPage() {
           <CardHeader>
             <CardTitle className="text-lg">Lifestyle & Daily Habits</CardTitle>
             <CardDescription>
-              Information regarding physical activity, diet, and family health history.
+              Information regarding physical activity, diet, and family health
+              history.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveHabits(e)}>
@@ -1649,7 +1694,9 @@ export function MemberFormsStudiesPage() {
                 </Label>
                 <RadioGroup
                   value={data.hypertension_medication}
-                  onValueChange={(val) => updateField("hypertension_medication", val)}
+                  onValueChange={(val) =>
+                    updateField("hypertension_medication", val)
+                  }
                   disabled={isSubmitting || isLoadingData}
                   className="flex gap-6 pt-1"
                 >
@@ -1690,11 +1737,14 @@ export function MemberFormsStudiesPage() {
                 )}
               >
                 <Label className="text-sm font-medium">
-                  Do you do at least 30 minutes of physical activity every day at work or during leisure time?
+                  Do you do at least 30 minutes of physical activity every day
+                  at work or during leisure time?
                 </Label>
                 <RadioGroup
                   value={data.daily_physical_activity}
-                  onValueChange={(val) => updateField("daily_physical_activity", val)}
+                  onValueChange={(val) =>
+                    updateField("daily_physical_activity", val)
+                  }
                   disabled={isSubmitting || isLoadingData}
                   className="flex gap-6 pt-1"
                 >
@@ -1780,11 +1830,14 @@ export function MemberFormsStudiesPage() {
                 )}
               >
                 <Label className="text-sm font-medium">
-                  Have you ever been found to have high blood glucose (e.g. in a health examination or during illness)?
+                  Have you ever been found to have high blood glucose (e.g. in a
+                  health examination or during illness)?
                 </Label>
                 <RadioGroup
                   value={data.previous_high_glucose}
-                  onValueChange={(val) => updateField("previous_high_glucose", val)}
+                  onValueChange={(val) =>
+                    updateField("previous_high_glucose", val)
+                  }
                   disabled={isSubmitting || isLoadingData}
                   className="flex gap-6 pt-1"
                 >
@@ -1870,7 +1923,8 @@ export function MemberFormsStudiesPage() {
                 )}
               >
                 <Label className="text-sm font-medium">
-                  Have any members of your family or relatives been diagnosed with diabetes?
+                  Have any members of your family or relatives been diagnosed
+                  with diabetes?
                 </Label>
                 <RadioGroup
                   value={data.family_diabetes}
@@ -1931,7 +1985,8 @@ export function MemberFormsStudiesPage() {
           <CardHeader>
             <CardTitle className="text-lg">Mood & Well-being</CardTitle>
             <CardDescription>
-              Over the last two weeks, how often have you been bothered by any of the following problems?
+              Over the last two weeks, how often have you been bothered by any
+              of the following problems?
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveMood(e)}>
@@ -1946,23 +2001,34 @@ export function MemberFormsStudiesPage() {
                       "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
                 >
-                  <Label className="text-sm font-medium">{index + 1}. {prompt}</Label>
+                  <Label className="text-sm font-medium">
+                    {index + 1}. {prompt}
+                  </Label>
                   <RadioGroup
                     value={data[field]}
                     onValueChange={(value) => updateField(field, value)}
                     disabled={isSubmitting || isLoadingData}
                     className="grid gap-2 sm:grid-cols-2"
                   >
-                    {["Not at all", "Several days", "More than half the days", "Nearly every day"].map(
-                      (label, score) => (
-                        <div key={label} className="flex items-center space-x-2">
-                          <RadioGroupItem value={String(score)} id={`${field}-${score}`} />
-                          <Label htmlFor={`${field}-${score}`} className="cursor-pointer font-normal">
-                            {label}
-                          </Label>
-                        </div>
-                      )
-                    )}
+                    {[
+                      "Not at all",
+                      "Several days",
+                      "More than half the days",
+                      "Nearly every day",
+                    ].map((label, score) => (
+                      <div key={label} className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value={String(score)}
+                          id={`${field}-${score}`}
+                        />
+                        <Label
+                          htmlFor={`${field}-${score}`}
+                          className="cursor-pointer font-normal"
+                        >
+                          {label}
+                        </Label>
+                      </div>
+                    ))}
                   </RadioGroup>
                   {fieldErrors[field] && (
                     <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
@@ -1996,15 +2062,27 @@ export function MemberFormsStudiesPage() {
           <form onSubmit={(e) => void handleSaveMetabolic(e)}>
             <CardContent className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
-                {([
-                  ["triglycerides", "Triglycerides (mg/dL)"],
-                  ["total_cholesterol", "Total cholesterol (mg/dL)"],
-                  ["hdl_cholesterol", "HDL cholesterol (mg/dL)"],
-                  ["systolic_blood_pressure", "Systolic blood pressure (mmHg)"],
-                  ["diastolic_blood_pressure", "Diastolic blood pressure (mmHg)"],
-                  ["fasting_glucose", "Fasting glucose (mg/dL)"],
-                ] as Array<[keyof StudiesData, string]>).map(([field, label]) => (
-                  <div key={field} id={`field-group-${field}`} className="space-y-2 rounded-xl border border-border/30 bg-background/40 p-4">
+                {(
+                  [
+                    ["triglycerides", "Triglycerides (mg/dL)"],
+                    ["total_cholesterol", "Total cholesterol (mg/dL)"],
+                    ["hdl_cholesterol", "HDL cholesterol (mg/dL)"],
+                    [
+                      "systolic_blood_pressure",
+                      "Systolic blood pressure (mmHg)",
+                    ],
+                    [
+                      "diastolic_blood_pressure",
+                      "Diastolic blood pressure (mmHg)",
+                    ],
+                    ["fasting_glucose", "Fasting glucose (mg/dL)"],
+                  ] as Array<[keyof StudiesData, string]>
+                ).map(([field, label]) => (
+                  <div
+                    key={field}
+                    id={`field-group-${field}`}
+                    className="space-y-2 rounded-xl border border-border/30 bg-background/40 p-4"
+                  >
                     <Label htmlFor={field}>{label}</Label>
                     <Input
                       id={field}
@@ -2014,62 +2092,125 @@ export function MemberFormsStudiesPage() {
                       onChange={(e) => updateField(field, e.target.value)}
                       disabled={isSubmitting || isLoadingData}
                     />
-                    {fieldErrors[field] && <p className="text-xs font-medium text-destructive">{fieldErrors[field]}</p>}
+                    {fieldErrors[field] && (
+                      <p className="text-xs font-medium text-destructive">
+                        {fieldErrors[field]}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
               {/* Laboratory Study Date & Obsolescence Control */}
-              <div id="field-group-lab_study_date" className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
+              <div
+                id="field-group-lab_study_date"
+                className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4"
+              >
                 <div className="flex items-center justify-between">
                   <Label htmlFor="lab_study_date" className="font-medium">
                     Date of Laboratory Study (Fecha del estudio) *
                   </Label>
-                  {data.lab_study_date && isLabStudyObsolete(data.lab_study_date) && (
-                    <span className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive flex items-center gap-1">
-                      <AlertCircle className="size-3.5" /> Dato obsoleto (&gt; 12 meses)
-                    </span>
-                  )}
+                  {data.lab_study_date &&
+                    isLabStudyObsolete(data.lab_study_date) && (
+                      <span className="flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
+                        <AlertCircle className="size-3.5" /> Dato obsoleto (&gt;
+                        12 meses)
+                      </span>
+                    )}
                 </div>
                 <Input
                   id="lab_study_date"
                   type="date"
                   value={data.lab_study_date}
-                  onChange={(e) => updateField("lab_study_date", e.target.value)}
+                  onChange={(e) =>
+                    updateField("lab_study_date", e.target.value)
+                  }
                   disabled={isSubmitting || isLoadingData}
-                  className={cn(fieldErrors.lab_study_date && "border-destructive")}
+                  className={cn(
+                    fieldErrors.lab_study_date && "border-destructive"
+                  )}
                 />
-                {data.lab_study_date && isLabStudyObsolete(data.lab_study_date) && (
-                  <p className="text-xs font-medium text-destructive flex items-center gap-1">
-                    <AlertCircle className="size-3.5 shrink-0" />
-                    El estudio supera los 12 meses de antigüedad. Por favor, actualizá los datos con un estudio reciente.
+                {data.lab_study_date &&
+                  isLabStudyObsolete(data.lab_study_date) && (
+                    <p className="flex items-center gap-1 text-xs font-medium text-destructive">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      El estudio supera los 12 meses de antigüedad. Por favor,
+                      actualizá los datos con un estudio reciente.
+                    </p>
+                  )}
+                {fieldErrors.lab_study_date && (
+                  <p className="text-xs font-medium text-destructive">
+                    {fieldErrors.lab_study_date}
                   </p>
                 )}
-                {fieldErrors.lab_study_date && <p className="text-xs font-medium text-destructive">{fieldErrors.lab_study_date}</p>}
               </div>
 
               {/* Glucose-lowering medication */}
-              <div id="field-group-glucose_lowering_medication" className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
+              <div
+                id="field-group-glucose_lowering_medication"
+                className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4"
+              >
                 <Label>Are you taking glucose-lowering medication?</Label>
-                <RadioGroup value={data.glucose_lowering_medication} onValueChange={(value) => updateField("glucose_lowering_medication", value)} disabled={isSubmitting || isLoadingData} className="flex gap-6">
-                  <div className="flex items-center gap-2"><RadioGroupItem value="true" id="metabolic-glucose-yes" /><Label htmlFor="metabolic-glucose-yes">Yes</Label></div>
-                  <div className="flex items-center gap-2"><RadioGroupItem value="false" id="metabolic-glucose-no" /><Label htmlFor="metabolic-glucose-no">No</Label></div>
+                <RadioGroup
+                  value={data.glucose_lowering_medication}
+                  onValueChange={(value) =>
+                    updateField("glucose_lowering_medication", value)
+                  }
+                  disabled={isSubmitting || isLoadingData}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="true" id="metabolic-glucose-yes" />
+                    <Label htmlFor="metabolic-glucose-yes">Yes</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="false" id="metabolic-glucose-no" />
+                    <Label htmlFor="metabolic-glucose-no">No</Label>
+                  </div>
                 </RadioGroup>
-                {fieldErrors.glucose_lowering_medication && <p className="text-xs font-medium text-destructive">{fieldErrors.glucose_lowering_medication}</p>}
+                {fieldErrors.glucose_lowering_medication && (
+                  <p className="text-xs font-medium text-destructive">
+                    {fieldErrors.glucose_lowering_medication}
+                  </p>
+                )}
               </div>
 
               {/* Statins (Cholesterol Medication) */}
-              <div id="field-group-statins" className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4">
-                <Label>Are you currently taking statins (medication for cholesterol)?</Label>
-                <RadioGroup value={data.statins} onValueChange={(value) => updateField("statins", value)} disabled={isSubmitting || isLoadingData} className="flex gap-6">
-                  <div className="flex items-center gap-2"><RadioGroupItem value="true" id="statins-yes" /><Label htmlFor="statins-yes">Yes</Label></div>
-                  <div className="flex items-center gap-2"><RadioGroupItem value="false" id="statins-no" /><Label htmlFor="statins-no">No</Label></div>
+              <div
+                id="field-group-statins"
+                className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4"
+              >
+                <Label>
+                  Are you currently taking statins (medication for cholesterol)?
+                </Label>
+                <RadioGroup
+                  value={data.statins}
+                  onValueChange={(value) => updateField("statins", value)}
+                  disabled={isSubmitting || isLoadingData}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="true" id="statins-yes" />
+                    <Label htmlFor="statins-yes">Yes</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="false" id="statins-no" />
+                    <Label htmlFor="statins-no">No</Label>
+                  </div>
                 </RadioGroup>
-                {fieldErrors.statins && <p className="text-xs font-medium text-destructive">{fieldErrors.statins}</p>}
+                {fieldErrors.statins && (
+                  <p className="text-xs font-medium text-destructive">
+                    {fieldErrors.statins}
+                  </p>
+                )}
               </div>
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild><Link to="/forms">Cancel</Link></Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>{isSubmitting ? "Saving..." : "Save Metabolic Data"}</Button>
+              <Button variant="ghost" asChild>
+                <Link to="/forms">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+                {isSubmitting ? "Saving..." : "Save Metabolic Data"}
+              </Button>
             </CardFooter>
           </form>
         </Card>
@@ -2078,9 +2219,13 @@ export function MemberFormsStudiesPage() {
       {formType === "eoss" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Obesity-related Health Impact</CardTitle>
+            <CardTitle className="text-lg">
+              Obesity-related Health Impact
+            </CardTitle>
             <CardDescription>
-              Choose the statement that best describes your daily situation in each area. This functional assessment is a self-evaluation, not a medical diagnosis.
+              Choose the statement that best describes your daily situation in
+              each area. This functional assessment is a self-evaluation, not a
+              medical diagnosis.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveEoss(e)}>
@@ -2096,8 +2241,12 @@ export function MemberFormsStudiesPage() {
                   )}
                 >
                   <div>
-                    <Label className="text-sm font-medium">{section.title}</Label>
-                    <p className="mt-1 text-xs text-muted-foreground">{section.subtitle}</p>
+                    <Label className="text-sm font-medium">
+                      {section.title}
+                    </Label>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {section.subtitle}
+                    </p>
                   </div>
                   <RadioGroup
                     value={data[section.field]}
@@ -2110,11 +2259,19 @@ export function MemberFormsStudiesPage() {
                         key={option.value}
                         className={cn(
                           "flex items-start gap-3 rounded-lg border border-border/30 bg-background/30 p-3 transition-all hover:bg-background/60",
-                          data[section.field] === option.value && "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                          data[section.field] === option.value &&
+                            "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
                         )}
                       >
-                        <RadioGroupItem value={option.value} id={`${section.field}-${option.value}`} className="mt-1" />
-                        <Label htmlFor={`${section.field}-${option.value}`} className="cursor-pointer font-normal text-sm text-foreground leading-snug">
+                        <RadioGroupItem
+                          value={option.value}
+                          id={`${section.field}-${option.value}`}
+                          className="mt-1"
+                        />
+                        <Label
+                          htmlFor={`${section.field}-${option.value}`}
+                          className="cursor-pointer text-sm leading-snug font-normal text-foreground"
+                        >
                           {option.description}
                         </Label>
                       </div>
@@ -2144,9 +2301,12 @@ export function MemberFormsStudiesPage() {
       {formType === "nordic_nmq" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Musculoskeletal Risk Assessment</CardTitle>
+            <CardTitle className="text-lg">
+              Musculoskeletal Risk Assessment
+            </CardTitle>
             <CardDescription>
-              Evaluate musculoskeletal trouble and work capacity across 9 body regions over the past 12 months and 7 days.
+              Evaluate musculoskeletal trouble and work capacity across 9 body
+              regions over the past 12 months and 7 days.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveNordicNmq(e)}>
@@ -2154,71 +2314,138 @@ export function MemberFormsStudiesPage() {
               <div className="overflow-x-auto rounded-xl border border-border/30 bg-background/40 p-4">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-border/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      <th className="py-3 px-2">Body Region</th>
-                      <th className="py-3 px-2 text-center">Trouble in last 12m?</th>
-                      <th className="py-3 px-2 text-center">Prevented work in last 12m?</th>
-                      <th className="py-3 px-2 text-center">Trouble in last 7 days?</th>
+                    <tr className="border-b border-border/40 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                      <th className="px-2 py-3">Body Region</th>
+                      <th className="px-2 py-3 text-center">
+                        Trouble in last 12m?
+                      </th>
+                      <th className="px-2 py-3 text-center">
+                        Prevented work in last 12m?
+                      </th>
+                      <th className="px-2 py-3 text-center">
+                        Trouble in last 7 days?
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/20">
                     {NMQ_ANATOMICAL_ZONES.map((zone) => {
                       const f12m = `nmq_${zone.id}_12m` as keyof StudiesData
-                      const fPrev = `nmq_${zone.id}_prevent_12m` as keyof StudiesData
+                      const fPrev =
+                        `nmq_${zone.id}_prevent_12m` as keyof StudiesData
                       const f7d = `nmq_${zone.id}_7d` as keyof StudiesData
-                      const hasErr = fieldErrors[f12m] || fieldErrors[fPrev] || fieldErrors[f7d]
+                      const hasErr =
+                        fieldErrors[f12m] ||
+                        fieldErrors[fPrev] ||
+                        fieldErrors[f7d]
 
                       return (
-                        <tr key={zone.id} id={`field-group-${f12m}`} className={cn("hover:bg-muted/20 transition-colors", hasErr && "bg-destructive/10")}>
-                          <td className="py-3 px-2 font-medium text-foreground">{zone.name}</td>
-                          <td className="py-3 px-2 text-center">
+                        <tr
+                          key={zone.id}
+                          id={`field-group-${f12m}`}
+                          className={cn(
+                            "transition-colors hover:bg-muted/20",
+                            hasErr && "bg-destructive/10"
+                          )}
+                        >
+                          <td className="px-2 py-3 font-medium text-foreground">
+                            {zone.name}
+                          </td>
+                          <td className="px-2 py-3 text-center">
                             <RadioGroup
                               value={data[f12m]}
                               onValueChange={(val) => updateField(f12m, val)}
                               disabled={isSubmitting || isLoadingData}
-                              className="inline-flex gap-4 justify-center"
+                              className="inline-flex justify-center gap-4"
                             >
                               <div className="flex items-center space-x-1">
-                                <RadioGroupItem value="true" id={`${f12m}-yes`} />
-                                <Label htmlFor={`${f12m}-yes`} className="cursor-pointer text-xs">Yes</Label>
+                                <RadioGroupItem
+                                  value="true"
+                                  id={`${f12m}-yes`}
+                                />
+                                <Label
+                                  htmlFor={`${f12m}-yes`}
+                                  className="cursor-pointer text-xs"
+                                >
+                                  Yes
+                                </Label>
                               </div>
                               <div className="flex items-center space-x-1">
-                                <RadioGroupItem value="false" id={`${f12m}-no`} />
-                                <Label htmlFor={`${f12m}-no`} className="cursor-pointer text-xs">No</Label>
+                                <RadioGroupItem
+                                  value="false"
+                                  id={`${f12m}-no`}
+                                />
+                                <Label
+                                  htmlFor={`${f12m}-no`}
+                                  className="cursor-pointer text-xs"
+                                >
+                                  No
+                                </Label>
                               </div>
                             </RadioGroup>
                           </td>
-                          <td className="py-3 px-2 text-center">
+                          <td className="px-2 py-3 text-center">
                             <RadioGroup
                               value={data[fPrev]}
                               onValueChange={(val) => updateField(fPrev, val)}
                               disabled={isSubmitting || isLoadingData}
-                              className="inline-flex gap-4 justify-center"
+                              className="inline-flex justify-center gap-4"
                             >
                               <div className="flex items-center space-x-1">
-                                <RadioGroupItem value="true" id={`${fPrev}-yes`} />
-                                <Label htmlFor={`${fPrev}-yes`} className="cursor-pointer text-xs">Yes</Label>
+                                <RadioGroupItem
+                                  value="true"
+                                  id={`${fPrev}-yes`}
+                                />
+                                <Label
+                                  htmlFor={`${fPrev}-yes`}
+                                  className="cursor-pointer text-xs"
+                                >
+                                  Yes
+                                </Label>
                               </div>
                               <div className="flex items-center space-x-1">
-                                <RadioGroupItem value="false" id={`${fPrev}-no`} />
-                                <Label htmlFor={`${fPrev}-no`} className="cursor-pointer text-xs">No</Label>
+                                <RadioGroupItem
+                                  value="false"
+                                  id={`${fPrev}-no`}
+                                />
+                                <Label
+                                  htmlFor={`${fPrev}-no`}
+                                  className="cursor-pointer text-xs"
+                                >
+                                  No
+                                </Label>
                               </div>
                             </RadioGroup>
                           </td>
-                          <td className="py-3 px-2 text-center">
+                          <td className="px-2 py-3 text-center">
                             <RadioGroup
                               value={data[f7d]}
                               onValueChange={(val) => updateField(f7d, val)}
                               disabled={isSubmitting || isLoadingData}
-                              className="inline-flex gap-4 justify-center"
+                              className="inline-flex justify-center gap-4"
                             >
                               <div className="flex items-center space-x-1">
-                                <RadioGroupItem value="true" id={`${f7d}-yes`} />
-                                <Label htmlFor={`${f7d}-yes`} className="cursor-pointer text-xs">Yes</Label>
+                                <RadioGroupItem
+                                  value="true"
+                                  id={`${f7d}-yes`}
+                                />
+                                <Label
+                                  htmlFor={`${f7d}-yes`}
+                                  className="cursor-pointer text-xs"
+                                >
+                                  Yes
+                                </Label>
                               </div>
                               <div className="flex items-center space-x-1">
-                                <RadioGroupItem value="false" id={`${f7d}-no`} />
-                                <Label htmlFor={`${f7d}-no`} className="cursor-pointer text-xs">No</Label>
+                                <RadioGroupItem
+                                  value="false"
+                                  id={`${f7d}-no`}
+                                />
+                                <Label
+                                  htmlFor={`${f7d}-no`}
+                                  className="cursor-pointer text-xs"
+                                >
+                                  No
+                                </Label>
                               </div>
                             </RadioGroup>
                           </td>
@@ -2246,7 +2473,8 @@ export function MemberFormsStudiesPage() {
           <CardHeader>
             <CardTitle className="text-lg">Alcohol Risk Assessment</CardTitle>
             <CardDescription>
-              Standardized 3-question survey evaluating alcohol consumption habits and risk patterns.
+              Standardized 3-question survey evaluating alcohol consumption
+              habits and risk patterns.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveAuditC(e)}>
@@ -2273,11 +2501,18 @@ export function MemberFormsStudiesPage() {
                         key={opt.value}
                         className={cn(
                           "flex items-center space-x-2.5 rounded-lg border border-border/30 bg-background/30 p-3 transition-all hover:bg-background/60",
-                          data[q.field] === opt.value && "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                          data[q.field] === opt.value &&
+                            "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
                         )}
                       >
-                        <RadioGroupItem value={opt.value} id={`${q.field}-${opt.value}`} />
-                        <Label htmlFor={`${q.field}-${opt.value}`} className="cursor-pointer text-sm font-normal">
+                        <RadioGroupItem
+                          value={opt.value}
+                          id={`${q.field}-${opt.value}`}
+                        />
+                        <Label
+                          htmlFor={`${q.field}-${opt.value}`}
+                          className="cursor-pointer text-sm font-normal"
+                        >
                           {opt.label}
                         </Label>
                       </div>
@@ -2307,9 +2542,12 @@ export function MemberFormsStudiesPage() {
       {formType === "pss10" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Perceived Stress & Burnout</CardTitle>
+            <CardTitle className="text-lg">
+              Perceived Stress & Burnout
+            </CardTitle>
             <CardDescription>
-              Read each item and indicate how often you felt or thought that way during the last month.
+              Read each item and indicate how often you felt or thought that way
+              during the last month.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSavePss10(e)}>
@@ -2343,11 +2581,19 @@ export function MemberFormsStudiesPage() {
                         key={opt.value}
                         className={cn(
                           "flex flex-col items-center justify-center rounded-lg border border-border/30 bg-background/30 p-2 text-center transition-all hover:bg-background/60",
-                          data[field] === opt.value && "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                          data[field] === opt.value &&
+                            "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
                         )}
                       >
-                        <RadioGroupItem value={opt.value} id={`${field}-${opt.value}`} className="mb-1" />
-                        <Label htmlFor={`${field}-${opt.value}`} className="cursor-pointer text-xs font-normal">
+                        <RadioGroupItem
+                          value={opt.value}
+                          id={`${field}-${opt.value}`}
+                          className="mb-1"
+                        />
+                        <Label
+                          htmlFor={`${field}-${opt.value}`}
+                          className="cursor-pointer text-xs font-normal"
+                        >
                           {opt.label}
                         </Label>
                       </div>
@@ -2376,4 +2622,3 @@ export function MemberFormsStudiesPage() {
     </div>
   )
 }
-

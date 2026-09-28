@@ -140,7 +140,12 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
                       {getButtonLabel()}
                       <ArrowRight className="ml-2 size-4" />
                     </Button>
-                    <Button size="lg" variant="outline" onClick={handleLogout} disabled={loggingOut}>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={handleLogout}
+                      disabled={loggingOut}
+                    >
                       {loggingOut ? "Logging out..." : "Log out"}
                       {!loggingOut && <LogOut className="ml-2 size-4" />}
                     </Button>

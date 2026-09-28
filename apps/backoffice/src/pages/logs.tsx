@@ -29,8 +29,11 @@ export function LogsPage() {
   return (
     <div
       ref={containerRef}
-      className={`flex flex-col gap-3 ${isFullscreen ? "fixed inset-0 z-50 bg-background p-4" : "h-[calc(100vh-8.5rem)] w-full"
-        }`}
+      className={`flex flex-col gap-3 ${
+        isFullscreen
+          ? "fixed inset-0 z-50 bg-background p-4"
+          : "h-[calc(100vh-8.5rem)] w-full"
+      }`}
     >
       <div className="flex items-center justify-between">
         <div>
@@ -92,7 +95,9 @@ export function LogsPage() {
         {isLoading && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-xs">
             <Skeleton className="h-8 w-48" />
-            <p className="text-xs text-muted-foreground">Connecting to log stream...</p>
+            <p className="text-xs text-muted-foreground">
+              Connecting to log stream...
+            </p>
           </div>
         )}
 

@@ -143,10 +143,12 @@ export function InvitationsPage() {
   }, [searchParams])
 
   // --- Listing Filters and Data State ---
-  const [filterType, setFilterType] = useState<"all" | "sysadmin" | "organization">(
-    initialFilterType
-  )
-  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "used" | "expired">("all")
+  const [filterType, setFilterType] = useState<
+    "all" | "sysadmin" | "organization"
+  >(initialFilterType)
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "active" | "used" | "expired"
+  >("all")
   const [selectedOrg, setSelectedOrg] = useState(
     searchParams.get("organizationId") ?? ""
   )
@@ -192,8 +194,14 @@ export function InvitationsPage() {
 
   // Combined invitations with helper tag for sysadmin status
   const combinedInvites = useMemo<CombinedInvite[]>(() => {
-    const sys: CombinedInvite[] = sysadminInvites.map((item) => ({ ...item, isSysadmin: true }))
-    const org: CombinedInvite[] = orgInvites.map((item) => ({ ...item, isSysadmin: false }))
+    const sys: CombinedInvite[] = sysadminInvites.map((item) => ({
+      ...item,
+      isSysadmin: true,
+    }))
+    const org: CombinedInvite[] = orgInvites.map((item) => ({
+      ...item,
+      isSysadmin: false,
+    }))
     return [...sys, ...org]
   }, [sysadminInvites, orgInvites])
 
@@ -201,11 +209,19 @@ export function InvitationsPage() {
   const metrics = useMemo(() => {
     const total = combinedInvites.length
     const sysadminActive = sysadminInvites.filter((invite) => {
-      const rem = formatRemainingTime(invite.expires_at, invite.uses, invite.max_uses)
+      const rem = formatRemainingTime(
+        invite.expires_at,
+        invite.uses,
+        invite.max_uses
+      )
       return rem.status === "active"
     }).length
     const orgActive = orgInvites.filter((invite) => {
-      const rem = formatRemainingTime(invite.expires_at, invite.uses, invite.max_uses)
+      const rem = formatRemainingTime(
+        invite.expires_at,
+        invite.uses,
+        invite.max_uses
+      )
       return rem.status === "active"
     }).length
 
@@ -399,7 +415,9 @@ export function InvitationsPage() {
       }
 
       toast.success(
-        deletedCount === 1 ? "Invitation deleted" : `${deletedCount} invitations deleted`
+        deletedCount === 1
+          ? "Invitation deleted"
+          : `${deletedCount} invitations deleted`
       )
       setDeleteDialogOpen(false)
       await loadInvites()
@@ -532,12 +550,11 @@ export function InvitationsPage() {
               Invitations
             </h3>
             <p className="text-sm text-muted-foreground">
-              Manage your system and organization invitations, view usage status and time remaining.
+              Manage your system and organization invitations, view usage status
+              and time remaining.
             </p>
           </div>
-          <CreateInvitationButton
-            onClick={() => setIsCreating(true)}
-          />
+          <CreateInvitationButton onClick={() => setIsCreating(true)} />
         </div>
         {selectedCount > 0 && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
@@ -657,12 +674,12 @@ export function InvitationsPage() {
 
             {/* Email Search input */}
             <div className="relative w-[250px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search by email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9"
+                className="h-9 pl-9"
               />
             </div>
 
@@ -688,8 +705,7 @@ export function InvitationsPage() {
                   <Checkbox
                     aria-label="Select page invitations"
                     checked={
-                      allPageSelected ||
-                      (somePageSelected && "indeterminate")
+                      allPageSelected || (somePageSelected && "indeterminate")
                     }
                     onCheckedChange={(checked) =>
                       togglePageSelection(checked === true)
@@ -753,11 +769,19 @@ export function InvitationsPage() {
                 ))
               ) : filteredInvites.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={8}
+                    className="h-32 text-center text-muted-foreground"
+                  >
                     <div className="flex flex-col items-center justify-center py-4">
-                      <Mail className="size-8 text-muted-foreground/60 mb-2" />
-                      <p className="font-medium text-foreground">No invitations found</p>
-                      <p className="text-xs mt-1">No active or expired invitation links match your filters.</p>
+                      <Mail className="mb-2 size-8 text-muted-foreground/60" />
+                      <p className="font-medium text-foreground">
+                        No invitations found
+                      </p>
+                      <p className="mt-1 text-xs">
+                        No active or expired invitation links match your
+                        filters.
+                      </p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -808,16 +832,18 @@ export function InvitationsPage() {
                       </TableCell>
                       <TableCell className="font-medium text-foreground">
                         {invite.isSysadmin ? (
-                          <span className="text-muted-foreground/60 italic">System</span>
+                          <span className="text-muted-foreground/60 italic">
+                            System
+                          </span>
                         ) : invite.organization_id ? (
                           <Link
                             to={`/organizations/${invite.organization_id}`}
-                            className="text-foreground transition-colors hover:text-primary font-medium"
+                            className="font-medium text-foreground transition-colors hover:text-primary"
                           >
                             {invite.organization_name ?? "General Workspace"}
                           </Link>
                         ) : (
-                          invite.organization_name ?? "General Workspace"
+                          (invite.organization_name ?? "General Workspace")
                         )}
                       </TableCell>
                       <TableCell className="font-medium text-muted-foreground">
@@ -825,7 +851,7 @@ export function InvitationsPage() {
                           <span className="text-muted-foreground/60">—</span>
                         ) : (
                           <div className="flex flex-col gap-0.5">
-                            <span className="capitalize text-foreground font-semibold">
+                            <span className="font-semibold text-foreground capitalize">
                               {invite.role ?? "Member"}
                             </span>
                             {invite.department_name && (
@@ -848,13 +874,15 @@ export function InvitationsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-1 opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                        <div className="flex justify-end gap-1 opacity-90 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
                             title="Copy Invitation Link"
-                            onClick={() => handleCopyLink(invite.id, invite.invite_url)}
+                            onClick={() =>
+                              handleCopyLink(invite.id, invite.invite_url)
+                            }
                           >
                             {copiedId === invite.id ? (
                               <Check className="h-4 w-4 text-emerald-500" />

@@ -89,7 +89,9 @@ export function InvitePeoplePage() {
 
   // Filters State
   const [selectedRole, setSelectedRole] = useState("all")
-  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "used" | "expired">("all")
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "active" | "used" | "expired"
+  >("all")
   const [searchQuery, setSearchQuery] = useState("")
 
   // Pagination State
@@ -124,7 +126,11 @@ export function InvitePeoplePage() {
     let expired = 0
 
     invites.forEach((invite) => {
-      const rem = formatRemainingTime(invite.expires_at, invite.uses, invite.max_uses)
+      const rem = formatRemainingTime(
+        invite.expires_at,
+        invite.uses,
+        invite.max_uses
+      )
       if (rem.status === "active") active++
       else if (rem.status === "used") used++
       else if (rem.status === "expired") expired++
@@ -198,7 +204,8 @@ export function InvitePeoplePage() {
     paginatedInviteIds.some((id) => selectedInviteIds.includes(id)) &&
     !allPageSelected
 
-  const hasActiveFilters = selectedRole !== "all" || filterStatus !== "all" || searchQuery !== ""
+  const hasActiveFilters =
+    selectedRole !== "all" || filterStatus !== "all" || searchQuery !== ""
 
   const handleResetFilters = () => {
     setSelectedRole("all")
@@ -405,7 +412,9 @@ export function InvitePeoplePage() {
                   <SelectItem value="all">All Roles</SelectItem>
                   <SelectItem value="superadmin">Superadmin</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="content_manager">Content Manager</SelectItem>
+                  <SelectItem value="content_manager">
+                    Content Manager
+                  </SelectItem>
                   <SelectItem value="member">Member</SelectItem>
                 </SelectContent>
               </Select>
@@ -433,12 +442,12 @@ export function InvitePeoplePage() {
             </div>
 
             <div className="relative w-[250px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search by email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9"
+                className="h-9 pl-9"
               />
             </div>
 
@@ -465,8 +474,7 @@ export function InvitePeoplePage() {
                   <Checkbox
                     aria-label="Select page invitations"
                     checked={
-                      allPageSelected ||
-                      (somePageSelected && "indeterminate")
+                      allPageSelected || (somePageSelected && "indeterminate")
                     }
                     onCheckedChange={(checked) =>
                       togglePageSelection(checked === true)
@@ -518,11 +526,19 @@ export function InvitePeoplePage() {
                 ))
               ) : filteredInvites.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={6}
+                    className="h-32 text-center text-muted-foreground"
+                  >
                     <div className="flex flex-col items-center justify-center py-4">
-                      <Mail className="size-8 text-muted-foreground/60 mb-2" />
-                      <p className="font-medium text-foreground">No invitations found</p>
-                      <p className="text-xs mt-1">No active or expired invitation links match your filters.</p>
+                      <Mail className="mb-2 size-8 text-muted-foreground/60" />
+                      <p className="font-medium text-foreground">
+                        No invitations found
+                      </p>
+                      <p className="mt-1 text-xs">
+                        No active or expired invitation links match your
+                        filters.
+                      </p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -563,7 +579,7 @@ export function InvitePeoplePage() {
                       </TableCell>
                       <TableCell className="font-medium text-muted-foreground">
                         <div className="flex flex-col gap-0.5">
-                          <span className="capitalize text-foreground font-semibold">
+                          <span className="font-semibold text-foreground capitalize">
                             {inv.role ? inv.role.replace(/_/g, " ") : "Member"}
                           </span>
                           {inv.department_name && (
@@ -582,7 +598,7 @@ export function InvitePeoplePage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-1 opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                        <div className="flex justify-end gap-1 opacity-90 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                           <Button
                             variant="ghost"
                             size="icon"

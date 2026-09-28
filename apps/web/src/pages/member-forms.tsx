@@ -2,7 +2,13 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card"
 import { Progress } from "@workspace/ui/components/progress"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
@@ -78,7 +84,8 @@ const ALL_FORMS: FormCardDef[] = [
   {
     type: "nordic_nmq",
     title: "Musculoskeletal Risk",
-    description: "Standardized questionnaire evaluating body regions for discomfort and work impact.",
+    description:
+      "Standardized questionnaire evaluating body regions for discomfort and work impact.",
     icon: Activity,
     editLabel: "Edit Musculoskeletal Assessment",
     completeLabel: "Complete Musculoskeletal Assessment",
@@ -86,7 +93,8 @@ const ALL_FORMS: FormCardDef[] = [
   {
     type: "audit_c",
     title: "Alcohol Risk Assessment",
-    description: "Standardized survey evaluating alcohol consumption frequency and habits.",
+    description:
+      "Standardized survey evaluating alcohol consumption frequency and habits.",
     icon: HeartPulse,
     editLabel: "Edit Alcohol Assessment",
     completeLabel: "Complete Alcohol Assessment",
@@ -94,7 +102,8 @@ const ALL_FORMS: FormCardDef[] = [
   {
     type: "pss10",
     title: "Perceived Stress & Burnout",
-    description: "10-item scale assessing feelings and stress control over the past month.",
+    description:
+      "10-item scale assessing feelings and stress control over the past month.",
     icon: HeartPulse,
     editLabel: "Edit Stress Assessment",
     completeLabel: "Complete Stress Assessment",
@@ -149,7 +158,6 @@ export function MemberFormsPage() {
         }
       }
     }
-
     void loadFormStatuses()
     return () => {
       cancelled = true
@@ -224,7 +232,8 @@ export function MemberFormsPage() {
               <div className="flex justify-between text-xs font-medium text-muted-foreground">
                 <span>Form Completion</span>
                 <span>
-                  {progressPercent}% ({completedCount} of {totalCount} active sections filled)
+                  {progressPercent}% ({completedCount} of {totalCount} active
+                  sections filled)
                 </span>
               </div>
               <Progress value={progressPercent} className="h-2.5" />
@@ -245,10 +254,7 @@ export function MemberFormsPage() {
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <Card
-                key={i}
-                className="flex flex-col justify-between p-5"
-              >
+              <Card key={i} className="flex flex-col justify-between p-5">
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <Skeleton className="size-10 rounded-xl" />
@@ -269,12 +275,15 @@ export function MemberFormsPage() {
         ) : visibleForms.length === 0 ? (
           <Card className="border-dashed border-border/80 bg-muted/10">
             <CardContent className="flex flex-col items-center justify-center p-10 text-center">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground mb-3">
+              <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                 <FileText className="size-6" />
               </div>
-              <h3 className="text-base font-semibold text-foreground">No Health Forms Required</h3>
+              <h3 className="text-base font-semibold text-foreground">
+                No Health Forms Required
+              </h3>
               <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-                There are currently no active health forms assigned to your profile based on your organization's configuration.
+                There are currently no active health forms assigned to your
+                profile based on your organization's configuration.
               </p>
             </CardContent>
           </Card>

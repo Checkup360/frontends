@@ -65,10 +65,10 @@ export function DashboardShell() {
 
   const userData = user
     ? {
-      name: formatFullName(user),
-      email: user.email,
-      avatar: user.avatar_url || "",
-    }
+        name: formatFullName(user),
+        email: user.email,
+        avatar: user.avatar_url || "",
+      }
     : undefined
 
   // Determine title based on current path

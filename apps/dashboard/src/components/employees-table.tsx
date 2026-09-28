@@ -144,7 +144,7 @@ export function EmployeesTable({
   const [employees, setEmployees] = useState<OrganizationEmployee[]>([])
   const [departments, setDepartments] = useState<DepartmentResponse[]>([])
   const [totalItems, setTotalItems] = useState(0)
-  const [loading, setLoading] = useState(true)   // true only on initial mount
+  const [loading, setLoading] = useState(true) // true only on initial mount
   const [isFetching, setIsFetching] = useState(false) // true on filter/page re-fetches
 
   const isCurrentUserSuperadmin = useMemo(() => {
@@ -398,7 +398,9 @@ export function EmployeesTable({
         : employeeTableSkeletonColumns
 
   const totalColSpan =
-    5 + (showRolesColumn ? 1 : 0) + (showRolesColumn && allowRoleManagement ? 1 : 0)
+    5 +
+    (showRolesColumn ? 1 : 0) +
+    (showRolesColumn && allowRoleManagement ? 1 : 0)
 
   return (
     <Card className="animate-in border-border/60 p-6 shadow-[var(--shadow-card)] duration-300 fade-in">
@@ -558,7 +560,11 @@ export function EmployeesTable({
             </TableRow>
           </TableHeader>
           <TableBody
-            className={isFetching ? "pointer-events-none opacity-50 transition-opacity" : "transition-opacity"}
+            className={
+              isFetching
+                ? "pointer-events-none opacity-50 transition-opacity"
+                : "transition-opacity"
+            }
           >
             {loading ? (
               <TableRowsSkeleton columns={renderSkeletonColumns} />
@@ -573,7 +579,8 @@ export function EmployeesTable({
               </TableRow>
             ) : (
               employees.map((w) => {
-                const isTargetSuperadmin = w.roles?.includes("superadmin") ?? false
+                const isTargetSuperadmin =
+                  w.roles?.includes("superadmin") ?? false
                 const isSelf = Boolean(user?.email && w.email === user.email)
 
                 return (
@@ -660,7 +667,8 @@ export function EmployeesTable({
                               Manage Roles
                             </DropdownMenuItem>
                             {isTargetSuperadmin ? (
-                              isCurrentUserSuperadmin && !isSelf && (
+                              isCurrentUserSuperadmin &&
+                              !isSelf && (
                                 <>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
@@ -721,7 +729,8 @@ export function EmployeesTable({
               Update organization roles for{" "}
               <span className="font-semibold text-foreground">
                 {managingEmployee
-                  ? formatEmployeeName(managingEmployee) || managingEmployee.email
+                  ? formatEmployeeName(managingEmployee) ||
+                    managingEmployee.email
                   : ""}
               </span>
             </DialogDescription>
@@ -740,7 +749,9 @@ export function EmployeesTable({
                 onCheckedChange={(checked) => {
                   if (checked) {
                     setSelectedRoles(
-                      Array.from(new Set([...selectedRoles, "superadmin", "admin"]))
+                      Array.from(
+                        new Set([...selectedRoles, "superadmin", "admin"])
+                      )
                     )
                   } else {
                     setSelectedRoles(
@@ -752,14 +763,14 @@ export function EmployeesTable({
               <div className="grid gap-1">
                 <Label
                   htmlFor="role-superadmin"
-                  className="font-semibold cursor-pointer"
+                  className="cursor-pointer font-semibold"
                 >
                   Superadmin
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   Full administrative power and quorum authority.
                   {managingEmployee?.roles?.includes("superadmin") && (
-                    <span className="block mt-0.5 text-amber-600 dark:text-amber-400 font-medium">
+                    <span className="mt-0.5 block font-medium text-amber-600 dark:text-amber-400">
                       * Cannot be unilaterally removed. Requires a Quorum vote.
                     </span>
                   )}
@@ -772,33 +783,35 @@ export function EmployeesTable({
               <Checkbox
                 id="role-admin"
                 checked={selectedRoles.includes("admin")}
-                disabled={!isCurrentUserSuperadmin || selectedRoles.includes("superadmin")}
+                disabled={
+                  !isCurrentUserSuperadmin ||
+                  selectedRoles.includes("superadmin")
+                }
                 onCheckedChange={(checked) => {
                   if (checked) {
                     setSelectedRoles([...selectedRoles, "admin"])
                   } else {
-                    setSelectedRoles(
-                      selectedRoles.filter((r) => r !== "admin")
-                    )
+                    setSelectedRoles(selectedRoles.filter((r) => r !== "admin"))
                   }
                 }}
               />
               <div className="grid gap-1">
                 <Label
                   htmlFor="role-admin"
-                  className="font-semibold cursor-pointer"
+                  className="cursor-pointer font-semibold"
                 >
                   Admin
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Organizational management, employee onboarding and dashboard access.
+                  Organizational management, employee onboarding and dashboard
+                  access.
                   {selectedRoles.includes("superadmin") ? (
-                    <span className="block mt-0.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                    <span className="mt-0.5 block text-xs font-medium text-amber-600 dark:text-amber-400">
                       * Required while Superadmin is active.
                     </span>
                   ) : (
                     !isCurrentUserSuperadmin && (
-                      <span className="block mt-0.5 text-muted-foreground/80 italic">
+                      <span className="mt-0.5 block text-muted-foreground/80 italic">
                         * Only Superadmins can assign/remove Admin roles.
                       </span>
                     )
@@ -826,7 +839,7 @@ export function EmployeesTable({
               <div className="grid gap-1">
                 <Label
                   htmlFor="role-content-manager"
-                  className="font-semibold cursor-pointer"
+                  className="cursor-pointer font-semibold"
                 >
                   Content Manager
                 </Label>
@@ -855,7 +868,7 @@ export function EmployeesTable({
               <div className="grid gap-1">
                 <Label
                   htmlFor="role-member"
-                  className="font-semibold cursor-pointer"
+                  className="cursor-pointer font-semibold"
                 >
                   Member
                 </Label>
@@ -947,62 +960,64 @@ export function EmployeesTable({
       {/* ── Quorum Request Dialog ── */}
       {isCurrentUserSuperadmin && (
         <Dialog open={quorumDialogOpen} onOpenChange={setQuorumDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ShieldAlert className="size-5 text-amber-600 dark:text-amber-400" />
-              Request Superadmin Removal
-            </DialogTitle>
-            <DialogDescription>
-              Initiates a formal multi-party Quorum voting process to remove{" "}
-              <span className="font-semibold text-foreground">
-                {quorumTargetEmployee
-                  ? formatEmployeeName(quorumTargetEmployee) ||
-                    quorumTargetEmployee.email
-                  : ""}
-              </span>{" "}
-              from the Superadmin role. You will automatically cast an approval
-              vote as requester.
-            </DialogDescription>
-          </DialogHeader>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <ShieldAlert className="size-5 text-amber-600 dark:text-amber-400" />
+                Request Superadmin Removal
+              </DialogTitle>
+              <DialogDescription>
+                Initiates a formal multi-party Quorum voting process to remove{" "}
+                <span className="font-semibold text-foreground">
+                  {quorumTargetEmployee
+                    ? formatEmployeeName(quorumTargetEmployee) ||
+                      quorumTargetEmployee.email
+                    : ""}
+                </span>{" "}
+                from the Superadmin role. You will automatically cast an
+                approval vote as requester.
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="space-y-2 py-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="quorum-reason">Reason for removal (optional)</Label>
-              <span className="text-xs text-muted-foreground">
-                {quorumReason.length}/500
-              </span>
+            <div className="space-y-2 py-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="quorum-reason">
+                  Reason for removal (optional)
+                </Label>
+                <span className="text-xs text-muted-foreground">
+                  {quorumReason.length}/500
+                </span>
+              </div>
+              <textarea
+                id="quorum-reason"
+                placeholder="e.g. Employee leaving organization or role transition"
+                value={quorumReason}
+                onChange={(e) => setQuorumReason(e.target.value.slice(0, 500))}
+                disabled={actionLoading}
+                maxLength={500}
+                rows={3}
+                className="w-full min-w-0 resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm break-all shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+              />
             </div>
-            <textarea
-              id="quorum-reason"
-              placeholder="e.g. Employee leaving organization or role transition"
-              value={quorumReason}
-              onChange={(e) => setQuorumReason(e.target.value.slice(0, 500))}
-              disabled={actionLoading}
-              maxLength={500}
-              rows={3}
-              className="w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 resize-none break-all"
-            />
-          </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setQuorumDialogOpen(false)}
-              disabled={actionLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="default"
-              onClick={handleSubmitQuorumRequest}
-              disabled={actionLoading}
-            >
-              {actionLoading ? "Submitting..." : "Submit Quorum Request"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setQuorumDialogOpen(false)}
+                disabled={actionLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={handleSubmitQuorumRequest}
+                disabled={actionLoading}
+              >
+                {actionLoading ? "Submitting..." : "Submit Quorum Request"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </Card>
   )

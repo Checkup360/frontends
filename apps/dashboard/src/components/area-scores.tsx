@@ -20,8 +20,7 @@ const toneFor = (score: number | null) => {
   if (score === null) {
     return {
       label: "Pending",
-      className:
-        "bg-muted/40 text-muted-foreground border-border/60",
+      className: "bg-muted/40 text-muted-foreground border-border/60",
       barClass: "bg-muted",
     }
   }
@@ -46,7 +45,11 @@ const toneFor = (score: number | null) => {
   }
 }
 
-export function AreaScores({ areas, loading = false, limit = 5 }: AreaScoresProps) {
+export function AreaScores({
+  areas,
+  loading = false,
+  limit = 5,
+}: AreaScoresProps) {
   // Sort: evaluated departments with lowest score first, then pending, break ties by most workers
   const sorted = [...areas]
     .sort((a, b) => {
@@ -100,7 +103,9 @@ export function AreaScores({ areas, loading = false, limit = 5 }: AreaScoresProp
               <div key={a.name}>
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-3">
-                    <span className="font-medium text-foreground">{a.name}</span>
+                    <span className="font-medium text-foreground">
+                      {a.name}
+                    </span>
                     <Badge variant="outline" className={tone.className}>
                       {tone.label}
                     </Badge>

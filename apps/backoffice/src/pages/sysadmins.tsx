@@ -15,7 +15,11 @@ import {
   formatFullName,
   getInitials,
 } from "@workspace/components/components/employee-profile-card"
-import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card } from "@workspace/ui/components/card"
@@ -69,7 +73,9 @@ export function SysadminsPage() {
 
   // Filters State
   const [search, setSearch] = useState("")
-  const [selectedStatus, setSelectedStatus] = useState<"all" | "active" | "inactive">("all")
+  const [selectedStatus, setSelectedStatus] = useState<
+    "all" | "active" | "inactive"
+  >("all")
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
@@ -153,7 +159,10 @@ export function SysadminsPage() {
         value: stats.pending_invites,
         hint: "invitation links awaiting registration",
         icon: Mail,
-        tone: stats.pending_invites > 0 ? ("warning" as const) : ("primary" as const),
+        tone:
+          stats.pending_invites > 0
+            ? ("warning" as const)
+            : ("primary" as const),
       },
     ]
   }, [stats])
@@ -188,13 +197,14 @@ export function SysadminsPage() {
               System Administrators
             </h3>
             <p className="text-sm text-muted-foreground">
-              Manage platform superusers with full access to backoffice settings and organization controls.
+              Manage platform superusers with full access to backoffice settings
+              and organization controls.
             </p>
           </div>
           <Button
             size="sm"
             onClick={() => setInviteDialogOpen(true)}
-            className="gap-2 cursor-pointer shadow-xs self-start sm:self-auto"
+            className="cursor-pointer gap-2 self-start shadow-xs sm:self-auto"
           >
             <Plus className="size-4" />
             Invite Sysadmin
@@ -215,7 +225,7 @@ export function SysadminsPage() {
                   setSearch(e.target.value)
                   setCurrentPage(1)
                 }}
-                className="pl-8 bg-background"
+                className="bg-background pl-8"
               />
             </div>
 
@@ -244,7 +254,7 @@ export function SysadminsPage() {
               <Button
                 variant="ghost"
                 onClick={handleResetFilters}
-                className="h-9 gap-2 px-3 text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                className="h-9 cursor-pointer gap-2 px-3 text-muted-foreground transition-colors hover:text-foreground"
               >
                 Reset
                 <X className="size-4" />
@@ -303,11 +313,11 @@ export function SysadminsPage() {
                               {initials}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="flex flex-col min-w-0">
-                            <span className="font-medium text-foreground truncate">
+                          <div className="flex min-w-0 flex-col">
+                            <span className="truncate font-medium text-foreground">
                               {fullName}
                             </span>
-                            <span className="text-xs text-muted-foreground truncate font-mono">
+                            <span className="truncate font-mono text-xs text-muted-foreground">
                               {admin.email}
                             </span>
                           </div>
@@ -319,7 +329,7 @@ export function SysadminsPage() {
                         {admin.is_active ? (
                           <Badge
                             variant="outline"
-                            className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 gap-1"
+                            className="gap-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                           >
                             <UserCheck className="size-3" />
                             Active
@@ -327,7 +337,7 @@ export function SysadminsPage() {
                         ) : (
                           <Badge
                             variant="outline"
-                            className="bg-destructive/10 text-destructive border-destructive/20 gap-1"
+                            className="gap-1 border-destructive/20 bg-destructive/10 text-destructive"
                           >
                             <ShieldAlert className="size-3" />
                             Inactive

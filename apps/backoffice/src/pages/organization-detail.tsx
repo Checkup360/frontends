@@ -35,7 +35,6 @@ import {
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { cn } from "@workspace/ui/lib/utils"
 
-
 function InviteMemberCard({
   organizationId,
   organizationName,
@@ -53,11 +52,11 @@ function InviteMemberCard({
   return (
     <div className={cn("w-full", className)}>
       <Card
-        className="h-full cursor-pointer transition-colors hover:ring-primary/40 flex flex-col justify-center"
+        className="flex h-full cursor-pointer flex-col justify-center transition-colors hover:ring-primary/40"
         onClick={() => navigate(inviteUrl)}
       >
-        <CardContent className="h-full p-6 flex flex-col justify-center">
-          <Empty className="h-full min-h-[260px] border border-dashed flex flex-col justify-center">
+        <CardContent className="flex h-full flex-col justify-center p-6">
+          <Empty className="flex h-full min-h-[260px] flex-col justify-center border border-dashed">
             <EmptyHeader>
               <EmptyMedia>
                 <AvatarGroup>
@@ -279,7 +278,7 @@ export function OrganizationDetailPage() {
         />
       </section>
 
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-stretch">
+      <section className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <ScoreEvolutionChart
             title="User Registrations Evolution"
@@ -303,7 +302,7 @@ export function OrganizationDetailPage() {
           />
         </div>
 
-        <div className="lg:col-span-1 flex">
+        <div className="flex lg:col-span-1">
           <InviteMemberCard
             organizationId={id}
             organizationName={summary.name}

@@ -103,11 +103,11 @@ const OVERALL_SERIES_CONFIG: ChartSeries = {
 const PALETTE = [
   "oklch(0.62 0.20 145)", // Green / Emerald
   "oklch(0.60 0.22 320)", // Purple / Violet
-  "oklch(0.68 0.20 55)",  // Amber / Yellow
+  "oklch(0.68 0.20 55)", // Amber / Yellow
   "oklch(0.62 0.18 195)", // Cyan / Teal
-  "oklch(0.60 0.20 30)",  // Orange
+  "oklch(0.60 0.20 30)", // Orange
   "oklch(0.55 0.18 280)", // Indigo
-  "oklch(0.58 0.20 10)",  // Rose
+  "oklch(0.58 0.20 10)", // Rose
 ]
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -244,8 +244,7 @@ function AssignMemberDialog({
     return employees.find((e) => e.id === selectedEmployeeId) ?? null
   }, [employees, selectedEmployeeId])
 
-  const isAlreadyInThisDept =
-    selectedEmployee?.department?.id === department.id
+  const isAlreadyInThisDept = selectedEmployee?.department?.id === department.id
   const isInAnotherDept =
     selectedEmployee?.department &&
     selectedEmployee.department.id !== department.id
@@ -281,7 +280,7 @@ function AssignMemberDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className="flex flex-col sm:max-w-lg sm:h-[600px] rounded-3xl p-6">
+      <DialogContent className="flex flex-col rounded-3xl p-6 sm:h-[600px] sm:max-w-lg">
         <DialogHeader className="shrink-0 space-y-1">
           <DialogTitle className="flex items-center gap-2 text-lg font-bold">
             <UserPlus className="size-5 text-primary" />
@@ -293,16 +292,16 @@ function AssignMemberDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-1 flex-col gap-3 min-h-0 overflow-hidden py-1">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden py-1">
           {error && (
-            <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive shrink-0">
+            <div className="flex shrink-0 items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive">
               <AlertTriangle className="size-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Search Input */}
-          <div className="space-y-1.5 shrink-0">
+          <div className="shrink-0 space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">
               Search employee
             </Label>
@@ -323,7 +322,7 @@ function AssignMemberDialog({
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
                 >
                   <X className="size-4" />
                 </button>
@@ -332,19 +331,17 @@ function AssignMemberDialog({
           </div>
 
           {/* Results List Container - Fixed flex-1 area */}
-          <div className="flex flex-1 flex-col min-h-0 space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted-foreground px-1 shrink-0">
+          <div className="flex min-h-0 flex-1 flex-col space-y-1">
+            <div className="flex shrink-0 items-center justify-between px-1 text-xs text-muted-foreground">
               <span>
-                {loading
-                  ? "Searching..."
-                  : `Results (${employees.length})`}
+                {loading ? "Searching..." : `Results (${employees.length})`}
               </span>
               {selectedEmployee && (
-                <span className="text-primary font-medium">1 selected</span>
+                <span className="font-medium text-primary">1 selected</span>
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto rounded-2xl border border-border/60 bg-muted/10 p-2 space-y-1.5">
+            <div className="flex-1 space-y-1.5 overflow-y-auto rounded-2xl border border-border/60 bg-muted/10 p-2">
               {loading && employees.length === 0 ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <div
@@ -352,14 +349,14 @@ function AssignMemberDialog({
                     className="flex items-center gap-3 rounded-xl border bg-card p-3"
                   >
                     <Skeleton className="size-9 rounded-full" />
-                    <div className="space-y-1.5 flex-1">
+                    <div className="flex-1 space-y-1.5">
                       <Skeleton className="h-4 w-32" />
                       <Skeleton className="h-3 w-48" />
                     </div>
                   </div>
                 ))
               ) : employees.length === 0 ? (
-                <div className="flex h-full min-h-[140px] items-center justify-center text-center text-xs text-muted-foreground p-4">
+                <div className="flex h-full min-h-[140px] items-center justify-center p-4 text-center text-xs text-muted-foreground">
                   {searchQuery
                     ? "No employees match your search query."
                     : "No employees found."}
@@ -379,41 +376,41 @@ function AssignMemberDialog({
                         setError("")
                       }}
                       className={cn(
-                        "flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer text-left",
+                        "flex cursor-pointer items-center justify-between rounded-xl border p-2.5 text-left transition-all",
                         isSelected
                           ? "border-primary bg-primary/10 ring-1 ring-primary/30"
-                          : "border-border/50 bg-card hover:bg-muted/50 hover:border-border"
+                          : "border-border/50 bg-card hover:border-border hover:bg-muted/50"
                       )}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex min-w-0 items-center gap-2.5">
                         <Avatar className="size-8.5 shrink-0 ring-1 ring-primary/15">
                           <AvatarImage src="" alt={fullName} />
-                          <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                          <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
                             {initials}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-semibold text-foreground truncate">
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate text-xs font-semibold text-foreground">
                             {fullName}
                           </span>
-                          <span className="text-[11px] text-muted-foreground truncate">
+                          <span className="truncate text-[11px] text-muted-foreground">
                             {emp.email}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex shrink-0 items-center gap-2">
                         {isThisDept ? (
                           <Badge
                             variant="outline"
-                            className="text-[10px] text-muted-foreground border-border/80"
+                            className="border-border/80 text-[10px] text-muted-foreground"
                           >
                             Current dept
                           </Badge>
                         ) : emp.department ? (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-medium text-amber-600 dark:text-amber-400 border-amber-500/30 bg-amber-500/10"
+                            className="border-amber-500/30 bg-amber-500/10 text-[10px] font-medium text-amber-600 dark:text-amber-400"
                           >
                             {emp.department.name}
                           </Badge>
@@ -426,7 +423,7 @@ function AssignMemberDialog({
                           </Badge>
                         )}
                         {isSelected && (
-                          <div className="flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shrink-0">
+                          <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
                             <Check className="size-3" />
                           </div>
                         )}
@@ -439,13 +436,13 @@ function AssignMemberDialog({
           </div>
 
           {/* Department Status & Switch Notice (Fixed container height) */}
-          <div className="h-16 shrink-0 flex items-center">
+          <div className="flex h-16 shrink-0 items-center">
             {selectedEmployee ? (
               <div className="w-full rounded-xl border bg-muted/20 p-2.5 text-xs">
                 {isAlreadyInThisDept && (
                   <div className="text-muted-foreground">
-                    <strong>{getDisplayName(selectedEmployee)}</strong> is already in{" "}
-                    <strong>{department.name}</strong>.
+                    <strong>{getDisplayName(selectedEmployee)}</strong> is
+                    already in <strong>{department.name}</strong>.
                   </div>
                 )}
 
@@ -479,7 +476,7 @@ function AssignMemberDialog({
           </div>
         </div>
 
-        <DialogFooter className="shrink-0 pt-2 gap-2 sm:gap-0">
+        <DialogFooter className="shrink-0 gap-2 pt-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
@@ -493,7 +490,7 @@ function AssignMemberDialog({
             type="button"
             onClick={handleAssign}
             disabled={!selectedEmployee || isAlreadyInThisDept || submitting}
-            className="gap-2 cursor-pointer"
+            className="cursor-pointer gap-2"
           >
             {submitting ? (
               <>
@@ -755,7 +752,7 @@ export function DepartmentDetailPage() {
             variant="outline"
             size="sm"
             onClick={() => navigate(`/departments/${department.slug}/edit`)}
-            className="gap-2 cursor-pointer"
+            className="cursor-pointer gap-2"
           >
             <Pencil className="size-3.5" />
             Edit department
@@ -832,7 +829,7 @@ export function DepartmentDetailPage() {
             variant="outline"
             size="sm"
             onClick={() => setIsAddMemberOpen(true)}
-            className="mt-2 self-start gap-1.5 text-xs cursor-pointer sm:mt-0 sm:self-auto"
+            className="mt-2 cursor-pointer gap-1.5 self-start text-xs sm:mt-0 sm:self-auto"
           >
             <UserPlus className="size-3.5" />
             Assign employee
@@ -854,7 +851,7 @@ export function DepartmentDetailPage() {
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                className="absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
               >
                 <X className="size-4" />
               </button>
@@ -887,7 +884,7 @@ export function DepartmentDetailPage() {
                 setSelectedStatus("all")
                 setCurrentPage(1)
               }}
-              className="h-9 text-xs text-muted-foreground cursor-pointer"
+              className="h-9 cursor-pointer text-xs text-muted-foreground"
             >
               Reset
             </Button>
@@ -943,7 +940,8 @@ export function DepartmentDetailPage() {
                       <Badge
                         variant="outline"
                         className={
-                          statusClasses[emp.status.toLowerCase()] ?? "capitalize"
+                          statusClasses[emp.status.toLowerCase()] ??
+                          "capitalize"
                         }
                       >
                         {emp.status}

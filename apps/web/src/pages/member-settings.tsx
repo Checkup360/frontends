@@ -138,7 +138,7 @@ export function MemberSettingsPage() {
               ? `${firstName} ${lastName}`
               : user?.first_name && user?.last_name
                 ? `${user.first_name} ${user.last_name}`
-                : user?.email ?? ""
+                : (user?.email ?? "")
           )}
           onSave={handleSaveAvatar}
           isUpdating={isAvatarUpdating}

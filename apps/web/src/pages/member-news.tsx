@@ -9,7 +9,10 @@ import { useMemberArticles } from "@/hooks/use-member-articles"
 export function MemberNewsPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
-  const { articles, pagination, isLoading } = useMemberArticles({ page, limit: 9 })
+  const { articles, pagination, isLoading } = useMemberArticles({
+    page,
+    limit: 9,
+  })
 
   if (isLoading) {
     return (
@@ -44,7 +47,8 @@ export function MemberNewsPage() {
       {pagination.totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-border pt-4">
           <p className="text-sm text-muted-foreground">
-            Page {pagination.page} of {pagination.totalPages} ({pagination.totalDocs} articles)
+            Page {pagination.page} of {pagination.totalPages} (
+            {pagination.totalDocs} articles)
           </p>
           <div className="flex items-center space-x-2">
             <Button
@@ -53,7 +57,7 @@ export function MemberNewsPage() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={!pagination.hasPrevPage}
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
+              <ChevronLeft className="mr-1 h-4 w-4" />
               Previous
             </Button>
             <Button
@@ -63,7 +67,7 @@ export function MemberNewsPage() {
               disabled={!pagination.hasNextPage}
             >
               Next
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
         </div>

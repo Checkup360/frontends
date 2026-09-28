@@ -38,7 +38,9 @@ export function OrganizationPage() {
 
   // ── Organization Profile Edit Modal State ──
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [orgName, setOrgName] = useState(user?.membership?.organization_name || "")
+  const [orgName, setOrgName] = useState(
+    user?.membership?.organization_name || ""
+  )
   const [orgLogoUrl, setOrgLogoUrl] = useState<string | null>(
     user?.membership?.organization_logo_url || null
   )
@@ -125,7 +127,7 @@ export function OrganizationPage() {
       <Card className="rounded-3xl border-border/70 bg-card/80 p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex size-14 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary overflow-hidden shrink-0">
+            <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/20 bg-primary/10 text-primary">
               {orgLogoUrl ? (
                 <img
                   src={orgLogoUrl}
@@ -154,7 +156,7 @@ export function OrganizationPage() {
               variant="outline"
               onClick={() => setIsEditDialogOpen(true)}
             >
-              <Pencil className="size-4 mr-1.5" />
+              <Pencil className="mr-1.5 size-4" />
               Edit Organization
             </Button>
             <ActionButton

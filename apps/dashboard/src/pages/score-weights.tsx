@@ -66,7 +66,8 @@ const SCORE_TOPICS: ScoreTopic[] = [
     id: "metabolic_syndrome",
     name: "Metabolic Health",
     subtitle: "Cardiometabolic risk",
-    description: "Evaluates metabolic syndrome criteria and cardiometabolic risk.",
+    description:
+      "Evaluates metabolic syndrome criteria and cardiometabolic risk.",
     icon: Activity,
     color: "bg-amber-500",
   },
@@ -74,7 +75,8 @@ const SCORE_TOPICS: ScoreTopic[] = [
     id: "eoss",
     name: "Obesity-related Health Impact",
     subtitle: "Health impact staging",
-    description: "Evaluates the self-reported impact on health, mood, and daily function.",
+    description:
+      "Evaluates the self-reported impact on health, mood, and daily function.",
     icon: HeartPulse,
     color: "bg-violet-500",
   },
@@ -82,7 +84,8 @@ const SCORE_TOPICS: ScoreTopic[] = [
     id: "cardiovascular",
     name: "Cardiovascular Risk",
     subtitle: "Heart health & 10-year CVD risk",
-    description: "Evaluates 10-year fatal and non-fatal cardiovascular risk based on SCORE2 model.",
+    description:
+      "Evaluates 10-year fatal and non-fatal cardiovascular risk based on SCORE2 model.",
     icon: HeartPulse,
     color: "bg-red-500",
   },
@@ -90,7 +93,8 @@ const SCORE_TOPICS: ScoreTopic[] = [
     id: "nordic_nmq",
     name: "Musculoskeletal Risk",
     subtitle: "Ergonomics & physical load",
-    description: "Evaluates trouble and work impairment across 9 anatomical body regions.",
+    description:
+      "Evaluates trouble and work impairment across 9 anatomical body regions.",
     icon: Activity,
     color: "bg-cyan-500",
   },
@@ -98,7 +102,8 @@ const SCORE_TOPICS: ScoreTopic[] = [
     id: "audit_c",
     name: "Alcohol Risk Assessment",
     subtitle: "Occupational safety & consumption",
-    description: "Evaluates alcohol consumption frequency, daily quantity, and binge drinking patterns.",
+    description:
+      "Evaluates alcohol consumption frequency, daily quantity, and binge drinking patterns.",
     icon: HeartPulse,
     color: "bg-orange-500",
   },
@@ -106,12 +111,12 @@ const SCORE_TOPICS: ScoreTopic[] = [
     id: "pss10",
     name: "Perceived Stress & Burnout",
     subtitle: "Psychological resilience & burnout",
-    description: "Evaluates perceived stress levels, control over life events, and coping capacity.",
+    description:
+      "Evaluates perceived stress levels, control over life events, and coping capacity.",
     icon: HeartPulse,
     color: "bg-fuchsia-500",
   },
 ]
-
 
 function computeBalancedWeights(
   topics: ScoreTopic[],
@@ -147,7 +152,9 @@ export function ScoreWeightsPage() {
     computeBalancedWeights(SCORE_TOPICS)
   )
 
-  const [filterMode, setFilterMode] = useState<"all" | "active" | "disabled">("all")
+  const [filterMode, setFilterMode] = useState<"all" | "active" | "disabled">(
+    "all"
+  )
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -166,7 +173,8 @@ export function ScoreWeightsPage() {
             Object.fromEntries(
               SCORE_TOPICS.map((topic) => [
                 topic.id,
-                res.score_weights[topic.id] ?? (hasKeys ? 0 : Math.floor(100 / SCORE_TOPICS.length)),
+                res.score_weights[topic.id] ??
+                  (hasKeys ? 0 : Math.floor(100 / SCORE_TOPICS.length)),
               ])
             )
           )
@@ -196,41 +204,118 @@ export function ScoreWeightsPage() {
 
   const disabledCount = SCORE_TOPICS.length - activeCount
 
-  const isValid = totalWeight > 0
+  const is100Percent = totalWeight === 100 || totalWeight === 0
+  const isValid = true
+
+  const roundWeightsTo100 = (
+    weights: Record<string, number>,
+    fixedId?: string
+  ) => {
+    const result = { ...weights }
+    const activeIds = Object.keys(result).filter(
+      (k) => result[k] > 0 || k === fixedId
+    )
+    if (activeIds.length === 0) return result
+
+    let totalFloor = 0
+    const fractions: { id: string; frac: number }[] = []
+
+    for (const id of Object.keys(result)) {
+      if (result[id] > 0 || id === fixedId) {
+        let floored = Math.floor(result[id])
+        if (id === fixedId) {
+          floored = Math.round(result[id])
+        }
+        totalFloor += floored
+        if (id !== fixedId) {
+          fractions.push({ id, frac: result[id] - Math.floor(result[id]) })
+        }
+        result[id] = floored
+      } else {
+        result[id] = 0
+      }
+    }
+
+    const remainder = 100 - totalFloor
+
+    if (remainder > 0) {
+      fractions.sort((a, b) => b.frac - a.frac)
+      for (let i = 0; i < remainder && i < fractions.length; i++) {
+        result[fractions[i].id] += 1
+      }
+    } else if (remainder < 0) {
+      fractions.sort((a, b) => a.frac - b.frac)
+      const absRem = -remainder
+      for (let i = 0; i < absRem && i < fractions.length; i++) {
+        if (result[fractions[i].id] > 0) {
+          result[fractions[i].id] -= 1
+        }
+      }
+    }
+
+    return result
+  }
 
   const handleSliderChange = (id: string, val: number[]) => {
     const rawVal = val[0] ?? 0
-    const otherSum = SCORE_TOPICS.reduce(
-      (sum, topic) => (topic.id === id ? sum : sum + (weights[topic.id] || 0)),
-      0
-    )
-    const maxAllowed = Math.max(0, 100 - otherSum)
-    const clampedVal = Math.max(0, Math.min(maxAllowed, rawVal))
+    setWeights((prev) => {
+      const otherSum = SCORE_TOPICS.reduce(
+        (sum, topic) => (topic.id === id ? sum : sum + (prev[topic.id] || 0)),
+        0
+      )
+      const maxAllowed = Math.max(0, 100 - otherSum)
+      const clampedVal = Math.max(0, Math.min(maxAllowed, rawVal))
 
-    setWeights((prev) => ({
-      ...prev,
-      [id]: clampedVal,
-    }))
+      return {
+        ...prev,
+        [id]: clampedVal,
+      }
+    })
   }
 
   const handleToggleModule = (id: string, enabled: boolean) => {
-    if (enabled) {
-      const otherSum = SCORE_TOPICS.reduce(
-        (sum, topic) => (topic.id === id ? sum : sum + (weights[topic.id] || 0)),
-        0
-      )
-      const available = Math.max(0, 100 - otherSum)
-      const defaultWeight = available > 0 ? Math.min(available, 10) : 0
-      setWeights((prev) => ({
-        ...prev,
-        [id]: defaultWeight,
-      }))
-    } else {
-      setWeights((prev) => ({
-        ...prev,
-        [id]: 0,
-      }))
-    }
+    setWeights((prev) => {
+      const next = { ...prev }
+      if (enabled) {
+        const activeIds = Object.keys(next).filter((k) => next[k] > 0)
+        const newCount = activeIds.length + 1
+        const fairShare = 100 / newCount
+
+        const delta = fairShare
+        const otherSum = activeIds.reduce((sum, k) => sum + next[k], 0)
+
+        next[id] = fairShare
+
+        if (otherSum > 0) {
+          for (const activeId of activeIds) {
+            const proportion = next[activeId] / otherSum
+            next[activeId] = Math.max(0, next[activeId] - delta * proportion)
+          }
+        }
+        return roundWeightsTo100(next, id)
+      } else {
+        const disabledVal = next[id] || 0
+        next[id] = 0
+
+        const otherActiveIds = Object.keys(next).filter((k) => next[k] > 0)
+        const otherSum = otherActiveIds.reduce((sum, k) => sum + next[k], 0)
+
+        if (otherActiveIds.length > 0) {
+          if (otherSum === 0) {
+            const eqVal = disabledVal / otherActiveIds.length
+            for (const activeId of otherActiveIds) {
+              next[activeId] += eqVal
+            }
+          } else {
+            for (const activeId of otherActiveIds) {
+              const proportion = next[activeId] / otherSum
+              next[activeId] += disabledVal * proportion
+            }
+          }
+        }
+        return roundWeightsTo100(next)
+      }
+    })
   }
 
   const handleApplyBalanced = () => {
@@ -246,13 +331,14 @@ export function ScoreWeightsPage() {
   }
 
   const handleSave = async () => {
-    if (!isValid || !organizationId) return
+    if (totalWeight > 0 && totalWeight !== 100) {
+      toast.error("Total weight must equal exactly 100%")
+      return
+    }
+    if (!organizationId) return
     setSaving(true)
     try {
-      const res = await updateOrganizationScoreWeights(
-        organizationId,
-        weights
-      )
+      const res = await updateOrganizationScoreWeights(organizationId, weights)
       if (res && res.score_weights) {
         setWeights(res.score_weights)
         toast.success("Score weights updated successfully")
@@ -284,11 +370,12 @@ export function ScoreWeightsPage() {
             Score weights
           </h2>
           <p className="text-sm text-muted-foreground">
-            Adjust module enablement and weight percentages for employee evaluations.
+            Adjust module enablement and weight percentages for employee
+            evaluations.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
           <Button
             type="button"
             size="sm"
@@ -311,22 +398,25 @@ export function ScoreWeightsPage() {
                 Total allocated
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground">
-                Combined weight distribution across active modules (must equal 100%)
+                Combined weight distribution across active modules (must equal
+                100%)
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold tabular-nums text-foreground">
+              <span className="text-xl font-bold text-foreground tabular-nums">
                 {totalWeight}%
               </span>
               <Badge
-                variant={isValid ? "outline" : "secondary"}
+                variant={is100Percent ? "outline" : "secondary"}
                 className={
-                  isValid
-                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold text-xs"
-                    : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-xs"
+                  is100Percent
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-xs font-semibold text-emerald-600 dark:text-emerald-400"
+                    : "border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-600 dark:text-amber-400"
                 }
               >
-                {isValid ? `${totalWeight}% Allocated` : "At least 1 active score required"}
+                {totalWeight === 0
+                  ? "All Modules Disabled"
+                  : `${totalWeight}% Allocated`}
               </Badge>
             </div>
           </div>
@@ -365,7 +455,9 @@ export function ScoreWeightsPage() {
                   />
                   <span
                     className={cn(
-                      weight > 0 ? "text-muted-foreground" : "text-muted-foreground/50 line-through"
+                      weight > 0
+                        ? "text-muted-foreground"
+                        : "text-muted-foreground/50 line-through"
                     )}
                   >
                     {topic.name}:
@@ -373,7 +465,9 @@ export function ScoreWeightsPage() {
                   <span
                     className={cn(
                       "font-semibold tabular-nums",
-                      weight > 0 ? "text-foreground" : "text-muted-foreground/50"
+                      weight > 0
+                        ? "text-foreground"
+                        : "text-muted-foreground/50"
                     )}
                   >
                     {weight}%
@@ -407,7 +501,7 @@ export function ScoreWeightsPage() {
               size="sm"
               onClick={handleEnableAll}
               disabled={loading || saving}
-              className="gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 font-medium whitespace-nowrap"
+              className="gap-1.5 border-emerald-500/30 bg-emerald-500/10 font-medium whitespace-nowrap text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
             >
               <Sparkles className="size-3.5 text-emerald-500" />
               Enable all
@@ -421,7 +515,7 @@ export function ScoreWeightsPage() {
             type="button"
             onClick={() => setFilterMode("all")}
             className={cn(
-              "rounded-md px-3 py-1 font-medium transition-colors cursor-pointer",
+              "cursor-pointer rounded-md px-3 py-1 font-medium transition-colors",
               filterMode === "all"
                 ? "bg-background text-foreground shadow-xs"
                 : "text-muted-foreground hover:text-foreground"
@@ -433,7 +527,7 @@ export function ScoreWeightsPage() {
             type="button"
             onClick={() => setFilterMode("active")}
             className={cn(
-              "rounded-md px-3 py-1 font-medium transition-colors cursor-pointer",
+              "cursor-pointer rounded-md px-3 py-1 font-medium transition-colors",
               filterMode === "active"
                 ? "bg-background text-foreground shadow-xs"
                 : "text-muted-foreground hover:text-foreground"
@@ -445,7 +539,7 @@ export function ScoreWeightsPage() {
             type="button"
             onClick={() => setFilterMode("disabled")}
             className={cn(
-              "rounded-md px-3 py-1 font-medium transition-colors cursor-pointer",
+              "cursor-pointer rounded-md px-3 py-1 font-medium transition-colors",
               filterMode === "disabled"
                 ? "bg-background text-foreground shadow-xs"
                 : "text-muted-foreground hover:text-foreground"
@@ -468,10 +562,12 @@ export function ScoreWeightsPage() {
               key={topic.id}
               className={cn(
                 "border-border/60 shadow-xs transition-all",
-                isEnabled ? "hover:border-border bg-card" : "bg-muted/15 border-dashed border-border/40 opacity-90"
+                isEnabled
+                  ? "bg-card hover:border-border"
+                  : "border-dashed border-border/40 bg-muted/15 opacity-90"
               )}
             >
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="space-y-3 p-4">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
                     <div
@@ -489,7 +585,9 @@ export function ScoreWeightsPage() {
                         <h3
                           className={cn(
                             "text-sm font-semibold",
-                            isEnabled ? "text-foreground" : "text-muted-foreground"
+                            isEnabled
+                              ? "text-foreground"
+                              : "text-muted-foreground"
                           )}
                         >
                           {topic.name}
@@ -497,7 +595,7 @@ export function ScoreWeightsPage() {
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[10px] px-1.5 py-0 font-medium",
+                            "px-1.5 py-0 text-[10px] font-medium",
                             isEnabled
                               ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                               : "border-muted-foreground/30 bg-muted/30 text-muted-foreground"
@@ -514,7 +612,7 @@ export function ScoreWeightsPage() {
 
                   <div className="flex items-center gap-3">
                     {isEnabled && (
-                      <span className="text-base font-bold tabular-nums text-foreground">
+                      <span className="text-base font-bold text-foreground tabular-nums">
                         {value}%
                       </span>
                     )}

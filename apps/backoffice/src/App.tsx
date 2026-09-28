@@ -39,7 +39,7 @@ function AccessDenied() {
         You don't have permission to access this area. Only system admins can
         access the backoffice.
       </p>
-      <div className="mt-8 flex flex-col sm:flex-row gap-3">
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Button asChild>
           <a href={mainPageUrl}>Go to main page</a>
         </Button>

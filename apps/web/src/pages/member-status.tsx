@@ -35,7 +35,11 @@ import { Link } from "react-router-dom"
 
 function formatRiskLevelLabel(riskLevel: string | null, score: number): string {
   const lower = (riskLevel || "").toLowerCase()
-  if (lower.includes("very high") || lower.includes("severe") || (!lower && score >= 80)) {
+  if (
+    lower.includes("very high") ||
+    lower.includes("severe") ||
+    (!lower && score >= 80)
+  ) {
     return "Very high risk"
   }
   if (lower.includes("high") || (!lower && score > 50)) {
@@ -44,7 +48,11 @@ function formatRiskLevelLabel(riskLevel: string | null, score: number): string {
   if (lower.includes("moderate") || (!lower && score > 30)) {
     return "Moderate risk"
   }
-  if (lower.includes("elevated") || lower.includes("mild") || (!lower && score > 15)) {
+  if (
+    lower.includes("elevated") ||
+    lower.includes("mild") ||
+    (!lower && score > 15)
+  ) {
     return "Slightly elevated risk"
   }
   return "Low risk"
@@ -61,7 +69,8 @@ function getRiskLevelConfig(riskLevel: string | null, riskScore: number) {
       label,
       color: "text-destructive",
       badgeVariant: "destructive" as const,
-      badgeClass: "bg-destructive/15 text-destructive border-transparent font-medium",
+      badgeClass:
+        "bg-destructive/15 text-destructive border-transparent font-medium",
       ringColor: "stroke-destructive text-destructive",
       barColor: "bg-destructive",
       description: lower.includes("very high")
@@ -76,10 +85,12 @@ function getRiskLevelConfig(riskLevel: string | null, riskScore: number) {
       label,
       color: "text-amber-600 dark:text-amber-400",
       badgeVariant: "outline" as const,
-      badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-medium",
+      badgeClass:
+        "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-medium",
       ringColor: "stroke-amber-500 text-amber-500",
       barColor: "bg-amber-500",
-      description: "Moderate risk detected. Preventive lifestyle habits advised.",
+      description:
+        "Moderate risk detected. Preventive lifestyle habits advised.",
     }
   }
 
@@ -89,10 +100,12 @@ function getRiskLevelConfig(riskLevel: string | null, riskScore: number) {
       label,
       color: "text-yellow-600 dark:text-yellow-400",
       badgeVariant: "outline" as const,
-      badgeClass: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 font-medium",
+      badgeClass:
+        "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 font-medium",
       ringColor: "stroke-yellow-500 text-yellow-500",
       barColor: "bg-yellow-500",
-      description: "Slightly elevated indicators. Minor lifestyle adjustments recommended.",
+      description:
+        "Slightly elevated indicators. Minor lifestyle adjustments recommended.",
     }
   }
 
@@ -101,7 +114,8 @@ function getRiskLevelConfig(riskLevel: string | null, riskScore: number) {
     label,
     color: "text-emerald-600 dark:text-emerald-400",
     badgeVariant: "outline" as const,
-    badgeClass: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-medium",
+    badgeClass:
+      "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-medium",
     ringColor: "stroke-emerald-500 text-emerald-500",
     barColor: "bg-emerald-500",
     description: "Evaluations within optimal and healthy parameters.",
@@ -110,7 +124,10 @@ function getRiskLevelConfig(riskLevel: string | null, riskScore: number) {
 
 /** Returns the normalized score (0-100) delivered by the backend */
 function getNormalizedScore(result: AssessmentResultResponse): number {
-  if (result.normalized_value !== null && result.normalized_value !== undefined) {
+  if (
+    result.normalized_value !== null &&
+    result.normalized_value !== undefined
+  ) {
     return Math.min(100, Math.max(0, Math.round(result.normalized_value)))
   }
   const raw = result.raw_value ?? 0
@@ -120,8 +137,14 @@ function getNormalizedScore(result: AssessmentResultResponse): number {
 /** Maps distinct icon per score category */
 function getScoreIcon(scoreId: string, scoreName?: string) {
   const text = `${scoreId} ${scoreName || ""}`.toLowerCase()
-  if (text.includes("sleep") || text.includes("stop") || text.includes("apnea")) return Moon
-  if (text.includes("diabetes") || text.includes("findrisc") || text.includes("glucose")) return Activity
+  if (text.includes("sleep") || text.includes("stop") || text.includes("apnea"))
+    return Moon
+  if (
+    text.includes("diabetes") ||
+    text.includes("findrisc") ||
+    text.includes("glucose")
+  )
+    return Activity
   return HeartPulse
 }
 
@@ -156,10 +179,7 @@ function RadialScore({
       className="relative flex shrink-0 items-center justify-center"
       style={{ width: size, height: size }}
     >
-      <svg
-        className="size-full -rotate-90"
-        viewBox={`0 0 ${size} ${size}`}
-      >
+      <svg className="size-full -rotate-90" viewBox={`0 0 ${size} ${size}`}>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -186,7 +206,7 @@ function RadialScore({
         <span
           className={cn(
             size < 90 ? "text-lg font-bold" : "text-3xl font-extrabold",
-            "tabular-nums text-foreground leading-none"
+            "leading-none text-foreground tabular-nums"
           )}
         >
           {safeVal}
@@ -194,7 +214,7 @@ function RadialScore({
         {sublabel && (
           <span
             className={cn(
-              size < 90 ? "text-[9px] mt-0.5" : "text-xs mt-1",
+              size < 90 ? "mt-0.5 text-[9px]" : "mt-1 text-xs",
               "font-medium text-muted-foreground"
             )}
           >
@@ -208,15 +228,22 @@ function RadialScore({
 
 export function MemberStatusPage() {
   const { user } = useCurrentUser()
-  const [assessments, setAssessments] = useState<AssessmentsResponse | null>(null)
+  const [assessments, setAssessments] = useState<AssessmentsResponse | null>(
+    null
+  )
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null
+  )
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
-  const [submissions, setSubmissions] = useState<AssessmentSubmissionSummary[]>([])
+  const [submissions, setSubmissions] = useState<AssessmentSubmissionSummary[]>(
+    []
+  )
   const [submissionPage, setSubmissionPage] = useState(1)
   const [submissionHasNext, setSubmissionHasNext] = useState(false)
   const [submissionsLoading, setSubmissionsLoading] = useState(true)
-  const [selectedSubmission, setSelectedSubmission] = useState<AssessmentSubmissionDetail | null>(null)
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<AssessmentSubmissionDetail | null>(null)
   const [submissionDetailLoading, setSubmissionDetailLoading] = useState(false)
 
   useEffect(() => {
@@ -292,7 +319,10 @@ export function MemberStatusPage() {
             Assessment Results
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {memberName} · {activeSession ? `Evaluated on ${activeSession.formattedDate}` : "Health status profile"}
+            {memberName} ·{" "}
+            {activeSession
+              ? `Evaluated on ${activeSession.formattedDate}`
+              : "Health status profile"}
           </p>
         </div>
 
@@ -303,7 +333,7 @@ export function MemberStatusPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedSessionId(sessions[0]?.id || null)}
-                className="h-8 gap-1.5 text-xs border-border/60"
+                className="h-8 gap-1.5 border-border/60 text-xs"
               >
                 <RotateCcw className="size-3.5" />
                 View latest
@@ -314,7 +344,7 @@ export function MemberStatusPage() {
               variant={isViewingLatest ? "outline" : "default"}
               size="sm"
               onClick={() => setIsHistoryOpen(true)}
-              className="h-8 gap-1.5 text-xs border-border/60"
+              className="h-8 gap-1.5 border-border/60 text-xs"
             >
               <History className="size-3.5" />
               Assessment history
@@ -326,18 +356,23 @@ export function MemberStatusPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
           <div className="size-8 animate-spin rounded-full border-3 border-primary border-t-transparent" />
-          <p className="text-xs text-muted-foreground">Loading your health status...</p>
+          <p className="text-xs text-muted-foreground">
+            Loading your health status...
+          </p>
         </div>
       ) : !sessions.length ? (
         /* Empty State */
         <Card className="border-dashed border-border/80 bg-muted/10">
           <CardContent className="flex flex-col items-center justify-center p-10 text-center">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground mb-3">
+            <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <ClipboardList className="size-6" />
             </div>
-            <h3 className="text-base font-semibold text-foreground">No Assessments Yet</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              No Assessments Yet
+            </h3>
             <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-              You haven't completed any clinical or health forms yet. Fill out your health studies to generate your risk evaluations.
+              You haven't completed any clinical or health forms yet. Fill out
+              your health studies to generate your risk evaluations.
             </p>
             <Button asChild size="sm" className="mt-5 gap-2 rounded-full px-5">
               <Link to="/forms">
@@ -363,7 +398,7 @@ export function MemberStatusPage() {
                 <h2 className="text-lg font-bold text-foreground">
                   Individual Scores
                 </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   Risk scores evaluated per domain category
                 </p>
               </div>
@@ -383,7 +418,7 @@ export function MemberStatusPage() {
                 return (
                   <Card
                     key={result.score_id}
-                    className="overflow-hidden rounded-xl border border-border/60 bg-gradient-to-r from-muted/20 via-card to-card p-4 sm:p-5 shadow-xs transition-all hover:border-border/90 hover:shadow-sm"
+                    className="overflow-hidden rounded-xl border border-border/60 bg-gradient-to-r from-muted/20 via-card to-card p-4 shadow-xs transition-all hover:border-border/90 hover:shadow-sm sm:p-5"
                   >
                     <div className="flex items-center justify-between gap-4">
                       {/* Left: Icon, Topic Name, Badge, Description & View details */}
@@ -393,14 +428,20 @@ export function MemberStatusPage() {
                         </div>
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-sm sm:text-base font-semibold text-foreground">
+                            <h3 className="text-sm font-semibold text-foreground sm:text-base">
                               {displayName}
                             </h3>
-                            <Badge variant={config.badgeVariant} className={cn(config.badgeClass, "text-[11px] px-2 py-0 h-5")}>
+                            <Badge
+                              variant={config.badgeVariant}
+                              className={cn(
+                                config.badgeClass,
+                                "h-5 px-2 py-0 text-[11px]"
+                              )}
+                            >
                               {config.label}
                             </Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground leading-relaxed">
+                          <p className="text-xs leading-relaxed text-muted-foreground">
                             {config.description}
                           </p>
                         </div>

@@ -29,7 +29,9 @@ export function RiskTrend({ trends, loading }: RiskTrendProps) {
   return (
     <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
       <div>
-        <h3 className="text-base font-semibold text-foreground">Health score trends</h3>
+        <h3 className="text-base font-semibold text-foreground">
+          Health score trends
+        </h3>
         <p className="text-sm text-muted-foreground">
           Monthly evolution of the aggregated health index (higher is healthier)
         </p>

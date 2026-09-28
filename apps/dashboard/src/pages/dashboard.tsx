@@ -71,7 +71,10 @@ export function DashboardPage() {
       return deptAnalytics.map((dept) => ({
         id: dept.department_id,
         name: dept.name,
-        score: typeof dept.average_score === "number" ? Math.round(dept.average_score) : null,
+        score:
+          typeof dept.average_score === "number"
+            ? Math.round(dept.average_score)
+            : null,
         workers: dept.total_workers,
       }))
     }
@@ -105,9 +108,9 @@ export function DashboardPage() {
           )}%`
         : "—"
 
-  const highRiskCount = areas.filter(
-    (a) => a.score !== null && a.score < 60
-  ).length.toString()
+  const highRiskCount = areas
+    .filter((a) => a.score !== null && a.score < 60)
+    .length.toString()
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">

@@ -122,10 +122,17 @@ export function QuorumRequestsCard({
     return null
   }
 
-  const handleVote = async (requestId: string, decision: "approve" | "reject") => {
+  const handleVote = async (
+    requestId: string,
+    decision: "approve" | "reject"
+  ) => {
     setVotingId(requestId)
     try {
-      const result = await voteSuperadminRemovalRequest(organizationId, requestId, decision)
+      const result = await voteSuperadminRemovalRequest(
+        organizationId,
+        requestId,
+        decision
+      )
       if (result.error) {
         toast.error(result.error.message)
       } else {
@@ -168,13 +175,16 @@ export function QuorumRequestsCard({
 
   // Active request for modal if any
   const modalRequest = selectedRequest
-    ? requests.find((r) => r.id === selectedRequest.id) ?? selectedRequest
+    ? (requests.find((r) => r.id === selectedRequest.id) ?? selectedRequest)
     : null
 
-  const modalIsTarget = Boolean(currentUserId && modalRequest?.target_user_id === currentUserId)
-  const modalUserVote = currentUserId && modalRequest
-    ? modalRequest.votes.find((v) => v.voter_user_id === currentUserId)
-    : undefined
+  const modalIsTarget = Boolean(
+    currentUserId && modalRequest?.target_user_id === currentUserId
+  )
+  const modalUserVote =
+    currentUserId && modalRequest
+      ? modalRequest.votes.find((v) => v.voter_user_id === currentUserId)
+      : undefined
   const canVoteModal = Boolean(
     modalRequest &&
     modalRequest.status === "pending" &&
@@ -195,7 +205,8 @@ export function QuorumRequestsCard({
               Superadmin Removal Quorum
             </h3>
             <p className="text-sm text-muted-foreground">
-              Multi-party authorization requests for Superadmin role revocation. Click a request to view complete vote details.
+              Multi-party authorization requests for Superadmin role revocation.
+              Click a request to view complete vote details.
             </p>
           </div>
         </div>
@@ -224,11 +235,21 @@ export function QuorumRequestsCard({
         <Table>
           <TableHeader className="bg-muted/30">
             <TableRow>
-              <TableHead className="font-semibold text-foreground">Target Superadmin</TableHead>
-              <TableHead className="font-semibold text-foreground">Requester</TableHead>
-              <TableHead className="font-semibold text-foreground">Quorum Progress</TableHead>
-              <TableHead className="font-semibold text-foreground">Status</TableHead>
-              <TableHead className="text-right font-semibold text-foreground">Vote</TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Target Superadmin
+              </TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Requester
+              </TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Quorum Progress
+              </TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Status
+              </TableHead>
+              <TableHead className="text-right font-semibold text-foreground">
+                Vote
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -248,8 +269,12 @@ export function QuorumRequestsCard({
               </TableRow>
             ) : (
               requests.map((req) => {
-                const approveVotes = req.votes.filter((v) => v.decision === "approve").length
-                const isTarget = Boolean(currentUserId && req.target_user_id === currentUserId)
+                const approveVotes = req.votes.filter(
+                  (v) => v.decision === "approve"
+                ).length
+                const isTarget = Boolean(
+                  currentUserId && req.target_user_id === currentUserId
+                )
                 const userVote = currentUserId
                   ? req.votes.find((v) => v.voter_user_id === currentUserId)
                   : undefined
@@ -262,7 +287,7 @@ export function QuorumRequestsCard({
                 return (
                   <TableRow
                     key={req.id}
-                    className="cursor-pointer hover:bg-muted/40 transition-colors"
+                    className="cursor-pointer transition-colors hover:bg-muted/40"
                     onClick={() => setSelectedRequest(req)}
                   >
                     <TableCell className="font-medium text-foreground">
@@ -282,7 +307,8 @@ export function QuorumRequestsCard({
                           {approveVotes} / {req.required_votes} Approvals
                         </span>
                         <span className="text-muted-foreground">
-                          {req.votes.length} total vote{req.votes.length === 1 ? "" : "s"} cast
+                          {req.votes.length} total vote
+                          {req.votes.length === 1 ? "" : "s"} cast
                         </span>
                       </div>
                     </TableCell>
@@ -296,7 +322,7 @@ export function QuorumRequestsCard({
                           <Button
                             size="sm"
                             variant="default"
-                            className="h-8 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                            className="h-8 gap-1 bg-emerald-600 text-white hover:bg-emerald-700"
                             onClick={() => handleVote(req.id, "approve")}
                             disabled={votingId === req.id}
                           >
@@ -316,13 +342,19 @@ export function QuorumRequestsCard({
                         </div>
                       ) : userVote ? (
                         <Badge
-                          variant={userVote.decision === "approve" ? "success-light" : "destructive"}
+                          variant={
+                            userVote.decision === "approve"
+                              ? "success-light"
+                              : "destructive"
+                          }
                           size="xs"
                         >
                           You voted: {userVote.decision}
                         </Badge>
                       ) : isTarget ? (
-                        <span className="text-xs text-muted-foreground italic">Target (No vote)</span>
+                        <span className="text-xs text-muted-foreground italic">
+                          Target (No vote)
+                        </span>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
@@ -359,7 +391,7 @@ export function QuorumRequestsCard({
             if (!open) setSelectedRequest(null)
           }}
         >
-          <DialogContent className="sm:max-w-xl max-w-[calc(100vw-2rem)] overflow-hidden">
+          <DialogContent className="max-w-[calc(100vw-2rem)] overflow-hidden sm:max-w-xl">
             <DialogHeader>
               <div className="flex items-center gap-2">
                 <ShieldAlert className="size-5 text-amber-500" />
@@ -368,39 +400,40 @@ export function QuorumRequestsCard({
                 </DialogTitle>
               </div>
               <DialogDescription>
-                Detailed multi-party authorization vote breakdown and governance records.
+                Detailed multi-party authorization vote breakdown and governance
+                records.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 py-2 overflow-hidden">
+            <div className="space-y-4 overflow-hidden py-2">
               {/* Target & Requester */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="rounded-lg border border-border/60 bg-muted/20 p-3 overflow-hidden">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+              <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                <div className="overflow-hidden rounded-lg border border-border/60 bg-muted/20 p-3">
+                  <span className="mb-1 block text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                     Target Superadmin
                   </span>
-                  <p className="font-semibold text-foreground truncate">
+                  <p className="truncate font-semibold text-foreground">
                     {getEmployeeDisplay(modalRequest.target_user_id)}
                   </p>
                 </div>
-                <div className="rounded-lg border border-border/60 bg-muted/20 p-3 overflow-hidden">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                <div className="overflow-hidden rounded-lg border border-border/60 bg-muted/20 p-3">
+                  <span className="mb-1 block text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                     Requested By
                   </span>
-                  <p className="font-medium text-foreground truncate">
+                  <p className="truncate font-medium text-foreground">
                     {getEmployeeDisplay(modalRequest.requester_user_id)}
                   </p>
                 </div>
               </div>
 
               {/* Description / Reason */}
-              <div className="rounded-lg border border-border/60 bg-muted/15 p-4 space-y-1.5 overflow-hidden">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+              <div className="space-y-1.5 overflow-hidden rounded-lg border border-border/60 bg-muted/15 p-4">
+                <span className="block text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                   Description / Reason
                 </span>
-                <p className="text-sm text-foreground whitespace-pre-wrap break-all [overflow-wrap:anywhere] leading-relaxed max-h-48 overflow-y-auto">
+                <p className="max-h-48 overflow-y-auto text-sm leading-relaxed [overflow-wrap:anywhere] break-all whitespace-pre-wrap text-foreground">
                   {modalRequest.reason || (
-                    <span className="italic text-muted-foreground">
+                    <span className="text-muted-foreground italic">
                       No specific reason provided by requester.
                     </span>
                   )}
@@ -409,40 +442,48 @@ export function QuorumRequestsCard({
 
               {/* Big Centered Vote Statistics */}
               <div>
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block text-center mb-2.5">
+                <span className="mb-2.5 block text-center text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                   Quorum Voting Summary
                 </span>
                 <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="rounded-xl border border-border/60 bg-muted/20 p-4 flex flex-col items-center justify-center">
-                    <span className="text-xs text-muted-foreground font-medium mb-1">
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-border/60 bg-muted/20 p-4">
+                    <span className="mb-1 text-xs font-medium text-muted-foreground">
                       Total Votes
                     </span>
                     <span className="text-3xl font-extrabold text-foreground">
                       {modalRequest.votes.length}
                     </span>
-                    <span className="text-[11px] text-muted-foreground mt-0.5">
+                    <span className="mt-0.5 text-[11px] text-muted-foreground">
                       cast so far
                     </span>
                   </div>
-                  <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4 flex flex-col items-center justify-center">
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mb-1">
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4">
+                    <span className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                       Accepted
                     </span>
                     <span className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">
-                      {modalRequest.votes.filter((v) => v.decision === "approve").length}
+                      {
+                        modalRequest.votes.filter(
+                          (v) => v.decision === "approve"
+                        ).length
+                      }
                     </span>
-                    <span className="text-[11px] text-muted-foreground mt-0.5">
+                    <span className="mt-0.5 text-[11px] text-muted-foreground">
                       of {modalRequest.required_votes} needed
                     </span>
                   </div>
-                  <div className="rounded-xl border border-destructive/25 bg-destructive/10 p-4 flex flex-col items-center justify-center">
-                    <span className="text-xs text-destructive font-medium mb-1">
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-destructive/25 bg-destructive/10 p-4">
+                    <span className="mb-1 text-xs font-medium text-destructive">
                       Rejected
                     </span>
                     <span className="text-3xl font-extrabold text-destructive">
-                      {modalRequest.votes.filter((v) => v.decision === "reject").length}
+                      {
+                        modalRequest.votes.filter(
+                          (v) => v.decision === "reject"
+                        ).length
+                      }
                     </span>
-                    <span className="text-[11px] text-muted-foreground mt-0.5">
+                    <span className="mt-0.5 text-[11px] text-muted-foreground">
                       rejections
                     </span>
                   </div>
@@ -456,13 +497,13 @@ export function QuorumRequestsCard({
               </div>
             </div>
 
-            <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
+            <DialogFooter className="flex-col gap-2 pt-2 sm:flex-row">
               {canVoteModal && (
-                <div className="flex gap-2 w-full sm:w-auto mr-auto">
+                <div className="mr-auto flex w-full gap-2 sm:w-auto">
                   <Button
                     size="sm"
                     variant="default"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1 flex-1 sm:flex-none"
+                    className="flex-1 gap-1 bg-emerald-600 text-white hover:bg-emerald-700 sm:flex-none"
                     onClick={async () => {
                       await handleVote(modalRequest.id, "approve")
                       setSelectedRequest(null)
@@ -475,7 +516,7 @@ export function QuorumRequestsCard({
                   <Button
                     size="sm"
                     variant="destructive"
-                    className="gap-1 flex-1 sm:flex-none"
+                    className="flex-1 gap-1 sm:flex-none"
                     onClick={async () => {
                       await handleVote(modalRequest.id, "reject")
                       setSelectedRequest(null)
