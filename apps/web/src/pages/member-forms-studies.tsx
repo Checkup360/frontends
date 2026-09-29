@@ -25,7 +25,6 @@ import {
   AlertCircle,
   ArrowLeft,
   HeartPulse,
-  Info,
   Moon,
   Ruler,
   User,
@@ -1338,19 +1337,11 @@ export function MemberFormsStudiesPage() {
           <CardHeader>
             <CardTitle className="text-lg">Physical Biometrics</CardTitle>
             <CardDescription>
-              Physical parameters pre-filled from your onboarding baseline.
+              Physical parameters and baseline measurements for health score calculations.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveBiometrics(e)}>
             <CardContent className="space-y-6">
-              <Alert variant="info" className="border-primary/20 bg-primary/5">
-                <Info className="h-4 w-4 text-primary" />
-                <AlertDescription className="text-xs text-muted-foreground">
-                  Height, weight, and biological sex are pre-filled from your
-                  onboarding profile. Updating them here keeps your health
-                  biometrics up to date.
-                </AlertDescription>
-              </Alert>
 
               {/* Biological Sex */}
               <div
