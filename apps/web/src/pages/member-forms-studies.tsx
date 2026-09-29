@@ -1218,7 +1218,7 @@ export function MemberFormsStudiesPage() {
 
     if (res.error) {
       setGlobalError(
-        res.error.message || "Failed to save PSS-10 perceived stress scale."
+        res.error.message || "Failed to save Perceived Stress & Burnout assessment."
       )
     } else {
       toast.success("Perceived Stress & Burnout saved successfully.")

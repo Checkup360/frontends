@@ -1,90 +1,4 @@
 import type { AssessmentResultResponse, AssessmentsResponse } from "@workspace/api"
-
-export function getLatestResultsPerScore(results: AssessmentResultResponse[]): AssessmentResultResponse[] {
-  if (!results || results.length === 0) return []
-
-  const latestMap = new Map<string, AssessmentResultResponse>()
-  const sorted = [...results].sort((a, b) => {
-    const timeA = a.evaluated_at ? new Date(a.evaluated_at).getTime() : 0
-    const timeB = b.evaluated_at ? new Date(b.evaluated_at).getTime() : 0
-    return timeB - timeA
-  })
-
-  for (const item of sorted) {
-    const key = item.score_name.toLowerCase()
-    if (!latestMap.has(key)) {
-      latestMap.set(key, item)
-    }
-  }
-
-  return Array.from(latestMap.values())
-}
-
-export function groupResultsIntoSessions(
-  input: AssessmentsResponse | AssessmentResultResponse[] | null | undefined
-): AssessmentSession[] {
-  if (!input) return []
-
-  // If input is an AssessmentsResponse object containing backend-calculated sessions, use them directly
-  if (!Array.isArray(input) && input.sessions && input.sessions.length > 0) {
-    return input.sessions.map((s, index) => ({
-      id: s.id,
-      evaluatedAt: s.evaluated_at ? new Date(s.evaluated_at) : null,
-      formattedDate: formatSessionDate(s.evaluated_at),
-      isLatest: index === 0,
-      overallScore: s.overall_score,
-      overallRiskLevel: s.overall_risk_level,
-      results: s.results,
-    }))
-  }
-
-  // Fallback for legacy raw array
-  const results = Array.isArray(input) ? input : input.results || []
-  if (results.length === 0) return []
-
-  const sessionGroups: {
-    [key: string]: {
-      timestamp: number
-      dateStr: string
-      resultsMap: Map<string, AssessmentResultResponse>
-    }
-  } = {}
-
-  for (const item of results) {
-    const rawTime = item.evaluated_at ? new Date(item.evaluated_at).getTime() : 0
-    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 2000) * 2000 : 0
-    const key = `session_${bucketTime}`
-
-    if (!sessionGroups[key]) {
-      sessionGroups[key] = {
-        timestamp: rawTime,
-        dateStr: item.evaluated_at || "",
-        resultsMap: new Map(),
-      }
-    }
-
-    const scoreKey = item.score_name.toLowerCase()
-    if (!sessionGroups[key].resultsMap.has(scoreKey)) {
-      sessionGroups[key].resultsMap.set(scoreKey, item)
-    }
-  }
-
-  const sortedGroups = Object.values(sessionGroups).sort((a, b) => b.timestamp - a.timestamp)
-
-  const sessions: AssessmentSession[] = sortedGroups.map((group, index) => ({
-    id: `session_${group.timestamp}_${index}`,
-    evaluatedAt: group.timestamp > 0 ? new Date(group.timestamp) : null,
-    formattedDate: formatSessionDate(group.dateStr),
-    isLatest: index === 0,
-    results: Array.from(group.resultsMap.values()),
-  }))
-
-  if (sessions.length > 0) {
-    sessions[0].results = getLatestResultsPerScore(results)
-  }
-
-  return sessions
-}
 import { Badge } from "@workspace/ui/components/badge"
 import {
   Dialog,
@@ -140,9 +54,9 @@ export function getAssessmentDisplayName(
   if (text.includes("phq") || text.includes("depression") || text.includes("mood")) {
     return "Mood & Well-being"
   }
-  if (text.includes("findrisc") || text.includes("diabetes")) return "Diabetes"
+  if (text.includes("findrisc") || text.includes("diabetes")) return "Type 2 Diabetes Risk"
   if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
-    return "Sleep Apnea"
+    return "Sleep Quality"
   }
   if (
     text.includes("metabolic_syndrome") ||
@@ -164,8 +78,101 @@ export function getAssessmentDisplayName(
   if (text.includes("pss") || text.includes("stress")) {
     return "Perceived Stress & Burnout"
   }
-  return safeName || safeId || "Clinical Assessment"
+  return "Health Risk Evaluation"
 }
+
+export function getLatestResultsPerScore(results: AssessmentResultResponse[]): AssessmentResultResponse[] {
+  if (!results || results.length === 0) return []
+
+  const latestMap = new Map<string, AssessmentResultResponse>()
+  const sorted = [...results].sort((a, b) => {
+    const timeA = a.evaluated_at ? new Date(a.evaluated_at).getTime() : 0
+    const timeB = b.evaluated_at ? new Date(b.evaluated_at).getTime() : 0
+    return timeB - timeA
+  })
+
+  for (const item of sorted) {
+    const displayName = getAssessmentDisplayName(item.score_id, item.score_name)
+    const key = displayName.toLowerCase()
+    if (!latestMap.has(key)) {
+      latestMap.set(key, item)
+    }
+  }
+
+  return Array.from(latestMap.values())
+}
+
+export function groupResultsIntoSessions(
+  input: AssessmentsResponse | AssessmentResultResponse[] | null | undefined
+): AssessmentSession[] {
+  if (!input) return []
+
+  // If input is an AssessmentsResponse object containing backend-calculated sessions, use them directly
+  if (!Array.isArray(input) && input.sessions && input.sessions.length > 0) {
+    return input.sessions.map((s, index) => {
+      // Deduplicate results inside session by friendly category name
+      const uniqueResults = getLatestResultsPerScore(s.results || [])
+      return {
+        id: s.id,
+        evaluatedAt: s.evaluated_at ? new Date(s.evaluated_at) : null,
+        formattedDate: formatSessionDate(s.evaluated_at),
+        isLatest: index === 0,
+        overallScore: s.overall_score,
+        overallRiskLevel: s.overall_risk_level,
+        results: uniqueResults,
+      }
+    })
+  }
+
+  // Fallback for legacy raw array
+  const results = Array.isArray(input) ? input : input.results || []
+  if (results.length === 0) return []
+
+  const sessionGroups: {
+    [key: string]: {
+      timestamp: number
+      dateStr: string
+      resultsMap: Map<string, AssessmentResultResponse>
+    }
+  } = {}
+
+  for (const item of results) {
+    const rawTime = item.evaluated_at ? new Date(item.evaluated_at).getTime() : 0
+    const bucketTime = rawTime > 0 ? Math.floor(rawTime / 2000) * 2000 : 0
+    const key = `session_${bucketTime}`
+
+    if (!sessionGroups[key]) {
+      sessionGroups[key] = {
+        timestamp: rawTime,
+        dateStr: item.evaluated_at || "",
+        resultsMap: new Map(),
+      }
+    }
+
+    const displayName = getAssessmentDisplayName(item.score_id, item.score_name)
+    const scoreKey = displayName.toLowerCase()
+    if (!sessionGroups[key].resultsMap.has(scoreKey)) {
+      sessionGroups[key].resultsMap.set(scoreKey, item)
+    }
+  }
+
+  const sortedGroups = Object.values(sessionGroups).sort((a, b) => b.timestamp - a.timestamp)
+
+  const sessions: AssessmentSession[] = sortedGroups.map((group, index) => ({
+    id: `session_${group.timestamp}_${index}`,
+    evaluatedAt: group.timestamp > 0 ? new Date(group.timestamp) : null,
+    formattedDate: formatSessionDate(group.dateStr),
+    isLatest: index === 0,
+    results: Array.from(group.resultsMap.values()),
+  }))
+
+  if (sessions.length > 0) {
+    sessions[0].results = getLatestResultsPerScore(results)
+  }
+
+  return sessions
+}
+
 
 export function computeOverallHealthScore(
   results: AssessmentResultResponse[],

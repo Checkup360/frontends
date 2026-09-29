@@ -346,12 +346,12 @@ export function MemberSettingsPage() {
                       "FORM:biometrics": "Physical Biometrics Consent",
                       "FORM:sleep": "Sleep Quality Consent",
                       "FORM:habits": "Lifestyle & Habits Consent",
-                      "FORM:mood": "Mood & Well-being (PHQ-9) Consent",
+                      "FORM:mood": "Mood & Well-being Consent",
                       "FORM:metabolic": "Metabolic Health Consent",
-                      "FORM:eoss": "Obesity Health Impact (EOSS) Consent",
-                      "FORM:nordic_nmq": "Musculoskeletal Risk (NMQ) Consent",
+                      "FORM:eoss": "Obesity-related Health Impact Consent",
+                      "FORM:nordic_nmq": "Musculoskeletal Risk Consent",
                       "FORM:audit_c": "Alcohol Risk Assessment Consent",
-                      "FORM:pss10": "Perceived Stress (PSS-10) Consent",
+                      "FORM:pss10": "Perceived Stress & Burnout Consent",
                     }
 
                     const displayName =
