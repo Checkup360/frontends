@@ -35,9 +35,20 @@ import { toast } from "@workspace/ui/components/sonner"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   fetchActiveMemberForms,
+  fetchCurrentConsents,
   fetchMemberForm,
   submitMemberForm,
+  type ActiveConsentsResponse,
+  type UserConsent,
 } from "@workspace/api"
+import {
+  ConsentGateModal,
+  FormConsentHeroCard,
+} from "../components/legal/consent-gate-modal"
+import {
+  MedicalNonDiagnosticDisclaimer,
+  Phq9CrisisSupportAlert,
+} from "../components/legal/medical-disclaimer"
 
 type FormType =
   | "biometrics"
@@ -479,10 +490,43 @@ export function MemberFormsStudiesPage() {
   const [activeFormsMap, setActiveFormsMap] = useState<
     Record<string, Set<string>>
   >({})
+  const [activeConsents, setActiveConsents] = useState<UserConsent[]>([])
+  const [consentGateOpen, setConsentGateOpen] = useState(false)
+  const [gatedFormType, setGatedFormType] = useState<string>("biometrics")
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [globalError, setGlobalError] = useState<string | null>(null)
+
+  const extractConsentsList = (res: ActiveConsentsResponse | null): UserConsent[] => {
+    if (!res) return []
+    const list: UserConsent[] = []
+    if (res.terms_and_conditions) list.push(res.terms_and_conditions)
+    if (res.privacy_policy) list.push(res.privacy_policy)
+    if (res.health_data_processing) list.push(res.health_data_processing)
+    if (res.form_consents) {
+      Object.values(res.form_consents).forEach((c) => {
+        if (c) list.push(c)
+      })
+    }
+    return list
+  }
+
+  const hasHealthConsent = activeConsents.some(
+    (c) => c.consent_type === "HEALTH_DATA_PROCESSING_CONSENT" && !c.revoked_at
+  )
+  const hasFormConsent = (fType: string) =>
+    activeConsents.some(
+      (c) =>
+        c.consent_type === "FORM_CONSENT" &&
+        c.form_type === fType &&
+        !c.revoked_at
+    )
+
+  const reloadConsents = async () => {
+    const res = await fetchCurrentConsents()
+    setActiveConsents(extractConsentsList(res))
+  }
 
   const isFieldActive = (form: FormType, field: string): boolean => {
     if (activeFormsMap[form]) {
@@ -497,6 +541,7 @@ export function MemberFormsStudiesPage() {
       setIsLoadingData(true)
       const [
         activeFormsRes,
+        consentsRes,
         biometricsForm,
         sleepForm,
         habitsForm,
@@ -508,6 +553,7 @@ export function MemberFormsStudiesPage() {
         pssForm,
       ] = await Promise.all([
         fetchActiveMemberForms(),
+        fetchCurrentConsents(),
         fetchMemberForm("biometrics"),
         fetchMemberForm("sleep"),
         fetchMemberForm("habits"),
@@ -520,6 +566,7 @@ export function MemberFormsStudiesPage() {
       ])
 
       if (!cancelled) {
+        setActiveConsents(extractConsentsList(consentsRes))
         if (activeFormsRes?.active_forms) {
           const map: Record<string, Set<string>> = {}
           for (const formDef of activeFormsRes.active_forms) {
@@ -1273,7 +1320,19 @@ export function MemberFormsStudiesPage() {
         </Alert>
       )}
 
-      {/* FORM 1: BIOMETRICS */}
+      {(!hasFormConsent(formType) || !hasHealthConsent) && !isLoadingData ? (
+        <FormConsentHeroCard
+          formType={formType}
+          onOpenConsentModal={() => {
+            setGatedFormType(formType)
+            setConsentGateOpen(true)
+          }}
+        />
+      ) : null}
+
+      {hasFormConsent(formType) && hasHealthConsent && (
+        <>
+          {/* FORM 1: BIOMETRICS */}
       {formType === "biometrics" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
@@ -2038,6 +2097,10 @@ export function MemberFormsStudiesPage() {
                   )}
                 </div>
               ))}
+
+              {data.self_harm_thoughts && data.self_harm_thoughts !== "0" ? (
+                <Phq9CrisisSupportAlert className="mt-4" />
+              ) : null}
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
               <Button variant="ghost" asChild>
@@ -2619,6 +2682,20 @@ export function MemberFormsStudiesPage() {
           </form>
         </Card>
       )}
+        </>
+      )}
+
+      <MedicalNonDiagnosticDisclaimer className="mt-8" />
+
+      <ConsentGateModal
+        open={consentGateOpen}
+        formType={gatedFormType}
+        hasHealthConsent={hasHealthConsent}
+        onOpenChange={setConsentGateOpen}
+        onConsentAccepted={() => {
+          void reloadConsents()
+        }}
+      />
     </div>
   )
 }

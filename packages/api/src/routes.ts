@@ -61,6 +61,11 @@ export const apiRoutes = {
 
 
 
+  consents: {
+    current: "/consents/current",
+    accept: "/consents",
+    revoke: (id: string) => `/consents/${encodeURIComponent(id)}/revoke`,
+  },
   members: {
     myDetails: "/members/me/details",
     myProfile: "/members/me/profile",

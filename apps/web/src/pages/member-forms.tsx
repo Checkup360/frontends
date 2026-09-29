@@ -22,6 +22,7 @@ import {
   Sparkles,
 } from "lucide-react"
 import { fetchActiveMemberForms } from "@workspace/api"
+import { MedicalNonDiagnosticDisclaimer } from "../components/legal/medical-disclaimer"
 
 interface FormCardDef {
   type: string
@@ -342,6 +343,8 @@ export function MemberFormsPage() {
           </div>
         )}
       </section>
+
+      <MedicalNonDiagnosticDisclaimer className="mt-8" />
     </div>
   )
 }

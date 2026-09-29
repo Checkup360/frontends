@@ -22,6 +22,9 @@ import {
   type SysadminUser,
   type SysadminStats,
   type MemberRiskPriorities,
+  type UserConsent,
+  type AcceptConsentPayload,
+  type ActiveConsentsResponse,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -553,6 +556,86 @@ export async function submitMemberForm(
     }
   }
 }
+
+export async function fetchCurrentConsents(): Promise<ActiveConsentsResponse | null> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.consents.current}`,
+      { credentials: "include" }
+    )
+    if (!response.ok) return null
+    return (await response.json()) as ActiveConsentsResponse
+  } catch (error) {
+    console.error("Error fetching current consents:", error)
+    return null
+  }
+}
+
+export interface ConsentError {
+  code: string
+  message: string
+}
+
+export async function acceptConsent(
+  payload: AcceptConsentPayload
+): Promise<
+  | { success: UserConsent; error?: never }
+  | { success?: never; error: ConsentError }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.consents.accept}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }
+    )
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { detail?: string }
+      return {
+        error: {
+          code: data.detail || "consent_failed",
+          message: data.detail || "Failed to record consent.",
+        },
+      }
+    }
+    return { success: (await response.json()) as UserConsent }
+  } catch (error) {
+    console.error("Error recording consent:", error)
+    return {
+      error: {
+        code: "network_error",
+        message: "Network error recording consent. Please try again.",
+      },
+    }
+  }
+}
+
+export async function revokeConsent(
+  consentId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.consents.revoke(consentId)}`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    )
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { detail?: string }
+      return { success: false, error: data.detail || "Failed to revoke consent." }
+    }
+    return { success: true }
+  } catch (error) {
+    console.error(`Error revoking consent '${consentId}':`, error)
+    return { success: false, error: "Network error while revoking consent." }
+  }
+}
+
+
 
 
 export async function logout(): Promise<void> {

@@ -1,7 +1,8 @@
-import { logout, resolveWebUrl, submitMemberDetails } from "@workspace/api"
+import { acceptConsent, logout, resolveWebUrl, submitMemberDetails } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import {
@@ -19,6 +20,7 @@ import {
   BadgeCheck,
   CalendarDays,
   Check,
+  FileText,
   HeartPulse,
   LogOut,
   Moon,
@@ -34,6 +36,8 @@ import { useMemo, useState } from "react"
 import { Navigate } from "react-router-dom"
 import { usePwaInstall } from "../components/pwa/pwa-install-context"
 import { PwaInstallDrawer } from "../components/pwa/pwa-install-drawer"
+import { LegalDocumentModal } from "../components/legal/legal-document-modal"
+import { MedicalNonDiagnosticDisclaimer } from "../components/legal/medical-disclaimer"
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
@@ -110,6 +114,12 @@ const steps: WizardStep[] = [
     name: "Biometrics",
     description: "Height and weight",
     icon: HeartPulse,
+  },
+  {
+    id: 3,
+    name: "Consent & Privacy",
+    description: "Legal agreements",
+    icon: ShieldCheck,
   },
 ]
 
@@ -225,6 +235,10 @@ export function MemberOnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [installDrawerOpen, setInstallDrawerOpen] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false)
+  const [acceptHealthData, setAcceptHealthData] = useState(false)
+  const [viewingLegalDoc, setViewingLegalDoc] = useState<string | null>(null)
   const maxDate = useMemo(() => todayIsoDate(), [])
   const memberOrganization = user?.membership?.roles?.includes("member")
     ? user.membership
@@ -287,6 +301,12 @@ export function MemberOnboardingPage() {
         return "height"
     }
 
+    if (currentStep === 3) {
+      if (!acceptTerms) return "acceptTerms"
+      if (!acceptPrivacy) return "acceptPrivacy"
+      if (!acceptHealthData) return "acceptHealthData"
+    }
+
     return null
   }
 
@@ -328,6 +348,26 @@ export function MemberOnboardingPage() {
     setIsSubmitting(true)
 
     try {
+      // 1. Record legal consents
+      await acceptConsent({
+        consent_type: "TERMS_AND_CONDITIONS",
+        document_version: "1",
+      })
+      await acceptConsent({
+        consent_type: "PRIVACY_POLICY",
+        document_version: "1",
+      })
+      await acceptConsent({
+        consent_type: "HEALTH_DATA_PROCESSING_CONSENT",
+        document_version: "1",
+      })
+      await acceptConsent({
+        consent_type: "FORM_CONSENT",
+        form_type: "biometrics",
+        document_version: "1",
+      })
+
+      // 2. Submit member details (which creates profile and biometrics)
       const result = await submitMemberDetails({
         date_of_birth: data.dateOfBirth,
         first_name: data.firstName.trim(),
@@ -590,7 +630,7 @@ export function MemberOnboardingPage() {
                           {fieldError(error, "gender")}
                         </div>
                       </div>
-                    ) : (
+                    ) : currentStep === 2 ? (
                       <div className="space-y-6">
                         <div className="grid gap-6 md:grid-cols-2">
                           <div className="space-y-2">
@@ -650,6 +690,131 @@ export function MemberOnboardingPage() {
                           </div>
                         </div>
                       </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="rounded-2xl border border-border/40 bg-background/30 p-5 space-y-4">
+                          <div className="flex items-center gap-2 text-primary font-semibold text-sm">
+                            <ShieldCheck className="size-4" />
+                            <span>Informed Consent & Privacy Acknowledgements</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            Under Argentine Law 25.326 and international occupational health guidelines, your explicit consent is required before processing personal and health-related data.
+                          </p>
+
+                          {/* Terms & Conditions Checkbox */}
+                          <div className="rounded-xl border border-border/40 bg-background/50 p-4 space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3">
+                                <Checkbox
+                                  id="accept-terms"
+                                  checked={acceptTerms}
+                                  onCheckedChange={(val) => {
+                                    setAcceptTerms(Boolean(val))
+                                    if (error === "acceptTerms") setError(null)
+                                  }}
+                                  disabled={isSubmitting}
+                                  className="mt-0.5"
+                                />
+                                <Label
+                                  htmlFor="accept-terms"
+                                  className="text-xs font-normal leading-relaxed text-foreground cursor-pointer"
+                                >
+                                  I have read and agree to the <strong>Terms and Conditions</strong> (v1.0) governing my use of the Checkup360 platform.
+                                </Label>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setViewingLegalDoc("TERMS_AND_CONDITIONS")}
+                                className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-primary shrink-0"
+                              >
+                                <FileText className="size-3" />
+                                <span>Read</span>
+                              </Button>
+                            </div>
+                            {error === "acceptTerms" ? (
+                              <p className="text-xs text-destructive">You must agree to the Terms and Conditions to proceed.</p>
+                            ) : null}
+                          </div>
+
+                          {/* Privacy Policy Checkbox */}
+                          <div className="rounded-xl border border-border/40 bg-background/50 p-4 space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3">
+                                <Checkbox
+                                  id="accept-privacy"
+                                  checked={acceptPrivacy}
+                                  onCheckedChange={(val) => {
+                                    setAcceptPrivacy(Boolean(val))
+                                    if (error === "acceptPrivacy") setError(null)
+                                  }}
+                                  disabled={isSubmitting}
+                                  className="mt-0.5"
+                                />
+                                <Label
+                                  htmlFor="accept-privacy"
+                                  className="text-xs font-normal leading-relaxed text-foreground cursor-pointer"
+                                >
+                                  I acknowledge the <strong>Privacy Policy</strong> (v1.0) and understand my Habeas Data rights under Law 25.326.
+                                </Label>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setViewingLegalDoc("PRIVACY_POLICY")}
+                                className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-primary shrink-0"
+                              >
+                                <FileText className="size-3" />
+                                <span>Read</span>
+                              </Button>
+                            </div>
+                            {error === "acceptPrivacy" ? (
+                              <p className="text-xs text-destructive">You must acknowledge the Privacy Policy to proceed.</p>
+                            ) : null}
+                          </div>
+
+                          {/* Health Data Processing Consent Checkbox */}
+                          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3">
+                                <Checkbox
+                                  id="accept-health"
+                                  checked={acceptHealthData}
+                                  onCheckedChange={(val) => {
+                                    setAcceptHealthData(Boolean(val))
+                                    if (error === "acceptHealthData") setError(null)
+                                  }}
+                                  disabled={isSubmitting}
+                                  className="mt-0.5"
+                                />
+                                <Label
+                                  htmlFor="accept-health"
+                                  className="text-xs font-normal leading-relaxed text-foreground cursor-pointer"
+                                >
+                                  I give explicit informed consent for the <strong>Processing of Health & Biometric Data</strong> (v1.0) for individual risk scoring and aggregate, anonymized occupational health insights.
+                                </Label>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setViewingLegalDoc("HEALTH_DATA_PROCESSING_CONSENT")}
+                                className="h-7 gap-1 px-2 text-xs text-primary hover:text-primary/80 shrink-0"
+                              >
+                                <FileText className="size-3" />
+                                <span>Read</span>
+                              </Button>
+                            </div>
+                            {error === "acceptHealthData" ? (
+                              <p className="text-xs text-destructive">Health data processing consent is required for occupational wellness features.</p>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <MedicalNonDiagnosticDisclaimer />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -692,6 +857,13 @@ export function MemberOnboardingPage() {
           </div>
         </div>
       </div>
+      <LegalDocumentModal
+        open={viewingLegalDoc !== null}
+        documentKey={viewingLegalDoc}
+        onOpenChange={(open) => {
+          if (!open) setViewingLegalDoc(null)
+        }}
+      />
       <PwaInstallDrawer
         open={installDrawerOpen}
         onOpenChange={setInstallDrawerOpen}

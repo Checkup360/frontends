@@ -11,16 +11,37 @@ import {
   CardDescription,
 } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
+import { Badge } from "@workspace/ui/components/badge"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog"
 import { toast } from "@workspace/ui/components/sonner"
 import {
   fetchMemberProfile,
   updateMemberProfile,
   uploadMemberAvatar,
   deleteMemberAvatar,
+  fetchCurrentConsents,
+  revokeConsent,
+  type UserConsent,
 } from "@workspace/api"
 import { useEffect, useState } from "react"
+import {
+  FileText,
+  ShieldAlert,
+  ShieldCheck,
+} from "lucide-react"
+import { LegalDocumentModal } from "../components/legal/legal-document-modal"
+import { MedicalNonDiagnosticDisclaimer } from "../components/legal/medical-disclaimer"
 
 export function MemberSettingsPage() {
   const { user, isLoading, refresh } = useCurrentUser()
@@ -34,11 +55,38 @@ export function MemberSettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isAvatarUpdating, setIsAvatarUpdating] = useState(false)
 
+  const [consents, setConsents] = useState<UserConsent[]>([])
+  const [consentsLoading, setConsentsLoading] = useState(true)
+  const [selectedConsentToRevoke, setSelectedConsentToRevoke] = useState<UserConsent | null>(null)
+  const [isRevoking, setIsRevoking] = useState(false)
+  const [viewingDocKey, setViewingDocKey] = useState<string | null>(null)
+
+  const loadConsents = async () => {
+    setConsentsLoading(true)
+    const res = await fetchCurrentConsents()
+    if (res) {
+      const list: UserConsent[] = []
+      if (res.terms_and_conditions) list.push(res.terms_and_conditions)
+      if (res.privacy_policy) list.push(res.privacy_policy)
+      if (res.health_data_processing) list.push(res.health_data_processing)
+      if (res.form_consents) {
+        Object.values(res.form_consents).forEach((c) => {
+          if (c) list.push(c)
+        })
+      }
+      setConsents(list)
+    }
+    setConsentsLoading(false)
+  }
+
   useEffect(() => {
     let cancelled = false
     async function loadProfile() {
       setProfileLoading(true)
-      const profile = await fetchMemberProfile()
+      const [profile] = await Promise.all([
+        fetchMemberProfile(),
+        loadConsents(),
+      ])
 
       if (!cancelled && profile) {
         setFirstName(profile.first_name)
@@ -224,6 +272,196 @@ export function MemberSettingsPage() {
               </form>
             </CardContent>
           </Card>
+
+          {/* Privacy & Legal Consents Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <ShieldCheck className="size-5 text-primary" />
+                    Privacy & Legal Consents
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Manage your legal agreements, informed consents, and privacy preferences.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {consentsLoading ? (
+                <div className="animate-pulse space-y-3">
+                  <div className="h-14 rounded-lg bg-muted" />
+                  <div className="h-14 rounded-lg bg-muted" />
+                  <div className="h-14 rounded-lg bg-muted" />
+                </div>
+              ) : consents.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border/80 p-6 text-center text-xs text-muted-foreground">
+                  No active consent records found.
+                </div>
+              ) : (
+                <div className="divide-y divide-border/40 rounded-xl border border-border/40 bg-background/30">
+                  {consents.map((consent) => {
+                    const isRevoked = Boolean(consent.revoked_at)
+                    const docKey =
+                      consent.consent_type === "FORM_CONSENT" && consent.form_type
+                        ? `FORM:${consent.form_type}`
+                        : consent.consent_type
+
+                    const titles: Record<string, string> = {
+                      TERMS_AND_CONDITIONS: "Terms and Conditions",
+                      PRIVACY_POLICY: "Privacy Policy",
+                      HEALTH_DATA_PROCESSING_CONSENT: "Health Data Processing Consent",
+                      "FORM:biometrics": "Physical Biometrics Consent",
+                      "FORM:sleep": "Sleep Quality Consent",
+                      "FORM:habits": "Lifestyle & Habits Consent",
+                      "FORM:mood": "Mood & Well-being (PHQ-9) Consent",
+                      "FORM:metabolic": "Metabolic Health Consent",
+                      "FORM:eoss": "Obesity Health Impact (EOSS) Consent",
+                      "FORM:nordic_nmq": "Musculoskeletal Risk (NMQ) Consent",
+                      "FORM:audit_c": "Alcohol Risk Assessment Consent",
+                      "FORM:pss10": "Perceived Stress (PSS-10) Consent",
+                    }
+
+                    const displayName =
+                      titles[docKey] ||
+                      (consent.form_type
+                        ? `${consent.form_type.toUpperCase()} Form Consent`
+                        : consent.consent_type)
+
+                    return (
+                      <div
+                        key={consent.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/10"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-foreground">
+                              {displayName}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className={
+                                !isRevoked
+                                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px]"
+                                  : "border-muted-foreground/30 bg-muted/20 text-muted-foreground text-[10px]"
+                              }
+                            >
+                              {!isRevoked ? "Active" : "Revoked"}
+                            </Badge>
+                            <span className="text-[11px] text-muted-foreground">
+                              v{consent.document_version}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Accepted on {new Date(consent.accepted_at).toLocaleDateString()}
+                            {consent.revoked_at
+                              ? ` • Revoked on ${new Date(consent.revoked_at).toLocaleDateString()}`
+                              : ""}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setViewingDocKey(docKey)}
+                            className="h-8 gap-1 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            <FileText className="size-3.5" />
+                            <span>View</span>
+                          </Button>
+
+                          {!isRevoked && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedConsentToRevoke(consent)}
+                              className="h-8 px-2.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              Revoke
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              <MedicalNonDiagnosticDisclaimer className="mt-4" />
+            </CardContent>
+          </Card>
+
+          {/* Revoke Confirmation Dialog */}
+          <AlertDialog
+            open={selectedConsentToRevoke !== null}
+            onOpenChange={(open) => {
+              if (!open) setSelectedConsentToRevoke(null)
+            }}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <div className="flex items-center gap-2 text-destructive">
+                  <ShieldAlert className="size-5" />
+                  <AlertDialogTitle>Revoke Informed Consent?</AlertDialogTitle>
+                </div>
+                <AlertDialogDescription className="text-xs sm:text-sm leading-relaxed space-y-2 pt-2">
+                  <p>
+                    Are you sure you want to revoke your consent for{" "}
+                    <strong>
+                      {selectedConsentToRevoke?.form_type
+                        ? `${selectedConsentToRevoke.form_type} health data`
+                        : selectedConsentToRevoke?.consent_type}
+                    </strong>
+                    ?
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    Revoking this consent will prevent Checkup360 from evaluating new submissions or generating risk scores for this assessment. Previously submitted historical entries will remain archived for compliance.
+                  </p>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isRevoking}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={async (e) => {
+                    e.preventDefault()
+                    if (!selectedConsentToRevoke) return
+                    setIsRevoking(true)
+                    try {
+                      const res = await revokeConsent(selectedConsentToRevoke.id)
+                      if (!res.success) {
+                        toast.error(res.error || "Failed to revoke consent.")
+                      } else {
+                        toast.success("Consent successfully revoked.")
+                        await loadConsents()
+                      }
+                    } catch {
+                      toast.error("Failed to revoke consent.")
+                    } finally {
+                      setIsRevoking(false)
+                      setSelectedConsentToRevoke(null)
+                    }
+                  }}
+                  disabled={isRevoking}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isRevoking ? "Revoking..." : "Confirm Revocation"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* Legal Document Viewer Modal */}
+          <LegalDocumentModal
+            open={viewingDocKey !== null}
+            documentKey={viewingDocKey}
+            onOpenChange={(open) => {
+              if (!open) setViewingDocKey(null)
+            }}
+          />
         </div>
       }
     />

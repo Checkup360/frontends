@@ -306,4 +306,37 @@ export type MemberRiskPriorities = {
   highest_risk: string | null
 }
 
+export type ConsentType =
+  | "TERMS_AND_CONDITIONS"
+  | "PRIVACY_POLICY"
+  | "HEALTH_DATA_PROCESSING_CONSENT"
+  | "FORM_CONSENT"
+
+export interface UserConsent {
+  id: string
+  user_id: string
+  consent_type: ConsentType
+  form_type: string | null
+  document_version: string
+  accepted_at: string
+  revoked_at: string | null
+  document_id?: string | null
+  document_hash?: string | null
+}
+
+export interface AcceptConsentPayload {
+  consent_type: ConsentType
+  form_type?: string
+  document_version?: string
+  ip_address?: string
+  user_agent?: string
+}
+
+export interface ActiveConsentsResponse {
+  terms_and_conditions: UserConsent | null
+  privacy_policy: UserConsent | null
+  health_data_processing: UserConsent | null
+  form_consents: Record<string, UserConsent>
+}
+
 
