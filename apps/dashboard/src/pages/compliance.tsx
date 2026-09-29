@@ -167,9 +167,6 @@ export function CompliancePage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Compliance & Legal Audit
             </h1>
-            <Badge variant="outline" className="h-6 border-primary/30 text-primary text-[11px]">
-              Ley 25.326 Habeas Data
-            </Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Immutable log of user consents, data processing authorizations, and access events.
@@ -250,7 +247,7 @@ export function CompliancePage() {
         <Card className="border border-border/70 bg-gradient-to-br from-card to-muted/20 shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Habeas Data Exports
+              Data Exports
             </CardTitle>
             <div className="flex size-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Download className="size-4" />
@@ -261,7 +258,7 @@ export function CompliancePage() {
               {summary ? summary.data_exported_count : "-"}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Member portability downloads
+              Member data downloads
             </p>
           </CardContent>
         </Card>
@@ -390,7 +387,7 @@ export function CompliancePage() {
                           )}
                           {version && <span className="ml-1 text-muted-foreground/80">v{version}</span>}
                           {!formType && !consentType && log.action === "DATA_EXPORTED" && (
-                            <span>Habeas Data personal portfolio exported</span>
+                            <span>Personal data portfolio exported</span>
                           )}
                         </TableCell>
                         <TableCell className="py-3 text-xs text-muted-foreground">

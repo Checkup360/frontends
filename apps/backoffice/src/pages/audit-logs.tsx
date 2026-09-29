@@ -159,7 +159,7 @@ export function AuditLogsPage() {
             </Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Platform-wide immutable trace of consent agreements, Habeas Data exports, and administrative events.
+            Platform-wide immutable trace of consent agreements, data exports, and administrative events.
           </p>
         </div>
 
