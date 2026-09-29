@@ -7,6 +7,7 @@ import {
 } from "@workspace/components/components/workspace-shell"
 import {
   Building2,
+  History,
   MailPlus,
   Settings,
   ShieldCheck,
@@ -27,6 +28,12 @@ const navigation: WorkspaceShellNavItem[] = [
     url: "/invitations",
     icon: MailPlus,
     to: "/invitations",
+  },
+  {
+    title: "Audit Trail",
+    url: "/audit-logs",
+    icon: History,
+    to: "/audit-logs",
   },
   {
     title: "System Logs",
@@ -74,6 +81,8 @@ export function BackofficeShell() {
         return "Sysadmins"
       case "/invitations":
         return "Invitations"
+      case "/audit-logs":
+        return "Audit Trail"
       case "/logs":
         return "System Logs"
       case "/settings":

@@ -16,6 +16,7 @@ import { EmployeeDetailPage } from "@/pages/employee-detail"
 import { InvitePeoplePage } from "@/pages/invite-people"
 import { OrganizationPage } from "@/pages/organization"
 import { ScoreWeightsPage } from "@/pages/score-weights"
+import { CompliancePage } from "@/pages/compliance"
 import { SettingsPage } from "@/pages/settings"
 import { ThemeProvider } from "./components/theme-provider"
 
@@ -101,6 +102,7 @@ export function App() {
               />
               <Route path="/organization" element={<OrganizationPage />} />
               <Route path="/score-weights" element={<ScoreWeightsPage />} />
+              <Route path="/compliance" element={<CompliancePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>

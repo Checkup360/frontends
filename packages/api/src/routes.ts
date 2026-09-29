@@ -11,6 +11,7 @@ export const apiRoutes = {
   admin: {
     sysadmins: "/admin/sysadmins",
     sysadminStats: "/admin/sysadmins/stats",
+    auditLogs: "/admin/audit-logs",
   },
   invites: {
     admin: "/admin/invites",
@@ -58,6 +59,10 @@ export const apiRoutes = {
     `/organizations/${encodeURIComponent(organizationId)}/analytics/departments`,
   organizationRegistrationTrends: (organizationId: string) =>
     `/organizations/${encodeURIComponent(organizationId)}/registration-trends`,
+  organizationAuditLogs: (organizationId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/audit-logs`,
+  organizationComplianceSummary: (organizationId: string) =>
+    `/organizations/${encodeURIComponent(organizationId)}/compliance-summary`,
 
 
 

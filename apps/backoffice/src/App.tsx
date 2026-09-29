@@ -9,6 +9,7 @@ import { BackofficeLoadingSkeleton } from "@/components/backoffice-loading-skele
 import { BackofficeShell } from "@/components/backoffice-shell"
 import { InvitationsPage } from "@/pages/invitations"
 import { LogsPage } from "@/pages/logs"
+import { AuditLogsPage } from "@/pages/audit-logs"
 import { OrganizationDetailPage } from "@/pages/organization-detail"
 import { OrganizationsPage } from "@/pages/organizations"
 import { SettingsPage } from "@/pages/settings"
@@ -86,6 +87,7 @@ export function App() {
               />
               <Route path="/sysadmins" element={<SysadminsPage />} />
               <Route path="/invitations" element={<InvitationsPage />} />
+              <Route path="/audit-logs" element={<AuditLogsPage />} />
               <Route path="/logs" element={<LogsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFound />} />

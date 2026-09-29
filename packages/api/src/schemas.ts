@@ -383,6 +383,37 @@ export interface MemberDataExport {
   compliance_notice: string
 }
 
+export interface AuditLogItem {
+  id: string
+  user_id: string | null
+  user_email: string | null
+  user_name: string | null
+  organization_id: string | null
+  action: string
+  resource_type: string
+  resource_id: string | null
+  details: Record<string, unknown>
+  created_at: string
+}
+
+export interface AuditLogListResponse {
+  items: AuditLogItem[]
+  total: number
+  page: number
+  page_size: number
+  has_next: boolean
+}
+
+export interface ConsentComplianceSummary {
+  total_audit_events: number
+  consent_accepted_count: number
+  consent_revoked_count: number
+  data_exported_count: number
+  audited_members_count: number
+  actions_breakdown: Record<string, number>
+}
+
+
 
 
 

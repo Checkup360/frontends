@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   MailPlus,
   Settings,
+  ShieldCheck,
   SlidersHorizontal,
   Users,
 } from "lucide-react"
@@ -42,6 +43,12 @@ const navigation: WorkspaceShellNavItem[] = [
     url: "/score-weights",
     icon: SlidersHorizontal,
     to: "/score-weights",
+  },
+  {
+    title: "Compliance & Audit",
+    url: "/compliance",
+    icon: ShieldCheck,
+    to: "/compliance",
   },
 ]
 
@@ -86,6 +93,8 @@ export function DashboardShell() {
         return "Departments"
       case "/score-weights":
         return "Score weights"
+      case "/compliance":
+        return "Compliance & Legal Audit"
       case "/settings":
         return "Settings"
       default:
