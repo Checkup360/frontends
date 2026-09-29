@@ -32,10 +32,12 @@ import {
   deleteMemberAvatar,
   fetchCurrentConsents,
   revokeConsent,
+  exportMemberData,
   type UserConsent,
 } from "@workspace/api"
 import { useEffect, useState } from "react"
 import {
+  Download,
   FileText,
   ShieldAlert,
   ShieldCheck,
@@ -59,7 +61,36 @@ export function MemberSettingsPage() {
   const [consentsLoading, setConsentsLoading] = useState(true)
   const [selectedConsentToRevoke, setSelectedConsentToRevoke] = useState<UserConsent | null>(null)
   const [isRevoking, setIsRevoking] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [viewingDocKey, setViewingDocKey] = useState<string | null>(null)
+
+  const handleExportData = async () => {
+    setIsExporting(true)
+    try {
+      const res = await exportMemberData()
+      if (!res.success) {
+        toast.error(res.error.message || "Failed to export data.")
+        return
+      }
+
+      const jsonString = JSON.stringify(res.data, null, 2)
+      const blob = new Blob([jsonString], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `checkup360-my-data-${new Date().toISOString().slice(0, 10)}.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast.success("Your personal data export has been downloaded successfully.")
+    } catch {
+      toast.error("An error occurred while generating your data export.")
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   const loadConsents = async () => {
     setConsentsLoading(true)
@@ -392,6 +423,44 @@ export function MemberSettingsPage() {
               )}
 
               <MedicalNonDiagnosticDisclaimer className="mt-4" />
+            </CardContent>
+          </Card>
+
+          {/* Data Portability / Habeas Data Export Card */}
+          <Card className="border-border/60 bg-card/60 backdrop-blur-sm">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Download className="size-5 text-primary" />
+                <CardTitle className="text-base font-semibold">
+                  Data Portability & Export
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs text-muted-foreground">
+                Download a complete, machine-readable JSON copy of all your personal profile information, recorded health measurements, completed assessment forms, risk evaluations, and informed consent audit history.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border/40 bg-background/30">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    Personal & Health Data Archive
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Format: JSON • Includes full timestamped audit logs
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportData}
+                  disabled={isExporting}
+                  className="gap-2 shrink-0 border-primary/30 hover:border-primary hover:bg-primary/5"
+                >
+                  <Download className="size-4 text-primary" />
+                  <span>{isExporting ? "Generating Export..." : "Export My Data"}</span>
+                </Button>
+              </div>
             </CardContent>
           </Card>
 

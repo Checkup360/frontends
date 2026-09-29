@@ -16,6 +16,7 @@ import { useState } from "react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
 import { PwaInstallDrawer } from "../pwa/pwa-install-drawer"
 import { PwaInstallMenuItem } from "../pwa/pwa-install-menu-item"
+import { GlobalLegalTermsGate } from "../legal/global-legal-terms-gate"
 
 const navigation: WorkspaceShellNavItem[] = [
   { title: "Overview", url: "/", icon: LayoutDashboard, to: "/", end: true },
@@ -73,6 +74,7 @@ export function MemberShell() {
 
   return (
     <>
+      <GlobalLegalTermsGate />
       <WorkspaceShell
         appName={organizationName ?? "CheckUp360"}
         appLogoUrl={organizationLogoUrl}

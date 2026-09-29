@@ -74,5 +74,6 @@ export const apiRoutes = {
     myActiveForms: "/members/me/forms/active",
     myForm: (formType: string) =>
       `/members/me/forms/${encodeURIComponent(formType)}`,
+    export: "/members/me/export",
   },
 } as const

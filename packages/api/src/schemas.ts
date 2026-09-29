@@ -339,4 +339,39 @@ export interface ActiveConsentsResponse {
   form_consents: Record<string, UserConsent>
 }
 
+export interface MemberDataExport {
+  user_id: string
+  email: string
+  first_name: string | null
+  last_name: string | null
+  phone_number: string | null
+  date_of_birth: string | null
+  avatar_url: string | null
+  organization_id: string | null
+  organization_name: string | null
+  roles: string[]
+  consents: UserConsent[]
+  health_data: Record<string, unknown> | null
+  assessment_submissions: Array<{
+    id: string
+    form_type: string
+    form_version: string
+    status: string
+    submitted_at: string | null
+    consent_id: string | null
+    answers: Record<string, unknown>
+  }>
+  risk_scores: Array<{
+    id: string
+    score_name: string
+    score_value: number | null
+    risk_category: string | null
+    attention_flags: Record<string, boolean>
+    evaluated_at: string | null
+  }>
+  exported_at: string
+  compliance_notice: string
+}
+
+
 

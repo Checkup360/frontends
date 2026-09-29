@@ -31,7 +31,6 @@ import { MemberStatusPage } from "./pages/member-status"
 import { MemberSettingsPage } from "./pages/member-settings"
 import { MemberOnboardingPage } from "./pages/member-onboarding"
 import { ThemeProvider } from "./components/shared/theme-provider"
-import { GlobalLegalTermsGate } from "./components/legal/global-legal-terms-gate"
 
 function isMemberOnlyUser(
   user: ReturnType<typeof useCurrentUser>["user"]
@@ -178,7 +177,6 @@ export function App() {
               <Route
                 element={
                   <RequireMemberRole>
-                    <GlobalLegalTermsGate />
                     <MemberShell />
                   </RequireMemberRole>
                 }

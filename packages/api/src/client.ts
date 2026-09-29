@@ -25,6 +25,7 @@ import {
   type UserConsent,
   type AcceptConsentPayload,
   type ActiveConsentsResponse,
+  type MemberDataExport,
 } from "./schemas"
 import { apiRoutes } from "./routes"
 
@@ -2545,6 +2546,52 @@ export async function getOrganizationRegistrationTrends(
   } catch (error) {
     console.error("Error fetching organization registration trends:", error)
     return []
+  }
+}
+
+export async function exportMemberData(): Promise<
+  | { success: true; data: MemberDataExport }
+  | { success: false; error: { code: string; message: string } }
+> {
+  try {
+    const response = await fetchWithAuth(
+      `${resolveApiBaseUrl()}${apiRoutes.members.export}`,
+      {
+        credentials: "include",
+      }
+    )
+
+    if (response.status === 401) {
+      return {
+        success: false,
+        error: {
+          code: "unauthorized",
+          message: "Session expired. Please log in again.",
+        },
+      }
+    }
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: {
+          code: "export_failed",
+          message: "Failed to export member data.",
+        },
+      }
+    }
+
+    const data = (await response.json()) as MemberDataExport
+    return { success: true, data }
+  } catch (error) {
+    console.error("Error exporting member data:", error)
+    return {
+      success: false,
+      error: {
+        code: "network_error",
+        message: "Failed to export data due to a network error.",
+      },
+    }
   }
 }
 
