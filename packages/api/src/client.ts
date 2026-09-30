@@ -241,13 +241,28 @@ export async function submitMemberDetails(payload: {
     }
 
     if (!response.ok) {
+      const errorData = await response.json().catch(() => null)
+      const detailStr = typeof errorData === "string" ? errorData : JSON.stringify(errorData ?? {})
+      let message = "Enter a valid birth date that is not in the future."
+      let code = "invalid_date_of_birth"
+
+      if (response.status === 403) {
+        message = "This onboarding is only available for members."
+        code = "forbidden"
+      } else if (detailStr.includes("minimum_age_required_18") || detailStr.includes("18")) {
+        message = "You must be at least 18 years old to complete onboarding."
+        code = "underage"
+      } else if (detailStr.includes("date_of_birth_in_future")) {
+        message = "Enter a valid birth date that is not in the future."
+        code = "date_of_birth_in_future"
+      } else if (errorData && typeof errorData.detail === "string") {
+        message = errorData.detail
+      }
+
       return {
         error: {
-          code: "invalid_date_of_birth",
-          message:
-            response.status === 403
-              ? "This onboarding is only available for members."
-              : "Enter a valid birth date that is not in the future.",
+          code,
+          message,
         },
       }
     }
