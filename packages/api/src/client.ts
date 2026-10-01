@@ -853,7 +853,7 @@ export interface OrganizationEmployee {
   avatar_url?: string | null
   roles: OrganizationEmployeeRole[]
   department: DepartmentResponse | null
-  status: string
+  status?: string | null
   last_assessment?: string | null
   overall_score?: number | null
 }

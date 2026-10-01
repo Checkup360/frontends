@@ -1,7 +1,6 @@
 import {
   listOrganizationEmployeesPage,
   listDepartments,
-  updateEmployeeRoles,
   removeEmployee,
   createSuperadminRemovalRequest,
   type OrganizationEmployee,
@@ -13,7 +12,6 @@ import { Card } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { Input } from "@workspace/ui/components/input"
 import { Button } from "@workspace/ui/components/button"
-import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Label } from "@workspace/ui/components/label"
 import {
   Dialog,
@@ -72,42 +70,8 @@ const employeeTableSkeletonColumns = [
   { skeletonClassName: "h-4 w-24" },
 ]
 
-function getRoleBadgeProps(role: string): {
-  variant: "info-light" | "warning-light" | "outline" | "secondary"
-  className?: string
-} {
-  switch (role) {
-    case "superadmin":
-      return {
-        variant: "secondary",
-        className:
-          "bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30 font-semibold",
-      }
-    case "admin":
-      return { variant: "info-light" }
-    case "content_manager":
-      return { variant: "warning-light" }
-    case "member":
-      return { variant: "outline" }
-    default:
-      return { variant: "secondary" }
-  }
-}
-
-function formatRoleName(role: string) {
-  switch (role) {
-    case "superadmin":
-      return "Superadmin"
-    case "admin":
-      return "Admin"
-    case "content_manager":
-      return "Content Manager"
-    case "member":
-      return "Member"
-    default:
-      return role
-  }
-}
+import { ManageRolesDialog } from "./manage-roles-dialog"
+import { getRoleBadgeProps, formatRoleName } from "@/lib/role-utils"
 
 function formatLastAssessment(value?: string | null): string {
   if (!value) return "Not assessed"
@@ -175,9 +139,6 @@ export function EmployeesTable({
   // Action Modals State
   const [managingEmployee, setManagingEmployee] =
     useState<OrganizationEmployee | null>(null)
-  const [selectedRoles, setSelectedRoles] = useState<
-    OrganizationEmployeeRole[]
-  >([])
   const [manageRolesOpen, setManageRolesOpen] = useState(false)
 
   const [deactivatingEmployee, setDeactivatingEmployee] =
@@ -294,7 +255,6 @@ export function EmployeesTable({
 
   const handleOpenManageRoles = (emp: OrganizationEmployee) => {
     setManagingEmployee(emp)
-    setSelectedRoles([...(emp.roles || [])] as OrganizationEmployeeRole[])
     setManageRolesOpen(true)
   }
 
@@ -311,31 +271,6 @@ export function EmployeesTable({
     setQuorumTargetEmployee(emp)
     setQuorumReason("")
     setQuorumDialogOpen(true)
-  }
-
-  const handleSaveRoles = async () => {
-    if (!organizationId || !managingEmployee) return
-    setActionLoading(true)
-    try {
-      const res = await updateEmployeeRoles(
-        organizationId,
-        managingEmployee.id,
-        selectedRoles
-      )
-      if (res.error) {
-        toast.error(res.error.message)
-      } else {
-        toast.success("Employee roles updated successfully.")
-        setManageRolesOpen(false)
-        setManagingEmployee(null)
-        setRefreshKey((k) => k + 1)
-        onDataChanged?.()
-      }
-    } catch {
-      toast.error("Failed to update employee roles")
-    } finally {
-      setActionLoading(false)
-    }
   }
 
   const handleConfirmDeactivate = async () => {
@@ -631,14 +566,18 @@ export function EmployeesTable({
                         : "—"}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          statusClasses[w.status] || statusClasses.pending
-                        }
-                      >
-                        {w.status}
-                      </Badge>
+                      {w.status ? (
+                        <Badge
+                          variant="outline"
+                          className={
+                            statusClasses[w.status] || statusClasses.pending
+                          }
+                        >
+                          {w.status}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatLastAssessment(w.last_assessment)}
@@ -721,178 +660,18 @@ export function EmployeesTable({
       )}
 
       {/* ── Manage Roles Dialog ── */}
-      <Dialog open={manageRolesOpen} onOpenChange={setManageRolesOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Manage Employee Roles</DialogTitle>
-            <DialogDescription>
-              Update organization roles for{" "}
-              <span className="font-semibold text-foreground">
-                {managingEmployee
-                  ? formatEmployeeName(managingEmployee) ||
-                    managingEmployee.email
-                  : ""}
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-3">
-            {/* Superadmin role */}
-            <div className="flex items-start space-x-3 rounded-lg border border-border/60 p-3">
-              <Checkbox
-                id="role-superadmin"
-                checked={selectedRoles.includes("superadmin")}
-                disabled={
-                  !isCurrentUserSuperadmin ||
-                  (managingEmployee?.roles?.includes("superadmin") ?? false)
-                }
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setSelectedRoles(
-                      Array.from(
-                        new Set([...selectedRoles, "superadmin", "admin"])
-                      )
-                    )
-                  } else {
-                    setSelectedRoles(
-                      selectedRoles.filter((r) => r !== "superadmin")
-                    )
-                  }
-                }}
-              />
-              <div className="grid gap-1">
-                <Label
-                  htmlFor="role-superadmin"
-                  className="cursor-pointer font-semibold"
-                >
-                  Superadmin
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Full administrative power and quorum authority.
-                  {managingEmployee?.roles?.includes("superadmin") && (
-                    <span className="mt-0.5 block font-medium text-amber-600 dark:text-amber-400">
-                      * Cannot be unilaterally removed. Requires a Quorum vote.
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* Admin role */}
-            <div className="flex items-start space-x-3 rounded-lg border border-border/60 p-3">
-              <Checkbox
-                id="role-admin"
-                checked={selectedRoles.includes("admin")}
-                disabled={
-                  !isCurrentUserSuperadmin ||
-                  selectedRoles.includes("superadmin")
-                }
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setSelectedRoles([...selectedRoles, "admin"])
-                  } else {
-                    setSelectedRoles(selectedRoles.filter((r) => r !== "admin"))
-                  }
-                }}
-              />
-              <div className="grid gap-1">
-                <Label
-                  htmlFor="role-admin"
-                  className="cursor-pointer font-semibold"
-                >
-                  Admin
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Organizational management, employee onboarding and dashboard
-                  access.
-                  {selectedRoles.includes("superadmin") ? (
-                    <span className="mt-0.5 block text-xs font-medium text-amber-600 dark:text-amber-400">
-                      * Required while Superadmin is active.
-                    </span>
-                  ) : (
-                    !isCurrentUserSuperadmin && (
-                      <span className="mt-0.5 block text-muted-foreground/80 italic">
-                        * Only Superadmins can assign/remove Admin roles.
-                      </span>
-                    )
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* Content Manager role */}
-            <div className="flex items-start space-x-3 rounded-lg border border-border/60 p-3">
-              <Checkbox
-                id="role-content-manager"
-                checked={selectedRoles.includes("content_manager")}
-                disabled={!isCurrentUserSuperadmin && !isCurrentUserAdmin}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setSelectedRoles([...selectedRoles, "content_manager"])
-                  } else {
-                    setSelectedRoles(
-                      selectedRoles.filter((r) => r !== "content_manager")
-                    )
-                  }
-                }}
-              />
-              <div className="grid gap-1">
-                <Label
-                  htmlFor="role-content-manager"
-                  className="cursor-pointer font-semibold"
-                >
-                  Content Manager
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Access to CMS articles and publication tools.
-                </p>
-              </div>
-            </div>
-
-            {/* Member role */}
-            <div className="flex items-start space-x-3 rounded-lg border border-border/60 p-3">
-              <Checkbox
-                id="role-member"
-                checked={selectedRoles.includes("member")}
-                disabled={!isCurrentUserSuperadmin && !isCurrentUserAdmin}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setSelectedRoles([...selectedRoles, "member"])
-                  } else {
-                    setSelectedRoles(
-                      selectedRoles.filter((r) => r !== "member")
-                    )
-                  }
-                }}
-              />
-              <div className="grid gap-1">
-                <Label
-                  htmlFor="role-member"
-                  className="cursor-pointer font-semibold"
-                >
-                  Member
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Patient portal access, clinical surveys, and health profiles.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setManageRolesOpen(false)}
-              disabled={actionLoading}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSaveRoles} disabled={actionLoading}>
-              {actionLoading ? "Saving..." : "Save Roles"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ManageRolesDialog
+        open={manageRolesOpen}
+        onOpenChange={setManageRolesOpen}
+        employee={managingEmployee}
+        organizationId={organizationId}
+        isCurrentUserSuperadmin={isCurrentUserSuperadmin}
+        isCurrentUserAdmin={isCurrentUserAdmin}
+        onSuccess={() => {
+          setRefreshKey((k) => k + 1)
+          onDataChanged?.()
+        }}
+      />
 
       {/* ── Deactivate Employee Dialog ── */}
       <Dialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>

@@ -199,9 +199,9 @@ export function OrganizationPage() {
               icon={Users}
               iconVariant="icon"
               tone="primary"
-              label="Total members"
+              label="Total users"
               value={allMembers.length.toString()}
-              hint="Active organization users"
+              hint="Organization users"
             />
             <OverviewStatCard
               icon={ShieldCheck}

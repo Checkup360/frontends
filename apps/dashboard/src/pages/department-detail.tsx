@@ -632,7 +632,7 @@ export function DepartmentDetailPage() {
   // ── Derived stats from real analytics ──
   const totalMembers = totalItems
   const activeCount = employees.filter(
-    (e) => e.status.toLowerCase() === "active"
+    (e) => e.status?.toLowerCase() === "active"
   ).length
 
   const healthScore =
@@ -937,15 +937,19 @@ export function DepartmentDetailPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          statusClasses[emp.status.toLowerCase()] ??
-                          "capitalize"
-                        }
-                      >
-                        {emp.status}
-                      </Badge>
+                      {emp.status ? (
+                        <Badge
+                          variant="outline"
+                          className={
+                            statusClasses[emp.status.toLowerCase()] ??
+                            "capitalize"
+                          }
+                        >
+                          {emp.status}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
                       {emp.roles.join(", ") || "—"}

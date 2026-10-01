@@ -65,8 +65,11 @@ import {
   Mail,
   Building2,
   Edit3,
+  UserCog,
 } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
+import { ManageRolesDialog } from "@/components/manage-roles-dialog"
+import { getRoleBadgeProps, formatRoleName } from "@/lib/role-utils"
 import {
   ScoreEvolutionChart,
   type ChartSeries,
@@ -321,6 +324,19 @@ export function EmployeeDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [manageRolesOpen, setManageRolesOpen] = useState(false)
+
+  const isCurrentUserSuperadmin = useMemo(() => {
+    if (user?.is_sysadmin) return true
+    return user?.membership?.roles?.includes("superadmin") ?? false
+  }, [user])
+
+  const isCurrentUserAdmin = useMemo(() => {
+    if (user?.is_sysadmin) return true
+    return user?.membership?.roles?.includes("admin") ?? false
+  }, [user])
+
+  const canManageRoles = isCurrentUserSuperadmin || isCurrentUserAdmin
 
   // Assessments state
   const [assessments, setAssessments] = useState<AssessmentsResponse | null>(
@@ -716,9 +732,6 @@ export function EmployeeDetailPage() {
 
   const fullName = formatFullName(employee)
   const initials = getInitials(fullName, employee.email)
-  const roleLabel = employee.roles.includes("admin")
-    ? "Administrator"
-    : "Member"
 
   const handleRefresh = () => {
     void loadEmployee()
@@ -768,22 +781,33 @@ export function EmployeeDetailPage() {
                 <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   {fullName}
                 </h1>
-                <Badge
-                  variant="outline"
-                  className={
-                    employee.status === "active"
-                      ? "border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-emerald-600 capitalize dark:text-emerald-400"
-                      : "border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-amber-600 capitalize dark:text-amber-400"
-                  }
-                >
-                  {employee.status}
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="px-2.5 py-0.5 text-xs font-normal"
-                >
-                  {roleLabel}
-                </Badge>
+                {employee.status && (
+                  <Badge
+                    variant="outline"
+                    className={
+                      employee.status === "active"
+                        ? "border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-emerald-600 capitalize dark:text-emerald-400"
+                        : "border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-amber-600 capitalize dark:text-amber-400"
+                    }
+                  >
+                    {employee.status}
+                  </Badge>
+                )}
+                {(employee.roles || []).map((r) => {
+                  const badgeProps = getRoleBadgeProps(r)
+                  return (
+                    <Badge
+                      key={r}
+                      variant={badgeProps.variant}
+                      className={cn(
+                        "px-2.5 py-0.5 text-xs font-normal",
+                        badgeProps.className
+                      )}
+                    >
+                      {formatRoleName(r)}
+                    </Badge>
+                  )
+                })}
               </div>
 
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
@@ -822,6 +846,18 @@ export function EmployeeDetailPage() {
                 {employee.department
                   ? "Change department"
                   : "Assign department"}
+              </Button>
+            )}
+
+            {canManageRoles && organizationId && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setManageRolesOpen(true)}
+                className="h-9 cursor-pointer gap-2 rounded-xl px-3.5 text-xs shadow-2xs"
+              >
+                <UserCog className="size-3.5" />
+                Manage roles
               </Button>
             )}
 
@@ -1162,6 +1198,17 @@ export function EmployeeDetailPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Dialog for managing roles */}
+      <ManageRolesDialog
+        open={manageRolesOpen}
+        onOpenChange={setManageRolesOpen}
+        employee={employee}
+        organizationId={organizationId}
+        isCurrentUserSuperadmin={isCurrentUserSuperadmin}
+        isCurrentUserAdmin={isCurrentUserAdmin}
+        onSuccess={handleRefresh}
+      />
     </div>
   )
 }
