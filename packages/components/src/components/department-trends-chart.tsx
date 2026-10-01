@@ -108,10 +108,6 @@ export function DepartmentTrendsChart({
           typeof latest?.average_score === "number"
             ? Math.round(latest.average_score)
             : null,
-        latestRisk:
-          typeof latest?.risk_index === "number"
-            ? Math.round(latest.risk_index)
-            : null,
         points: pts,
         color: PALETTE[idx % PALETTE.length] as string,
       }

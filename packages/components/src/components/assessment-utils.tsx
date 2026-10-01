@@ -117,7 +117,7 @@ export function groupResultsIntoSessions(
         evaluatedAt: s.evaluated_at ? new Date(s.evaluated_at) : null,
         formattedDate: formatSessionDate(s.evaluated_at),
         isLatest: index === 0,
-        overallScore: s.overall_score,
+        overallScore: s.overall_health_index,
         overallRiskLevel: s.overall_risk_level,
         results: uniqueResults,
       }

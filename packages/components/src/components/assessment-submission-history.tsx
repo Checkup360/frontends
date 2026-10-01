@@ -474,9 +474,9 @@ export function AssessmentSubmissionHistory({
                                 <span className="block truncate text-xs font-semibold text-foreground">
                                   {getAssessmentDisplayName(score.score_id, score.score_name)}
                                 </span>
-                                {score.normalized_value !== null && score.normalized_value !== undefined && (
+                                {score.health_index !== null && score.health_index !== undefined && (
                                   <span className="text-[11px] text-muted-foreground">
-                                    Score: {Math.round(score.normalized_value)}%
+                                    Score: {Math.round(score.health_index)}%
                                   </span>
                                 )}
                               </div>

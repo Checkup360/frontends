@@ -1030,8 +1030,8 @@ export function DepartmentDetailPage() {
                         </div>
                       </TableCell>
                       <TableCell className="font-semibold text-foreground tabular-nums">
-                        {typeof emp.overall_score === "number"
-                          ? `${Math.round(emp.overall_score)}%`
+                        {typeof emp.overall_health_index === "number"
+                          ? `${Math.round(emp.overall_health_index)}%`
                           : "—"}
                       </TableCell>
                       <TableCell>
