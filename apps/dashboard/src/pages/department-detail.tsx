@@ -4,6 +4,7 @@ import {
   assignEmployeeDepartment,
   getOrganizationDepartmentAnalytics,
   getOrganizationRiskTrends,
+  getOrganizationScoreWeights,
   listDepartments,
   listOrganizationEmployeesPage,
   type DepartmentAnalyticsSummary,
@@ -63,6 +64,7 @@ import {
   UserPlus,
   Search,
   Check,
+  ChevronRight,
 } from "lucide-react"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -76,21 +78,37 @@ import {
   ScoreEvolutionChart,
   type ChartSeries,
 } from "@workspace/components/components/score-evolution-chart"
+import { getRoleBadgeProps, formatRoleName } from "@/lib/role-utils"
+import { isScoreDeactivated } from "@/lib/score-topics"
 import { cn } from "@workspace/ui/lib/utils"
 
 // ─── Helpers & Configurations ──────────────────────────────────────────────────
 
 const statusClasses: Record<string, string> = {
   active:
-    "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 capitalize",
+    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 capitalize",
   onboarding:
     "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 capitalize",
+  inactive:
+    "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border-zinc-500/20 capitalize",
+  pending:
+    "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border-zinc-500/20 capitalize",
+}
+
+function formatLastAssessment(value?: string | null): string {
+  if (!value) return "Not assessed"
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+  }).format(new Date(value))
 }
 
 const tableSkeletonColumns = [
-  { skeletonClassName: "h-4 w-48" },
+  { skeletonClassName: "h-4 w-44" },
   { skeletonClassName: "h-5 w-20 rounded-full" },
-  { skeletonClassName: "h-4 w-24" },
+  { skeletonClassName: "h-4 w-12" },
+  { skeletonClassName: "h-5 w-20 rounded-full" },
+  { skeletonClassName: "h-4 w-28" },
+  { skeletonClassName: "h-8 w-8 ml-auto" },
 ]
 
 const OVERALL_SERIES_CONFIG: ChartSeries = {
@@ -527,6 +545,9 @@ export function DepartmentDetailPage() {
   const [deptAnalytics, setDeptAnalytics] =
     useState<DepartmentAnalyticsSummary | null>(null)
   const [trends, setTrends] = useState<RiskTrendPoint[]>([])
+  const [scoreWeights, setScoreWeights] = useState<Record<string, number> | null>(
+    null
+  )
   const [loadingDept, setLoadingDept] = useState(true)
   const [loadingTrends, setLoadingTrends] = useState(true)
   const [error, setError] = useState("")
@@ -538,6 +559,7 @@ export function DepartmentDetailPage() {
   const [loadingTable, setLoadingTable] = useState(true)
   const [search, setSearch] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("all")
+  const [selectedScore, setSelectedScore] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
@@ -553,11 +575,15 @@ export function DepartmentDetailPage() {
       setLoadingTrends(true)
       setError("")
       try {
-        const [depts, analytics] = await Promise.all([
+        const [depts, analytics, weights] = await Promise.all([
           listDepartments(organizationId),
           getOrganizationDepartmentAnalytics(organizationId),
+          getOrganizationScoreWeights(organizationId).catch(() => null),
         ])
         if (!active) return
+        if (weights?.score_weights) {
+          setScoreWeights(weights.score_weights)
+        }
         const found = depts.find((d) => d.slug === slug)
         if (found) {
           setDepartment(found)
@@ -605,6 +631,7 @@ export function DepartmentDetailPage() {
         {
           departmentId: department.id,
           status: selectedStatus !== "all" ? selectedStatus : undefined,
+          score: selectedScore !== "all" ? selectedScore : undefined,
           search: search.trim() || undefined,
           page: currentPage,
           pageSize,
@@ -623,6 +650,7 @@ export function DepartmentDetailPage() {
     organizationId,
     department,
     selectedStatus,
+    selectedScore,
     search,
     currentPage,
     pageSize,
@@ -645,7 +673,7 @@ export function DepartmentDetailPage() {
     return [...trends].sort((a, b) => a.period.localeCompare(b.period))
   }, [trends])
 
-  // Discover all available studies from backend trends (100% dynamic)
+  // Discover all available studies from backend trends that are enabled for the organization
   const availableStudies = useMemo<ChartSeries[]>(() => {
     const list: ChartSeries[] = [OVERALL_SERIES_CONFIG]
     const foundKeys = new Set<string>()
@@ -653,8 +681,10 @@ export function DepartmentDetailPage() {
     trends.forEach((pt) => {
       if (pt.scores_by_study) {
         Object.keys(pt.scores_by_study).forEach((studyName) => {
-          if (studyName.trim()) {
-            foundKeys.add(studyName.trim())
+          const trimmed = studyName.trim()
+          if (!trimmed) return
+          if (!isScoreDeactivated(trimmed, scoreWeights)) {
+            foundKeys.add(trimmed)
           }
         })
       }
@@ -671,9 +701,9 @@ export function DepartmentDetailPage() {
     })
 
     return list
-  }, [trends])
+  }, [trends, scoreWeights])
 
-  // Chart data formatted for multi-study curves
+  // Chart data formatted for multi-study curves (only enabled studies)
   const chartData = useMemo(() => {
     return sortedTrends.map((t) => {
       const row: Record<string, string | number | null> = {
@@ -685,15 +715,18 @@ export function DepartmentDetailPage() {
       }
       if (t.scores_by_study) {
         Object.entries(t.scores_by_study).forEach(([k, v]) => {
-          row[k] = Math.round(v)
+          if (!isScoreDeactivated(k, scoreWeights)) {
+            row[k] = Math.round(v)
+          }
         })
       }
       return row
     })
-  }, [sortedTrends])
+  }, [sortedTrends, scoreWeights])
 
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const hasFilters = search !== "" || selectedStatus !== "all"
+  const hasFilters =
+    search !== "" || selectedStatus !== "all" || selectedScore !== "all"
 
   // ── States ──
   if (loadingDept) return <DepartmentDetailSkeleton />
@@ -740,9 +773,6 @@ export function DepartmentDetailPage() {
               <h2 className="text-xl font-bold tracking-tight text-foreground">
                 {department.name}
               </h2>
-              <Badge variant="outline" className="font-mono text-xs">
-                /{department.slug}
-              </Badge>
             </div>
           </div>
         </div>
@@ -845,12 +875,15 @@ export function DepartmentDetailPage() {
                 setSearch(e.target.value)
                 setCurrentPage(1)
               }}
-              placeholder="Search by email, role..."
+              placeholder="Search by name or email..."
               className="h-9 pr-8 text-sm"
             />
             {search && (
               <button
-                onClick={() => setSearch("")}
+                onClick={() => {
+                  setSearch("")
+                  setCurrentPage(1)
+                }}
                 className="absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
               >
                 <X className="size-4" />
@@ -858,22 +891,44 @@ export function DepartmentDetailPage() {
             )}
           </div>
 
-          <Select
-            value={selectedStatus}
-            onValueChange={(val) => {
-              setSelectedStatus(val)
-              setCurrentPage(1)
-            }}
-          >
-            <SelectTrigger className="h-9 w-full sm:w-[150px]">
-              <SelectValue placeholder="All status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="onboarding">Onboarding</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="w-[150px]">
+            <Select
+              value={selectedStatus}
+              onValueChange={(val) => {
+                setSelectedStatus(val)
+                setCurrentPage(1)
+              }}
+            >
+              <SelectTrigger className="h-9 bg-background">
+                <SelectValue placeholder="All status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="onboarding">Onboarding</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-[150px]">
+            <Select
+              value={selectedScore}
+              onValueChange={(val) => {
+                setSelectedScore(val)
+                setCurrentPage(1)
+              }}
+            >
+              <SelectTrigger className="h-9 bg-background">
+                <SelectValue placeholder="All scores" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All scores</SelectItem>
+                <SelectItem value="scored">With score</SelectItem>
+                <SelectItem value="unscored">Without score</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {hasFilters && (
             <Button
@@ -882,9 +937,10 @@ export function DepartmentDetailPage() {
               onClick={() => {
                 setSearch("")
                 setSelectedStatus("all")
+                setSelectedScore("all")
                 setCurrentPage(1)
               }}
-              className="h-9 cursor-pointer text-xs text-muted-foreground"
+              className="h-9 cursor-pointer text-xs text-muted-foreground hover:text-foreground"
             >
               Reset
             </Button>
@@ -892,74 +948,132 @@ export function DepartmentDetailPage() {
         </div>
 
         {/* Table */}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Employee</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="hidden sm:table-cell">Role</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loadingTable ? (
-              <TableRowsSkeleton
-                rows={pageSize}
-                columns={tableSkeletonColumns}
-              />
-            ) : employees.length === 0 ? (
+        <div className="overflow-x-auto rounded-lg border border-border/60 bg-card">
+          <Table className="min-w-[700px]">
+            <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableCell
-                  colSpan={3}
-                  className="py-12 text-center text-muted-foreground"
-                >
-                  {hasFilters
-                    ? "No members match the current filters."
-                    : "No members assigned to this department yet."}
-                </TableCell>
+                <TableHead className="font-semibold text-foreground">
+                  Employee
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Roles
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Score
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Status
+                </TableHead>
+                <TableHead className="font-semibold text-foreground">
+                  Last assessment
+                </TableHead>
+                <TableHead className="w-16 text-right font-semibold text-foreground">
+                  Actions
+                </TableHead>
               </TableRow>
-            ) : (
-              employees.map((emp) => {
-                const displayName = getDisplayName(emp)
-                return (
-                  <TableRow
-                    key={emp.id}
-                    className="cursor-pointer transition-colors hover:bg-muted/40"
-                    onClick={() => navigate(`/employees/${emp.id}`)}
+            </TableHeader>
+            <TableBody>
+              {loadingTable ? (
+                <TableRowsSkeleton
+                  rows={pageSize}
+                  columns={tableSkeletonColumns}
+                />
+              ) : employees.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="py-12 text-center text-muted-foreground"
                   >
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-foreground">
+                    {hasFilters
+                      ? "No members match the current filters."
+                      : "No members assigned to this department yet."}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                employees.map((emp) => {
+                  const displayName = getDisplayName(emp)
+                  return (
+                    <TableRow
+                      key={emp.id}
+                      className="group cursor-pointer transition-colors hover:bg-muted/40"
+                      onClick={() => navigate(`/employees/${emp.id}`)}
+                    >
+                      <TableCell className="font-medium text-foreground transition-colors group-hover:text-primary">
+                        <span className="block font-medium">
                           {displayName}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="block text-xs font-normal text-muted-foreground">
                           {emp.email}
                         </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {emp.status ? (
-                        <Badge
-                          variant="outline"
-                          className={
-                            statusClasses[emp.status.toLowerCase()] ??
-                            "capitalize"
-                          }
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {emp.roles && emp.roles.length > 0 ? (
+                            emp.roles.map((role) => {
+                              const badgeProps = getRoleBadgeProps(role)
+                              return (
+                                <Badge
+                                  key={role}
+                                  variant={badgeProps.variant}
+                                  className={badgeProps.className}
+                                  size="xs"
+                                >
+                                  {formatRoleName(role)}
+                                </Badge>
+                              )
+                            })
+                          ) : (
+                            <Badge variant="outline" size="xs">
+                              No roles
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-semibold text-foreground tabular-nums">
+                        {typeof emp.overall_score === "number"
+                          ? `${Math.round(emp.overall_score)}%`
+                          : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {emp.status ? (
+                          <Badge
+                            variant="outline"
+                            className={
+                              statusClasses[emp.status.toLowerCase()] ??
+                              "capitalize"
+                            }
+                          >
+                            {emp.status}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatLastAssessment(emp.last_assessment)}
+                      </TableCell>
+                      <TableCell
+                        className="text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/employees/${emp.id}`)}
+                          className="size-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                          title="View employee profile"
+                          aria-label="View employee profile"
                         >
-                          {emp.status}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
-                      {emp.roles.join(", ") || "—"}
-                    </TableCell>
-                  </TableRow>
-                )
-              })
-            )}
-          </TableBody>
-        </Table>
+                          <ChevronRight className="size-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         {/* Reusable Table Pagination */}
         <TablePagination
