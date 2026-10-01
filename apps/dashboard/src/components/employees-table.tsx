@@ -561,8 +561,8 @@ export function EmployeesTable({
                       {w.department?.name ?? "Unassigned"}
                     </TableCell>
                     <TableCell className="font-semibold text-foreground tabular-nums">
-                      {typeof w.overall_score === "number"
-                        ? `${Math.round(w.overall_score)}%`
+                      {typeof w.overall_health_index === "number"
+                        ? `${Math.round(w.overall_health_index)}%`
                         : "—"}
                     </TableCell>
                     <TableCell>

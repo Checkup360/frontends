@@ -855,7 +855,7 @@ export interface OrganizationEmployee {
   department: DepartmentResponse | null
   status?: string | null
   last_assessment?: string | null
-  overall_score?: number | null
+  overall_health_index?: number | null
 }
 
 export interface SuperadminRemovalVote {

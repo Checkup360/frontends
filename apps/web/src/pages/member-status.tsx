@@ -125,10 +125,10 @@ function getRiskLevelConfig(riskLevel: string | null, riskScore: number) {
 /** Returns the normalized score (0-100) delivered by the backend */
 function getNormalizedScore(result: AssessmentResultResponse): number {
   if (
-    result.normalized_value !== null &&
-    result.normalized_value !== undefined
+    result.health_index !== null &&
+    result.health_index !== undefined
   ) {
-    return Math.min(100, Math.max(0, Math.round(result.normalized_value)))
+    return Math.min(100, Math.max(0, Math.round(result.health_index)))
   }
   const raw = result.raw_value ?? 0
   return Math.min(100, Math.max(0, Math.round(raw)))
@@ -304,7 +304,7 @@ export function MemberStatusPage() {
     if (!activeSession || !activeSession.results.length) return null
     return computeOverallHealthScore(
       activeSession.results,
-      isViewingLatest ? assessments?.overall_score : null,
+      isViewingLatest ? assessments?.overall_health_index : null,
       isViewingLatest ? assessments?.overall_risk_level : null
     )
   }, [activeSession, isViewingLatest, assessments])

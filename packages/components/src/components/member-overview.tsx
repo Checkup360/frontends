@@ -119,7 +119,7 @@ export function MemberOverview({
     if (!latestSession || !latestSession.results.length) return null
     return computeOverallHealthScore(
       latestSession.results,
-      assessmentsData?.overall_score,
+      assessmentsData?.overall_health_index,
       assessmentsData?.overall_risk_level
     )
   }, [latestSession, assessmentsData])
@@ -140,10 +140,10 @@ export function MemberOverview({
     return [...sessions]
       .reverse()
       .map((session, idx, arr) => {
-        // For latest session in array (which is the actual latest session), use overall_score from backend if present
+        // For latest session in array (which is the actual latest session), use overall_health_index from backend if present
         const isLatestInArray = idx === arr.length - 1
-        const sessionScore = isLatestInArray && typeof assessmentsData?.overall_score === "number"
-          ? Math.round(assessmentsData.overall_score)
+        const sessionScore = isLatestInArray && typeof assessmentsData?.overall_health_index === "number"
+          ? Math.round(assessmentsData.overall_health_index)
           : computeOverallHealthScore(session.results).score
 
         return {

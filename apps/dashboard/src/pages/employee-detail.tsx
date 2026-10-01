@@ -517,9 +517,9 @@ export function EmployeeDetailPage() {
       const isDeactivated =
         scoreWeights !== null && (scoreWeights[topicMeta.id] ?? 0) <= 0
       const isEvaluated =
-        res.normalized_value !== null && res.normalized_value !== undefined
+        res.health_index !== null && res.health_index !== undefined
       const val = isEvaluated
-        ? Math.round(res.normalized_value as number)
+        ? Math.round(res.health_index as number)
         : null
       const riskMeta = getRiskTone(res.risk_level, val ?? undefined)
 
@@ -582,7 +582,7 @@ export function EmployeeDetailPage() {
       }
     }
 
-    if (typeof assessments?.overall_score !== "number") {
+    if (typeof assessments?.overall_health_index !== "number") {
       return {
         score: null,
         label: "Incomplete assessment",
@@ -590,7 +590,7 @@ export function EmployeeDetailPage() {
       }
     }
 
-    const finalScore = Math.round(assessments.overall_score)
+    const finalScore = Math.round(assessments.overall_health_index)
     const riskMeta = getRiskTone(assessments?.overall_risk_level, finalScore)
 
     return {
@@ -609,8 +609,8 @@ export function EmployeeDetailPage() {
       session.results.forEach((res) => {
         if (
           res.score_name &&
-          res.normalized_value !== null &&
-          res.normalized_value !== undefined
+          res.health_index !== null &&
+          res.health_index !== undefined
         ) {
           const topic = getTopicMeta(res.score_id || "", res.score_name)
           const isDeactivated = scoreWeights !== null && (scoreWeights[topic.id] ?? 0) <= 0
@@ -640,8 +640,8 @@ export function EmployeeDetailPage() {
     return [...sessions].reverse().map((session, idx, arr) => {
       const isLatestInArray = idx === arr.length - 1
       const overallScore =
-        isLatestInArray && typeof assessments?.overall_score === "number"
-          ? Math.round(assessments.overall_score)
+        isLatestInArray && typeof assessments?.overall_health_index === "number"
+          ? Math.round(assessments.overall_health_index)
           : typeof session.overallScore === "number"
             ? Math.round(session.overallScore)
             : null
@@ -656,13 +656,13 @@ export function EmployeeDetailPage() {
       session.results.forEach((r) => {
         if (
           r.score_name &&
-          r.normalized_value !== null &&
-          r.normalized_value !== undefined
+          r.health_index !== null &&
+          r.health_index !== undefined
         ) {
           const topic = getTopicMeta(r.score_id || "", r.score_name)
           const isDeactivated = scoreWeights !== null && (scoreWeights[topic.id] ?? 0) <= 0
           if (!isDeactivated) {
-            row[r.score_name.trim()] = Math.round(r.normalized_value)
+            row[r.score_name.trim()] = Math.round(r.health_index)
           }
         }
       })
@@ -687,7 +687,7 @@ export function EmployeeDetailPage() {
         results.push({
           score_id: topic.matchKey,
           score_name: topic.name,
-          normalized_value: null,
+          health_index: null,
           risk_level: null,
           explanation: null,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1014,11 +1014,11 @@ export function EmployeeDetailPage() {
                       (scoreWeights[topic.id] ?? 0) <= 0
 
                     const isEvaluated =
-                      result.normalized_value !== null &&
-                      result.normalized_value !== undefined
+                      result.health_index !== null &&
+                      result.health_index !== undefined
 
                     const val = isEvaluated
-                      ? Math.round(result.normalized_value as number)
+                      ? Math.round(result.health_index as number)
                       : null
                     const riskMeta = getRiskTone(result.risk_level, val)
 

@@ -46,12 +46,12 @@ export function EmployeesPage() {
 
         const total = members.length
         const evaluated = members.filter(
-          (m) => typeof m.overall_score === "number"
+          (m) => typeof m.overall_health_index === "number"
         ).length
         const evaluatedPct =
           total > 0 ? Math.round((evaluated / total) * 100) : 0
         const atRisk = members.filter(
-          (m) => typeof m.overall_score === "number" && m.overall_score < 60
+          (m) => typeof m.overall_health_index === "number" && m.overall_health_index < 60
         ).length
 
         setSummary({

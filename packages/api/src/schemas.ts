@@ -203,7 +203,8 @@ export type AssessmentResultResponse = {
   score_name: string
   risk_level: string | null
   raw_value: number | null
-  normalized_value: number | null
+  /** 0-100, higher is healthier. */
+  health_index: number | null
   explanation: string | null
   contributing_factors: Record<string, unknown>
   attention_flags: Record<string, boolean>
@@ -213,13 +214,13 @@ export type AssessmentResultResponse = {
 export type AssessmentSessionResponse = {
   id: string
   evaluated_at: string
-  overall_score?: number | null
+  overall_health_index?: number | null
   overall_risk_level?: string | null
   results: AssessmentResultResponse[]
 }
 
 export type AssessmentsResponse = {
-  overall_score?: number | null
+  overall_health_index?: number | null
   overall_risk_level?: string | null
   total_sessions?: number
   page?: number
@@ -272,7 +273,6 @@ export type RiskTrendPoint = {
   period: string
   month_label: string
   average_score: number | null
-  risk_index: number | null
   total_assessments: number
   scores_by_study?: Record<string, number>
 }
