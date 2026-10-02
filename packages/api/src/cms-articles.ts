@@ -48,6 +48,11 @@ export type PayloadPagesResponse = {
   nextPage: number | null
 }
 
+export type RecommendedCmsPagesResponse = PayloadPagesResponse & {
+  /** Raw category keys of every article in the organization. */
+  categories?: string[]
+}
+
 export type HealthContentAuthor = {
   name: string
   website?: string
@@ -145,7 +150,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   cardiovascular: "Cardiovascular Disease",
 }
 
-function formatCategoryName(rawCategory?: string): string {
+export function formatCategoryName(rawCategory?: string): string {
   if (!rawCategory) return DEFAULT_CATEGORY_LABEL
   const key = rawCategory.toLowerCase()
   const knownLabel = CATEGORY_LABELS[key]
@@ -307,7 +312,9 @@ export async function fetchRecommendedCmsPages(options?: {
   page?: number
   limit?: number
   organizationId?: string
-}): Promise<PayloadPagesResponse> {
+  category?: string | null
+  search?: string
+}): Promise<RecommendedCmsPagesResponse> {
   const cmsOrigin = (
     options?.cmsOrigin ||
     resolveCmsUrl()
@@ -319,11 +326,20 @@ export async function fetchRecommendedCmsPages(options?: {
   params.append("page", page.toString())
   params.append("limit", limit.toString())
 
-  if (options?.riskWeights && Object.keys(options.riskWeights).length > 0) {
+  // Weights hold only the risks the organization has enabled. An empty object
+  // is meaningful (no active risks); omitting it disables category filtering.
+  if (options?.riskWeights) {
     params.append("weights", JSON.stringify(options.riskWeights))
   }
   if (options?.organizationId) {
     params.append("organization", options.organizationId)
+  }
+  if (options?.category) {
+    params.append("category", options.category)
+  }
+  const search = options?.search?.trim()
+  if (search) {
+    params.append("search", search)
   }
 
   const url = `${cmsOrigin}/api/pages/recommended?${params.toString()}`
@@ -340,5 +356,5 @@ export async function fetchRecommendedCmsPages(options?: {
     throw new Error(`Failed to fetch recommended CMS pages: HTTP ${response.status}`)
   }
 
-  return (await response.json()) as PayloadPagesResponse
+  return (await response.json()) as RecommendedCmsPagesResponse
 }

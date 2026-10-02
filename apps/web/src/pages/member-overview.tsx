@@ -5,12 +5,22 @@ import {
   MemberOverviewSkeleton,
 } from "@workspace/components/components/member-overview"
 import { HealthContentGrid } from "@workspace/components/components/health-content-grid"
+import { useArticleFilters } from "@/hooks/use-article-filters"
 import { useMemberArticles } from "@/hooks/use-member-articles"
 
 export function MemberOverviewPage() {
   const navigate = useNavigate()
   const { user, isLoading: isUserLoading } = useCurrentUser()
-  const { articles, isLoading: isArticlesLoading } = useMemberArticles()
+  const filters = useArticleFilters()
+  const {
+    articles,
+    categories,
+    isLoading: isArticlesLoading,
+    isFetching: isArticlesFetching,
+  } = useMemberArticles({
+    category: filters.category,
+    search: filters.search,
+  })
 
   if (isUserLoading || isArticlesLoading) {
     return <MemberOverviewSkeleton />
@@ -30,6 +40,12 @@ export function MemberOverviewPage() {
       />
       <HealthContentGrid
         articles={articles}
+        categories={categories}
+        selectedCategory={filters.category}
+        onCategoryChange={filters.changeCategory}
+        search={filters.searchInput}
+        onSearchChange={filters.changeSearch}
+        isFetching={isArticlesFetching}
         title="Health content"
         description="Personalized articles and wellness recommendations."
         onNavigate={(href) => navigate(href)}
