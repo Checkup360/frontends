@@ -559,10 +559,11 @@ export async function submitMemberForm(
       }
     }
     if (!response.ok) {
+      const errData = (await response.json().catch(() => ({}))) as { detail?: string }
       return {
         error: {
-          code: "unknown_error",
-          message: "Failed to submit form data. Please try again.",
+          code: errData.detail || "unknown_error",
+          message: errData.detail || "Failed to submit form data. Please try again.",
         },
       }
     }

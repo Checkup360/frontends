@@ -57,7 +57,7 @@ export function ConsentGateModal({
       const formRes = await acceptConsent({
         consent_type: "FORM_CONSENT",
         form_type: formType,
-        document_version: "1.0",
+        document_version: doc.version,
       })
 
       if (formRes.error) {
