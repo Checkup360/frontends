@@ -2,10 +2,44 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 import { ArrowRight, Clock, Newspaper, Search } from "lucide-react"
 import { useMemo, useState } from "react"
 import type { HealthContentArticle } from "@workspace/api"
+
+const MAX_VISIBLE_CARD_CATEGORIES = 2
+const ALL_CATEGORIES = "All"
+
+function ArticleCategoryBadges({ categories }: { categories: string[] }) {
+  const visible = categories.slice(0, MAX_VISIBLE_CARD_CATEGORIES)
+  const hidden = categories.slice(MAX_VISIBLE_CARD_CATEGORIES)
+  return (
+    <div className="flex min-w-0 flex-wrap justify-end gap-1.5">
+      {visible.map((category) => (
+        <Badge key={category} variant="secondary" className="text-xs">
+          {category}
+        </Badge>
+      ))}
+      {hidden.length > 0 && (
+        <Badge
+          variant="outline"
+          className="text-xs"
+          title={hidden.join(", ")}
+          aria-label={`${hidden.length} more categories: ${hidden.join(", ")}`}
+        >
+          +{hidden.length}
+        </Badge>
+      )}
+    </div>
+  )
+}
 
 type HealthContentGridProps = {
   articles: HealthContentArticle[]
@@ -52,19 +86,17 @@ function ArticleCard({
         )}
       </a>
       <CardContent className="flex flex-1 flex-col space-y-3 p-5">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-start justify-between gap-3">
           {article.readTime ? (
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="size-3.5" />
               {article.readTime} min read
             </span>
           ) : (
             <span />
           )}
-          {article.category && (
-            <Badge variant="secondary" className="text-xs">
-              {article.category}
-            </Badge>
+          {article.categories.length > 0 && (
+            <ArticleCategoryBadges categories={article.categories} />
           )}
         </div>
         <div className="space-y-1.5">
@@ -118,12 +150,12 @@ export function HealthContentGrid({
   description = "Articles and practical tips for your wellbeing.",
   onNavigate,
 }: HealthContentGridProps) {
-  const [category, setCategory] = useState("All")
+  const [category, setCategory] = useState(ALL_CATEGORIES)
   const [search, setSearch] = useState("")
   const categories = useMemo(
     () => [
-      "All",
-      ...new Set(articles.map((article) => article.category).filter(Boolean)),
+      ALL_CATEGORIES,
+      ...new Set(articles.flatMap((article) => article.categories)),
     ],
     [articles]
   )
@@ -131,7 +163,7 @@ export function HealthContentGrid({
     const query = search.trim().toLowerCase()
     return articles.filter((article) => {
       const matchesCategory =
-        category === "All" || article.category === category
+        category === ALL_CATEGORIES || article.categories.includes(category)
       const matchesSearch =
         !query ||
         article.title.toLowerCase().includes(query) ||
@@ -157,16 +189,31 @@ export function HealthContentGrid({
 
       <Tabs value={category} onValueChange={setCategory} className="gap-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="w-full sm:w-auto">
-            <TabsList className="h-auto flex-wrap justify-start">
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger
+              className="w-full sm:hidden"
+              aria-label="Filter by category"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
               {categories.map((item) => (
-                <TabsTrigger key={item} value={item}>
+                <SelectItem key={item} value={item}>
+                  {item === ALL_CATEGORIES ? "All categories" : item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="hidden min-w-0 overflow-x-auto pb-1 sm:block sm:flex-1">
+            <TabsList className="w-max justify-start">
+              {categories.map((item) => (
+                <TabsTrigger key={item} value={item} className="flex-none">
                   {item}
                 </TabsTrigger>
               ))}
             </TabsList>
           </div>
-          <div className="relative w-full sm:max-w-xs">
+          <div className="relative w-full sm:w-72 sm:shrink-0">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"

@@ -22,7 +22,7 @@ export interface Blogpost1Props {
   pubDate?: Date
   description?: string
   content?: unknown
-  category?: string
+  categories?: string[]
   readTime?: number
   onBack?: () => void
   backUrl?: string
@@ -188,7 +188,7 @@ export const Blogpost1 = ({
   pubDate,
   description,
   content,
-  category,
+  categories = [],
   readTime,
   onBack,
   backUrl,
@@ -247,11 +247,6 @@ export const Blogpost1 = ({
           )}
 
           <div className="flex items-center gap-2">
-            {category && (
-              <Badge variant="secondary" className="capitalize">
-                {category}
-              </Badge>
-            )}
             {readTime && (
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Clock className="size-3.5" />
@@ -273,6 +268,15 @@ export const Blogpost1 = ({
 
         {/* Hero & Meta */}
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 text-center">
+          {categories.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2">
+              {categories.map((category) => (
+                <Badge key={category} variant="secondary">
+                  {category}
+                </Badge>
+              ))}
+            </div>
+          )}
           {title && (
             <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-pretty sm:text-4xl md:text-5xl lg:text-6xl">
               {title}
