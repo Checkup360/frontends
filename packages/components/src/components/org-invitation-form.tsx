@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react"
+import { OrganizationCombobox } from "./organization-combobox"
 import type {
   DepartmentResponse,
   OrganizationResponse,
@@ -74,8 +75,10 @@ export function OrgInvitationForm({
 
   const { user } = useCurrentUser()
   const isSysadmin = user?.is_sysadmin ?? false
-  const isUserSuperadmin = user?.membership?.roles?.includes("superadmin") ?? false
-  const canGrantSuperadmin = isSysadmin || isUserSuperadmin || canInviteSuperadmin
+  const isUserSuperadmin =
+    user?.membership?.roles?.includes("superadmin") ?? false
+  const canGrantSuperadmin =
+    isSysadmin || isUserSuperadmin || canInviteSuperadmin
 
   const [isSuperadmin, setIsSuperadmin] = useState(false)
   const isSuperadminRole = role === "admin" && isSuperadmin
@@ -383,7 +386,8 @@ export function OrgInvitationForm({
           ) : (
             <div className="space-y-2">
               <Label htmlFor="organization">Organization</Label>
-              <Select
+              <OrganizationCombobox
+                organizations={organizations}
                 value={selectedOrganizationId}
                 onValueChange={(organizationId) => {
                   const organization =
@@ -391,32 +395,11 @@ export function OrgInvitationForm({
                     null
                   setSelected(organization)
                 }}
-                disabled={loading || orgsLoading || organizations.length === 0}
-              >
-                <SelectTrigger id="organization">
-                  <SelectValue
-                    placeholder={
-                      orgsLoading
-                        ? "Loading organizations..."
-                        : "Select organization"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {organizations.map((organization) => (
-                    <SelectItem key={organization.id} value={organization.id}>
-                      {organization.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                disabled={loading || orgsLoading}
+                loading={orgsLoading}
+              />
               {orgsError && (
                 <p className="text-xs text-destructive">{orgsError}</p>
-              )}
-              {!orgsLoading && organizations.length === 0 && !orgsError && (
-                <p className="text-xs text-muted-foreground">
-                  No organizations available.
-                </p>
               )}
             </div>
           )}
@@ -458,18 +441,22 @@ export function OrgInvitationForm({
                 <Checkbox
                   id="invite-superadmin"
                   checked={isSuperadmin}
-                  onCheckedChange={(checked) => setIsSuperadmin(checked === true)}
+                  onCheckedChange={(checked) =>
+                    setIsSuperadmin(checked === true)
+                  }
                   disabled={loading}
                 />
                 <div className="grid gap-1">
                   <Label
                     htmlFor="invite-superadmin"
-                    className="font-semibold cursor-pointer text-sm text-foreground"
+                    className="cursor-pointer text-sm font-semibold text-foreground"
                   >
                     Superadmin
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Grants highest authority in the organization, including managing other administrators and participating in removal quorums.
+                    Grants highest authority in the organization, including
+                    managing other administrators and participating in removal
+                    quorums.
                   </p>
                 </div>
               </div>

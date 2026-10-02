@@ -6,6 +6,7 @@ import { DeleteInvitationsDialog } from "@workspace/components/components/delete
 import { OrgInvitationForm } from "@workspace/components/components/org-invitation-form"
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card"
 import { Stepper } from "@workspace/ui/components/stepper"
+import { OrganizationCombobox } from "@workspace/components/components/organization-combobox"
 import {
   OverviewStatCard,
   OverviewStatCardSkeleton,
@@ -625,7 +626,8 @@ export function InvitationsPage() {
               <>
                 {/* Organization selector */}
                 <div className="w-[200px]">
-                  <Select
+                  <OrganizationCombobox
+                    organizations={organizations}
                     value={selectedOrg || "all"}
                     onValueChange={(val) => {
                       const newOrg = val === "all" ? "" : val
@@ -635,19 +637,8 @@ export function InvitationsPage() {
                       }
                       setCurrentPage(1)
                     }}
-                  >
-                    <SelectTrigger className="h-9 bg-background">
-                      <SelectValue placeholder="All Organizations" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Organizations</SelectItem>
-                      {organizations.map((org) => (
-                        <SelectItem key={org.id} value={org.id}>
-                          {org.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    includeAllOption
+                  />
                 </div>
 
                 {/* Role selector */}
