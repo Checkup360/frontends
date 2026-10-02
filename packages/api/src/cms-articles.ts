@@ -138,22 +138,27 @@ export function calculateReadTime(content: unknown, wordsPerMinute = 200): numbe
 }
 
 const DEFAULT_CATEGORY_LABEL = "General Health"
+const GENERAL_CATEGORY_KEY = "general"
 
-// Mirrors the option labels of the CMS `diseaseTypes` field
-const CATEGORY_LABELS: Record<string, string> = {
-  general: DEFAULT_CATEGORY_LABEL,
-  diabetes: "Diabetes",
-  sleep_apnea: "Sleep Apnea",
-  depression: "Depression & Mental Health",
-  metabolic_syndrome: "Metabolic Syndrome",
-  eoss: "Obesity (EOSS)",
-  cardiovascular: "Cardiovascular Disease",
+/** Readable names of health topics by key, provided by the backend catalog. */
+export type CategoryLabels = Record<string, string>
+
+export function toCategoryLabels(
+  categories?: Array<{ key: string; label: string }>
+): CategoryLabels {
+  return Object.fromEntries(
+    (categories ?? []).map((category) => [category.key, category.label])
+  )
 }
 
-export function formatCategoryName(rawCategory?: string): string {
+export function formatCategoryName(
+  rawCategory?: string,
+  labels: CategoryLabels = {}
+): string {
   if (!rawCategory) return DEFAULT_CATEGORY_LABEL
   const key = rawCategory.toLowerCase()
-  const knownLabel = CATEGORY_LABELS[key]
+  if (key === GENERAL_CATEGORY_KEY) return DEFAULT_CATEGORY_LABEL
+  const knownLabel = labels[key]
   if (knownLabel) return knownLabel
   const readable = key.replace(/[_-]+/g, " ").trim()
   return readable.charAt(0).toUpperCase() + readable.slice(1)
@@ -164,12 +169,17 @@ export function formatCategoryName(rawCategory?: string): string {
  */
 export function mapPayloadPageToArticle(
   doc: PayloadPageDoc,
-  cmsOrigin = "http://localhost:3000"
+  cmsOrigin = "http://localhost:3000",
+  categoryLabels: CategoryLabels = {}
 ): HealthContentArticle {
   const diseaseTypes = doc.diseaseTypes ?? []
   const categories =
     diseaseTypes.length > 0
-      ? [...new Set(diseaseTypes.map(formatCategoryName))]
+      ? [
+          ...new Set(
+            diseaseTypes.map((type) => formatCategoryName(type, categoryLabels))
+          ),
+        ]
       : [DEFAULT_CATEGORY_LABEL]
 
   let imageUrl: string | undefined = undefined

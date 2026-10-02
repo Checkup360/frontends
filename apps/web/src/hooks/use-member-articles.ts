@@ -4,6 +4,8 @@ import {
   fetchRecommendedCmsPages,
   mapPayloadPageToArticle,
   resolveCmsUrl,
+  toCategoryLabels,
+  type CategoryLabels,
   type HealthContentArticle,
 } from "@workspace/api"
 
@@ -23,7 +25,10 @@ export interface PaginationInfo {
   hasPrevPage: boolean
 }
 
-type RiskWeights = Record<string, number> | undefined
+type MemberTopics = {
+  riskWeights: Record<string, number> | undefined
+  categoryLabels: CategoryLabels
+}
 
 export function useMemberArticles(options?: UseMemberArticlesOptions) {
   const page = options?.page ?? 1
@@ -33,6 +38,7 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
 
   const [articles, setArticles] = useState<HealthContentArticle[]>([])
   const [categories, setCategories] = useState<string[]>([])
+  const [categoryLabels, setCategoryLabels] = useState<CategoryLabels>({})
   const [pagination, setPagination] = useState<PaginationInfo>({
     page,
     totalPages: 1,
@@ -46,14 +52,18 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isFetching, setIsFetching] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
-  const riskWeightsRequest = useRef<Promise<RiskWeights> | null>(null)
+  const memberTopicsRequest = useRef<Promise<MemberTopics> | null>(null)
   const latestRequestId = useRef(0)
 
-  const loadRiskWeights = useCallback((): Promise<RiskWeights> => {
-    riskWeightsRequest.current ??= fetchMemberRiskPriorities().then(
-      (priorities) => priorities?.risk_weights
+  // Weights and topic names come from the backend; fetched once per page view
+  const loadMemberTopics = useCallback((): Promise<MemberTopics> => {
+    memberTopicsRequest.current ??= fetchMemberRiskPriorities().then(
+      (priorities) => ({
+        riskWeights: priorities?.risk_weights,
+        categoryLabels: toCategoryLabels(priorities?.categories),
+      })
     )
-    return riskWeightsRequest.current
+    return memberTopicsRequest.current
   }, [])
 
   const loadArticles = useCallback(async () => {
@@ -63,8 +73,8 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
 
     try {
       const cmsOrigin = resolveCmsUrl()
-      // 1. Clinical risk priorities computed by the backend (fetched once)
-      const riskWeights = await loadRiskWeights()
+      // 1. Clinical risk priorities and topic names from the backend
+      const { riskWeights, categoryLabels: labels } = await loadMemberTopics()
       // 2. Weighted, filtered and paginated recommendations from the CMS
       const response = await fetchRecommendedCmsPages({
         cmsOrigin,
@@ -77,9 +87,10 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
       if (requestId !== latestRequestId.current) return
 
       const mapped = (response.docs || []).map((doc) =>
-        mapPayloadPageToArticle(doc, cmsOrigin)
+        mapPayloadPageToArticle(doc, cmsOrigin, labels)
       )
       setArticles(mapped)
+      setCategoryLabels(labels)
       setCategories(response.categories ?? [])
       setPagination({
         page: response.page || page,
@@ -104,7 +115,7 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
         setIsFetching(false)
       }
     }
-  }, [page, limit, category, search, loadRiskWeights])
+  }, [page, limit, category, search, loadMemberTopics])
 
   useEffect(() => {
     // eslint-disable-next-line
@@ -114,6 +125,7 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
   return {
     articles,
     categories,
+    categoryLabels,
     pagination,
     isLoading,
     isFetching,

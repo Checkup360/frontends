@@ -11,7 +11,14 @@ export function MemberNewsPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const filters = useArticleFilters(() => setPage(1))
-  const { articles, categories, pagination, isLoading, isFetching } =
+  const {
+    articles,
+    categories,
+    categoryLabels,
+    pagination,
+    isLoading,
+    isFetching,
+  } =
     useMemberArticles({
       page,
       limit: 9,
@@ -45,6 +52,7 @@ export function MemberNewsPage() {
       <HealthContentGrid
         articles={articles}
         categories={categories}
+        categoryLabels={categoryLabels}
         selectedCategory={filters.category}
         onCategoryChange={filters.changeCategory}
         search={filters.searchInput}

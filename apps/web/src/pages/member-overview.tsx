@@ -15,6 +15,7 @@ export function MemberOverviewPage() {
   const {
     articles,
     categories,
+    categoryLabels,
     isLoading: isArticlesLoading,
     isFetching: isArticlesFetching,
   } = useMemberArticles({
@@ -41,6 +42,7 @@ export function MemberOverviewPage() {
       <HealthContentGrid
         articles={articles}
         categories={categories}
+        categoryLabels={categoryLabels}
         selectedCategory={filters.category}
         onCategoryChange={filters.changeCategory}
         search={filters.searchInput}

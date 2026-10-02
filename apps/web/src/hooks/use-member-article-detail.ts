@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from "react"
 import {
   fetchCmsPageById,
+  fetchMemberRiskPriorities,
   mapPayloadPageToArticle,
   resolveCmsUrl,
+  toCategoryLabels,
   type HealthContentArticle,
 } from "@workspace/api"
 
@@ -25,13 +27,21 @@ export function useMemberArticleDetail(articleId: string | undefined) {
     try {
       const cmsOrigin = resolveCmsUrl()
 
-      const doc = await fetchCmsPageById(articleId, { cmsOrigin })
+      // Topic names are cosmetic: a backend failure falls back to readable keys
+      const [doc, priorities] = await Promise.all([
+        fetchCmsPageById(articleId, { cmsOrigin }),
+        fetchMemberRiskPriorities().catch(() => null),
+      ])
 
       if (!doc) {
         setError("Article not found")
         setArticle(null)
       } else {
-        const mapped = mapPayloadPageToArticle(doc, cmsOrigin)
+        const mapped = mapPayloadPageToArticle(
+          doc,
+          cmsOrigin,
+          toCategoryLabels(priorities?.categories)
+        )
         setArticle(mapped)
       }
     } catch (err) {

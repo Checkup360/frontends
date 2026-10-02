@@ -11,7 +11,11 @@ import {
 } from "@workspace/ui/components/select"
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 import { ArrowRight, Clock, Newspaper, Search } from "lucide-react"
-import { formatCategoryName, type HealthContentArticle } from "@workspace/api"
+import {
+  formatCategoryName,
+  type CategoryLabels,
+  type HealthContentArticle,
+} from "@workspace/api"
 
 const MAX_VISIBLE_CARD_CATEGORIES = 2
 const ALL_CATEGORIES = "all"
@@ -44,6 +48,8 @@ type HealthContentGridProps = {
   articles: HealthContentArticle[]
   /** Raw CMS category keys available to filter by. */
   categories: string[]
+  /** Readable names of category keys, from the backend topic catalog. */
+  categoryLabels?: CategoryLabels
   selectedCategory: string | null
   onCategoryChange: (category: string | null) => void
   search: string
@@ -154,6 +160,7 @@ function ArticleCard({
 export function HealthContentGrid({
   articles,
   categories,
+  categoryLabels = {},
   selectedCategory,
   onCategoryChange,
   search,
@@ -167,7 +174,7 @@ export function HealthContentGrid({
     { value: ALL_CATEGORIES, label: "All" },
     ...categories.map((category) => ({
       value: category,
-      label: formatCategoryName(category),
+      label: formatCategoryName(category, categoryLabels),
     })),
   ]
   const activeValue = selectedCategory ?? ALL_CATEGORIES
