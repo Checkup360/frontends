@@ -4,15 +4,27 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Button } from "@workspace/ui/components/button"
 import { HealthContentGrid } from "@workspace/components/components/health-content-grid"
+import { useArticleFilters } from "@/hooks/use-article-filters"
 import { useMemberArticles } from "@/hooks/use-member-articles"
 
 export function MemberNewsPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
-  const { articles, pagination, isLoading } = useMemberArticles({
-    page,
-    limit: 9,
-  })
+  const filters = useArticleFilters(() => setPage(1))
+  const {
+    articles,
+    categories,
+    categoryLabels,
+    pagination,
+    isLoading,
+    isFetching,
+  } =
+    useMemberArticles({
+      page,
+      limit: 9,
+      category: filters.category,
+      search: filters.search,
+    })
 
   if (isLoading) {
     return (
@@ -39,6 +51,13 @@ export function MemberNewsPage() {
     <div className="mx-auto w-full max-w-7xl space-y-8">
       <HealthContentGrid
         articles={articles}
+        categories={categories}
+        categoryLabels={categoryLabels}
+        selectedCategory={filters.category}
+        onCategoryChange={filters.changeCategory}
+        search={filters.searchInput}
+        onSearchChange={filters.changeSearch}
+        isFetching={isFetching}
         title="Health Articles & News"
         description="Explore articles, medical advice, and healthy habits tailored for you."
         onNavigate={(href) => navigate(href)}

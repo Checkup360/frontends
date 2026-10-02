@@ -48,6 +48,11 @@ export type PayloadPagesResponse = {
   nextPage: number | null
 }
 
+export type RecommendedCmsPagesResponse = PayloadPagesResponse & {
+  /** Raw category keys of every article in the organization. */
+  categories?: string[]
+}
+
 export type HealthContentAuthor = {
   name: string
   website?: string
@@ -58,7 +63,8 @@ export type HealthContentAuthor = {
 export type HealthContentArticle = {
   id: string
   title: string
-  category: string
+  /** Readable labels of every CMS category, in CMS order. */
+  categories: string[]
   readTime?: number
   image?: string
   imageAlt?: string
@@ -131,9 +137,31 @@ export function calculateReadTime(content: unknown, wordsPerMinute = 200): numbe
   return Math.max(1, Math.ceil(words / wordsPerMinute))
 }
 
-function formatCategoryName(rawCategory?: string): string {
-  if (!rawCategory) return "General"
-  return rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase()
+const DEFAULT_CATEGORY_LABEL = "General Health"
+const GENERAL_CATEGORY_KEY = "general"
+
+/** Readable names of health topics by key, provided by the backend catalog. */
+export type CategoryLabels = Record<string, string>
+
+export function toCategoryLabels(
+  categories?: Array<{ key: string; label: string }>
+): CategoryLabels {
+  return Object.fromEntries(
+    (categories ?? []).map((category) => [category.key, category.label])
+  )
+}
+
+export function formatCategoryName(
+  rawCategory?: string,
+  labels: CategoryLabels = {}
+): string {
+  if (!rawCategory) return DEFAULT_CATEGORY_LABEL
+  const key = rawCategory.toLowerCase()
+  if (key === GENERAL_CATEGORY_KEY) return DEFAULT_CATEGORY_LABEL
+  const knownLabel = labels[key]
+  if (knownLabel) return knownLabel
+  const readable = key.replace(/[_-]+/g, " ").trim()
+  return readable.charAt(0).toUpperCase() + readable.slice(1)
 }
 
 /**
@@ -141,11 +169,18 @@ function formatCategoryName(rawCategory?: string): string {
  */
 export function mapPayloadPageToArticle(
   doc: PayloadPageDoc,
-  cmsOrigin = "http://localhost:3000"
+  cmsOrigin = "http://localhost:3000",
+  categoryLabels: CategoryLabels = {}
 ): HealthContentArticle {
   const diseaseTypes = doc.diseaseTypes ?? []
-  const primaryDisease = diseaseTypes[0]
-  const category = formatCategoryName(primaryDisease)
+  const categories =
+    diseaseTypes.length > 0
+      ? [
+          ...new Set(
+            diseaseTypes.map((type) => formatCategoryName(type, categoryLabels))
+          ),
+        ]
+      : [DEFAULT_CATEGORY_LABEL]
 
   let imageUrl: string | undefined = undefined
   let imageAlt = doc.title
@@ -200,7 +235,7 @@ export function mapPayloadPageToArticle(
   return {
     id: String(doc.id),
     title: doc.title,
-    category,
+    categories,
     readTime: finalReadTime,
     image: imageUrl,
     imageAlt,
@@ -211,43 +246,6 @@ export function mapPayloadPageToArticle(
     pubDate,
     content: doc.content,
   }
-}
-
-/**
- * Ordena artículos determinísticamente según la lista de prioridades de salud dada por el backend
- */
-export function sortArticlesByTopics(
-  articles: HealthContentArticle[],
-  priorityTopics: string[] = []
-): HealthContentArticle[] {
-  if (!priorityTopics || priorityTopics.length === 0) {
-    return [...articles]
-  }
-
-  const topicIndexMap = new Map<string, number>()
-  priorityTopics.forEach((topic, index) => {
-    topicIndexMap.set(topic.toLowerCase(), index)
-  })
-
-  function getArticlePriorityRank(article: HealthContentArticle): number {
-    const types = article.diseaseTypes ?? [article.category.toLowerCase()]
-    let highestRank = 9999
-
-    for (const type of types) {
-      const rank = topicIndexMap.get(type)
-      if (rank !== undefined && rank < highestRank) {
-        highestRank = rank
-      }
-    }
-
-    return highestRank
-  }
-
-  return [...articles].sort((a, b) => {
-    const rankA = getArticlePriorityRank(a)
-    const rankB = getArticlePriorityRank(b)
-    return rankA - rankB
-  })
 }
 
 /**
@@ -324,7 +322,9 @@ export async function fetchRecommendedCmsPages(options?: {
   page?: number
   limit?: number
   organizationId?: string
-}): Promise<PayloadPagesResponse> {
+  category?: string | null
+  search?: string
+}): Promise<RecommendedCmsPagesResponse> {
   const cmsOrigin = (
     options?.cmsOrigin ||
     resolveCmsUrl()
@@ -336,11 +336,20 @@ export async function fetchRecommendedCmsPages(options?: {
   params.append("page", page.toString())
   params.append("limit", limit.toString())
 
-  if (options?.riskWeights && Object.keys(options.riskWeights).length > 0) {
+  // Weights hold only the risks the organization has enabled. An empty object
+  // is meaningful (no active risks); omitting it disables category filtering.
+  if (options?.riskWeights) {
     params.append("weights", JSON.stringify(options.riskWeights))
   }
   if (options?.organizationId) {
     params.append("organization", options.organizationId)
+  }
+  if (options?.category) {
+    params.append("category", options.category)
+  }
+  const search = options?.search?.trim()
+  if (search) {
+    params.append("search", search)
   }
 
   const url = `${cmsOrigin}/api/pages/recommended?${params.toString()}`
@@ -357,5 +366,5 @@ export async function fetchRecommendedCmsPages(options?: {
     throw new Error(`Failed to fetch recommended CMS pages: HTTP ${response.status}`)
   }
 
-  return (await response.json()) as PayloadPagesResponse
+  return (await response.json()) as RecommendedCmsPagesResponse
 }

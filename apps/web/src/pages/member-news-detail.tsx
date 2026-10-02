@@ -94,7 +94,7 @@ export function MemberNewsDetailPage() {
         description={article.excerpt}
         image={article.image}
         pubDate={article.pubDate}
-        category={article.category}
+        categories={article.categories}
         readTime={article.readTime}
         author={article.author}
         content={article.content}

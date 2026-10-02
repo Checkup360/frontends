@@ -300,10 +300,19 @@ export interface SysadminStats {
   pending_invites: number
 }
 
+export type ContentCategory = {
+  /** Health topic key from the scoring catalog (e.g. "audit_c"). */
+  key: string
+  label: string
+  active: boolean
+}
+
 export type MemberRiskPriorities = {
   user_id: string
   risk_weights: Record<string, number>
   highest_risk: string | null
+  /** Health topics enabled for the member's organization, with their names. */
+  categories?: ContentCategory[]
 }
 
 export type ConsentType =

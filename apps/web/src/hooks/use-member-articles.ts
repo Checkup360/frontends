@@ -1,15 +1,19 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import {
   fetchMemberRiskPriorities,
   fetchRecommendedCmsPages,
   mapPayloadPageToArticle,
   resolveCmsUrl,
+  toCategoryLabels,
+  type CategoryLabels,
   type HealthContentArticle,
 } from "@workspace/api"
 
 export interface UseMemberArticlesOptions {
   page?: number
   limit?: number
+  category?: string | null
+  search?: string
 }
 
 export interface PaginationInfo {
@@ -21,11 +25,20 @@ export interface PaginationInfo {
   hasPrevPage: boolean
 }
 
+type MemberTopics = {
+  riskWeights: Record<string, number> | undefined
+  categoryLabels: CategoryLabels
+}
+
 export function useMemberArticles(options?: UseMemberArticlesOptions) {
   const page = options?.page ?? 1
   const limit = options?.limit ?? 10
+  const category = options?.category ?? null
+  const search = options?.search ?? ""
 
   const [articles, setArticles] = useState<HealthContentArticle[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [categoryLabels, setCategoryLabels] = useState<CategoryLabels>({})
   const [pagination, setPagination] = useState<PaginationInfo>({
     page,
     totalPages: 1,
@@ -34,32 +47,51 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
     hasNextPage: false,
     hasPrevPage: false,
   })
+  // isLoading only covers the first load; later filter changes use isFetching
+  // so the page keeps its controls mounted while new results arrive.
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isFetching, setIsFetching] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
+  const memberTopicsRequest = useRef<Promise<MemberTopics> | null>(null)
+  const latestRequestId = useRef(0)
+
+  // Weights and topic names come from the backend; fetched once per page view
+  const loadMemberTopics = useCallback((): Promise<MemberTopics> => {
+    memberTopicsRequest.current ??= fetchMemberRiskPriorities().then(
+      (priorities) => ({
+        riskWeights: priorities?.risk_weights,
+        categoryLabels: toCategoryLabels(priorities?.categories),
+      })
+    )
+    return memberTopicsRequest.current
+  }, [])
 
   const loadArticles = useCallback(async () => {
-    setIsLoading(true)
+    const requestId = ++latestRequestId.current
+    setIsFetching(true)
     setError(null)
 
     try {
       const cmsOrigin = resolveCmsUrl()
-
-      // 1. Consultar prioridades clínicas de riesgo calculadas por el backend
-      const priorities = await fetchMemberRiskPriorities()
-      const riskWeights = priorities?.risk_weights
-
-      // 2. Consultar recomendaciones ponderadas y paginadas del CMS
+      // 1. Clinical risk priorities and topic names from the backend
+      const { riskWeights, categoryLabels: labels } = await loadMemberTopics()
+      // 2. Weighted, filtered and paginated recommendations from the CMS
       const response = await fetchRecommendedCmsPages({
         cmsOrigin,
         riskWeights,
         page,
         limit,
+        category,
+        search,
       })
+      if (requestId !== latestRequestId.current) return
 
-      const docs = response.docs || []
-      const mapped = docs.map((doc) => mapPayloadPageToArticle(doc, cmsOrigin))
-
+      const mapped = (response.docs || []).map((doc) =>
+        mapPayloadPageToArticle(doc, cmsOrigin, labels)
+      )
       setArticles(mapped)
+      setCategoryLabels(labels)
+      setCategories(response.categories ?? [])
       setPagination({
         page: response.page || page,
         totalPages: response.totalPages || 1,
@@ -69,6 +101,7 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
         hasPrevPage: Boolean(response.hasPrevPage),
       })
     } catch (err) {
+      if (requestId !== latestRequestId.current) return
       console.error("Error fetching recommended articles from CMS:", err)
       setError(
         err instanceof Error
@@ -77,9 +110,12 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
       )
       setArticles([])
     } finally {
-      setIsLoading(false)
+      if (requestId === latestRequestId.current) {
+        setIsLoading(false)
+        setIsFetching(false)
+      }
     }
-  }, [page, limit])
+  }, [page, limit, category, search, loadMemberTopics])
 
   useEffect(() => {
     // eslint-disable-next-line
@@ -88,8 +124,11 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
 
   return {
     articles,
+    categories,
+    categoryLabels,
     pagination,
     isLoading,
+    isFetching,
     error,
     refetch: loadArticles,
   }

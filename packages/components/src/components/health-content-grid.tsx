@@ -2,13 +2,60 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 import { ArrowRight, Clock, Newspaper, Search } from "lucide-react"
-import { useMemo, useState } from "react"
-import type { HealthContentArticle } from "@workspace/api"
+import {
+  formatCategoryName,
+  type CategoryLabels,
+  type HealthContentArticle,
+} from "@workspace/api"
+
+const MAX_VISIBLE_CARD_CATEGORIES = 2
+const ALL_CATEGORIES = "all"
+
+function ArticleCategoryBadges({ categories }: { categories: string[] }) {
+  const visible = categories.slice(0, MAX_VISIBLE_CARD_CATEGORIES)
+  const hidden = categories.slice(MAX_VISIBLE_CARD_CATEGORIES)
+  return (
+    <div className="flex min-w-0 flex-wrap justify-end gap-1.5">
+      {visible.map((category) => (
+        <Badge key={category} variant="secondary" className="text-xs">
+          {category}
+        </Badge>
+      ))}
+      {hidden.length > 0 && (
+        <Badge
+          variant="outline"
+          className="text-xs"
+          title={hidden.join(", ")}
+          aria-label={`${hidden.length} more categories: ${hidden.join(", ")}`}
+        >
+          +{hidden.length}
+        </Badge>
+      )}
+    </div>
+  )
+}
 
 type HealthContentGridProps = {
   articles: HealthContentArticle[]
+  /** Raw CMS category keys available to filter by. */
+  categories: string[]
+  /** Readable names of category keys, from the backend topic catalog. */
+  categoryLabels?: CategoryLabels
+  selectedCategory: string | null
+  onCategoryChange: (category: string | null) => void
+  search: string
+  onSearchChange: (search: string) => void
+  /** True while a filtered page is being fetched. */
+  isFetching?: boolean
   title?: string
   description?: string
   onNavigate?: (href: string) => void
@@ -52,19 +99,17 @@ function ArticleCard({
         )}
       </a>
       <CardContent className="flex flex-1 flex-col space-y-3 p-5">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-start justify-between gap-3">
           {article.readTime ? (
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="size-3.5" />
               {article.readTime} min read
             </span>
           ) : (
             <span />
           )}
-          {article.category && (
-            <Badge variant="secondary" className="text-xs">
-              {article.category}
-            </Badge>
+          {article.categories.length > 0 && (
+            <ArticleCategoryBadges categories={article.categories} />
           )}
         </div>
         <div className="space-y-1.5">
@@ -114,31 +159,27 @@ function ArticleCard({
 
 export function HealthContentGrid({
   articles,
+  categories,
+  categoryLabels = {},
+  selectedCategory,
+  onCategoryChange,
+  search,
+  onSearchChange,
+  isFetching = false,
   title = "Health content",
   description = "Articles and practical tips for your wellbeing.",
   onNavigate,
 }: HealthContentGridProps) {
-  const [category, setCategory] = useState("All")
-  const [search, setSearch] = useState("")
-  const categories = useMemo(
-    () => [
-      "All",
-      ...new Set(articles.map((article) => article.category).filter(Boolean)),
-    ],
-    [articles]
-  )
-  const visibleArticles = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    return articles.filter((article) => {
-      const matchesCategory =
-        category === "All" || article.category === category
-      const matchesSearch =
-        !query ||
-        article.title.toLowerCase().includes(query) ||
-        (article.excerpt && article.excerpt.toLowerCase().includes(query))
-      return matchesCategory && matchesSearch
-    })
-  }, [articles, category, search])
+  const filterOptions = [
+    { value: ALL_CATEGORIES, label: "All" },
+    ...categories.map((category) => ({
+      value: category,
+      label: formatCategoryName(category, categoryLabels),
+    })),
+  ]
+  const activeValue = selectedCategory ?? ALL_CATEGORIES
+  const handleCategoryChange = (value: string) =>
+    onCategoryChange(value === ALL_CATEGORIES ? null : value)
 
   return (
     <section
@@ -155,23 +196,48 @@ export function HealthContentGrid({
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </header>
 
-      <Tabs value={category} onValueChange={setCategory} className="gap-6">
+      <Tabs
+        value={activeValue}
+        onValueChange={handleCategoryChange}
+        className="gap-6"
+      >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="w-full sm:w-auto">
-            <TabsList className="h-auto flex-wrap justify-start">
-              {categories.map((item) => (
-                <TabsTrigger key={item} value={item}>
-                  {item}
+          <Select value={activeValue} onValueChange={handleCategoryChange}>
+            <SelectTrigger
+              className="w-full sm:hidden"
+              aria-label="Filter by category"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {filterOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.value === ALL_CATEGORIES
+                    ? "All categories"
+                    : option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="hidden min-w-0 overflow-x-auto pb-1 sm:block sm:flex-1">
+            <TabsList className="w-max justify-start">
+              {filterOptions.map((option) => (
+                <TabsTrigger
+                  key={option.value}
+                  value={option.value}
+                  className="flex-none"
+                >
+                  {option.label}
                 </TabsTrigger>
               ))}
             </TabsList>
           </div>
-          <div className="relative w-full sm:max-w-xs">
+          <div className="relative w-full sm:w-72 sm:shrink-0">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search health content"
               aria-label="Search health content"
               className="pl-9"
@@ -180,9 +246,12 @@ export function HealthContentGrid({
         </div>
       </Tabs>
 
-      {visibleArticles.length > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleArticles.map((article) => (
+      {articles.length > 0 ? (
+        <div
+          className="grid gap-6 transition-opacity sm:grid-cols-2 lg:grid-cols-3 aria-busy:opacity-60"
+          aria-busy={isFetching}
+        >
+          {articles.map((article) => (
             <ArticleCard
               key={article.id}
               article={article}
@@ -192,7 +261,9 @@ export function HealthContentGrid({
         </div>
       ) : (
         <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-          No health content matches your search.
+          {isFetching
+            ? "Loading health content…"
+            : "No health content matches your search."}
         </p>
       )}
     </section>
