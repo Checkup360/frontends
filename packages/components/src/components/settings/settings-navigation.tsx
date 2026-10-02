@@ -6,9 +6,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select"
-import { Bell, Palette, UserRound, type LucideIcon } from "lucide-react"
+import { Palette, UserRound, type LucideIcon } from "lucide-react"
 
-export type SettingsSection = "account" | "appearance" | "notifications"
+export type SettingsSection = "account" | "appearance"
 
 const navigationItems: Array<{
   value: SettingsSection
@@ -17,7 +17,6 @@ const navigationItems: Array<{
 }> = [
   { value: "account", label: "Account", icon: UserRound },
   { value: "appearance", label: "Appearance", icon: Palette },
-  { value: "notifications", label: "Notifications", icon: Bell },
 ]
 
 type SettingsNavigationProps = {

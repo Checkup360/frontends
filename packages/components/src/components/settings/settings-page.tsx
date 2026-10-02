@@ -2,7 +2,6 @@ import { Separator } from "@workspace/ui/components/separator"
 import { useState, type ReactNode } from "react"
 import { AccountSettings } from "./account-settings"
 import { AppearanceSettings } from "./appearance-settings"
-import { NotificationSettings } from "./notification-settings"
 import { SettingsNavigation, type SettingsSection } from "./settings-navigation"
 
 export type SettingsPageProps = {
@@ -20,7 +19,6 @@ function ActiveSection({
   account: SettingsPageProps
 }) {
   if (section === "appearance") return <AppearanceSettings />
-  if (section === "notifications") return <NotificationSettings />
   return (
     <AccountSettings
       {...account}
