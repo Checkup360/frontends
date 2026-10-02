@@ -33,7 +33,7 @@ export function ConsentGateModal({
   hasHealthConsent = false,
 }: ConsentGateModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [acknowledged, setAcknowledged] = useState(true)
+  const [acknowledged, setAcknowledged] = useState(false)
 
   const doc = getLegalDocForForm(formType)
 
@@ -235,7 +235,7 @@ export function FormConsentHeroCard({
               Confidentiality Safeguard
             </p>
             <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
-              Your answers are protected under medical privacy standards. Individual records are never disclosed to employers in identifiable form.
+              Your answers are protected under occupational health privacy standards and used to evaluate preventive health and wellness indicators.
             </p>
           </div>
         </div>

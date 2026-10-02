@@ -20,8 +20,10 @@ import {
   BadgeCheck,
   CalendarDays,
   Check,
+  CheckCircle2,
   FileText,
   HeartPulse,
+  Lock,
   LogOut,
   Moon,
   Ruler,
@@ -691,125 +693,288 @@ export function MemberOnboardingPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-6">
-                        <div className="rounded-2xl border border-border/40 bg-background/30 p-5 space-y-4">
-                          <div className="flex items-center gap-2 text-primary font-semibold text-sm">
-                            <ShieldCheck className="size-4" />
-                            <span>Informed Consent & Privacy Acknowledgements</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground leading-relaxed">
-                            Under Argentine Law 25.326 and international occupational health guidelines, your explicit consent is required before processing personal and health-related data.
-                          </p>
-
-                          {/* Terms & Conditions Checkbox */}
-                          <div className="rounded-xl border border-border/40 bg-background/50 p-4 space-y-2">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-start gap-3">
-                                <Checkbox
-                                  id="accept-terms"
-                                  checked={acceptTerms}
-                                  onCheckedChange={(val) => {
-                                    setAcceptTerms(Boolean(val))
-                                    if (error === "acceptTerms") setError(null)
-                                  }}
-                                  disabled={isSubmitting}
-                                  className="mt-0.5"
-                                />
-                                <Label
-                                  htmlFor="accept-terms"
-                                  className="text-xs font-normal leading-relaxed text-foreground cursor-pointer"
-                                >
-                                  I have read and agree to the <strong>Terms and Conditions</strong> (v1.0) governing my use of the Checkup360 platform.
-                                </Label>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setViewingLegalDoc("TERMS_AND_CONDITIONS")}
-                                className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-primary shrink-0"
-                              >
-                                <FileText className="size-3" />
-                                <span>Read</span>
-                              </Button>
+                      <div className="space-y-5">
+                        {/* Header banner */}
+                        <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 sm:p-5">
+                          <div className="flex items-start gap-3.5">
+                            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                              <ShieldCheck className="size-5" />
                             </div>
-                            {error === "acceptTerms" ? (
-                              <p className="text-xs text-destructive">You must agree to the Terms and Conditions to proceed.</p>
-                            ) : null}
+                            <div className="min-w-0 space-y-1">
+                              <h3 className="text-sm font-semibold tracking-tight text-foreground sm:text-base">
+                                Informed Consent & Privacy Agreements
+                              </h3>
+                              <p className="text-xs leading-relaxed text-muted-foreground">
+                                Please review and accept our platform agreements to enable health assessment features and preventive analytics.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Consent Cards List */}
+                        <div className="space-y-3.5">
+                          {/* Terms & Conditions Card */}
+                          <div
+                            className={cn(
+                              "group relative overflow-hidden rounded-2xl border transition-all duration-200",
+                              acceptTerms
+                                ? "border-primary/50 bg-card shadow-xs"
+                                : "border-border/70 bg-card/60 hover:border-border",
+                              error === "acceptTerms" && "border-destructive/60 bg-destructive/[0.02]"
+                            )}
+                          >
+                            {/* Card Top: Info & Read button */}
+                            <div className="p-4 sm:p-5">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                                    <FileText className="size-4 text-primary" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <h4 className="text-sm font-semibold tracking-tight text-foreground">
+                                        Terms of Service
+                                      </h4>
+                                      <Badge variant="secondary" className="text-[10px] font-mono py-0 px-1.5 h-4 text-muted-foreground">
+                                        v1.0
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                      Governs platform usage rules, account responsibilities, and service security standards.
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setViewingLegalDoc("TERMS_AND_CONDITIONS")}
+                                  className="h-8 gap-1.5 px-3 text-xs font-medium shrink-0 rounded-lg border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+                                >
+                                  <FileText className="size-3.5" />
+                                  <span>Read document</span>
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Card Bottom: Explicit Action Checkbox Bar */}
+                            <div
+                              className={cn(
+                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer",
+                                acceptTerms
+                                  ? "border-primary/30 bg-primary/5"
+                                  : "border-border/40 bg-muted/25 hover:bg-muted/40",
+                                error === "acceptTerms" && "border-destructive/40 bg-destructive/5"
+                              )}
+                              onClick={() => {
+                                setAcceptTerms(!acceptTerms)
+                                if (error === "acceptTerms") setError(null)
+                              }}
+                            >
+                              <Checkbox
+                                id="accept-terms"
+                                checked={acceptTerms}
+                                onCheckedChange={(val) => {
+                                  setAcceptTerms(Boolean(val))
+                                  if (error === "acceptTerms") setError(null)
+                                }}
+                                disabled={isSubmitting}
+                                className="mt-0"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <Label
+                                htmlFor="accept-terms"
+                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer flex-1 select-none"
+                              >
+                                I agree to the Terms of Service
+                              </Label>
+                              {acceptTerms && (
+                                <CheckCircle2 className="size-4 text-primary shrink-0 animate-in fade-in zoom-in-50 duration-200" />
+                              )}
+                            </div>
+
+                            {error === "acceptTerms" && (
+                              <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20">
+                                You must accept the Terms of Service to proceed.
+                              </p>
+                            )}
                           </div>
 
-                          {/* Privacy Policy Checkbox */}
-                          <div className="rounded-xl border border-border/40 bg-background/50 p-4 space-y-2">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-start gap-3">
-                                <Checkbox
-                                  id="accept-privacy"
-                                  checked={acceptPrivacy}
-                                  onCheckedChange={(val) => {
-                                    setAcceptPrivacy(Boolean(val))
-                                    if (error === "acceptPrivacy") setError(null)
-                                  }}
-                                  disabled={isSubmitting}
-                                  className="mt-0.5"
-                                />
-                                <Label
-                                  htmlFor="accept-privacy"
-                                  className="text-xs font-normal leading-relaxed text-foreground cursor-pointer"
+                          {/* Privacy Policy Card */}
+                          <div
+                            className={cn(
+                              "group relative overflow-hidden rounded-2xl border transition-all duration-200",
+                              acceptPrivacy
+                                ? "border-primary/50 bg-card shadow-xs"
+                                : "border-border/70 bg-card/60 hover:border-border",
+                              error === "acceptPrivacy" && "border-destructive/60 bg-destructive/[0.02]"
+                            )}
+                          >
+                            {/* Card Top: Info & Read button */}
+                            <div className="p-4 sm:p-5">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                                    <Lock className="size-4 text-primary" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <h4 className="text-sm font-semibold tracking-tight text-foreground">
+                                        Privacy Policy
+                                      </h4>
+                                      <Badge variant="secondary" className="text-[10px] font-mono py-0 px-1.5 h-4 text-muted-foreground">
+                                        v1.0
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                      Details how your personal data is protected, encrypted, and your privacy access rights.
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setViewingLegalDoc("PRIVACY_POLICY")}
+                                  className="h-8 gap-1.5 px-3 text-xs font-medium shrink-0 rounded-lg border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted"
                                 >
-                                  I acknowledge the <strong>Privacy Policy</strong> (v1.0) and understand my Habeas Data rights under Law 25.326.
-                                </Label>
+                                  <FileText className="size-3.5" />
+                                  <span>Read document</span>
+                                </Button>
                               </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setViewingLegalDoc("PRIVACY_POLICY")}
-                                className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-primary shrink-0"
-                              >
-                                <FileText className="size-3" />
-                                <span>Read</span>
-                              </Button>
                             </div>
-                            {error === "acceptPrivacy" ? (
-                              <p className="text-xs text-destructive">You must acknowledge the Privacy Policy to proceed.</p>
-                            ) : null}
+
+                            {/* Card Bottom: Explicit Action Checkbox Bar */}
+                            <div
+                              className={cn(
+                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer",
+                                acceptPrivacy
+                                  ? "border-primary/30 bg-primary/5"
+                                  : "border-border/40 bg-muted/25 hover:bg-muted/40",
+                                error === "acceptPrivacy" && "border-destructive/40 bg-destructive/5"
+                              )}
+                              onClick={() => {
+                                setAcceptPrivacy(!acceptPrivacy)
+                                if (error === "acceptPrivacy") setError(null)
+                              }}
+                            >
+                              <Checkbox
+                                id="accept-privacy"
+                                checked={acceptPrivacy}
+                                onCheckedChange={(val) => {
+                                  setAcceptPrivacy(Boolean(val))
+                                  if (error === "acceptPrivacy") setError(null)
+                                }}
+                                disabled={isSubmitting}
+                                className="mt-0"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <Label
+                                htmlFor="accept-privacy"
+                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer flex-1 select-none"
+                              >
+                                I agree to the Privacy Policy
+                              </Label>
+                              {acceptPrivacy && (
+                                <CheckCircle2 className="size-4 text-primary shrink-0 animate-in fade-in zoom-in-50 duration-200" />
+                              )}
+                            </div>
+
+                            {error === "acceptPrivacy" && (
+                              <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20">
+                                You must accept the Privacy Policy to proceed.
+                              </p>
+                            )}
                           </div>
 
-                          {/* Health Data Processing Consent Checkbox */}
-                          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-start gap-3">
-                                <Checkbox
-                                  id="accept-health"
-                                  checked={acceptHealthData}
-                                  onCheckedChange={(val) => {
-                                    setAcceptHealthData(Boolean(val))
-                                    if (error === "acceptHealthData") setError(null)
-                                  }}
-                                  disabled={isSubmitting}
-                                  className="mt-0.5"
-                                />
-                                <Label
-                                  htmlFor="accept-health"
-                                  className="text-xs font-normal leading-relaxed text-foreground cursor-pointer"
+                          {/* Health Data Processing Consent Card */}
+                          <div
+                            className={cn(
+                              "group relative overflow-hidden rounded-2xl border transition-all duration-200",
+                              acceptHealthData
+                                ? "border-primary/50 bg-card shadow-xs"
+                                : "border-border/70 bg-card/60 hover:border-border",
+                              error === "acceptHealthData" && "border-destructive/60 bg-destructive/[0.02]"
+                            )}
+                          >
+                            {/* Card Top: Info & Read button */}
+                            <div className="p-4 sm:p-5">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                    <HeartPulse className="size-4" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <h4 className="text-sm font-semibold tracking-tight text-foreground">
+                                        Health & Biometric Data Processing
+                                      </h4>
+                                      <Badge variant="secondary" className="text-[10px] font-mono py-0 px-1.5 h-4 text-muted-foreground">
+                                        v1.0
+                                      </Badge>
+                                      <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] py-0 px-1.5 h-4">
+                                        Occupational Health
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                      Authorizes confidential calculation of preventative health indicators, risk profiles, and workplace well-being analytics.
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setViewingLegalDoc("HEALTH_DATA_PROCESSING_CONSENT")}
+                                  className="h-8 gap-1.5 px-3 text-xs font-medium shrink-0 rounded-lg border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted"
                                 >
-                                  I give explicit informed consent for the <strong>Processing of Health & Biometric Data</strong> (v1.0) for individual risk scoring and aggregate, anonymized occupational health insights.
-                                </Label>
+                                  <FileText className="size-3.5" />
+                                  <span>Read document</span>
+                                </Button>
                               </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setViewingLegalDoc("HEALTH_DATA_PROCESSING_CONSENT")}
-                                className="h-7 gap-1 px-2 text-xs text-primary hover:text-primary/80 shrink-0"
-                              >
-                                <FileText className="size-3" />
-                                <span>Read</span>
-                              </Button>
                             </div>
-                            {error === "acceptHealthData" ? (
-                              <p className="text-xs text-destructive">Health data processing consent is required for occupational wellness features.</p>
-                            ) : null}
+
+                            {/* Card Bottom: Explicit Action Checkbox Bar */}
+                            <div
+                              className={cn(
+                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer",
+                                acceptHealthData
+                                  ? "border-primary/30 bg-primary/5"
+                                  : "border-border/40 bg-muted/25 hover:bg-muted/40",
+                                error === "acceptHealthData" && "border-destructive/40 bg-destructive/5"
+                              )}
+                              onClick={() => {
+                                setAcceptHealthData(!acceptHealthData)
+                                if (error === "acceptHealthData") setError(null)
+                              }}
+                            >
+                              <Checkbox
+                                id="accept-health"
+                                checked={acceptHealthData}
+                                onCheckedChange={(val) => {
+                                  setAcceptHealthData(Boolean(val))
+                                  if (error === "acceptHealthData") setError(null)
+                                }}
+                                disabled={isSubmitting}
+                                className="mt-0"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <Label
+                                htmlFor="accept-health"
+                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer flex-1 select-none"
+                              >
+                                I consent to Health and Biometric Data Processing
+                              </Label>
+                              {acceptHealthData && (
+                                <CheckCircle2 className="size-4 text-primary shrink-0 animate-in fade-in zoom-in-50 duration-200" />
+                              )}
+                            </div>
+
+                            {error === "acceptHealthData" && (
+                              <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20">
+                                Health data processing consent is required to complete onboarding.
+                              </p>
+                            )}
                           </div>
                         </div>
 

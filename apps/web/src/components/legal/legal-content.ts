@@ -64,7 +64,7 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
     ],
     rights: [
       "Explicit consent is entirely voluntary and not a condition of employment",
-      "Individual health records are strictly confidential and never shared with employers in identifiable form",
+      "Health indicators and assessment evaluations are processed under occupational health standards to support preventative care and workplace health management within your organization",
       "You may revoke this consent at any time from your account settings",
     ],
   },
@@ -142,7 +142,7 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
       "Standardized frequency indicators on mood, sleep quality, energy, concentration, and emotional state",
     ],
     rights: [
-      "Strict confidentiality: Individual answers are encrypted and never shown to employers or supervisors",
+      "Confidentiality: Responses are processed under occupational health standards for well-being assessment and preventative support",
       "If you are experiencing distress, support resources are immediately provided",
       "Consent can be revoked at any time",
     ],
@@ -217,7 +217,7 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
       "Consumption frequency and typical patterns",
     ],
     rights: [
-      "All responses are confidential and never shared with employers individually",
+      "Confidential evaluation: Responses are processed under occupational health standards for preventive wellness programs",
       "Consent can be revoked at any time",
     ],
   },

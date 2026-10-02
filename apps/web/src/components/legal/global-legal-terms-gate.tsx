@@ -25,9 +25,9 @@ export function GlobalLegalTermsGate() {
   const [missingPrivacy, setMissingPrivacy] = useState(false)
   const [missingHealth, setMissingHealth] = useState(false)
 
-  const [acceptTerms, setAcceptTerms] = useState(true)
-  const [acceptPrivacy, setAcceptPrivacy] = useState(true)
-  const [acceptHealth, setAcceptHealth] = useState(true)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false)
+  const [acceptHealth, setAcceptHealth] = useState(false)
 
   const [viewingDocKey, setViewingDocKey] = useState<string | null>(null)
 
