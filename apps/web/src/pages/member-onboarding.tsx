@@ -917,7 +917,7 @@ export function MemberOnboardingPage() {
                                       </Badge>
                                     </div>
                                     <p className="text-xs text-muted-foreground leading-relaxed">
-                                      Authorizes confidential calculation of preventative health indicators, risk profiles, and workplace well-being analytics.
+                                      Authorizes processing and review of health indicators, risk profiles, and workplace well-being assessments by authorized organization administrators and medical staff.
                                     </p>
                                   </div>
                                 </div>

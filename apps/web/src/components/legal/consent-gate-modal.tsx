@@ -157,7 +157,7 @@ export function ConsentGateModal({
                 htmlFor="consent-form-ack-modal"
                 className="text-xs font-normal leading-relaxed text-foreground cursor-pointer"
               >
-                I have read and voluntarily agree to the informed consent terms for this questionnaire. I understand my responses are confidential and used exclusively for preventative health insights.
+                I have read and voluntarily agree to the informed consent terms for this questionnaire. I understand my responses and health indicators will be processed and reviewed by authorized organization administrators and occupational health medical staff for preventative care and workplace health tracking.
               </Label>
             </div>
           </div>
@@ -232,10 +232,10 @@ export function FormConsentHeroCard({
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
               <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
-              Confidentiality Safeguard
+              Occupational Health Access
             </p>
             <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
-              Your answers are protected under occupational health privacy standards and used to evaluate preventive health and wellness indicators.
+              Your answers and health indicators are processed under occupational health standards and accessible to authorized organization administrators and medical personnel for preventative wellness management.
             </p>
           </div>
         </div>

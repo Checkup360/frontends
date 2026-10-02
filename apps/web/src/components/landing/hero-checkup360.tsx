@@ -32,7 +32,8 @@ const heroCards = [
   },
   {
     title: "For employers",
-    description: "Aggregated indicators to detect risk trends.",
+    description:
+      "Workforce health overview, risk trend detection, and employee assessment insights.",
     icon: ShieldCheck,
   },
   {
@@ -176,7 +177,7 @@ export function HeroCheckup360({ className, user }: HeroCheckup360Props) {
                   <div>
                     <p className="text-sm font-medium">Population risk</p>
                     <p className="text-xs text-muted-foreground">
-                      Aggregated and anonymized view
+                      Workplace and departmental overview
                     </p>
                   </div>
                   <div className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">

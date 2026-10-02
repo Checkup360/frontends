@@ -124,7 +124,7 @@ export function GlobalLegalTermsGate() {
               Review & Accept Platform Terms
             </DialogTitle>
             <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
-              To ensure compliance with privacy regulations and medical confidentiality standards, please review and accept the latest platform agreements.
+              To ensure compliance with privacy regulations and occupational health standards, please review and accept the latest platform agreements.
             </DialogDescription>
           </DialogHeader>
 
@@ -233,7 +233,7 @@ export function GlobalLegalTermsGate() {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Authorizes processing of health indicators for personalized preventative insights under strict medical confidentiality.
+                      Authorizes processing and review of health indicators by authorized organization administrators and medical staff for preventative occupational health management.
                     </p>
                   </div>
                 </div>
