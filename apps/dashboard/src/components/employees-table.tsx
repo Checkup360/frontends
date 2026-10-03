@@ -62,14 +62,6 @@ const statusClasses: Record<string, string> = {
 
 const MEMBER_ROLES: OrganizationEmployeeRole[] = ["member"]
 
-const employeeTableSkeletonColumns = [
-  { skeletonClassName: "h-4 w-48" },
-  { skeletonClassName: "h-4 w-28" },
-  { skeletonClassName: "h-4 w-10" },
-  { skeletonClassName: "h-5 w-20 rounded-full" },
-  { skeletonClassName: "h-4 w-24" },
-]
-
 import { ManageRolesDialog } from "./manage-roles-dialog"
 import { getRoleBadgeProps, formatRoleName, normalizeRoles } from "@/lib/role-utils"
 
@@ -89,6 +81,7 @@ interface EmployeesTableProps {
   onDataChanged?: () => void
   title?: string
   description?: string
+  showScoreColumn?: boolean
 }
 
 export function EmployeesTable({
@@ -100,6 +93,7 @@ export function EmployeesTable({
   onDataChanged,
   title = "Employees",
   description = "Individual data and status level",
+  showScoreColumn = true,
 }: EmployeesTableProps) {
   const navigate = useNavigate()
   const { user } = useCurrentUser()
@@ -321,20 +315,22 @@ export function EmployeesTable({
     }
   }
 
-  const renderSkeletonColumns =
-    showRolesColumn && allowRoleManagement
-      ? [
-          ...employeeTableSkeletonColumns,
-          { skeletonClassName: "h-4 w-12" },
-          { skeletonClassName: "h-8 w-8 ml-auto rounded-md" },
-        ]
-      : showRolesColumn
-        ? [...employeeTableSkeletonColumns, { skeletonClassName: "h-4 w-12" }]
-        : employeeTableSkeletonColumns
+  const renderSkeletonColumns = [
+    { skeletonClassName: "h-4 w-48" },
+    ...(showRolesColumn ? [{ skeletonClassName: "h-4 w-12" }] : []),
+    { skeletonClassName: "h-4 w-28" },
+    ...(showScoreColumn ? [{ skeletonClassName: "h-4 w-10" }] : []),
+    { skeletonClassName: "h-5 w-20 rounded-full" },
+    { skeletonClassName: "h-4 w-24" },
+    ...(showRolesColumn && allowRoleManagement
+      ? [{ skeletonClassName: "h-8 w-8 ml-auto rounded-md" }]
+      : []),
+  ]
 
   const totalColSpan =
-    5 +
+    4 +
     (showRolesColumn ? 1 : 0) +
+    (showScoreColumn ? 1 : 0) +
     (showRolesColumn && allowRoleManagement ? 1 : 0)
 
   return (
@@ -430,24 +426,26 @@ export function EmployeesTable({
             </Select>
           </div>
 
-          <div className="w-[160px]">
-            <Select
-              value={selectedScore}
-              onValueChange={(val) => {
-                setSelectedScore(val)
-                setCurrentPage(1)
-              }}
-            >
-              <SelectTrigger className="h-9 bg-background">
-                <SelectValue placeholder="All Scores" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Scores</SelectItem>
-                <SelectItem value="scored">With Score</SelectItem>
-                <SelectItem value="unscored">Without Score</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {showScoreColumn && (
+            <div className="w-[160px]">
+              <Select
+                value={selectedScore}
+                onValueChange={(val) => {
+                  setSelectedScore(val)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="h-9 bg-background">
+                  <SelectValue placeholder="All Scores" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Scores</SelectItem>
+                  <SelectItem value="scored">With Score</SelectItem>
+                  <SelectItem value="unscored">Without Score</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {hasActiveFilters && (
             <Button
@@ -478,9 +476,11 @@ export function EmployeesTable({
               <TableHead className="font-semibold text-foreground">
                 Area
               </TableHead>
-              <TableHead className="font-semibold text-foreground">
-                Score
-              </TableHead>
+              {showScoreColumn && (
+                <TableHead className="font-semibold text-foreground">
+                  Score
+                </TableHead>
+              )}
               <TableHead className="font-semibold text-foreground">
                 Status
               </TableHead>
@@ -560,11 +560,13 @@ export function EmployeesTable({
                     <TableCell className="text-muted-foreground">
                       {w.department?.name ?? "Unassigned"}
                     </TableCell>
-                    <TableCell className="font-semibold text-foreground tabular-nums">
-                      {typeof w.overall_health_index === "number"
-                        ? `${Math.round(w.overall_health_index)}%`
-                        : "—"}
-                    </TableCell>
+                    {showScoreColumn && (
+                      <TableCell className="font-semibold text-foreground tabular-nums">
+                        {typeof w.overall_health_index === "number"
+                          ? `${Math.round(w.overall_health_index)}%`
+                          : "—"}
+                      </TableCell>
+                    )}
                     <TableCell>
                       {w.status ? (
                         <Badge

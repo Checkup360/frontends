@@ -250,6 +250,7 @@ export function OrganizationPage() {
         roles={undefined}
         showRoleFilter={true}
         showRolesColumn={true}
+        showScoreColumn={false}
         allowRoleManagement={true}
         onDataChanged={() => {
           setStatsRefreshKey((k) => k + 1)
