@@ -69,7 +69,7 @@ import {
 } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { ManageRolesDialog } from "@/components/manage-roles-dialog"
-import { getRoleBadgeProps, formatRoleName } from "@/lib/role-utils"
+import { getRoleBadgeProps, formatRoleName, normalizeRoles } from "@/lib/role-utils"
 import {
   ScoreEvolutionChart,
   type ChartSeries,
@@ -793,7 +793,7 @@ export function EmployeeDetailPage() {
                     {employee.status}
                   </Badge>
                 )}
-                {(employee.roles || []).map((r) => {
+                {normalizeRoles(employee.roles || []).map((r) => {
                   const badgeProps = getRoleBadgeProps(r)
                   return (
                     <Badge

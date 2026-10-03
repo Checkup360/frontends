@@ -78,7 +78,7 @@ import {
   ScoreEvolutionChart,
   type ChartSeries,
 } from "@workspace/components/components/score-evolution-chart"
-import { getRoleBadgeProps, formatRoleName } from "@/lib/role-utils"
+import { getRoleBadgeProps, formatRoleName, normalizeRoles } from "@/lib/role-utils"
 import { isScoreDeactivated } from "@/lib/score-topics"
 import { cn } from "@workspace/ui/lib/utils"
 
@@ -1009,7 +1009,7 @@ export function DepartmentDetailPage() {
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {emp.roles && emp.roles.length > 0 ? (
-                            emp.roles.map((role) => {
+                            normalizeRoles(emp.roles).map((role) => {
                               const badgeProps = getRoleBadgeProps(role)
                               return (
                                 <Badge

@@ -25,6 +25,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { EmployeesTable } from "@/components/employees-table"
 import { QuorumRequestsCard } from "@/components/quorum-requests-card"
+import { normalizeRoles } from "@/lib/role-utils"
 
 export function OrganizationPage() {
   const { user, refresh } = useCurrentUser()
@@ -105,10 +106,11 @@ export function OrganizationPage() {
     let regularMembers = 0
 
     allMembers.forEach((m) => {
-      if (m.roles.includes("superadmin")) superadmins++
-      if (m.roles.includes("admin")) admins++
-      if (m.roles.includes("content_manager")) contentManagers++
-      if (m.roles.includes("member")) regularMembers++
+      const normalized = normalizeRoles(m.roles)
+      if (normalized.includes("superadmin")) superadmins++
+      if (normalized.includes("admin")) admins++
+      if (normalized.includes("content_manager")) contentManagers++
+      if (normalized.includes("member")) regularMembers++
     })
 
     return { superadmins, admins, contentManagers, regularMembers }

@@ -387,6 +387,7 @@ export function OrgInvitationForm({
             <div className="space-y-2">
               <Label htmlFor="organization">Organization</Label>
               <OrganizationCombobox
+                id="organization"
                 organizations={organizations}
                 value={selectedOrganizationId}
                 onValueChange={(organizationId) => {

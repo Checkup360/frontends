@@ -34,3 +34,11 @@ export function formatRoleName(role: string): string {
       return role
   }
 }
+
+export function normalizeRoles(roles: string[] | undefined | null): string[] {
+  if (!roles) return []
+  if (roles.includes("superadmin")) {
+    return roles.filter((role) => role !== "admin")
+  }
+  return roles
+}

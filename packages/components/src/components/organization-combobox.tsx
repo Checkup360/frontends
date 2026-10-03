@@ -18,6 +18,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { OrganizationResponse } from "@workspace/api"
 
 export interface OrganizationComboboxProps {
+  id?: string
   organizations: OrganizationResponse[]
   value: string
   onValueChange: (value: string) => void
@@ -29,6 +30,7 @@ export interface OrganizationComboboxProps {
 }
 
 export function OrganizationCombobox({
+  id,
   organizations,
   value,
   onValueChange,
@@ -40,22 +42,18 @@ export function OrganizationCombobox({
 }: OrganizationComboboxProps) {
   const [open, setOpen] = useState(false)
 
-  // Filter out E2E test organizations that have timestamps and random hashes
-  const validOrgs = organizations.filter(
-    (org) => !/\d{13}-[a-z0-9]+$/i.test(org.name)
-  )
-
-  const selectedOrg = validOrgs.find((org) => org.id === value)
+  const selectedOrg = organizations.find((org) => org.id === value)
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant="outline"
           role="combobox"
           aria-expanded={open}
           disabled={
-            disabled || loading || (validOrgs.length === 0 && !includeAllOption)
+            disabled || loading || (organizations.length === 0 && !includeAllOption)
           }
           className={cn("w-full justify-between font-normal", className)}
         >
@@ -98,7 +96,7 @@ export function OrganizationCombobox({
                   All Organizations
                 </CommandItem>
               )}
-              {validOrgs.map((organization) => (
+              {organizations.map((organization) => (
                 <CommandItem
                   key={organization.id}
                   value={organization.name}

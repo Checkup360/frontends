@@ -154,7 +154,11 @@ export function EmployeeProfileCard({
   className,
 }: EmployeeProfileCardProps) {
   const normalizedStatus = status.toLowerCase()
-  const roleLabel = roles.includes("admin") ? "Administrator" : "Member"
+  const roleLabel = roles.includes("superadmin")
+    ? "Superadmin"
+    : roles.includes("admin")
+      ? "Administrator"
+      : "Member"
   const displayName = getDisplayName(email, firstName, lastName, name)
   const initials = getInitials(displayName, email)
 

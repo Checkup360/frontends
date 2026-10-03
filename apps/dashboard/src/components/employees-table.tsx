@@ -71,7 +71,7 @@ const employeeTableSkeletonColumns = [
 ]
 
 import { ManageRolesDialog } from "./manage-roles-dialog"
-import { getRoleBadgeProps, formatRoleName } from "@/lib/role-utils"
+import { getRoleBadgeProps, formatRoleName, normalizeRoles } from "@/lib/role-utils"
 
 function formatLastAssessment(value?: string | null): string {
   if (!value) return "Not assessed"
@@ -536,7 +536,7 @@ export function EmployeesTable({
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {w.roles && w.roles.length > 0 ? (
-                            w.roles.map((role) => {
+                            normalizeRoles(w.roles).map((role) => {
                               const badgeProps = getRoleBadgeProps(role)
                               return (
                                 <Badge
