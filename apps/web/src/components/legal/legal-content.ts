@@ -140,7 +140,9 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
     purpose:
       "To screen for symptoms of stress, emotional fatigue, and psychological well-being in the workplace. This is a screening tool, not a clinical psychiatric diagnosis.",
     dataCollected: [
-      "Standardized frequency indicators on mood, sleep quality, energy, concentration, and emotional state",
+      "Mood, emotional state & interest frequency",
+      "Energy levels & daytime fatigue indicators",
+      "Sleep quality & concentration assessment",
     ],
     rights: [
       "Responses and risk scores are accessible to authorized organization administrators and occupational health professionals for well-being assessment and support",
@@ -180,7 +182,7 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
     dataCollected: [
       "Self-reported physical health stage",
       "Emotional well-being related to body weight",
-      "Functional and mobility observations",
+      "Functional mobility & daily capacity observations",
     ],
     rights: [
       "Responses and functional stages are accessible to authorized organization administrators and medical staff for occupational wellness guidance",
@@ -197,8 +199,8 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
     purpose:
       "To identify workplace ergonomic strain, posture factors, and musculoskeletal wellness opportunities.",
     dataCollected: [
-      "Discomfort occurrences in neck, shoulders, elbows, wrists, spine, hips, knees, ankles",
-      "Daily activity impediment history per region",
+      "Discomfort occurrences across 9 anatomical body regions",
+      "Work impediment and activity limitation history per region",
     ],
     rights: [
       "Responses are visible to authorized organization administrators and medical staff to improve workplace ergonomics and injury prevention",
@@ -215,7 +217,9 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
     purpose:
       "To assess lifestyle consumption habits as part of comprehensive occupational health and wellness programs.",
     dataCollected: [
-      "Consumption frequency and typical patterns",
+      "Alcoholic beverage consumption frequency",
+      "Typical daily drink quantities",
+      "Heavy drinking pattern indicators",
     ],
     rights: [
       "Responses and risk scores are visible to authorized organization administrators and occupational health professionals for preventive wellness programs",
@@ -232,7 +236,9 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
     purpose:
       "To assess perceived workplace stress levels and coping resilience for preventative wellness support.",
     dataCollected: [
-      "Rating responses regarding stress perception, control, and emotional coping over the last month",
+      "Perceived stress and unpredictability ratings",
+      "Personal control and coping balance assessment",
+      "Daily life overload and irritation indicators",
     ],
     rights: [
       "Responses and stress index scores are visible to authorized organization administrators and occupational health professionals for workplace wellness support",

@@ -83,10 +83,10 @@ export function WorkspaceShell({
         navUser={user && <NavUser user={user} onLogout={onLogout} />}
       />
 
-      <div className="flex w-full flex-col">
+      <div className="flex w-full min-w-0 flex-1 flex-col">
         <SiteHeader title={title} />
 
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </SidebarProvider>
   )

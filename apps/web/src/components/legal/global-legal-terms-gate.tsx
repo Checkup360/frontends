@@ -113,56 +113,56 @@ export function GlobalLegalTermsGate() {
     <>
       <Dialog open={open} onOpenChange={() => {}}>
         <DialogContent
-          className="max-h-[90vh] max-w-xl overflow-y-auto sm:rounded-2xl border border-primary/20 shadow-2xl bg-card"
+          className="max-h-[90vh] max-w-xl w-full min-w-0 overflow-y-auto overflow-x-hidden sm:rounded-2xl border border-primary/20 shadow-2xl bg-card"
           onPointerDownOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
-          <DialogHeader className="space-y-3">
-            <div className="flex items-center gap-2">
+          <DialogHeader className="space-y-3 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline" className="gap-1.5 border-primary/40 bg-primary/10 text-primary py-1 px-3">
                 <ShieldCheck className="size-3.5" />
                 Updated Privacy & Legal Terms
               </Badge>
             </div>
-            <DialogTitle className="text-xl sm:text-2xl font-bold tracking-tight">
+            <DialogTitle className="text-xl sm:text-2xl font-bold tracking-tight break-words">
               Review & Accept Platform Terms
             </DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
+            <DialogDescription className="text-sm leading-relaxed text-muted-foreground break-words">
               To ensure compliance with privacy regulations and occupational health standards, please review and accept the latest platform agreements.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3.5 py-3">
+          <div className="space-y-3.5 py-3 min-w-0">
             {/* Terms & Conditions */}
             {missingTerms && (
-              <div className="rounded-xl border border-border/60 bg-background/50 p-4 transition-colors hover:border-primary/40">
-                <div className="flex items-start gap-3">
+              <div className="rounded-xl border border-border/60 bg-background/50 p-4 transition-colors hover:border-primary/40 min-w-0 max-w-full overflow-hidden break-words">
+                <div className="flex items-start gap-3 min-w-0">
                   <Checkbox
                     id="global-accept-terms"
                     checked={acceptTerms}
                     onCheckedChange={(v) => setAcceptTerms(Boolean(v))}
-                    className="mt-0.5"
+                    className="mt-0.5 shrink-0"
                   />
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center justify-between">
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label
                         htmlFor="global-accept-terms"
-                        className="text-sm font-semibold text-foreground cursor-pointer flex items-center gap-1.5"
+                        className="text-sm font-semibold text-foreground cursor-pointer flex items-center gap-1.5 min-w-0 break-words"
                       >
-                        <FileText className="size-4 text-primary" />
-                        Terms of Service
+                        <FileText className="size-4 text-primary shrink-0" />
+                        <span>Terms of Service</span>
                       </Label>
                       <Button
                         type="button"
                         variant="link"
                         size="sm"
                         onClick={() => setViewingDocKey("TERMS_AND_CONDITIONS")}
-                        className="h-auto p-0 text-xs text-primary font-medium"
+                        className="h-auto p-0 text-xs text-primary font-medium shrink-0"
                       >
                         View Document
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-xs text-muted-foreground leading-relaxed break-words">
                       Governs platform usage, security obligations, and account access.
                     </p>
                   </div>
@@ -172,34 +172,34 @@ export function GlobalLegalTermsGate() {
 
             {/* Privacy Policy */}
             {missingPrivacy && (
-              <div className="rounded-xl border border-border/60 bg-background/50 p-4 transition-colors hover:border-primary/40">
-                <div className="flex items-start gap-3">
+              <div className="rounded-xl border border-border/60 bg-background/50 p-4 transition-colors hover:border-primary/40 min-w-0 max-w-full overflow-hidden break-words">
+                <div className="flex items-start gap-3 min-w-0">
                   <Checkbox
                     id="global-accept-privacy"
                     checked={acceptPrivacy}
                     onCheckedChange={(v) => setAcceptPrivacy(Boolean(v))}
-                    className="mt-0.5"
+                    className="mt-0.5 shrink-0"
                   />
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center justify-between">
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label
                         htmlFor="global-accept-privacy"
-                        className="text-sm font-semibold text-foreground cursor-pointer flex items-center gap-1.5"
+                        className="text-sm font-semibold text-foreground cursor-pointer flex items-center gap-1.5 min-w-0 break-words"
                       >
-                        <Lock className="size-4 text-primary" />
-                        Privacy Policy
+                        <Lock className="size-4 text-primary shrink-0" />
+                        <span>Privacy Policy</span>
                       </Label>
                       <Button
                         type="button"
                         variant="link"
                         size="sm"
                         onClick={() => setViewingDocKey("PRIVACY_POLICY")}
-                        className="h-auto p-0 text-xs text-primary font-medium"
+                        className="h-auto p-0 text-xs text-primary font-medium shrink-0"
                       >
                         View Document
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-xs text-muted-foreground leading-relaxed break-words">
                       Explains data encryption, storage policies, and your data access rights.
                     </p>
                   </div>
@@ -209,34 +209,34 @@ export function GlobalLegalTermsGate() {
 
             {/* Health Data Processing Consent */}
             {missingHealth && (
-              <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:border-primary/50">
-                <div className="flex items-start gap-3">
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:border-primary/50 min-w-0 max-w-full overflow-hidden break-words">
+                <div className="flex items-start gap-3 min-w-0">
                   <Checkbox
                     id="global-accept-health"
                     checked={acceptHealth}
                     onCheckedChange={(v) => setAcceptHealth(Boolean(v))}
-                    className="mt-0.5"
+                    className="mt-0.5 shrink-0"
                   />
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center justify-between">
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label
                         htmlFor="global-accept-health"
-                        className="text-sm font-semibold text-foreground cursor-pointer flex items-center gap-1.5"
+                        className="text-sm font-semibold text-foreground cursor-pointer flex items-center gap-1.5 min-w-0 break-words"
                       >
-                        <HeartHandshake className="size-4 text-primary" />
-                        Health Data Processing Consent
+                        <HeartHandshake className="size-4 text-primary shrink-0" />
+                        <span>Health Data Processing Consent</span>
                       </Label>
                       <Button
                         type="button"
                         variant="link"
                         size="sm"
                         onClick={() => setViewingDocKey("HEALTH_DATA_PROCESSING_CONSENT")}
-                        className="h-auto p-0 text-xs text-primary font-medium"
+                        className="h-auto p-0 text-xs text-primary font-medium shrink-0"
                       >
                         View Document
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-xs text-muted-foreground leading-relaxed break-words">
                       Authorizes processing and review of health indicators by authorized organization administrators and medical staff for preventative occupational health management.
                     </p>
                   </div>
@@ -245,12 +245,12 @@ export function GlobalLegalTermsGate() {
             )}
           </div>
 
-          <DialogFooter className="pt-2">
+          <DialogFooter className="pt-2 min-w-0">
             <Button
               type="button"
               onClick={() => void handleAcceptAll()}
               disabled={!canProceed || isSubmitting}
-              className="w-full gap-2 rounded-xl py-5 text-sm font-medium shadow-md shadow-primary/20"
+              className="w-full gap-2 rounded-xl py-5 text-sm font-medium shadow-md shadow-primary/20 shrink-0"
             >
               {isSubmitting ? "Updating..." : "Accept All & Continue"}
               <ArrowRight className="size-4" />

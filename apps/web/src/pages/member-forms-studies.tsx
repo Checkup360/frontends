@@ -1288,23 +1288,23 @@ export function MemberFormsStudiesPage() {
   const TitleIcon = currentTitle.icon
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8 pb-12">
+    <div className="mx-auto w-full max-w-7xl min-w-0 space-y-8 pb-12">
       {/* Top Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
+      <div className="flex items-center gap-3 min-w-0">
+        <Button variant="ghost" size="icon" asChild className="shrink-0">
           <Link to="/forms">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/80">
             <TitleIcon className="size-5" />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">
+          <div className="min-w-0">
+            <h2 className="text-2xl font-bold tracking-tight break-words">
               {currentTitle.title}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground break-words">
               {currentTitle.description}
             </p>
           </div>
@@ -2312,7 +2312,7 @@ export function MemberFormsStudiesPage() {
                       <div
                         key={option.value}
                         className={cn(
-                          "flex items-start gap-3 rounded-lg border border-border/30 bg-background/30 p-3 transition-all hover:bg-background/60",
+                          "flex items-start gap-3 rounded-lg border border-border/30 bg-background/30 p-3 transition-all hover:bg-background/60 min-w-0",
                           data[section.field] === option.value &&
                             "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
                         )}
@@ -2320,11 +2320,11 @@ export function MemberFormsStudiesPage() {
                         <RadioGroupItem
                           value={option.value}
                           id={`${section.field}-${option.value}`}
-                          className="mt-1"
+                          className="mt-1 shrink-0"
                         />
                         <Label
                           htmlFor={`${section.field}-${option.value}`}
-                          className="cursor-pointer text-sm leading-snug font-normal text-foreground"
+                          className="cursor-pointer text-sm leading-snug font-normal text-foreground min-w-0 flex-1 break-words"
                         >
                           {option.description}
                         </Label>
@@ -2616,8 +2616,8 @@ export function MemberFormsStudiesPage() {
                       "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-sm font-medium">{prompt}</Label>
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <Label className="text-sm font-medium min-w-0 flex-1 break-words">{prompt}</Label>
                     {isReversed && (
                       <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                         Coping Factor

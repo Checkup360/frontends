@@ -722,11 +722,11 @@ export function MemberOnboardingPage() {
                         </div>
 
                         {/* Consent Cards List */}
-                        <div className="space-y-3.5">
+                        <div className="space-y-3.5 min-w-0">
                           {/* Terms & Conditions Card */}
                           <div
                             className={cn(
-                              "group relative overflow-hidden rounded-2xl border transition-all duration-200",
+                              "group relative overflow-hidden rounded-2xl border transition-all duration-200 min-w-0 max-w-full",
                               acceptTerms
                                 ? "border-primary/50 bg-card shadow-xs"
                                 : "border-border/70 bg-card/60 hover:border-border",
@@ -734,22 +734,22 @@ export function MemberOnboardingPage() {
                             )}
                           >
                             {/* Card Top: Info & Read button */}
-                            <div className="p-4 sm:p-5">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex items-start gap-3">
+                            <div className="p-4 sm:p-5 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 min-w-0">
+                                <div className="flex items-start gap-3 min-w-0 flex-1">
                                   <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
-                                    <FileText className="size-4 text-primary" />
+                                    <FileText className="size-4 text-primary shrink-0" />
                                   </div>
-                                  <div className="space-y-1">
+                                  <div className="space-y-1 min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
-                                      <h4 className="text-sm font-semibold tracking-tight text-foreground">
+                                      <h4 className="text-sm font-semibold tracking-tight text-foreground break-words">
                                         Terms of Service
                                       </h4>
                                       <Badge variant="secondary" className="text-[10px] font-mono py-0 px-1.5 h-4 text-muted-foreground">
                                         v1.0
                                       </Badge>
                                     </div>
-                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                    <p className="text-xs text-muted-foreground leading-relaxed break-words">
                                       Governs platform usage rules, account responsibilities, and service security standards.
                                     </p>
                                   </div>
@@ -759,7 +759,7 @@ export function MemberOnboardingPage() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => setViewingLegalDoc("TERMS_AND_CONDITIONS")}
-                                  className="h-8 gap-1.5 px-3 text-xs font-medium shrink-0 rounded-lg border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+                                  className="h-8 gap-1.5 px-3 text-xs font-medium shrink-0 rounded-lg border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted w-fit"
                                 >
                                   <FileText className="size-3.5" />
                                   <span>Read document</span>
@@ -770,7 +770,7 @@ export function MemberOnboardingPage() {
                             {/* Card Bottom: Explicit Action Checkbox Bar */}
                             <div
                               className={cn(
-                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer",
+                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer min-w-0",
                                 acceptTerms
                                   ? "border-primary/30 bg-primary/5"
                                   : "border-border/40 bg-muted/25 hover:bg-muted/40",
@@ -789,12 +789,12 @@ export function MemberOnboardingPage() {
                                   if (error === "acceptTerms") setError(null)
                                 }}
                                 disabled={isSubmitting}
-                                className="mt-0"
+                                className="mt-0 shrink-0"
                                 onClick={(e) => e.stopPropagation()}
                               />
                               <Label
                                 htmlFor="accept-terms"
-                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer flex-1 select-none"
+                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer min-w-0 flex-1 break-words select-none"
                               >
                                 I agree to the Terms of Service
                               </Label>
@@ -804,7 +804,7 @@ export function MemberOnboardingPage() {
                             </div>
 
                             {error === "acceptTerms" && (
-                              <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20">
+                              <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20 break-words">
                                 You must accept the Terms of Service to proceed.
                               </p>
                             )}
@@ -813,7 +813,7 @@ export function MemberOnboardingPage() {
                           {/* Privacy Policy Card */}
                           <div
                             className={cn(
-                              "group relative overflow-hidden rounded-2xl border transition-all duration-200",
+                              "group relative overflow-hidden rounded-2xl border transition-all duration-200 min-w-0 max-w-full",
                               acceptPrivacy
                                 ? "border-primary/50 bg-card shadow-xs"
                                 : "border-border/70 bg-card/60 hover:border-border",
@@ -821,22 +821,22 @@ export function MemberOnboardingPage() {
                             )}
                           >
                             {/* Card Top: Info & Read button */}
-                            <div className="p-4 sm:p-5">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex items-start gap-3">
+                            <div className="p-4 sm:p-5 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 min-w-0">
+                                <div className="flex items-start gap-3 min-w-0 flex-1">
                                   <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
-                                    <Lock className="size-4 text-primary" />
+                                    <Lock className="size-4 text-primary shrink-0" />
                                   </div>
-                                  <div className="space-y-1">
+                                  <div className="space-y-1 min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
-                                      <h4 className="text-sm font-semibold tracking-tight text-foreground">
+                                      <h4 className="text-sm font-semibold tracking-tight text-foreground break-words">
                                         Privacy Policy
                                       </h4>
                                       <Badge variant="secondary" className="text-[10px] font-mono py-0 px-1.5 h-4 text-muted-foreground">
                                         v1.0
                                       </Badge>
                                     </div>
-                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                    <p className="text-xs text-muted-foreground leading-relaxed break-words">
                                       Details how your personal data is protected, encrypted, and your privacy access rights.
                                     </p>
                                   </div>
@@ -846,7 +846,7 @@ export function MemberOnboardingPage() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => setViewingLegalDoc("PRIVACY_POLICY")}
-                                  className="h-8 gap-1.5 px-3 text-xs font-medium shrink-0 rounded-lg border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+                                  className="h-8 gap-1.5 px-3 text-xs font-medium shrink-0 rounded-lg border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted w-fit"
                                 >
                                   <FileText className="size-3.5" />
                                   <span>Read document</span>
@@ -857,7 +857,7 @@ export function MemberOnboardingPage() {
                             {/* Card Bottom: Explicit Action Checkbox Bar */}
                             <div
                               className={cn(
-                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer",
+                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer min-w-0",
                                 acceptPrivacy
                                   ? "border-primary/30 bg-primary/5"
                                   : "border-border/40 bg-muted/25 hover:bg-muted/40",
@@ -876,12 +876,12 @@ export function MemberOnboardingPage() {
                                   if (error === "acceptPrivacy") setError(null)
                                 }}
                                 disabled={isSubmitting}
-                                className="mt-0"
+                                className="mt-0 shrink-0"
                                 onClick={(e) => e.stopPropagation()}
                               />
                               <Label
                                 htmlFor="accept-privacy"
-                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer flex-1 select-none"
+                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer min-w-0 flex-1 break-words select-none"
                               >
                                 I agree to the Privacy Policy
                               </Label>
@@ -891,7 +891,7 @@ export function MemberOnboardingPage() {
                             </div>
 
                             {error === "acceptPrivacy" && (
-                              <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20">
+                              <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20 break-words">
                                 You must accept the Privacy Policy to proceed.
                               </p>
                             )}
@@ -900,7 +900,7 @@ export function MemberOnboardingPage() {
                           {/* Health Data Processing Consent Card */}
                           <div
                             className={cn(
-                              "group relative overflow-hidden rounded-2xl border transition-all duration-200",
+                              "group relative overflow-hidden rounded-2xl border transition-all duration-200 min-w-0 max-w-full",
                               acceptHealthData
                                 ? "border-primary/50 bg-card shadow-xs"
                                 : "border-border/70 bg-card/60 hover:border-border",
@@ -908,15 +908,15 @@ export function MemberOnboardingPage() {
                             )}
                           >
                             {/* Card Top: Info & Read button */}
-                            <div className="p-4 sm:p-5">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex items-start gap-3">
+                            <div className="p-4 sm:p-5 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 min-w-0">
+                                <div className="flex items-start gap-3 min-w-0 flex-1">
                                   <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                    <HeartPulse className="size-4" />
+                                    <HeartPulse className="size-4 shrink-0" />
                                   </div>
-                                  <div className="space-y-1">
+                                  <div className="space-y-1 min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
-                                      <h4 className="text-sm font-semibold tracking-tight text-foreground">
+                                      <h4 className="text-sm font-semibold tracking-tight text-foreground break-words">
                                         Health & Biometric Data Processing
                                       </h4>
                                       <Badge variant="secondary" className="text-[10px] font-mono py-0 px-1.5 h-4 text-muted-foreground">
@@ -926,7 +926,7 @@ export function MemberOnboardingPage() {
                                         Occupational Health
                                       </Badge>
                                     </div>
-                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                    <p className="text-xs text-muted-foreground leading-relaxed break-words">
                                       Authorizes processing and review of health indicators, risk profiles, and workplace well-being assessments by authorized organization administrators and medical staff.
                                     </p>
                                   </div>
@@ -936,7 +936,7 @@ export function MemberOnboardingPage() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => setViewingLegalDoc("HEALTH_DATA_PROCESSING_CONSENT")}
-                                  className="h-8 gap-1.5 px-3 text-xs font-medium shrink-0 rounded-lg border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+                                  className="h-8 gap-1.5 px-3 text-xs font-medium shrink-0 rounded-lg border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted w-fit"
                                 >
                                   <FileText className="size-3.5" />
                                   <span>Read document</span>
@@ -947,7 +947,7 @@ export function MemberOnboardingPage() {
                             {/* Card Bottom: Explicit Action Checkbox Bar */}
                             <div
                               className={cn(
-                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer",
+                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer min-w-0",
                                 acceptHealthData
                                   ? "border-primary/30 bg-primary/5"
                                   : "border-border/40 bg-muted/25 hover:bg-muted/40",
@@ -966,12 +966,12 @@ export function MemberOnboardingPage() {
                                   if (error === "acceptHealthData") setError(null)
                                 }}
                                 disabled={isSubmitting}
-                                className="mt-0"
+                                className="mt-0 shrink-0"
                                 onClick={(e) => e.stopPropagation()}
                               />
                               <Label
                                 htmlFor="accept-health"
-                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer flex-1 select-none"
+                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer min-w-0 flex-1 break-words select-none"
                               >
                                 I consent to Health and Biometric Data Processing
                               </Label>
@@ -981,7 +981,7 @@ export function MemberOnboardingPage() {
                             </div>
 
                             {error === "acceptHealthData" && (
-                              <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20">
+                              <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20 break-words">
                                 Health data processing consent is required to complete onboarding.
                               </p>
                             )}
