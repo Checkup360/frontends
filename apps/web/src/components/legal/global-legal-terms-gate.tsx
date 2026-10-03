@@ -48,6 +48,10 @@ export function GlobalLegalTermsGate() {
         setMissingPrivacy(needsPrivacy)
         setMissingHealth(needsHealth)
 
+        setAcceptTerms(false)
+        setAcceptPrivacy(false)
+        setAcceptHealth(false)
+
         if (needsTerms || needsPrivacy || needsHealth) {
           setOpen(true)
         } else {

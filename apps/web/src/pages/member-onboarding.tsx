@@ -241,6 +241,16 @@ export function MemberOnboardingPage() {
   const [acceptPrivacy, setAcceptPrivacy] = useState(false)
   const [acceptHealthData, setAcceptHealthData] = useState(false)
   const [viewingLegalDoc, setViewingLegalDoc] = useState<string | null>(null)
+  const [previousStepIndex, setPreviousStepIndex] = useState(currentStep)
+
+  if (currentStep !== previousStepIndex) {
+    setPreviousStepIndex(currentStep)
+    if (currentStep !== 3) {
+      setAcceptTerms(false)
+      setAcceptPrivacy(false)
+      setAcceptHealthData(false)
+    }
+  }
   const maxDate = useMemo(() => todayIsoDate(), [])
   const memberOrganization = user?.membership?.roles?.includes("member")
     ? user.membership

@@ -34,8 +34,19 @@ export function ConsentGateModal({
 }: ConsentGateModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [acknowledged, setAcknowledged] = useState(false)
+  const [prevFormType, setPrevFormType] = useState(formType)
+
+  if (formType !== prevFormType) {
+    setPrevFormType(formType)
+    setAcknowledged(false)
+  }
 
   const doc = getLegalDocForForm(formType)
+
+  const handleClose = () => {
+    setAcknowledged(false)
+    onOpenChange(false)
+  }
 
   const handleAccept = async () => {
     setIsSubmitting(true)
@@ -67,6 +78,7 @@ export function ConsentGateModal({
       }
 
       toast.success(`Informed consent for ${doc.title} recorded successfully.`)
+      setAcknowledged(false)
       onOpenChange(false)
       onConsentAccepted()
     } catch {
@@ -79,7 +91,13 @@ export function ConsentGateModal({
   const canSubmit = acknowledged
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(val) => {
+        if (!val) setAcknowledged(false)
+        onOpenChange(val)
+      }}
+    >
       <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto sm:rounded-2xl border border-primary/20 bg-card shadow-2xl p-6">
         <DialogHeader className="space-y-2.5 text-left">
           <div className="flex items-center gap-2">
@@ -167,7 +185,7 @@ export function ConsentGateModal({
           <Button
             type="button"
             variant="ghost"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
             disabled={isSubmitting}
             className="text-xs"
           >
