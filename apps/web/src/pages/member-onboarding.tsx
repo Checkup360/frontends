@@ -800,18 +800,15 @@ export function MemberOnboardingPage() {
                             </div>
 
                             {/* Card Bottom: Explicit Action Checkbox Bar */}
-                            <div
+                            <label
+                              htmlFor="accept-terms"
                               className={cn(
-                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer min-w-0",
+                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer select-none min-w-0",
                                 acceptTerms
                                   ? "border-primary/30 bg-primary/5"
                                   : "border-border/40 bg-muted/25 hover:bg-muted/40",
                                 error === "acceptTerms" && "border-destructive/40 bg-destructive/5"
                               )}
-                              onClick={() => {
-                                setAcceptTerms(!acceptTerms)
-                                if (error === "acceptTerms") setError(null)
-                              }}
                             >
                               <Checkbox
                                 id="accept-terms"
@@ -821,19 +818,15 @@ export function MemberOnboardingPage() {
                                   if (error === "acceptTerms") setError(null)
                                 }}
                                 disabled={isSubmitting}
-                                className="mt-0 shrink-0"
-                                onClick={(e) => e.stopPropagation()}
+                                className="mt-0 shrink-0 cursor-pointer"
                               />
-                              <Label
-                                htmlFor="accept-terms"
-                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer min-w-0 flex-1 break-words select-none"
-                              >
+                              <span className="text-xs font-medium leading-relaxed text-foreground min-w-0 flex-1 break-words cursor-pointer">
                                 I agree to the Terms of Service
-                              </Label>
+                              </span>
                               {acceptTerms && (
-                                <CheckCircle2 className="size-4 text-primary shrink-0 animate-in fade-in zoom-in-50 duration-200" />
+                                <CheckCircle2 className="size-4 text-primary shrink-0" />
                               )}
-                            </div>
+                            </label>
 
                             {error === "acceptTerms" && (
                               <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20 break-words">
@@ -887,18 +880,15 @@ export function MemberOnboardingPage() {
                             </div>
 
                             {/* Card Bottom: Explicit Action Checkbox Bar */}
-                            <div
+                            <label
+                              htmlFor="accept-privacy"
                               className={cn(
-                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer min-w-0",
+                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer select-none min-w-0",
                                 acceptPrivacy
                                   ? "border-primary/30 bg-primary/5"
                                   : "border-border/40 bg-muted/25 hover:bg-muted/40",
                                 error === "acceptPrivacy" && "border-destructive/40 bg-destructive/5"
                               )}
-                              onClick={() => {
-                                setAcceptPrivacy(!acceptPrivacy)
-                                if (error === "acceptPrivacy") setError(null)
-                              }}
                             >
                               <Checkbox
                                 id="accept-privacy"
@@ -908,19 +898,15 @@ export function MemberOnboardingPage() {
                                   if (error === "acceptPrivacy") setError(null)
                                 }}
                                 disabled={isSubmitting}
-                                className="mt-0 shrink-0"
-                                onClick={(e) => e.stopPropagation()}
+                                className="mt-0 shrink-0 cursor-pointer"
                               />
-                              <Label
-                                htmlFor="accept-privacy"
-                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer min-w-0 flex-1 break-words select-none"
-                              >
+                              <span className="text-xs font-medium leading-relaxed text-foreground min-w-0 flex-1 break-words cursor-pointer">
                                 I agree to the Privacy Policy
-                              </Label>
+                              </span>
                               {acceptPrivacy && (
-                                <CheckCircle2 className="size-4 text-primary shrink-0 animate-in fade-in zoom-in-50 duration-200" />
+                                <CheckCircle2 className="size-4 text-primary shrink-0" />
                               )}
-                            </div>
+                            </label>
 
                             {error === "acceptPrivacy" && (
                               <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20 break-words">
@@ -977,18 +963,15 @@ export function MemberOnboardingPage() {
                             </div>
 
                             {/* Card Bottom: Explicit Action Checkbox Bar */}
-                            <div
+                            <label
+                              htmlFor="accept-health"
                               className={cn(
-                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer min-w-0",
+                                "flex items-center gap-3 border-t px-4 py-3 sm:px-5 transition-colors cursor-pointer select-none min-w-0",
                                 acceptHealthData
                                   ? "border-primary/30 bg-primary/5"
                                   : "border-border/40 bg-muted/25 hover:bg-muted/40",
                                 error === "acceptHealthData" && "border-destructive/40 bg-destructive/5"
                               )}
-                              onClick={() => {
-                                setAcceptHealthData(!acceptHealthData)
-                                if (error === "acceptHealthData") setError(null)
-                              }}
                             >
                               <Checkbox
                                 id="accept-health"
@@ -998,19 +981,15 @@ export function MemberOnboardingPage() {
                                   if (error === "acceptHealthData") setError(null)
                                 }}
                                 disabled={isSubmitting}
-                                className="mt-0 shrink-0"
-                                onClick={(e) => e.stopPropagation()}
+                                className="mt-0 shrink-0 cursor-pointer"
                               />
-                              <Label
-                                htmlFor="accept-health"
-                                className="text-xs font-medium leading-relaxed text-foreground cursor-pointer min-w-0 flex-1 break-words select-none"
-                              >
+                              <span className="text-xs font-medium leading-relaxed text-foreground min-w-0 flex-1 break-words cursor-pointer">
                                 I consent to Health and Biometric Data Processing
-                              </Label>
+                              </span>
                               {acceptHealthData && (
-                                <CheckCircle2 className="size-4 text-primary shrink-0 animate-in fade-in zoom-in-50 duration-200" />
+                                <CheckCircle2 className="size-4 text-primary shrink-0" />
                               )}
-                            </div>
+                            </label>
 
                             {error === "acceptHealthData" && (
                               <p className="bg-destructive/10 px-5 py-1.5 text-xs text-destructive font-medium border-t border-destructive/20 break-words">
