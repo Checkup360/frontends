@@ -1419,6 +1419,7 @@ export async function listOrganizationEmployeesPage(
     search?: string
     page: number
     pageSize: number
+    includeInactive?: boolean
   }
 ): Promise<PaginatedResponse<OrganizationEmployee>> {
   try {
@@ -1435,6 +1436,9 @@ export async function listOrganizationEmployeesPage(
     }
     if (filters.search?.trim()) {
       queryParams.append("search", filters.search.trim())
+    }
+    if (filters.includeInactive) {
+      queryParams.append("include_inactive", "true")
     }
     queryParams.append("page", filters.page.toString())
     queryParams.append("page_size", filters.pageSize.toString())

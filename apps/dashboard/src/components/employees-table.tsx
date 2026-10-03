@@ -51,11 +51,15 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { X, MoreVertical, UserCog, UserMinus, ShieldAlert } from "lucide-react"
 
+import { Switch } from "@workspace/ui/components/switch"
+
 const statusClasses: Record<string, string> = {
-  active:
-    "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 capitalize",
-  onboarding:
+  up_to_date:
+    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 capitalize",
+  pending_assessments:
     "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 capitalize",
+  onboarding:
+    "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 capitalize",
   inactive:
     "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border-zinc-500/20 capitalize",
 }
@@ -82,6 +86,8 @@ interface EmployeesTableProps {
   title?: string
   description?: string
   showScoreColumn?: boolean
+  showInactiveToggle?: boolean
+  defaultShowInactive?: boolean
 }
 
 export function EmployeesTable({
@@ -94,6 +100,8 @@ export function EmployeesTable({
   title = "Employees",
   description = "Individual data and status level",
   showScoreColumn = true,
+  showInactiveToggle = true,
+  defaultShowInactive = false,
 }: EmployeesTableProps) {
   const navigate = useNavigate()
   const { user } = useCurrentUser()
@@ -125,6 +133,7 @@ export function EmployeesTable({
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [selectedRole, setSelectedRole] = useState("all")
   const [selectedScore, setSelectedScore] = useState("all")
+  const [showInactive, setShowInactive] = useState(defaultShowInactive)
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
@@ -179,7 +188,8 @@ export function EmployeesTable({
           search?: string
           page: number
           pageSize: number
-        } = { page: currentPage, pageSize }
+          includeInactive?: boolean
+        } = { page: currentPage, pageSize, includeInactive: showInactive }
         if (selectedDept !== "all") apiFilters.departmentId = selectedDept
         if (selectedStatus !== "all") apiFilters.status = selectedStatus
         if (selectedScore !== "all") apiFilters.score = selectedScore
@@ -226,6 +236,7 @@ export function EmployeesTable({
     search,
     currentPage,
     pageSize,
+    showInactive,
     refreshKey,
   ])
 
@@ -244,6 +255,7 @@ export function EmployeesTable({
     setSelectedStatus("all")
     setSelectedRole("all")
     setSelectedScore("all")
+    setShowInactive(defaultShowInactive)
     setCurrentPage(1)
   }
 
@@ -419,7 +431,8 @@ export function EmployeesTable({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="up_to_date">Up to date</SelectItem>
+                <SelectItem value="pending_assessments">Pending assessments</SelectItem>
                 <SelectItem value="onboarding">Onboarding</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
@@ -451,11 +464,27 @@ export function EmployeesTable({
             <Button
               variant="ghost"
               onClick={handleResetFilters}
-              className="h-9 gap-2 px-3 text-muted-foreground transition-colors hover:text-foreground"
+              className="h-9 gap-2 px-3 text-muted-foreground transition-colors hover:text-foreground ml-auto"
             >
               Reset
               <X className="size-4" />
             </Button>
+          )}
+
+          {showInactiveToggle && (
+            <div className={`flex items-center gap-2 ${hasActiveFilters ? '' : 'ml-auto'}`}>
+              <Switch
+                id="show-inactive"
+                checked={showInactive}
+                onCheckedChange={(checked) => {
+                  setShowInactive(checked)
+                  setCurrentPage(1)
+                }}
+              />
+              <Label htmlFor="show-inactive" className="text-sm text-muted-foreground cursor-pointer">
+                Show inactive
+              </Label>
+            </div>
           )}
         </div>
       </div>
@@ -572,10 +601,10 @@ export function EmployeesTable({
                         <Badge
                           variant="outline"
                           className={
-                            statusClasses[w.status] || statusClasses.pending
+                            statusClasses[w.status] || statusClasses.onboarding
                           }
                         >
-                          {w.status}
+                          {w.status.replace(/_/g, " ")}
                         </Badge>
                       ) : (
                         <span className="text-muted-foreground">—</span>
