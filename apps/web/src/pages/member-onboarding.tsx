@@ -245,6 +245,8 @@ export function MemberOnboardingPage() {
 
   if (currentStep !== previousStepIndex) {
     setPreviousStepIndex(currentStep)
+    setError(null)
+    setFormError(null)
     if (currentStep !== 3) {
       setAcceptTerms(false)
       setAcceptPrivacy(false)
@@ -285,8 +287,8 @@ export function MemberOnboardingPage() {
     }
   }
 
-  const validateStep = () => {
-    if (currentStep === 1) {
+  const validateStep = (stepToValidate: number) => {
+    if (stepToValidate === 1) {
       if (!data.firstName.trim()) return "firstName"
       if (!data.lastName.trim()) return "lastName"
       if (!data.phoneNumber.trim()) return "phoneNumber"
@@ -296,7 +298,7 @@ export function MemberOnboardingPage() {
       if (!data.gender) return "gender"
     }
 
-    if (currentStep === 2) {
+    if (stepToValidate === 2) {
       if (
         !data.weight ||
         isNaN(Number(data.weight)) ||
@@ -313,7 +315,7 @@ export function MemberOnboardingPage() {
         return "height"
     }
 
-    if (currentStep === 3) {
+    if (stepToValidate === 3) {
       if (!acceptTerms) return "acceptTerms"
       if (!acceptPrivacy) return "acceptPrivacy"
       if (!acceptHealthData) return "acceptHealthData"
@@ -323,22 +325,30 @@ export function MemberOnboardingPage() {
   }
 
   const nextStep = () => {
+    if (currentStep >= steps.length - 1) {
+      return
+    }
+
     if (currentStep === 0) {
+      setError(null)
+      setFormError(null)
       setCurrentStep(1)
       return
     }
 
-    const invalidField = validateStep()
+    const invalidField = validateStep(currentStep)
     if (invalidField) {
       setError(invalidField)
       return
     }
     setError(null)
+    setFormError(null)
     setCurrentStep((step) => Math.min(step + 1, steps[steps.length - 1].id))
   }
 
   const prevStep = () => {
     setError(null)
+    setFormError(null)
     setCurrentStep((step) => Math.max(step - 1, 0))
   }
 
@@ -347,11 +357,33 @@ export function MemberOnboardingPage() {
     window.location.replace("/")
   }
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
-    const invalidField = validateStep()
-    if (invalidField) {
-      setError(invalidField)
+  const handleSubmit = async (event?: React.FormEvent) => {
+    if (event) {
+      event.preventDefault()
+    }
+
+    if (currentStep < steps.length - 1) {
+      nextStep()
+      return
+    }
+
+    const invalidStep1 = validateStep(1)
+    if (invalidStep1) {
+      setCurrentStep(1)
+      setError(invalidStep1)
+      return
+    }
+
+    const invalidStep2 = validateStep(2)
+    if (invalidStep2) {
+      setCurrentStep(2)
+      setError(invalidStep2)
+      return
+    }
+
+    const invalidStep3 = validateStep(3)
+    if (invalidStep3) {
+      setError(invalidStep3)
       return
     }
 
@@ -363,20 +395,20 @@ export function MemberOnboardingPage() {
       // 1. Record legal consents
       await acceptConsent({
         consent_type: "TERMS_AND_CONDITIONS",
-        document_version: "1",
+        document_version: "1.0",
       })
       await acceptConsent({
         consent_type: "PRIVACY_POLICY",
-        document_version: "1",
+        document_version: "1.0",
       })
       await acceptConsent({
         consent_type: "HEALTH_DATA_PROCESSING_CONSENT",
-        document_version: "1",
+        document_version: "1.0",
       })
       await acceptConsent({
         consent_type: "FORM_CONSENT",
         form_type: "biometrics",
-        document_version: "1",
+        document_version: "1.0",
       })
 
       // 2. Submit member details (which creates profile and biometrics)
@@ -1008,6 +1040,7 @@ export function MemberOnboardingPage() {
 
                   {currentStep < steps[steps.length - 1].id ? (
                     <Button
+                      key="next-step-btn"
                       type="button"
                       onClick={nextStep}
                       disabled={isSubmitting}
@@ -1018,7 +1051,9 @@ export function MemberOnboardingPage() {
                     </Button>
                   ) : (
                     <Button
-                      type="submit"
+                      key="complete-btn"
+                      type="button"
+                      onClick={() => void handleSubmit()}
                       disabled={isSubmitting}
                       className="gap-2 rounded-full px-8"
                     >
