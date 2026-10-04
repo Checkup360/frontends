@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   updateEmployeeRoles,
   type OrganizationEmployee,
@@ -17,6 +18,7 @@ import {
 } from "@workspace/ui/components/dialog"
 import { toast } from "@workspace/ui/components/sonner"
 import { formatEmployeeName } from "@workspace/components/components/employee-profile-card"
+import { describeRoleChangeError } from "@/lib/role-utils"
 
 export interface ManageRolesDialogProps {
   open: boolean
@@ -41,6 +43,9 @@ export function ManageRolesDialog({
     OrganizationEmployeeRole[]
   >([])
   const [actionLoading, setActionLoading] = useState(false)
+  const { user } = useCurrentUser()
+  const isSelf = Boolean(user?.email && employee?.email === user.email)
+  const isEmployeeSuperadmin = employee?.roles?.includes("superadmin") ?? false
 
   useEffect(() => {
     if (open && employee) {
@@ -59,7 +64,7 @@ export function ManageRolesDialog({
         selectedRoles
       )
       if (res.error) {
-        toast.error(res.error.message)
+        toast.error(describeRoleChangeError(res.error.message))
       } else {
         toast.success("Employee roles updated successfully.")
         onOpenChange(false)
@@ -93,10 +98,8 @@ export function ManageRolesDialog({
             <Checkbox
               id="role-superadmin"
               checked={selectedRoles.includes("superadmin")}
-              disabled={
-                !isCurrentUserSuperadmin ||
-                (employee?.roles?.includes("superadmin") ?? false)
-              }
+              // Superadmins manage other superadmins, never their own role
+              disabled={!isCurrentUserSuperadmin || (isSelf && isEmployeeSuperadmin)}
               onCheckedChange={(checked) => {
                 if (checked) {
                   setSelectedRoles(
@@ -119,10 +122,11 @@ export function ManageRolesDialog({
                 Superadmin
               </Label>
               <p className="text-xs text-muted-foreground">
-                Full administrative power and quorum authority.
-                {employee?.roles?.includes("superadmin") && (
+                Full administrative power, including managing other
+                superadmins.
+                {isSelf && isEmployeeSuperadmin && (
                   <span className="mt-0.5 block font-medium text-amber-600 dark:text-amber-400">
-                    * Cannot be unilaterally removed. Requires a Quorum vote.
+                    * You can&apos;t remove your own superadmin role.
                   </span>
                 )}
               </p>
