@@ -25,7 +25,7 @@ const navigation: WorkspaceShellNavItem[] = [
     icon: Building2,
     to: "/organization",
   },
-  { title: "Employees", url: "/employees", icon: Users, to: "/employees" },
+  { title: "Members", url: "/employees", icon: Users, to: "/employees" },
   {
     title: "Invitations",
     url: "/invitations",
@@ -86,7 +86,7 @@ export function DashboardShell() {
       case "/organization":
         return "Organization"
       case "/employees":
-        return "Employees"
+        return "Members"
       case "/invitations":
         return "Invitations"
       case "/departments":

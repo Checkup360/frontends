@@ -305,7 +305,7 @@ function AssignMemberDialog({
             Assign Member to {department.name}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Search by name, surname, or email to assign or switch an employee to{" "}
+            Search by name, surname, or email to assign or switch a member to{" "}
             <strong className="text-foreground">{department.name}</strong>.
           </DialogDescription>
         </DialogHeader>
@@ -321,7 +321,7 @@ function AssignMemberDialog({
           {/* Search Input */}
           <div className="shrink-0 space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">
-              Search employee
+              Search member
             </Label>
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -376,8 +376,8 @@ function AssignMemberDialog({
               ) : employees.length === 0 ? (
                 <div className="flex h-full min-h-[140px] items-center justify-center p-4 text-center text-xs text-muted-foreground">
                   {searchQuery
-                    ? "No employees match your search query."
-                    : "No employees found."}
+                    ? "No members match your search query."
+                    : "No members found."}
                 </div>
               ) : (
                 employees.map((emp) => {
@@ -825,8 +825,8 @@ export function DepartmentDetailPage() {
           value={loadingDept ? "..." : highRiskWorkers.toString()}
           hint={
             highRiskWorkers === 1
-              ? "1 employee in risk"
-              : `${highRiskWorkers} employees in risk`
+              ? "1 member at risk"
+              : `${highRiskWorkers} members at risk`
           }
         />
       </section>
@@ -844,7 +844,7 @@ export function DepartmentDetailPage() {
         height={280}
       />
 
-      {/* Employees table */}
+      {/* Members table */}
       <Card className="animate-in border-border/60 p-6 shadow-[var(--shadow-card)] duration-300 fade-in">
         <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -852,7 +852,7 @@ export function DepartmentDetailPage() {
               Members
             </h3>
             <p className="text-sm text-muted-foreground">
-              All employees assigned to {department.name}
+              All members assigned to {department.name}
             </p>
           </div>
           <Button
@@ -862,7 +862,7 @@ export function DepartmentDetailPage() {
             className="mt-2 cursor-pointer gap-1.5 self-start text-xs sm:mt-0 sm:self-auto"
           >
             <UserPlus className="size-3.5" />
-            Assign employee
+            Assign member
           </Button>
         </div>
 

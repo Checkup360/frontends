@@ -225,9 +225,9 @@ export function OrganizationPage() {
               icon={UserCheck}
               iconVariant="icon"
               tone="primary"
-              label="Regular Members"
+              label="Health Program Members"
               value={roleCounts.regularMembers.toString()}
-              hint="App & health form users"
+              hint="Enrolled in health studies"
             />
           </>
         )}
@@ -257,7 +257,7 @@ export function OrganizationPage() {
         onDataChanged={() => {
           setStatsRefreshKey((k) => k + 1)
         }}
-        title="Organization Members & Roles"
+        title="Organization Users & Roles"
         description="Detailed list of all accounts registered in this organization and their assigned roles."
       />
     </div>

@@ -753,7 +753,7 @@ export function EmployeeDetailPage() {
       <Card className="mx-auto mt-12 max-w-md border-destructive/20 bg-destructive/5">
         <CardContent className="space-y-4 pt-6 text-center">
           <p className="font-medium text-destructive">
-            {error || "Employee not found."}
+            {error || "Member not found."}
           </p>
           <Button
             onClick={() => navigate(-1)}

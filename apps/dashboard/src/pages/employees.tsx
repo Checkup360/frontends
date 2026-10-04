@@ -86,16 +86,16 @@ export function EmployeesPage() {
 
     return [
       {
-        label: "Total employees",
+        label: "Total members",
         value: summary.total.toString(),
-        hint: "Enrolled members",
+        hint: "Health program members",
         icon: Users,
         tone: "primary" as const,
       },
       {
         label: "Evaluated",
         value: summary.evaluated.toString(),
-        hint: `${summary.evaluatedPct}% of members`,
+        hint: `${summary.evaluatedPct}% with health index`,
         icon: ShieldCheck,
         tone: "success" as const,
       },
@@ -112,7 +112,7 @@ export function EmployeesPage() {
       {
         label: "At risk",
         value: summary.atRisk.toString(),
-        hint: "Score below 60%",
+        hint: "Health index below 60%",
         icon: AlertTriangle,
         tone: summary.atRisk > 0 ? ("warning" as const) : ("primary" as const),
       },
@@ -140,7 +140,11 @@ export function EmployeesPage() {
       </section>
 
       <section>
-        <EmployeesTable organizationId={organizationId} />
+        <EmployeesTable
+          organizationId={organizationId}
+          title="Members"
+          description="Health monitoring and clinical assessment status for enrolled members."
+        />
       </section>
     </div>
   )

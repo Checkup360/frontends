@@ -97,8 +97,8 @@ export function EmployeesTable({
   showRolesColumn = false,
   allowRoleManagement = false,
   onDataChanged,
-  title = "Employees",
-  description = "Individual data and status level",
+  title = "Members",
+  description = "Individual assessment data and health status level",
   showScoreColumn = true,
   showInactiveToggle = true,
   defaultShowInactive = false,
@@ -495,7 +495,7 @@ export function EmployeesTable({
           <TableHeader className="bg-muted/30">
             <TableRow>
               <TableHead className="font-semibold text-foreground">
-                Employee
+                {showRolesColumn ? "User" : "Member"}
               </TableHead>
               {showRolesColumn && (
                 <TableHead className="font-semibold text-foreground">
@@ -538,7 +538,9 @@ export function EmployeesTable({
                   colSpan={totalColSpan}
                   className="h-32 text-center text-muted-foreground"
                 >
-                  No employees found matching the active criteria.
+                  {showRolesColumn
+                    ? "No users found matching the active criteria."
+                    : "No members found matching the active criteria."}
                 </TableCell>
               </TableRow>
             ) : (

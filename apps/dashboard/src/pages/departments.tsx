@@ -325,7 +325,7 @@ export function DepartmentsPage() {
     if ("error" in result) {
       setDeleteError(
         result.error.code === "department_in_use"
-          ? `Cannot delete "${deleteTarget.name}" — it still has assigned employees.`
+          ? `Cannot delete "${deleteTarget.name}" — it still has assigned members.`
           : result.error.message
       )
       return

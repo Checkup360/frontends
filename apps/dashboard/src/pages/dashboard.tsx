@@ -119,8 +119,9 @@ export function DashboardPage() {
           <OverviewStatCardSkeleton />
         ) : (
           <OverviewStatCard
-            label="Total employees"
+            label="Total members"
             value={totalEmployees}
+            hint="Enrolled in health program"
             icon={Users}
             iconVariant="icon"
             tone="primary"
@@ -161,7 +162,11 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <EmployeesTable organizationId={organizationId} />
+      <EmployeesTable
+        organizationId={organizationId}
+        title="Members Health Status"
+        description="Latest clinical evaluations and health index across organization members."
+      />
     </div>
   )
 }
