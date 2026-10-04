@@ -374,7 +374,14 @@ export function MemberOverview({
                 )}
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div
+                className={cn(
+                  "grid gap-4",
+                  focusScores.length === 1 && "grid-cols-1",
+                  focusScores.length === 2 && "grid-cols-1 sm:grid-cols-2",
+                  focusScores.length >= 3 && "grid-cols-1 md:grid-cols-3"
+                )}
+              >
                 {focusScores.map((item) => {
                   const status = scoreStatusConfig[item.statusKey]
                   const Icon = getDomainIcon(item.score_id, item.score_name)
@@ -385,43 +392,50 @@ export function MemberOverview({
                       className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border-border/60 bg-gradient-to-br from-card via-card to-muted/20 p-5 shadow-xs transition-all hover:border-primary/30 hover:shadow-md"
                     >
                       <div className="space-y-4">
+                        {/* Top: Icon on left, Badge on right */}
                         <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div
-                              className={cn(
-                                "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                                status.iconBg
-                              )}
-                            >
-                              <Icon className="size-5" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h3
-                                className="font-semibold text-foreground text-sm leading-snug truncate"
-                                title={item.displayName}
-                              >
-                                {item.displayName}
-                              </h3>
-                              <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                                Health index:{" "}
-                                <span className={cn("font-bold tabular-nums", status.textColor)}>
-                                  {item.scoreVal}/100
-                                </span>
-                              </p>
-                            </div>
+                          <div
+                            className={cn(
+                              "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                              status.iconBg
+                            )}
+                          >
+                            <Icon className="size-5" />
                           </div>
                           <Badge
                             variant="outline"
-                            className={cn("shrink-0 text-[11px] px-2 py-0.5 rounded-md", status.badgeClass)}
+                            className={cn(
+                              "shrink-0 text-[11px] px-2 py-0.5 rounded-md",
+                              status.badgeClass
+                            )}
                           >
                             {status.label}
                           </Badge>
                         </div>
 
+                        {/* Title and Health Index: full card width */}
+                        <div className="space-y-1">
+                          <h3
+                            className="font-semibold text-foreground text-sm leading-snug line-clamp-2 min-h-[2.5rem] flex items-center"
+                            title={item.displayName}
+                          >
+                            {item.displayName}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            Health index:{" "}
+                            <span className={cn("font-bold tabular-nums", status.textColor)}>
+                              {item.scoreVal}/100
+                            </span>
+                          </p>
+                        </div>
+
                         {/* Progress Bar */}
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
                           <div
-                            className={cn("h-full rounded-full transition-all duration-700 ease-out", status.barColor)}
+                            className={cn(
+                              "h-full rounded-full transition-all duration-700 ease-out",
+                              status.barColor
+                            )}
                             style={{ width: `${Math.min(100, Math.max(8, item.scoreVal))}%` }}
                           />
                         </div>

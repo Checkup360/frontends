@@ -42,18 +42,16 @@ export function MemberOverviewSkeleton() {
           </div>
           <Skeleton className="h-8 w-28 rounded-lg" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
             <Card key={index} className="p-5 space-y-4 rounded-2xl">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="size-10 rounded-xl" />
-                  <div className="space-y-1">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-3 w-16" />
-                  </div>
-                </div>
+              <div className="flex items-center justify-between gap-3">
+                <Skeleton className="size-10 rounded-xl" />
                 <Skeleton className="h-5 w-20 rounded-md" />
+              </div>
+              <div className="space-y-1.5 py-0.5">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-24" />
               </div>
               <Skeleton className="h-1.5 w-full rounded-full" />
               <div className="pt-3 border-t flex justify-between items-center">
