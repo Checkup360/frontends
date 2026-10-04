@@ -20,7 +20,7 @@ import {
 
 export interface ComputedHealthScore {
   score: number | null
-  label: "Low risk" | "Moderate risk" | "Needs attention" | "Incomplete evaluation"
+  label: "Low risk" | "Moderate risk" | "High risk" | "Incomplete evaluation"
   riskLevel: "low" | "moderate" | "high" | null
   explanation: string
 }
@@ -210,7 +210,7 @@ export function computeOverallHealthScore(
         ? riskThresholds.moderate_risk
         : 50
 
-  let label: "Low risk" | "Moderate risk" | "Needs attention" = "Low risk"
+  let label: "Low risk" | "Moderate risk" | "High risk" = "Low risk"
   let riskLevel: "low" | "moderate" | "high" = "low"
   let explanation =
     "Your preventive health indicators show a favorable status. Keep up your active lifestyle!"
@@ -227,7 +227,7 @@ export function computeOverallHealthScore(
       explanation =
         "Your health profile shows moderate risk indicators. Consider making lifestyle adjustments to improve your parameters."
     } else {
-      label = "Needs attention"
+      label = "High risk"
       riskLevel = "high"
       explanation =
         "One or more evaluations show elevated risk parameters requiring preventive care and lifestyle modifications."
@@ -235,7 +235,7 @@ export function computeOverallHealthScore(
   } else if (backendOverallRiskLevel) {
     const lowerRisk = backendOverallRiskLevel.toLowerCase()
     if (lowerRisk.includes("high") || lowerRisk.includes("attention") || lowerRisk.includes("severe")) {
-      label = "Needs attention"
+      label = "High risk"
       riskLevel = "high"
       explanation =
         "One or more evaluations show elevated risk parameters requiring preventive care and lifestyle modifications."
@@ -294,9 +294,9 @@ export function formatSessionDate(dateString?: string | null): string {
 export function getRiskIcon(riskLevel: string | null) {
   if (!riskLevel) return <ClipboardList className="h-5 w-5 text-muted-foreground" />
   const lowerRisk = riskLevel.toLowerCase()
-  if (lowerRisk.includes("high")) return <AlertCircle className="h-5 w-5 text-destructive" />
-  if (lowerRisk.includes("moderate")) return <AlertTriangle className="h-5 w-5 text-yellow-500" />
-  if (lowerRisk.includes("low")) return <CheckCircle2 className="h-5 w-5 text-green-500" />
+  if (lowerRisk.includes("high") || lowerRisk.includes("attention")) return <AlertCircle className="h-5 w-5 text-destructive" />
+  if (lowerRisk.includes("moderate") || lowerRisk.includes("elevated") || lowerRisk.includes("mild")) return <AlertTriangle className="h-5 w-5 text-[color:var(--warning)]" />
+  if (lowerRisk.includes("low") || lowerRisk.includes("optimal") || lowerRisk.includes("good")) return <CheckCircle2 className="h-5 w-5 text-[color:var(--success)]" />
   return <ShieldAlert className="h-5 w-5 text-muted-foreground" />
 }
 

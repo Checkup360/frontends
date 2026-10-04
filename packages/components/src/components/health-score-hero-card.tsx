@@ -25,7 +25,7 @@ export const heroLevelConfig = {
   high: {
     color: "text-destructive",
     bg: "bg-destructive/10",
-    label: "Needs attention",
+    label: "High risk",
     ringColor: "stroke-destructive",
   },
 } as const

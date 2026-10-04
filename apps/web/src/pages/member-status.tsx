@@ -93,14 +93,15 @@ function getRiskLevelConfig(
   const label = formatRiskLevelLabel(riskLevel, riskScore, riskThresholds)
   const lower = label.toLowerCase()
 
-  // 1. Very high / High risk (red/destructive)
-  if (lower.includes("high")) {
+  // 1. Very high / High risk / Needs attention (destructive token)
+  if (lower.includes("high") || lower.includes("attention") || lower.includes("severe")) {
     return {
       label,
       color: "text-destructive",
-      badgeVariant: "destructive" as const,
+      iconBg: "bg-destructive/10",
+      badgeVariant: "outline" as const,
       badgeClass:
-        "bg-destructive/15 text-destructive border-transparent font-medium",
+        "bg-destructive/10 text-destructive border-destructive/20 font-medium",
       ringColor: "stroke-destructive text-destructive",
       barColor: "bg-destructive",
       description: lower.includes("very high")
@@ -109,45 +110,38 @@ function getRiskLevelConfig(
     }
   }
 
-  // 2. Moderate risk (amber/orange)
-  if (lower.includes("moderate")) {
+  // 2. Moderate risk / Slightly elevated (warning token)
+  if (
+    lower.includes("moderate") ||
+    lower.includes("elevated") ||
+    lower.includes("mild")
+  ) {
     return {
       label,
-      color: "text-amber-600 dark:text-amber-400",
+      color: "text-[color:var(--warning)]",
+      iconBg: "bg-[color:var(--warning)]/10",
       badgeVariant: "outline" as const,
       badgeClass:
-        "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-medium",
-      ringColor: "stroke-amber-500 text-amber-500",
-      barColor: "bg-amber-500",
+        "bg-[color:var(--warning)]/10 text-[color:var(--warning)] border-[color:var(--warning)]/20 font-medium",
+      ringColor: "stroke-[color:var(--warning)] text-[color:var(--warning)]",
+      barColor: "bg-[color:var(--warning)]",
       description:
-        "Moderate risk detected. Preventive lifestyle habits advised.",
+        lower.includes("elevated") || lower.includes("mild")
+          ? "Slightly elevated indicators. Minor lifestyle adjustments recommended."
+          : "Moderate risk detected. Preventive lifestyle habits advised.",
     }
   }
 
-  // 3. Slightly elevated risk (yellow/gold tone)
-  if (lower.includes("elevated") || lower.includes("mild")) {
-    return {
-      label,
-      color: "text-yellow-600 dark:text-yellow-400",
-      badgeVariant: "outline" as const,
-      badgeClass:
-        "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 font-medium",
-      ringColor: "stroke-yellow-500 text-yellow-500",
-      barColor: "bg-yellow-500",
-      description:
-        "Slightly elevated indicators. Minor lifestyle adjustments recommended.",
-    }
-  }
-
-  // 4. Low risk / Optimal (emerald green)
+  // 3. Low risk / Optimal (success token)
   return {
     label,
-    color: "text-emerald-600 dark:text-emerald-400",
+    color: "text-[color:var(--success)]",
+    iconBg: "bg-[color:var(--success)]/10",
     badgeVariant: "outline" as const,
     badgeClass:
-      "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-medium",
-    ringColor: "stroke-emerald-500 text-emerald-500",
-    barColor: "bg-emerald-500",
+      "bg-[color:var(--success)]/10 text-[color:var(--success)] border-[color:var(--success)]/20 font-medium",
+    ringColor: "stroke-[color:var(--success)] text-[color:var(--success)]",
+    barColor: "bg-[color:var(--success)]",
     description: "Evaluations within optimal and healthy parameters.",
   }
 }
@@ -190,6 +184,7 @@ function RadialScore({
   size = 66,
   strokeWidth = 5.5,
   ringColor = "stroke-primary text-primary",
+  scoreColor,
   trackClass = "text-muted/50",
   sublabel = "/ 100",
 }: {
@@ -197,6 +192,7 @@ function RadialScore({
   size?: number
   strokeWidth?: number
   ringColor?: string
+  scoreColor?: string
   trackClass?: string
   sublabel?: string
 }) {
@@ -237,7 +233,8 @@ function RadialScore({
         <span
           className={cn(
             size < 90 ? "text-lg font-bold" : "text-3xl font-extrabold",
-            "leading-none text-foreground tabular-nums"
+            "leading-none tabular-nums",
+            scoreColor ?? "text-foreground"
           )}
         >
           {safeVal}
@@ -461,7 +458,13 @@ export function MemberStatusPage() {
                     <div className="flex items-center justify-between gap-4">
                       {/* Left: Icon, Topic Name, Badge, Description & View details */}
                       <div className="flex items-start gap-3.5">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/80">
+                        <div
+                          className={cn(
+                            "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                            config.iconBg,
+                            config.color
+                          )}
+                        >
                           <Icon className="size-5" />
                         </div>
                         <div className="space-y-1">
@@ -492,6 +495,7 @@ export function MemberStatusPage() {
                           size={66}
                           strokeWidth={5.5}
                           ringColor={config.ringColor}
+                          scoreColor={config.color}
                           sublabel="/ 100"
                         />
                       </div>
