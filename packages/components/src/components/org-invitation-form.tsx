@@ -429,7 +429,7 @@ export function OrgInvitationForm({
             </Select>
             <p className="text-xs text-muted-foreground">
               {isSuperadminRole
-                ? "Superadmins have full governance over the organization, including roles, quorum decisions, and security settings."
+                ? "Superadmins have full governance over the organization, including roles, other superadmins, and security settings."
                 : isAdminRole
                   ? "Admins can manage organization settings, invite members, and have full access to organization data."
                   : isContentManagerRole
@@ -456,8 +456,7 @@ export function OrgInvitationForm({
                   </Label>
                   <p className="text-xs text-muted-foreground">
                     Grants highest authority in the organization, including
-                    managing other administrators and participating in removal
-                    quorums.
+                    managing other administrators and superadmins.
                   </p>
                 </div>
               </div>

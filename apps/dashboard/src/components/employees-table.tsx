@@ -2,7 +2,6 @@ import {
   listOrganizationEmployeesPage,
   listDepartments,
   removeEmployee,
-  createSuperadminRemovalRequest,
   type OrganizationEmployee,
   type OrganizationEmployeeRole,
   type DepartmentResponse,
@@ -49,7 +48,7 @@ import { formatEmployeeName } from "@workspace/components/components/employee-pr
 import { toast } from "@workspace/ui/components/sonner"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { X, MoreVertical, UserCog, UserMinus, ShieldAlert } from "lucide-react"
+import { X, MoreVertical, UserCog, UserMinus } from "lucide-react"
 
 import { Switch } from "@workspace/ui/components/switch"
 
@@ -148,10 +147,6 @@ export function EmployeesTable({
     useState<OrganizationEmployee | null>(null)
   const [deactivateOpen, setDeactivateOpen] = useState(false)
 
-  const [quorumTargetEmployee, setQuorumTargetEmployee] =
-    useState<OrganizationEmployee | null>(null)
-  const [quorumReason, setQuorumReason] = useState("")
-  const [quorumDialogOpen, setQuorumDialogOpen] = useState(false)
 
   const [actionLoading, setActionLoading] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -269,16 +264,6 @@ export function EmployeesTable({
     setDeactivateOpen(true)
   }
 
-  const handleOpenQuorumRequest = (emp: OrganizationEmployee) => {
-    if (!isCurrentUserSuperadmin) {
-      toast.error("Only superadmins can initiate a quorum removal request.")
-      return
-    }
-    setQuorumTargetEmployee(emp)
-    setQuorumReason("")
-    setQuorumDialogOpen(true)
-  }
-
   const handleConfirmDeactivate = async () => {
     if (!organizationId || !deactivatingEmployee) return
     setActionLoading(true)
@@ -297,31 +282,6 @@ export function EmployeesTable({
       }
     } catch {
       toast.error("Failed to deactivate employee")
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleSubmitQuorumRequest = async () => {
-    if (!organizationId || !quorumTargetEmployee) return
-    setActionLoading(true)
-    try {
-      const res = await createSuperadminRemovalRequest(
-        organizationId,
-        quorumTargetEmployee.id,
-        quorumReason.trim() || undefined
-      )
-      if (res.error) {
-        toast.error(res.error.message)
-      } else {
-        toast.success("Quorum removal request submitted successfully.")
-        setQuorumDialogOpen(false)
-        setQuorumTargetEmployee(null)
-        setQuorumReason("")
-        window.location.reload()
-      }
-    } catch {
-      toast.error("Failed to submit quorum request")
     } finally {
       setActionLoading(false)
     }
@@ -547,7 +507,6 @@ export function EmployeesTable({
               employees.map((w) => {
                 const isTargetSuperadmin =
                   w.roles?.includes("superadmin") ?? false
-                const isSelf = Boolean(user?.email && w.email === user.email)
 
                 return (
                   <TableRow
@@ -638,20 +597,7 @@ export function EmployeesTable({
                               <UserCog className="mr-2 size-4" />
                               Manage Roles
                             </DropdownMenuItem>
-                            {isTargetSuperadmin ? (
-                              isCurrentUserSuperadmin &&
-                              !isSelf && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={() => handleOpenQuorumRequest(w)}
-                                  >
-                                    <ShieldAlert className="mr-2 size-4 text-amber-600 dark:text-amber-400" />
-                                    Request Removal (Quorum)
-                                  </DropdownMenuItem>
-                                </>
-                              )
-                            ) : (
+                            {!isTargetSuperadmin && (
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -710,17 +656,9 @@ export function EmployeesTable({
       <Dialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {deactivatingEmployee?.roles?.includes("superadmin")
-                ? "Superadmin Deactivation Protected"
-                : "Deactivate Employee"}
-            </DialogTitle>
+            <DialogTitle>Deactivate Employee</DialogTitle>
             <DialogDescription>
-              {deactivatingEmployee?.roles?.includes("superadmin") ? (
-                "This user holds the Superadmin role. Platform governance requires an absolute majority quorum vote from all active Superadmins before a Superadmin can be removed."
-              ) : (
-                <>
-                  Are you sure you want to deactivate{" "}
+              Are you sure you want to deactivate{" "}
                   <span className="font-semibold text-foreground">
                     {deactivatingEmployee
                       ? formatEmployeeName(deactivatingEmployee) ||
@@ -730,8 +668,6 @@ export function EmployeesTable({
                   ? This will revoke active sessions and disable portal access.
                   Historical medical checkups and assessment records are legally
                   preserved and will NOT be deleted.
-                </>
-              )}
             </DialogDescription>
           </DialogHeader>
 
@@ -743,94 +679,17 @@ export function EmployeesTable({
             >
               Cancel
             </Button>
-            {deactivatingEmployee?.roles?.includes("superadmin") ? (
-              isCurrentUserSuperadmin ? (
-                <Button
-                  variant="default"
-                  onClick={() => {
-                    const emp = deactivatingEmployee
-                    setDeactivateOpen(false)
-                    if (emp) handleOpenQuorumRequest(emp)
-                  }}
-                >
-                  Initiate Quorum Request
-                </Button>
-              ) : null
-            ) : (
-              <Button
-                variant="destructive"
-                onClick={handleConfirmDeactivate}
-                disabled={actionLoading}
-              >
-                {actionLoading ? "Deactivating..." : "Confirm Deactivation"}
-              </Button>
-            )}
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDeactivate}
+              disabled={actionLoading}
+            >
+              {actionLoading ? "Deactivating..." : "Confirm Deactivation"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Quorum Request Dialog ── */}
-      {isCurrentUserSuperadmin && (
-        <Dialog open={quorumDialogOpen} onOpenChange={setQuorumDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <ShieldAlert className="size-5 text-amber-600 dark:text-amber-400" />
-                Request Superadmin Removal
-              </DialogTitle>
-              <DialogDescription>
-                Initiates a formal multi-party Quorum voting process to remove{" "}
-                <span className="font-semibold text-foreground">
-                  {quorumTargetEmployee
-                    ? formatEmployeeName(quorumTargetEmployee) ||
-                      quorumTargetEmployee.email
-                    : ""}
-                </span>{" "}
-                from the Superadmin role. You will automatically cast an
-                approval vote as requester.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-2 py-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="quorum-reason">
-                  Reason for removal (optional)
-                </Label>
-                <span className="text-xs text-muted-foreground">
-                  {quorumReason.length}/500
-                </span>
-              </div>
-              <textarea
-                id="quorum-reason"
-                placeholder="e.g. Employee leaving organization or role transition"
-                value={quorumReason}
-                onChange={(e) => setQuorumReason(e.target.value.slice(0, 500))}
-                disabled={actionLoading}
-                maxLength={500}
-                rows={3}
-                className="w-full min-w-0 resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm break-all shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setQuorumDialogOpen(false)}
-                disabled={actionLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="default"
-                onClick={handleSubmitQuorumRequest}
-                disabled={actionLoading}
-              >
-                {actionLoading ? "Submitting..." : "Submit Quorum Request"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
     </Card>
   )
 }

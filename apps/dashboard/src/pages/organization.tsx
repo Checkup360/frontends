@@ -24,7 +24,6 @@ import {
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { EmployeesTable } from "@/components/employees-table"
-import { QuorumRequestsCard } from "@/components/quorum-requests-card"
 import { normalizeRoles } from "@/lib/role-utils"
 
 export function OrganizationPage() {
@@ -116,12 +115,6 @@ export function OrganizationPage() {
     return { superadmins, admins, contentManagers, regularMembers }
   }, [allMembers])
 
-  const isSuperadmin = useMemo(() => {
-    if (user?.is_sysadmin) return true
-    if (user?.membership?.roles?.includes("superadmin")) return true
-    const currentMember = allMembers.find((m) => m.email === user?.email)
-    return currentMember?.roles.includes("superadmin") ?? false
-  }, [user, allMembers])
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -233,16 +226,6 @@ export function OrganizationPage() {
         )}
       </section>
 
-      {/* ── Superadmin Quorum Requests Section ── */}
-      {organizationId && isSuperadmin && (
-        <QuorumRequestsCard
-          organizationId={organizationId}
-          employees={allMembers}
-          onRequestUpdated={() => {
-            setStatsRefreshKey((k) => k + 1)
-          }}
-        />
-      )}
 
       {/* ── Reusable Employees / Members Table ── */}
       <EmployeesTable
