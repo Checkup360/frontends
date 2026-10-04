@@ -222,6 +222,7 @@ export type AssessmentSessionResponse = {
 export type AssessmentsResponse = {
   overall_health_index?: number | null
   overall_risk_level?: string | null
+  risk_thresholds?: { low: number; moderate: number } | null
   total_sessions?: number
   page?: number
   limit?: number

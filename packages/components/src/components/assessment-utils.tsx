@@ -177,7 +177,11 @@ export function groupResultsIntoSessions(
 export function computeOverallHealthScore(
   results: AssessmentResultResponse[],
   backendOverallScore?: number | null,
-  _backendOverallRiskLevel?: string | null
+  backendOverallRiskLevel?: string | null,
+  riskThresholds?:
+    | { low?: number; moderate?: number; low_risk?: number; moderate_risk?: number }
+    | Record<string, number>
+    | null
 ): ComputedHealthScore {
   if (!results || results.length === 0) {
     return {
@@ -192,6 +196,15 @@ export function computeOverallHealthScore(
   let score: number | null = null
   if (typeof backendOverallScore === "number") {
     score = Math.round(backendOverallScore)
+  } else {
+    const validScores = results
+      .map((r) => r.health_index)
+      .filter((v): v is number => typeof v === "number" && !isNaN(v))
+    if (validScores.length > 0) {
+      score = Math.round(
+        validScores.reduce((a, b) => a + b, 0) / validScores.length
+      )
+    }
   }
 
   const recommendations: Recommendation[] = []
@@ -201,7 +214,7 @@ export function computeOverallHealthScore(
     const name = getAssessmentDisplayName(r.score_id, r.score_name || r.score_id || "Assessment")
     const isCardio = name.toLowerCase().includes("cardio") || (r.score_id || "").toLowerCase().includes("score2")
 
-    if (risk.includes("high")) {
+    if (risk.includes("high") || risk.includes("severe") || risk.includes("attention")) {
       recommendations.push({
         id: `rec_${r.score_id}_high`,
         title: `High Risk Attention: ${name}`,
@@ -225,7 +238,7 @@ export function computeOverallHealthScore(
           : Stethoscope,
         action: "View details",
       })
-    } else if (risk.includes("moderate") || risk.includes("elevated")) {
+    } else if (risk.includes("moderate") || risk.includes("elevated") || risk.includes("mild")) {
       recommendations.push({
         id: `rec_${r.score_id}_mod`,
         title: `Moderate Risk Monitoring: ${name}`,
@@ -275,21 +288,64 @@ export function computeOverallHealthScore(
     }
   }
 
+  const lowThresh =
+    typeof riskThresholds?.low === "number"
+      ? riskThresholds.low
+      : typeof riskThresholds?.low_risk === "number"
+        ? riskThresholds.low_risk
+        : 80
+  const modThresh =
+    typeof riskThresholds?.moderate === "number"
+      ? riskThresholds.moderate
+      : typeof riskThresholds?.moderate_risk === "number"
+        ? riskThresholds.moderate_risk
+        : 50
+
   let label: "Low risk" | "Moderate risk" | "Needs attention" = "Low risk"
   let riskLevel: "low" | "moderate" | "high" = "low"
   let explanation =
     "Your preventive health indicators show a favorable status. Keep up your active lifestyle!"
 
-  if (score > 50) {
-    label = "Needs attention"
-    riskLevel = "high"
-    explanation =
-      "One or more evaluations show elevated risk parameters requiring preventive care and lifestyle modifications."
-  } else if (score > 20) {
-    label = "Moderate risk"
-    riskLevel = "moderate"
-    explanation =
-      "Your health profile shows moderate risk indicators. Review the recommendations below to improve your parameters."
+  if (score !== null) {
+    if (score >= lowThresh) {
+      label = "Low risk"
+      riskLevel = "low"
+      explanation =
+        "Your preventive health indicators show a favorable status. Keep up your active lifestyle!"
+    } else if (score >= modThresh) {
+      label = "Moderate risk"
+      riskLevel = "moderate"
+      explanation =
+        "Your health profile shows moderate risk indicators. Review the recommendations below to improve your parameters."
+    } else {
+      label = "Needs attention"
+      riskLevel = "high"
+      explanation =
+        "One or more evaluations show elevated risk parameters requiring preventive care and lifestyle modifications."
+    }
+  } else if (backendOverallRiskLevel) {
+    const lowerRisk = backendOverallRiskLevel.toLowerCase()
+    if (lowerRisk.includes("high") || lowerRisk.includes("attention") || lowerRisk.includes("severe")) {
+      label = "Needs attention"
+      riskLevel = "high"
+      explanation =
+        "One or more evaluations show elevated risk parameters requiring preventive care and lifestyle modifications."
+    } else if (
+      lowerRisk.includes("moderate") ||
+      lowerRisk.includes("elevated") ||
+      lowerRisk.includes("mild") ||
+      lowerRisk.includes("inter")
+    ) {
+      label = "Moderate risk"
+      riskLevel = "moderate"
+      explanation =
+        "Your health profile shows moderate risk indicators. Review the recommendations below to improve your parameters."
+    } else {
+      label = "Low risk"
+      riskLevel = "low"
+      explanation =
+        "Your preventive health indicators show a favorable status. Keep up your active lifestyle!"
+    }
   }
 
   return {

@@ -33,34 +33,64 @@ import {
 } from "lucide-react"
 import { Link } from "react-router-dom"
 
-function formatRiskLevelLabel(riskLevel: string | null, score: number): string {
-  const lower = (riskLevel || "").toLowerCase()
-  if (
-    lower.includes("very high") ||
-    lower.includes("severe") ||
-    (!lower && score >= 80)
-  ) {
-    return "Very high risk"
-  }
-  if (lower.includes("high") || (!lower && score > 50)) {
+function formatRiskLevelLabel(
+  riskLevel: string | null,
+  score: number,
+  riskThresholds?: Record<string, number> | null
+): string {
+  const low =
+    typeof riskThresholds?.low === "number"
+      ? riskThresholds.low
+      : typeof riskThresholds?.low_risk === "number"
+        ? riskThresholds.low_risk
+        : 80
+  const mod =
+    typeof riskThresholds?.moderate === "number"
+      ? riskThresholds.moderate
+      : typeof riskThresholds?.moderate_risk === "number"
+        ? riskThresholds.moderate_risk
+        : 50
+
+  if (typeof score === "number" && !isNaN(score)) {
+    if (score >= low) {
+      return "Low risk"
+    }
+    if (score >= mod) {
+      return "Moderate risk"
+    }
     return "High risk"
   }
-  if (lower.includes("moderate") || (!lower && score > 30)) {
-    return "Moderate risk"
+
+  if (riskLevel) {
+    const lower = riskLevel.toLowerCase()
+    if (lower.includes("very high") || lower.includes("severe")) {
+      return "Very high risk"
+    }
+    if (lower.includes("high") || lower.includes("attention")) {
+      return "High risk"
+    }
+    if (lower.includes("moderate")) {
+      return "Moderate risk"
+    }
+    if (lower.includes("elevated") || lower.includes("mild")) {
+      return "Slightly elevated risk"
+    }
+    if (lower.includes("low") || lower.includes("optimal") || lower.includes("good")) {
+      return "Low risk"
+    }
+    return riskLevel
   }
-  if (
-    lower.includes("elevated") ||
-    lower.includes("mild") ||
-    (!lower && score > 15)
-  ) {
-    return "Slightly elevated risk"
-  }
+
   return "Low risk"
 }
 
-/** Helper to determine theme tone and labels for risk levels (Risk Score: 0 = low/optimal risk, 100 = highest risk) */
-function getRiskLevelConfig(riskLevel: string | null, riskScore: number) {
-  const label = formatRiskLevelLabel(riskLevel, riskScore)
+/** Helper to determine theme tone and labels for risk levels (Health Index: 0 = high risk/critical, 100 = low risk/optimal) */
+function getRiskLevelConfig(
+  riskLevel: string | null,
+  riskScore: number,
+  riskThresholds?: Record<string, number> | null
+) {
+  const label = formatRiskLevelLabel(riskLevel, riskScore, riskThresholds)
   const lower = label.toLowerCase()
 
   // 1. Very high / High risk (red/destructive)
@@ -305,7 +335,8 @@ export function MemberStatusPage() {
     return computeOverallHealthScore(
       activeSession.results,
       isViewingLatest ? assessments?.overall_health_index : null,
-      isViewingLatest ? assessments?.overall_risk_level : null
+      isViewingLatest ? assessments?.overall_risk_level : null,
+      assessments?.risk_thresholds
     )
   }, [activeSession, isViewingLatest, assessments])
 
@@ -390,6 +421,7 @@ export function MemberStatusPage() {
             score={computedHealth?.score ?? null}
             riskLevel={computedHealth?.riskLevel}
             explanation={computedHealth?.explanation}
+            riskThresholds={assessments?.risk_thresholds}
           />
 
           {/* Individual Scores Section (Horizontal Row Cards) */}
@@ -413,7 +445,11 @@ export function MemberStatusPage() {
                             {activeSession?.results
                 .map((result) => {
                 const normScore = getNormalizedScore(result)
-                const config = getRiskLevelConfig(result.risk_level, normScore)
+                const config = getRiskLevelConfig(
+                  result.risk_level,
+                  normScore,
+                  assessments?.risk_thresholds
+                )
                 const Icon = getScoreIcon(result.score_id, result.score_name)
                 const displayName = formatUserScoreName(result)
 

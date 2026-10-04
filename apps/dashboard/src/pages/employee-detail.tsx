@@ -182,10 +182,43 @@ function getTopicMeta(scoreId: string, scoreName: string) {
   }
 }
 
-function getRiskTone(riskLevel?: string | null, value?: number | null) {
-  const normRisk = (riskLevel || "").toLowerCase()
+function getRiskTone(
+  riskLevel?: string | null,
+  value?: number | null,
+  riskThresholds?: Record<string, number> | null
+) {
+  const low =
+    typeof riskThresholds?.low === "number"
+      ? riskThresholds.low
+      : typeof riskThresholds?.low_risk === "number"
+        ? riskThresholds.low_risk
+        : 80
+  const mod =
+    typeof riskThresholds?.moderate === "number"
+      ? riskThresholds.moderate
+      : typeof riskThresholds?.moderate_risk === "number"
+        ? riskThresholds.moderate_risk
+        : 50
 
-  if (normRisk.includes("high")) {
+  if (typeof value === "number" && !isNaN(value)) {
+    if (value >= low) {
+      return {
+        tone: "green" as const,
+        riskLevel: "low" as const,
+        label: "Low risk",
+        badgeClass:
+          "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      }
+    }
+    if (value >= mod) {
+      return {
+        tone: "amber" as const,
+        riskLevel: "moderate" as const,
+        label: "Moderate risk",
+        badgeClass:
+          "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      }
+    }
     return {
       tone: "red" as const,
       riskLevel: "high" as const,
@@ -195,7 +228,28 @@ function getRiskTone(riskLevel?: string | null, value?: number | null) {
     }
   }
 
-  if (normRisk.includes("moderate") || normRisk.includes("elevated")) {
+  const normRisk = (riskLevel || "").toLowerCase()
+
+  if (
+    normRisk.includes("high") ||
+    normRisk.includes("attention") ||
+    normRisk.includes("severe")
+  ) {
+    return {
+      tone: "red" as const,
+      riskLevel: "high" as const,
+      label: "High risk",
+      badgeClass:
+        "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    }
+  }
+
+  if (
+    normRisk.includes("moderate") ||
+    normRisk.includes("elevated") ||
+    normRisk.includes("mild") ||
+    normRisk.includes("inter")
+  ) {
     return {
       tone: "amber" as const,
       riskLevel: "moderate" as const,
@@ -205,36 +259,11 @@ function getRiskTone(riskLevel?: string | null, value?: number | null) {
     }
   }
 
-  if (normRisk.includes("low")) {
-    return {
-      tone: "green" as const,
-      riskLevel: "low" as const,
-      label: "Low risk",
-      badgeClass:
-        "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    }
-  }
-
-  // Fallbacks for when no explicit string risk level is provided (e.g. overall health score)
-  if (typeof value === "number") {
-    if (value < 60) {
-      return {
-        tone: "red" as const,
-        riskLevel: "high" as const,
-        label: "High risk",
-        badgeClass:
-          "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
-      }
-    }
-    if (value < 80) {
-      return {
-        tone: "amber" as const,
-        riskLevel: "moderate" as const,
-        label: "Moderate risk",
-        badgeClass:
-          "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-      }
-    }
+  if (
+    normRisk.includes("low") ||
+    normRisk.includes("optimal") ||
+    normRisk.includes("good")
+  ) {
     return {
       tone: "green" as const,
       riskLevel: "low" as const,
@@ -521,7 +550,11 @@ export function EmployeeDetailPage() {
       const val = isEvaluated
         ? Math.round(res.health_index as number)
         : null
-      const riskMeta = getRiskTone(res.risk_level, val ?? undefined)
+      const riskMeta = getRiskTone(
+        res.risk_level,
+        val ?? undefined,
+        assessments?.risk_thresholds
+      )
 
       let severityScore = 0
       if (riskMeta.riskLevel === "high") severityScore = 3
@@ -567,7 +600,7 @@ export function EmployeeDetailPage() {
       isPending: indicator.isPending,
       isDeactivated: indicator.isDeactivated,
     }))
-  }, [activeSession, scoreWeights])
+  }, [activeSession, scoreWeights, assessments?.risk_thresholds])
 
   const hasAnyEvaluated = dynamicIndicators.some(
     (i) => !i.isPending && i.value !== null
@@ -591,7 +624,11 @@ export function EmployeeDetailPage() {
     }
 
     const finalScore = Math.round(assessments.overall_health_index)
-    const riskMeta = getRiskTone(assessments?.overall_risk_level, finalScore)
+    const riskMeta = getRiskTone(
+      assessments?.overall_risk_level,
+      finalScore,
+      assessments?.risk_thresholds
+    )
 
     return {
       score: finalScore,
@@ -1020,7 +1057,11 @@ export function EmployeeDetailPage() {
                     const val = isEvaluated
                       ? Math.round(result.health_index as number)
                       : null
-                    const riskMeta = getRiskTone(result.risk_level, val)
+                    const riskMeta = getRiskTone(
+                      result.risk_level,
+                      val,
+                      assessments?.risk_thresholds
+                    )
 
                     if (!isEvaluated) {
                       return (

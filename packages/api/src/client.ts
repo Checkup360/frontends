@@ -1324,6 +1324,10 @@ export async function deleteOrganizationLogo(
 
 export interface ScoreWeightsResponse {
   score_weights: Record<string, number>
+  risk_thresholds?: {
+    low: number
+    moderate: number
+  } | null
 }
 
 export async function getOrganizationScoreWeights(
@@ -1347,16 +1351,27 @@ export async function getOrganizationScoreWeights(
 
 export async function updateOrganizationScoreWeights(
   organizationId: string,
-  scoreWeights: Record<string, number>
+  scoreWeights: Record<string, number>,
+  riskThresholds?: { low: number; moderate: number } | null
 ): Promise<ScoreWeightsResponse | null> {
   try {
+    const payload: {
+      score_weights: Record<string, number>
+      risk_thresholds?: { low: number; moderate: number }
+    } = {
+      score_weights: scoreWeights,
+    }
+    if (riskThresholds) {
+      payload.risk_thresholds = riskThresholds
+    }
+
     const response = await fetchWithAuth(
       `${resolveApiBaseUrl()}${apiRoutes.organizationScoreWeights(organizationId)}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ score_weights: scoreWeights }),
+        body: JSON.stringify(payload),
       }
     )
 

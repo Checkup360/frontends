@@ -33,6 +33,10 @@ export const heroLevelConfig = {
 export interface HealthScoreHeroCardProps {
   score: number | null
   riskLevel?: "low" | "moderate" | "high" | string | null
+  riskThresholds?:
+    | { low?: number; moderate?: number; low_risk?: number; moderate_risk?: number }
+    | Record<string, number>
+    | null
   explanation?: string
   title?: string
   description?: string
@@ -41,23 +45,60 @@ export interface HealthScoreHeroCardProps {
 
 export function HealthScoreHeroCard({
   score,
-  riskLevel = "low",
+  riskLevel,
+  riskThresholds,
   explanation = "Evaluations within optimal and healthy parameters.",
   title = "Health Score",
   description = "Evaluated from your latest clinical studies & health forms",
   className,
 }: HealthScoreHeroCardProps) {
+  const lowThreshold =
+    typeof riskThresholds?.low === "number"
+      ? riskThresholds.low
+      : typeof riskThresholds?.low_risk === "number"
+        ? riskThresholds.low_risk
+        : 80
+  const moderateThreshold =
+    typeof riskThresholds?.moderate === "number"
+      ? riskThresholds.moderate
+      : typeof riskThresholds?.moderate_risk === "number"
+        ? riskThresholds.moderate_risk
+        : 50
   const hasScore = typeof score === "number"
-  const normalizedLevel = (
-    riskLevel && riskLevel.toLowerCase().includes("high")
-      ? "high"
-      : riskLevel &&
-          (riskLevel.toLowerCase().includes("mod") ||
-            riskLevel.toLowerCase().includes("elevated") ||
-            riskLevel.toLowerCase().includes("inter"))
-        ? "moderate"
-        : "low"
-  ) as keyof typeof heroLevelConfig
+
+  const normalizedLevel = ((): keyof typeof heroLevelConfig => {
+    if (hasScore) {
+      if (score >= lowThreshold) return "low"
+      if (score >= moderateThreshold) return "moderate"
+      return "high"
+    }
+    if (riskLevel) {
+      const lower = riskLevel.toLowerCase()
+      if (
+        lower.includes("high") ||
+        lower.includes("attention") ||
+        lower.includes("severe")
+      ) {
+        return "high"
+      }
+      if (
+        lower.includes("mod") ||
+        lower.includes("elevated") ||
+        lower.includes("inter") ||
+        lower.includes("mild")
+      ) {
+        return "moderate"
+      }
+      if (
+        lower.includes("low") ||
+        lower.includes("optimal") ||
+        lower.includes("good")
+      ) {
+        return "low"
+      }
+    }
+    return "low"
+  })()
 
   const config = hasScore
     ? heroLevelConfig[normalizedLevel] || heroLevelConfig.low
@@ -143,18 +184,22 @@ export function HealthScoreHeroCard({
             </div>
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-[color:var(--success)]">0-20</p>
-                <p className="text-xs text-muted-foreground">Low Risk</p>
-              </div>
-              <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-[color:var(--warning)]">21-50</p>
-                <p className="text-xs text-muted-foreground">Moderate Risk</p>
-              </div>
-              <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-destructive">&gt;50</p>
+                <p className="font-medium text-destructive">&lt;{moderateThreshold}</p>
                 <p className="text-xs text-muted-foreground">
                   Attention Needed
                 </p>
+              </div>
+              <div className="rounded-lg bg-muted/30 p-3">
+                <p className="font-medium text-[color:var(--warning)]">
+                  {moderateThreshold}–{lowThreshold - 1}
+                </p>
+                <p className="text-xs text-muted-foreground">Moderate Risk</p>
+              </div>
+              <div className="rounded-lg bg-muted/30 p-3">
+                <p className="font-medium text-[color:var(--success)]">
+                  {lowThreshold}–100
+                </p>
+                <p className="text-xs text-muted-foreground">Low Risk</p>
               </div>
             </div>
           </div>

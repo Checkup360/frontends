@@ -120,7 +120,8 @@ export function MemberOverview({
     return computeOverallHealthScore(
       latestSession.results,
       assessmentsData?.overall_health_index,
-      assessmentsData?.overall_risk_level
+      assessmentsData?.overall_risk_level,
+      assessmentsData?.risk_thresholds
     )
   }, [latestSession, assessmentsData])
 
@@ -144,7 +145,12 @@ export function MemberOverview({
         const isLatestInArray = idx === arr.length - 1
         const sessionScore = isLatestInArray && typeof assessmentsData?.overall_health_index === "number"
           ? Math.round(assessmentsData.overall_health_index)
-          : computeOverallHealthScore(session.results).score
+          : computeOverallHealthScore(
+              session.results,
+              null,
+              null,
+              assessmentsData?.risk_thresholds
+            ).score
 
         return {
           month: session.formattedDate.split(" ")[0] || "Evaluation",
@@ -240,6 +246,7 @@ export function MemberOverview({
             score={score}
             riskLevel={computedHealth?.riskLevel}
             explanation={computedHealth?.explanation}
+            riskThresholds={assessmentsData?.risk_thresholds}
           />
 
           {/* Recommendation Card Carousel */}

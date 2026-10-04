@@ -117,16 +117,16 @@ export function HealthScoreHero({
             </div>
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-[color:var(--success)]">85+</p>
-                <p className="text-xs text-muted-foreground">Excellent</p>
+                <p className="font-medium text-destructive">&lt;50</p>
+                <p className="text-xs text-muted-foreground">Attention</p>
               </div>
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-[color:var(--warning)]">60-84</p>
+                <p className="font-medium text-[color:var(--warning)]">50-79</p>
                 <p className="text-xs text-muted-foreground">Moderate</p>
               </div>
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-destructive">&lt;60</p>
-                <p className="text-xs text-muted-foreground">Attention</p>
+                <p className="font-medium text-[color:var(--success)]">80-100</p>
+                <p className="text-xs text-muted-foreground">Low Risk</p>
               </div>
             </div>
           </div>

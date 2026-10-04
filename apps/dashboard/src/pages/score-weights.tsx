@@ -4,19 +4,25 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
+import { Label } from "@workspace/ui/components/label"
 import { Slider } from "@workspace/ui/components/slider"
 import { Switch } from "@workspace/ui/components/switch"
 import { toast } from "@workspace/ui/components/sonner"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   Activity,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
   HeartPulse,
   Moon,
   RotateCcw,
   Save,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
@@ -152,6 +158,14 @@ export function ScoreWeightsPage() {
     computeBalancedWeights(SCORE_TOPICS)
   )
 
+  const [riskThresholds, setRiskThresholds] = useState<{
+    low: number
+    moderate: number
+  }>({
+    low: 80,
+    moderate: 50,
+  })
+
   const [filterMode, setFilterMode] = useState<"all" | "active" | "disabled">(
     "all"
   )
@@ -167,17 +181,25 @@ export function ScoreWeightsPage() {
       }
       try {
         const res = await getOrganizationScoreWeights(organizationId)
-        if (active && res && res.score_weights) {
-          const hasKeys = Object.keys(res.score_weights).length > 0
-          setWeights(
-            Object.fromEntries(
-              SCORE_TOPICS.map((topic) => [
-                topic.id,
-                res.score_weights[topic.id] ??
-                  (hasKeys ? 0 : Math.floor(100 / SCORE_TOPICS.length)),
-              ])
+        if (active && res) {
+          if (res.score_weights) {
+            const hasKeys = Object.keys(res.score_weights).length > 0
+            setWeights(
+              Object.fromEntries(
+                SCORE_TOPICS.map((topic) => [
+                  topic.id,
+                  res.score_weights[topic.id] ??
+                    (hasKeys ? 0 : Math.floor(100 / SCORE_TOPICS.length)),
+                ])
+              )
             )
-          )
+          }
+          if (res.risk_thresholds) {
+            setRiskThresholds({
+              low: Number(res.risk_thresholds.low ?? 80),
+              moderate: Number(res.risk_thresholds.moderate ?? 50),
+            })
+          }
         }
       } catch (e) {
         console.error("Failed to load score weights from API", e)
@@ -205,7 +227,23 @@ export function ScoreWeightsPage() {
   const disabledCount = SCORE_TOPICS.length - activeCount
 
   const is100Percent = totalWeight === 100 || totalWeight === 0
-  const isValid = true
+  const isRiskThresholdsValid = useMemo(() => {
+    return (
+      riskThresholds.moderate >= 0 &&
+      riskThresholds.moderate < riskThresholds.low &&
+      riskThresholds.low <= 100
+    )
+  }, [riskThresholds])
+
+  const isValid = is100Percent && isRiskThresholdsValid
+
+  const isStandardThresholds =
+    riskThresholds.low === 80 && riskThresholds.moderate === 50
+
+  const handleResetThresholds = () => {
+    setRiskThresholds({ low: 80, moderate: 50 })
+    toast.info("Risk thresholds reset to standard defaults (80 / 50)")
+  }
 
   const roundWeightsTo100 = (
     weights: Record<string, number>,
@@ -335,18 +373,36 @@ export function ScoreWeightsPage() {
       toast.error("Total weight must equal exactly 100%")
       return
     }
+    if (!isRiskThresholdsValid) {
+      toast.error(
+        "Moderate risk cutoff must be strictly lower than Low risk cutoff"
+      )
+      return
+    }
     if (!organizationId) return
     setSaving(true)
     try {
-      const res = await updateOrganizationScoreWeights(organizationId, weights)
-      if (res && res.score_weights) {
-        setWeights(res.score_weights)
-        toast.success("Score weights updated successfully")
+      const res = await updateOrganizationScoreWeights(
+        organizationId,
+        weights,
+        riskThresholds
+      )
+      if (res) {
+        if (res.score_weights) setWeights(res.score_weights)
+        if (res.risk_thresholds) {
+          setRiskThresholds({
+            low: Number(res.risk_thresholds.low ?? 80),
+            moderate: Number(res.risk_thresholds.moderate ?? 50),
+          })
+        }
+        toast.success(
+          "Score weights and risk thresholds updated successfully. Background score recalculation started."
+        )
       } else {
-        toast.error("Failed to save score weights")
+        toast.error("Failed to save configuration")
       }
     } catch {
-      toast.error("An error occurred while saving score weights.")
+      toast.error("An error occurred while saving configuration.")
     } finally {
       setSaving(false)
     }
@@ -362,7 +418,7 @@ export function ScoreWeightsPage() {
   }, [filterMode, weights])
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-5">
+    <div className="mx-auto w-full max-w-4xl space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -370,8 +426,8 @@ export function ScoreWeightsPage() {
             Score weights
           </h2>
           <p className="text-sm text-muted-foreground">
-            Adjust module enablement and weight percentages for employee
-            evaluations.
+            Adjust module enablement, weight percentages, and risk cutoff
+            thresholds for employee evaluations.
           </p>
         </div>
 
@@ -388,6 +444,10 @@ export function ScoreWeightsPage() {
           </Button>
         </div>
       </div>
+
+      {/* ========================================================= */}
+      {/* SECTION 1: SCORE WEIGHTS (TOP)                            */}
+      {/* ========================================================= */}
 
       {/* Total Allocated Card with Multi-Topic Stacked Progress Bar */}
       <Card className="border-border/60 shadow-xs">
@@ -651,6 +711,249 @@ export function ScoreWeightsPage() {
           )
         })}
       </div>
+
+      {/* ========================================================= */}
+      {/* SECTION 2: RISK CUTOFF THRESHOLDS (BOTTOM)                */}
+      {/* ========================================================= */}
+
+      {/* Risk Classification Standards Card */}
+      <Card className="border-border/60 shadow-xs">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-0.5">
+              <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+                <ShieldCheck className="size-4 text-primary" />
+                Risk Cutoff Thresholds
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
+                Configure Health Index score boundaries (0–100) for risk tier
+                classification and automatic recalculation across your
+                organization.
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className={
+                  isStandardThresholds
+                    ? "border-primary/30 bg-primary/10 text-xs font-semibold text-primary"
+                    : "border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-600 dark:text-amber-400"
+                }
+              >
+                {isStandardThresholds ? "Standard Defaults" : "Custom Thresholds"}
+              </Badge>
+              {!isStandardThresholds && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleResetThresholds}
+                  className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <RotateCcw className="size-3" />
+                  Reset to default
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5 pt-0">
+          {/* Dynamic Segmented color bar */}
+          <div className="space-y-1.5">
+            <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-muted shadow-inner">
+              <div
+                className="h-full bg-rose-500 transition-all duration-200"
+                style={{ width: `${riskThresholds.moderate}%` }}
+                title={`Needs attention / High risk: 0 - ${riskThresholds.moderate - 1}`}
+              />
+              <div
+                className="h-full bg-amber-500 transition-all duration-200"
+                style={{
+                  width: `${Math.max(0, riskThresholds.low - riskThresholds.moderate)}%`,
+                }}
+                title={`Moderate risk: ${riskThresholds.moderate} - ${riskThresholds.low - 1}`}
+              />
+              <div
+                className="h-full bg-emerald-500 transition-all duration-200"
+                style={{
+                  width: `${Math.max(0, 100 - riskThresholds.low)}%`,
+                }}
+                title={`Low risk: ${riskThresholds.low} - 100`}
+              />
+            </div>
+            <div className="flex justify-between px-0.5 text-[10px] font-medium text-muted-foreground">
+              <span>0 (High risk)</span>
+              <span>
+                Moderate cutoff:{" "}
+                <strong className="text-foreground">
+                  {riskThresholds.moderate}
+                </strong>
+              </span>
+              <span>
+                Low risk cutoff:{" "}
+                <strong className="text-foreground">
+                  {riskThresholds.low}
+                </strong>
+              </span>
+              <span>100 (Optimal)</span>
+            </div>
+          </div>
+
+          {/* Sliders / Controls for Cutoff Values */}
+          <div className="grid grid-cols-1 gap-4 rounded-lg border border-border/60 bg-muted/20 p-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="low-threshold"
+                  className="text-xs font-semibold text-foreground"
+                >
+                  Low Risk Minimum Score (Optimal)
+                </Label>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                    &ge; {riskThresholds.low}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">pts</span>
+                </div>
+              </div>
+              <Slider
+                id="low-threshold"
+                value={[riskThresholds.low]}
+                min={Math.max(1, riskThresholds.moderate + 1)}
+                max={99}
+                step={1}
+                onValueChange={(val) => {
+                  const raw = val[0] ?? 80
+                  setRiskThresholds((prev) => ({
+                    ...prev,
+                    low: Math.max(prev.moderate + 1, Math.min(99, raw)),
+                  }))
+                }}
+                className="py-1"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Employees scoring at or above this threshold are classified as{" "}
+                <strong className="text-foreground">Low Risk</strong>.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="moderate-threshold"
+                  className="text-xs font-semibold text-foreground"
+                >
+                  Moderate Risk Minimum Score
+                </Label>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                    &ge; {riskThresholds.moderate}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">pts</span>
+                </div>
+              </div>
+              <Slider
+                id="moderate-threshold"
+                value={[riskThresholds.moderate]}
+                min={1}
+                max={Math.min(98, riskThresholds.low - 1)}
+                step={1}
+                onValueChange={(val) => {
+                  const raw = val[0] ?? 50
+                  setRiskThresholds((prev) => ({
+                    ...prev,
+                    moderate: Math.max(1, Math.min(prev.low - 1, raw)),
+                  }))
+                }}
+                className="py-1"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Employees scoring between this and Low cutoff are{" "}
+                <strong className="text-foreground">Moderate Risk</strong>; below
+                are <strong className="text-foreground">Needs Attention</strong>
+                .
+              </p>
+            </div>
+          </div>
+
+          {/* 3 Tier Cards */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="space-y-1 rounded-lg border border-rose-500/20 bg-rose-500/5 p-3">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400">
+                  <AlertCircle className="size-3.5" />
+                  Needs Attention
+                </span>
+                <Badge
+                  variant="outline"
+                  className="border-rose-500/30 bg-rose-500/10 text-[10px] font-semibold text-rose-600 dark:text-rose-400"
+                >
+                  &lt; {riskThresholds.moderate}
+                </Badge>
+              </div>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Elevated risk parameters requiring preventive care and medical
+                follow-up.
+              </p>
+            </div>
+
+            <div className="space-y-1 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                  <AlertTriangle className="size-3.5" />
+                  Moderate Risk
+                </span>
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/30 bg-amber-500/10 text-[10px] font-semibold text-amber-600 dark:text-amber-400"
+                >
+                  {riskThresholds.moderate} – {riskThresholds.low - 1}
+                </Badge>
+              </div>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Intermediate risk indicators. Preventive lifestyle habits and
+                monitoring advised.
+              </p>
+            </div>
+
+            <div className="space-y-1 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="size-3.5" />
+                  Low Risk
+                </span>
+                <Badge
+                  variant="outline"
+                  className="border-emerald-500/30 bg-emerald-500/10 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400"
+                >
+                  {riskThresholds.low} – 100
+                </Badge>
+              </div>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Optimal health parameters. Health promotion and active
+                maintenance.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-3 border-t border-border/40 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">
+            Saving new risk thresholds triggers an automatic background
+            recalculation of current employee risk levels across your
+            organization.
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSave}
+            disabled={!isValid || loading || saving}
+            className="gap-1.5 whitespace-nowrap self-end sm:self-auto"
+          >
+            <Save className="size-3.5" />
+            {saving ? "Saving..." : "Save risk thresholds"}
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   )
 }
