@@ -16,32 +16,13 @@ import {
   History,
   Calendar,
   Check,
-  Dumbbell,
-  Moon,
-  Stethoscope,
-  Apple,
-  Activity,
-  HeartPulse,
-  Sparkles,
-  type LucideIcon,
 } from "lucide-react"
-
-export interface Recommendation {
-  id: string
-  title: string
-  description: string
-  priority: "high" | "medium" | "low"
-  category: string
-  icon: LucideIcon
-  action?: string
-}
 
 export interface ComputedHealthScore {
   score: number | null
   label: "Low risk" | "Moderate risk" | "Needs attention" | "Incomplete evaluation"
   riskLevel: "low" | "moderate" | "high" | null
   explanation: string
-  recommendations: Recommendation[]
 }
 
 export function getAssessmentDisplayName(
@@ -189,7 +170,6 @@ export function computeOverallHealthScore(
       label: "Low risk",
       riskLevel: "low",
       explanation: "Complete your health forms to get your personalized risk evaluation.",
-      recommendations: [],
     }
   }
 
@@ -207,76 +187,6 @@ export function computeOverallHealthScore(
     }
   }
 
-  const recommendations: Recommendation[] = []
-
-  for (const r of results) {
-    const risk = (r.risk_level || "").toLowerCase()
-    const name = getAssessmentDisplayName(r.score_id, r.score_name || r.score_id || "Assessment")
-    const isCardio = name.toLowerCase().includes("cardio") || (r.score_id || "").toLowerCase().includes("score2")
-
-    if (risk.includes("high") || risk.includes("severe") || risk.includes("attention")) {
-      recommendations.push({
-        id: `rec_${r.score_id}_high`,
-        title: `High Risk Attention: ${name}`,
-        description:
-          r.explanation ||
-          `Your ${name} score indicates high risk factors. We recommend consulting a healthcare provider.`,
-        priority: "high",
-        category: name.toLowerCase().includes("sleep")
-          ? "Sleep"
-          : name.toLowerCase().includes("diabet")
-          ? "Nutrition & Lifestyle"
-          : isCardio
-          ? "Cardiovascular Health"
-          : "Preventive care",
-        icon: name.toLowerCase().includes("sleep")
-          ? Moon
-          : name.toLowerCase().includes("diabet")
-          ? Apple
-          : isCardio
-          ? HeartPulse
-          : Stethoscope,
-        action: "View details",
-      })
-    } else if (risk.includes("moderate") || risk.includes("elevated") || risk.includes("mild")) {
-      recommendations.push({
-        id: `rec_${r.score_id}_mod`,
-        title: `Moderate Risk Monitoring: ${name}`,
-        description:
-          r.explanation ||
-          `Your ${name} score shows moderate risk factors. Consider lifestyle adjustments.`,
-        priority: "medium",
-        category: name.toLowerCase().includes("sleep")
-          ? "Sleep"
-          : name.toLowerCase().includes("diabet")
-          ? "Nutrition & Activity"
-          : isCardio
-          ? "Cardiovascular Health"
-          : "Preventive care",
-        icon: name.toLowerCase().includes("sleep")
-          ? Moon
-          : name.toLowerCase().includes("diabet")
-          ? Dumbbell
-          : isCardio
-          ? HeartPulse
-          : Activity,
-        action: "View recommendations",
-      })
-    } else {
-      recommendations.push({
-        id: `rec_${r.score_id}_low`,
-        title: `Good Standing: ${name}`,
-        description:
-          r.explanation ||
-          `Your ${name} evaluation shows low risk. Maintain your healthy habits!`,
-        priority: "low",
-        category: isCardio ? "Cardiovascular Health" : "Lifestyle",
-        icon: Sparkles,
-        action: "Keep it up",
-      })
-    }
-  }
-
   if (score === null) {
     return {
       score: null,
@@ -284,7 +194,6 @@ export function computeOverallHealthScore(
       riskLevel: null,
       explanation:
         "Some evaluations are still pending to calculate your overall health score. Individual disease scores are shown below.",
-      recommendations,
     }
   }
 
@@ -353,7 +262,6 @@ export function computeOverallHealthScore(
     label,
     riskLevel,
     explanation,
-    recommendations,
   }
 }
 
