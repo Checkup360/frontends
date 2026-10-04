@@ -38,6 +38,7 @@ export function MemberOverviewPage() {
         firstName={user.first_name}
         lastName={user.last_name}
         avatarUrl={user.avatar_url}
+        onNavigate={(href) => navigate(href)}
       />
       <HealthContentGrid
         articles={articles}
