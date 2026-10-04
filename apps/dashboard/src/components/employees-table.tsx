@@ -66,7 +66,12 @@ const statusClasses: Record<string, string> = {
 const MEMBER_ROLES: OrganizationEmployeeRole[] = ["member"]
 
 import { ManageRolesDialog } from "./manage-roles-dialog"
-import { getRoleBadgeProps, formatRoleName, normalizeRoles } from "@/lib/role-utils"
+import {
+  describeRoleChangeError,
+  formatRoleName,
+  getRoleBadgeProps,
+  normalizeRoles,
+} from "@/lib/role-utils"
 
 function formatLastAssessment(value?: string | null): string {
   if (!value) return "Not assessed"
@@ -270,7 +275,7 @@ export function EmployeesTable({
     try {
       const res = await removeEmployee(organizationId, deactivatingEmployee.id)
       if (res.error) {
-        toast.error(res.error.message)
+        toast.error(describeRoleChangeError(res.error.message))
       } else {
         toast.success(
           "Employee deactivated. Historical medical data has been preserved."
@@ -507,6 +512,8 @@ export function EmployeesTable({
               employees.map((w) => {
                 const isTargetSuperadmin =
                   w.roles?.includes("superadmin") ?? false
+                const isSelf = Boolean(user?.email && w.email === user.email)
+                const hasRoles = (w.roles?.length ?? 0) > 0
 
                 return (
                   <TableRow
@@ -597,18 +604,24 @@ export function EmployeesTable({
                               <UserCog className="mr-2 size-4" />
                               Manage Roles
                             </DropdownMenuItem>
-                            {!isTargetSuperadmin && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  variant="destructive"
-                                  onClick={() => handleOpenDeactivate(w)}
-                                >
-                                  <UserMinus className="mr-2 size-4" />
-                                  Deactivate Employee
-                                </DropdownMenuItem>
-                              </>
-                            )}
+                            {/* Nobody deactivates themselves, users without
+                                roles are already deactivated, and superadmins
+                                are only removable by another superadmin */}
+                            {!isSelf &&
+                              hasRoles &&
+                              (!isTargetSuperadmin ||
+                                isCurrentUserSuperadmin) && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => handleOpenDeactivate(w)}
+                                  >
+                                    <UserMinus className="mr-2 size-4" />
+                                    Deactivate Employee
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -658,7 +671,20 @@ export function EmployeesTable({
           <DialogHeader>
             <DialogTitle>Deactivate Employee</DialogTitle>
             <DialogDescription>
-              Are you sure you want to deactivate{" "}
+              {deactivatingEmployee?.roles?.includes("superadmin") ? (
+                <>
+                  Are you sure you want to deactivate superadmin{" "}
+                  <span className="font-semibold text-foreground">
+                    {formatEmployeeName(deactivatingEmployee) ||
+                      deactivatingEmployee.email}
+                  </span>
+                  ? They will lose all access to the organization, including
+                  superadmin governance. This action is recorded in the audit
+                  log.
+                </>
+              ) : (
+                <>
+                  Are you sure you want to deactivate{" "}
                   <span className="font-semibold text-foreground">
                     {deactivatingEmployee
                       ? formatEmployeeName(deactivatingEmployee) ||
@@ -668,6 +694,8 @@ export function EmployeesTable({
                   ? This will revoke active sessions and disable portal access.
                   Historical medical checkups and assessment records are legally
                   preserved and will NOT be deleted.
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
 

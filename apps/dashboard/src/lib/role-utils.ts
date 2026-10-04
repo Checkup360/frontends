@@ -42,3 +42,14 @@ export function normalizeRoles(roles: string[] | undefined | null): string[] {
   }
   return roles
 }
+
+const ROLE_CHANGE_ERROR_MESSAGES: Record<string, string> = {
+  cannot_remove_last_superadmin:
+    "The organization needs at least one superadmin.",
+  cannot_remove_own_superadmin: "You can't remove your own superadmin role.",
+}
+
+/** Readable message for role change errors returned by the API. */
+export function describeRoleChangeError(message: string): string {
+  return ROLE_CHANGE_ERROR_MESSAGES[message] ?? message
+}
