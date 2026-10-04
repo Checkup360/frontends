@@ -316,7 +316,7 @@ export function computeOverallHealthScore(
       label = "Moderate risk"
       riskLevel = "moderate"
       explanation =
-        "Your health profile shows moderate risk indicators. Review the recommendations below to improve your parameters."
+        "Your health profile shows moderate risk indicators. Consider making lifestyle adjustments to improve your parameters."
     } else {
       label = "Needs attention"
       riskLevel = "high"
@@ -339,7 +339,7 @@ export function computeOverallHealthScore(
       label = "Moderate risk"
       riskLevel = "moderate"
       explanation =
-        "Your health profile shows moderate risk indicators. Review the recommendations below to improve your parameters."
+        "Your health profile shows moderate risk indicators. Consider making lifestyle adjustments to improve your parameters."
     } else {
       label = "Low risk"
       riskLevel = "low"

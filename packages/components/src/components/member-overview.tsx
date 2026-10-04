@@ -4,17 +4,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/av
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card } from "@workspace/ui/components/card"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@workspace/ui/components/carousel"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
   ArrowLeft,
-  ArrowRight,
   ClipboardList,
 } from "lucide-react"
 import {
@@ -29,27 +21,8 @@ import {
 import {
   groupResultsIntoSessions,
   computeOverallHealthScore,
-  type Recommendation,
 } from "./assessment-utils"
 import { HealthScoreHeroCard, heroLevelConfig } from "./health-score-hero-card"
-
-const priorityConfig = {
-  high: {
-    label: "High priority",
-    color: "text-destructive",
-    bg: "bg-destructive/10 border-destructive/20",
-  },
-  medium: {
-    label: "Medium priority",
-    color: "text-[color:var(--warning)]",
-    bg: "bg-[color:var(--warning)]/10 border-[color:var(--warning)]/20",
-  },
-  low: {
-    label: "Suggestion",
-    color: "text-primary",
-    bg: "bg-primary/10 border-primary/20",
-  },
-} as const
 
 import {
   formatFullName,
@@ -159,8 +132,6 @@ export function MemberOverview({
       })
   }, [sessions, assessmentsData])
 
-  const recommendationsList: Recommendation[] = computedHealth?.recommendations || []
-
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
       <header>
@@ -248,79 +219,6 @@ export function MemberOverview({
             explanation={computedHealth?.explanation}
             riskThresholds={assessmentsData?.risk_thresholds}
           />
-
-          {/* Recommendation Card Carousel */}
-          {!showBack && recommendationsList.length > 0 && (
-            <section className="space-y-4">
-              <Carousel
-                opts={{
-                  align: "start",
-                }}
-                className="w-full"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-lg font-semibold">
-                      Personalized recommendations
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      Suggested actions based on evaluated health risk scores
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <CarouselPrevious className="static translate-x-0 translate-y-0" />
-                    <CarouselNext className="static translate-x-0 translate-y-0" />
-                  </div>
-                </div>
-
-                <CarouselContent className="mt-4 -ml-4 px-px pb-1">
-                  {recommendationsList.map((recommendation) => {
-                    const Icon = recommendation.icon
-                    const pConfig = priorityConfig[recommendation.priority]
-
-                    return (
-                      <CarouselItem
-                        key={recommendation.id}
-                        className="pl-4 md:basis-1/2 lg:basis-1/3"
-                      >
-                        <Card className="group h-full border-border/60 p-5 space-y-3 transition-all hover:border-primary/25 hover:shadow-sm">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                              <Icon className="size-5" />
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${pConfig.bg} ${pConfig.color}`}
-                            >
-                              {pConfig.label}
-                            </Badge>
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold text-foreground leading-snug">
-                              {recommendation.title}
-                            </h3>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                              {recommendation.description}
-                            </p>
-                          </div>
-                          {recommendation.action && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="group/btn -ml-2 text-xs font-semibold text-primary"
-                            >
-                              {recommendation.action}
-                              <ArrowRight className="ml-1 size-3 transition-transform group-hover/btn:translate-x-1" />
-                            </Button>
-                          )}
-                        </Card>
-                      </CarouselItem>
-                    )
-                  })}
-                </CarouselContent>
-              </Carousel>
-            </section>
-          )}
 
           {/* Health Score History Evolution Chart */}
           <section className="space-y-4">

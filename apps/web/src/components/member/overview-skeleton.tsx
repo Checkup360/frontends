@@ -34,31 +34,6 @@ export function MemberOverviewSkeleton() {
         </CardContent>
       </Card>
 
-      <section className="space-y-4">
-        <div>
-          <Skeleton className="h-6 w-64" />
-          <Skeleton className="mt-2 h-4 w-72 max-w-full" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Card key={index} className="min-h-[250px]">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <Skeleton className="size-11 rounded-lg" />
-                  <Skeleton className="h-5 w-24 rounded-full" />
-                </div>
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-16 w-full" />
-              </CardHeader>
-              <CardContent className="mt-auto flex items-center justify-between gap-3">
-                <Skeleton className="h-5 w-24 rounded-full" />
-                <Skeleton className="h-8 w-28" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
       <Card>
         <CardHeader>
           <Skeleton className="h-5 w-44" />
