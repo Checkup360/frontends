@@ -35,9 +35,9 @@ export function getAssessmentDisplayName(
   if (text.includes("phq") || text.includes("depression") || text.includes("mood")) {
     return "Mood & Well-being"
   }
-  if (text.includes("findrisc") || text.includes("diabetes")) return "Type 2 Diabetes Risk"
+  if (text.includes("findrisc") || text.includes("diabetes")) return "Diabetes"
   if (text.includes("stop_bang") || text.includes("stopbang") || text.includes("sleep")) {
-    return "Sleep Quality"
+    return "Sleep Apnea"
   }
   if (
     text.includes("metabolic_syndrome") ||
@@ -46,20 +46,20 @@ export function getAssessmentDisplayName(
   ) {
     return "Metabolic Health"
   }
-  if (text.includes("eoss") || text.includes("obesity")) return "Obesity-related Health Impact"
+  if (text.includes("eoss") || text.includes("obesity")) return "Obesity Impact"
   if (text.includes("score2") || text.includes("cardiovascular")) {
-    return "Cardiovascular Risk"
+    return "Cardiovascular"
   }
   if (text.includes("nordic") || text.includes("nmq") || text.includes("musculoskeletal")) {
-    return "Musculoskeletal Risk"
+    return "Musculoskeletal"
   }
   if (text.includes("audit") || text.includes("alcohol")) {
-    return "Alcohol Risk Assessment"
+    return "Alcohol Habits"
   }
   if (text.includes("pss") || text.includes("stress")) {
-    return "Perceived Stress & Burnout"
+    return "Stress & Burnout"
   }
-  return "Health Risk Evaluation"
+  return "Health Evaluation"
 }
 
 export function getLatestResultsPerScore(results: AssessmentResultResponse[]): AssessmentResultResponse[] {

@@ -348,10 +348,10 @@ export function MemberSettingsPage() {
                       "FORM:habits": "Lifestyle & Habits Consent",
                       "FORM:mood": "Mood & Well-being Consent",
                       "FORM:metabolic": "Metabolic Health Consent",
-                      "FORM:eoss": "Obesity-related Health Impact Consent",
-                      "FORM:nordic_nmq": "Musculoskeletal Risk Consent",
-                      "FORM:audit_c": "Alcohol Risk Assessment Consent",
-                      "FORM:pss10": "Perceived Stress & Burnout Consent",
+                      "FORM:eoss": "Obesity Impact Consent",
+                      "FORM:nordic_nmq": "Musculoskeletal Consent",
+                      "FORM:audit_c": "Alcohol Habits Consent",
+                      "FORM:pss10": "Stress & Burnout Consent",
                     }
 
                     const displayName =

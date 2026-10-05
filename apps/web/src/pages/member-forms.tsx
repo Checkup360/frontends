@@ -44,7 +44,7 @@ const ALL_FORMS: FormCardDef[] = [
   },
   {
     type: "eoss",
-    title: "Obesity-related Health Impact",
+    title: "Obesity Impact",
     description: "A reflective assessment of health, mood, and daily function.",
     icon: HeartPulse,
     editLabel: "Edit Health Impact",
@@ -84,7 +84,7 @@ const ALL_FORMS: FormCardDef[] = [
   },
   {
     type: "nordic_nmq",
-    title: "Musculoskeletal Risk",
+    title: "Musculoskeletal",
     description:
       "Standardized questionnaire evaluating body regions for discomfort and work impact.",
     icon: Activity,
@@ -93,7 +93,7 @@ const ALL_FORMS: FormCardDef[] = [
   },
   {
     type: "audit_c",
-    title: "Alcohol Risk Assessment",
+    title: "Alcohol Habits",
     description:
       "Standardized survey evaluating alcohol consumption frequency and habits.",
     icon: HeartPulse,
@@ -102,7 +102,7 @@ const ALL_FORMS: FormCardDef[] = [
   },
   {
     type: "pss10",
-    title: "Perceived Stress & Burnout",
+    title: "Stress & Burnout",
     description:
       "10-item scale assessing feelings and stress control over the past month.",
     icon: HeartPulse,

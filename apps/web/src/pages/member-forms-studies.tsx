@@ -1259,27 +1259,27 @@ export function MemberFormsStudiesPage() {
       icon: Activity,
     },
     eoss: {
-      title: "Obesity-related Health Impact",
+      title: "Obesity Impact",
       description:
         "Reflect on how your health, mood, and daily function are affected.",
       icon: HeartPulse,
     },
     nordic_nmq: {
-      title: "Musculoskeletal Risk",
+      title: "Musculoskeletal",
       description:
         "Standardized questionnaire evaluating body regions for discomfort and work impact.",
       icon: Activity,
     },
     audit_c: {
-      title: "Alcohol Risk Assessment",
+      title: "Alcohol Habits",
       description:
-        "Standardized questionnaire evaluating alcohol consumption and risk behaviors.",
+        "Standardized questionnaire evaluating alcohol consumption and habits.",
       icon: HeartPulse,
     },
     pss10: {
-      title: "Perceived Stress & Burnout",
+      title: "Stress & Burnout",
       description:
-        "10-item scale assessing perceived stress and coping capacity over the past month.",
+        "10-item scale assessing feelings and stress control over the past month.",
       icon: HeartPulse,
     },
   }
@@ -2274,7 +2274,7 @@ export function MemberFormsStudiesPage() {
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="text-lg">
-              Obesity-related Health Impact
+              Obesity Impact
             </CardTitle>
             <CardDescription>
               Choose the statement that best describes your daily situation in
@@ -2356,7 +2356,7 @@ export function MemberFormsStudiesPage() {
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="text-lg">
-              Musculoskeletal Risk Assessment
+              Musculoskeletal Assessment
             </CardTitle>
             <CardDescription>
               Evaluate musculoskeletal trouble and work capacity across 9 body
@@ -2525,7 +2525,7 @@ export function MemberFormsStudiesPage() {
       {formType === "audit_c" && (
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-lg">Alcohol Risk Assessment</CardTitle>
+            <CardTitle className="text-lg">Alcohol Habits</CardTitle>
             <CardDescription>
               Standardized 3-question survey evaluating alcohol consumption
               habits and risk patterns.
@@ -2597,7 +2597,7 @@ export function MemberFormsStudiesPage() {
         <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="text-lg">
-              Perceived Stress & Burnout
+              Stress & Burnout
             </CardTitle>
             <CardDescription>
               Read each item and indicate how often you felt or thought that way

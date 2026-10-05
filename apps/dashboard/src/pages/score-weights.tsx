@@ -44,7 +44,7 @@ const SCORE_TOPICS: ScoreTopic[] = [
   {
     id: "diabetes",
     name: "Diabetes",
-    subtitle: "Metabolic health",
+    subtitle: "Metabolic health & 10-year risk",
     description:
       "Evaluates metabolic risk indicators, nutritional habits, physical activity, and glycemic predisposition.",
     icon: Activity,
@@ -62,7 +62,7 @@ const SCORE_TOPICS: ScoreTopic[] = [
   {
     id: "depression",
     name: "Mood & Well-being",
-    subtitle: "Emotional well-being",
+    subtitle: "Emotional well-being & mood",
     description: "Evaluates mood and emotional well-being indicators.",
     icon: HeartPulse,
     color: "bg-rose-500",
@@ -70,7 +70,7 @@ const SCORE_TOPICS: ScoreTopic[] = [
   {
     id: "metabolic_syndrome",
     name: "Metabolic Health",
-    subtitle: "Cardiometabolic risk",
+    subtitle: "Cardiometabolic & vital signs",
     description:
       "Evaluates metabolic syndrome criteria and cardiometabolic risk.",
     icon: Activity,
@@ -78,8 +78,8 @@ const SCORE_TOPICS: ScoreTopic[] = [
   },
   {
     id: "eoss",
-    name: "Obesity-related Health Impact",
-    subtitle: "Health impact staging",
+    name: "Obesity Impact",
+    subtitle: "Health & functional impact staging",
     description:
       "Evaluates the self-reported impact on health, mood, and daily function.",
     icon: HeartPulse,
@@ -87,16 +87,16 @@ const SCORE_TOPICS: ScoreTopic[] = [
   },
   {
     id: "cardiovascular",
-    name: "Cardiovascular Risk",
+    name: "Cardiovascular",
     subtitle: "Heart health & 10-year CVD risk",
     description:
-      "Evaluates 10-year fatal and non-fatal cardiovascular risk based on SCORE2 model.",
+      "Evaluates 10-year fatal and non-fatal cardiovascular risk based on clinical guidelines.",
     icon: HeartPulse,
     color: "bg-red-500",
   },
   {
     id: "nordic_nmq",
-    name: "Musculoskeletal Risk",
+    name: "Musculoskeletal",
     subtitle: "Ergonomics & physical load",
     description:
       "Evaluates trouble and work impairment across 9 anatomical body regions.",
@@ -105,8 +105,8 @@ const SCORE_TOPICS: ScoreTopic[] = [
   },
   {
     id: "audit_c",
-    name: "Alcohol Risk Assessment",
-    subtitle: "Occupational safety & consumption",
+    name: "Alcohol Habits",
+    subtitle: "Occupational safety & consumption habits",
     description:
       "Evaluates alcohol consumption frequency, daily quantity, and binge drinking patterns.",
     icon: HeartPulse,
@@ -114,8 +114,8 @@ const SCORE_TOPICS: ScoreTopic[] = [
   },
   {
     id: "pss10",
-    name: "Perceived Stress & Burnout",
-    subtitle: "Psychological resilience & burnout",
+    name: "Stress & Burnout",
+    subtitle: "Psychological resilience & coping",
     description:
       "Evaluates perceived stress levels, control over life events, and coping capacity.",
     icon: HeartPulse,
