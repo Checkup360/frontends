@@ -92,6 +92,8 @@ interface EmployeesTableProps {
   showScoreColumn?: boolean
   showInactiveToggle?: boolean
   defaultShowInactive?: boolean
+  showStatusColumn?: boolean
+  showAssessmentColumn?: boolean
 }
 
 export function EmployeesTable({
@@ -106,6 +108,8 @@ export function EmployeesTable({
   showScoreColumn = true,
   showInactiveToggle = true,
   defaultShowInactive = false,
+  showStatusColumn = true,
+  showAssessmentColumn = true,
 }: EmployeesTableProps) {
   const navigate = useNavigate()
   const { user } = useCurrentUser()
@@ -383,26 +387,28 @@ export function EmployeesTable({
             </Select>
           </div>
 
-          <div className="w-[150px]">
-            <Select
-              value={selectedStatus}
-              onValueChange={(val) => {
-                setSelectedStatus(val)
-                setCurrentPage(1)
-              }}
-            >
-              <SelectTrigger className="h-9 bg-background">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="up_to_date">Up to date</SelectItem>
-                <SelectItem value="pending_assessments">Pending assessments</SelectItem>
-                <SelectItem value="onboarding">Onboarding</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {showStatusColumn && (
+            <div className="w-[150px]">
+              <Select
+                value={selectedStatus}
+                onValueChange={(val) => {
+                  setSelectedStatus(val)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="h-9 bg-background">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="up_to_date">Up to date</SelectItem>
+                  <SelectItem value="pending_assessments">Pending assessments</SelectItem>
+                  <SelectItem value="onboarding">Onboarding</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {showScoreColumn && (
             <div className="w-[160px]">
@@ -475,12 +481,16 @@ export function EmployeesTable({
                   Score
                 </TableHead>
               )}
-              <TableHead className="font-semibold text-foreground">
-                Status
-              </TableHead>
-              <TableHead className="font-semibold text-foreground">
-                Last assessment
-              </TableHead>
+              {showStatusColumn && (
+                <TableHead className="font-semibold text-foreground">
+                  Status
+                </TableHead>
+              )}
+              {showAssessmentColumn && (
+                <TableHead className="font-semibold text-foreground">
+                  Last assessment
+                </TableHead>
+              )}
               {showRolesColumn && allowRoleManagement && (
                 <TableHead className="w-16 text-right font-semibold text-foreground">
                   Actions
@@ -564,23 +574,27 @@ export function EmployeesTable({
                           : "—"}
                       </TableCell>
                     )}
-                    <TableCell>
-                      {w.status ? (
-                        <Badge
-                          variant="outline"
-                          className={
-                            statusClasses[w.status] || statusClasses.onboarding
-                          }
-                        >
-                          {w.status.replace(/_/g, " ")}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatLastAssessment(w.last_assessment)}
-                    </TableCell>
+                    {showStatusColumn && (
+                      <TableCell>
+                        {w.status ? (
+                          <Badge
+                            variant="outline"
+                            className={
+                              statusClasses[w.status] || statusClasses.onboarding
+                            }
+                          >
+                            {w.status.replace(/_/g, " ")}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                    )}
+                    {showAssessmentColumn && (
+                      <TableCell className="text-muted-foreground">
+                        {formatLastAssessment(w.last_assessment)}
+                      </TableCell>
+                    )}
                     {showRolesColumn && allowRoleManagement && (
                       <TableCell
                         className="text-right"

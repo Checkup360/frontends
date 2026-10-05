@@ -81,7 +81,11 @@ export function OrganizationPage() {
 
       setLoadingMeta(true)
       try {
-        const memRes = await listOrganizationEmployees(organizationId)
+        const memRes = await listOrganizationEmployees(
+          organizationId,
+          undefined,
+          { includeInactive: true }
+        )
         if (!active) return
         setAllMembers(memRes)
       } catch {
@@ -237,6 +241,8 @@ export function OrganizationPage() {
         allowRoleManagement={true}
         showInactiveToggle={false}
         defaultShowInactive={true}
+        showStatusColumn={false}
+        showAssessmentColumn={false}
         onDataChanged={() => {
           setStatsRefreshKey((k) => k + 1)
         }}

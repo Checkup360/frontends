@@ -1369,6 +1369,7 @@ export async function listOrganizationEmployees(
   filters?: {
     departmentId?: string
     status?: string
+    includeInactive?: boolean
   }
 ): Promise<OrganizationEmployee[]> {
   try {
@@ -1379,6 +1380,9 @@ export async function listOrganizationEmployees(
     }
     if (filters?.status) {
       queryParams.append("status", filters.status)
+    }
+    if (filters?.includeInactive) {
+      queryParams.append("include_inactive", "true")
     }
     const queryString = queryParams.toString()
     const url = `${resolveApiBaseUrl()}${apiRoutes.organizationEmployees(organizationId)}${queryString ? `?${queryString}` : ""}`
