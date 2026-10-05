@@ -423,7 +423,7 @@ export function EmployeeDetailPage() {
     setLoading(true)
     setError("")
     try {
-      const employees = await listOrganizationEmployees(organizationId)
+      const employees = await listOrganizationEmployees(organizationId, undefined, { includeInactive: true })
       const found = employees.find((e) => e.id === id)
       if (found) {
         setEmployee(found)
@@ -444,7 +444,7 @@ export function EmployeeDetailPage() {
       setLoading(true)
       setError("")
       try {
-        const employees = await listOrganizationEmployees(organizationId)
+      const employees = await listOrganizationEmployees(organizationId, undefined, { includeInactive: true })
         const found = employees.find((e) => e.id === id)
         if (active) {
           if (found) {
