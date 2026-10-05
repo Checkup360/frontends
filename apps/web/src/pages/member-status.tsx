@@ -51,16 +51,6 @@ function formatRiskLevelLabel(
         ? riskThresholds.moderate_risk
         : 50
 
-  if (typeof score === "number" && !isNaN(score)) {
-    if (score >= low) {
-      return "Low risk"
-    }
-    if (score >= mod) {
-      return "Moderate risk"
-    }
-    return "High risk"
-  }
-
   if (riskLevel) {
     const lower = riskLevel.toLowerCase()
     if (lower.includes("very high") || lower.includes("severe")) {
@@ -79,6 +69,16 @@ function formatRiskLevelLabel(
       return "Low risk"
     }
     return riskLevel
+  }
+
+  if (typeof score === "number" && !isNaN(score)) {
+    if (score >= low) {
+      return "Low risk"
+    }
+    if (score >= mod) {
+      return "Moderate risk"
+    }
+    return "High risk"
   }
 
   return "Low risk"

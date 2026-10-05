@@ -67,11 +67,6 @@ export function HealthScoreHeroCard({
   const hasScore = typeof score === "number"
 
   const normalizedLevel = ((): keyof typeof heroLevelConfig => {
-    if (hasScore) {
-      if (score >= lowThreshold) return "low"
-      if (score >= moderateThreshold) return "moderate"
-      return "high"
-    }
     if (riskLevel) {
       const lower = riskLevel.toLowerCase()
       if (
@@ -96,6 +91,11 @@ export function HealthScoreHeroCard({
       ) {
         return "low"
       }
+    }
+    if (hasScore) {
+      if (score >= lowThreshold) return "low"
+      if (score >= moderateThreshold) return "moderate"
+      return "high"
     }
     return "low"
   })()
