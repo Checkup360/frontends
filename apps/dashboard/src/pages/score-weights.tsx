@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
@@ -395,9 +394,7 @@ export function ScoreWeightsPage() {
             moderate: Number(res.risk_thresholds.moderate ?? 50),
           })
         }
-        toast.success(
-          "Score weights and risk thresholds updated successfully. Background score recalculation started."
-        )
+        toast.success("Changes saved successfully.")
       } else {
         toast.error("Failed to save configuration")
       }
@@ -936,24 +933,21 @@ export function ScoreWeightsPage() {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-3 border-t border-border/40 pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            Saving new risk thresholds triggers an automatic background
-            recalculation of current employee risk levels across your
-            organization.
-          </p>
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleSave}
-            disabled={!isValid || loading || saving}
-            className="gap-1.5 whitespace-nowrap self-end sm:self-auto"
-          >
-            <Save className="size-3.5" />
-            {saving ? "Saving..." : "Save risk thresholds"}
-          </Button>
-        </CardFooter>
       </Card>
+
+      {/* Global Page Action Footer */}
+      <div className="flex items-center justify-end border-t border-border/60 pt-4 pb-8">
+        <Button
+          type="button"
+          size="sm"
+          onClick={handleSave}
+          disabled={!isValid || loading || saving}
+          className="gap-1.5 whitespace-nowrap"
+        >
+          <Save className="size-3.5" />
+          {saving ? "Saving..." : "Save changes"}
+        </Button>
+      </div>
     </div>
   )
 }
