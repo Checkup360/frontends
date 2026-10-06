@@ -488,7 +488,7 @@ export function MemberSettingsPage() {
                     ?
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    Revoking this consent will prevent Checkup360 from evaluating new submissions or generating risk scores for this assessment. Previously submitted historical entries will remain archived for compliance.
+                    Revoking this consent will prevent Checkup360 from evaluating new submissions or generating health scores for this assessment. Previously submitted historical entries will remain archived for compliance.
                   </p>
                 </AlertDialogDescription>
               </AlertDialogHeader>

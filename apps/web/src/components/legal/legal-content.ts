@@ -43,7 +43,7 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
       "Technical telemetry and security logs",
     ],
     rights: [
-      "Your health profile, assessment answers, and risk scores are accessible to authorized organization administrators and occupational health medical professionals for workplace health surveillance and preventive management",
+      "Your health profile, assessment answers, and health scores are accessible to authorized organization administrators and occupational health medical professionals for workplace health surveillance and preventive management",
       "Right of access, rectification, update, and data portability (export)",
       "Right to withdraw consent at any time from your account settings",
       "Data is stored securely with encryption in transit and at rest, and accessed under role-based authorization controls",
@@ -145,7 +145,7 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
       "Sleep quality & concentration assessment",
     ],
     rights: [
-      "Responses and risk scores are accessible to authorized organization administrators and occupational health professionals for well-being assessment and support",
+      "Responses and health scores are accessible to authorized organization administrators and occupational health professionals for well-being assessment and support",
       "If you are experiencing distress, support resources are immediately provided",
       "Consent can be revoked at any time",
     ],
@@ -166,7 +166,7 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
       "Prescribed medication usage",
     ],
     rights: [
-      "Laboratory parameters and computed risk scores are accessible to authorized organization administrators and medical personnel for preventative occupational health management",
+      "Laboratory parameters and computed health scores are accessible to authorized organization administrators and medical personnel for preventative occupational health management",
       "Consent can be revoked at any time",
     ],
   },
@@ -222,7 +222,7 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocInfo> = {
       "Heavy drinking pattern indicators",
     ],
     rights: [
-      "Responses and risk scores are visible to authorized organization administrators and occupational health professionals for preventive wellness programs",
+      "Responses and health scores are visible to authorized organization administrators and occupational health professionals for preventive wellness programs",
       "Consent can be revoked at any time",
     ],
   },

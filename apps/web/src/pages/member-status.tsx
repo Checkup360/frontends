@@ -429,7 +429,7 @@ export function MemberStatusPage() {
                   Individual Scores
                 </h2>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Risk scores evaluated per domain category
+                  Health scores evaluated per domain category
                 </p>
               </div>
                             <span className="text-xs font-medium text-muted-foreground">
