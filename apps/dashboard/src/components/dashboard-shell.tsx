@@ -39,7 +39,7 @@ const navigation: WorkspaceShellNavItem[] = [
     to: "/departments",
   },
   {
-    title: "Score weights",
+    title: "Score Configuration",
     url: "/score-weights",
     icon: SlidersHorizontal,
     to: "/score-weights",
@@ -92,7 +92,7 @@ export function DashboardShell() {
       case "/departments":
         return "Departments"
       case "/score-weights":
-        return "Score weights"
+        return "Score Configuration"
       case "/compliance":
         return "Compliance & Legal Audit"
       case "/settings":
