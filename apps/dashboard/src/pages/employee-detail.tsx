@@ -2,13 +2,13 @@ import { useEffect, useState, useMemo } from "react"
 import { cn } from "@workspace/ui/lib/utils"
 import { useParams, useNavigate } from "react-router-dom"
 import {
-  listOrganizationEmployees,
+  getOrganizationEmployee,
   listEmployeeAssessments,
   getEmployeeAssessmentSubmission,
   listEmployeeAssessmentSubmissions,
   type AssessmentSubmissionDetail,
   type AssessmentSubmissionSummary,
-  type OrganizationEmployee,
+  type EmployeeDetail,
   type AssessmentsResponse,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
@@ -66,6 +66,8 @@ import {
   Building2,
   Edit3,
   UserCog,
+  Phone,
+  Cake,
 } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { ManageRolesDialog } from "@/components/manage-roles-dialog"
@@ -309,6 +311,26 @@ function formatFullName(
   return prefix
 }
 
+function calculateAge(dateOfBirth: Date) {
+  const today = new Date()
+  const age = today.getFullYear() - dateOfBirth.getFullYear()
+  const hadBirthdayThisYear =
+    today.getMonth() > dateOfBirth.getMonth() ||
+    (today.getMonth() === dateOfBirth.getMonth() &&
+      today.getDate() >= dateOfBirth.getDate())
+  return hadBirthdayThisYear ? age : age - 1
+}
+
+function formatDateOfBirth(value: string) {
+  // Parse as a local date: "YYYY-MM-DD" alone would be read as UTC midnight.
+  const [year, month, day] = value.split("-").map(Number)
+  const dateOfBirth = new Date(year, month - 1, day)
+  const formatted = new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+  }).format(dateOfBirth)
+  return `${formatted} (${calculateAge(dateOfBirth)} years)`
+}
+
 function getInitials(fullName: string, email: string) {
   const parts = fullName.split(" ").filter(Boolean)
   if (parts.length >= 2) {
@@ -339,7 +361,7 @@ export function EmployeeDetailPage() {
   const { user } = useCurrentUser()
   const organizationId = user?.membership?.organization_id
 
-  const [employee, setEmployee] = useState<OrganizationEmployee | null>(null)
+  const [employee, setEmployee] = useState<EmployeeDetail | null>(null)
   const [scoreWeights, setScoreWeights] = useState<Record<
     string,
     number
@@ -417,8 +439,7 @@ export function EmployeeDetailPage() {
     setLoading(true)
     setError("")
     try {
-      const employees = await listOrganizationEmployees(organizationId, undefined, { membership: "all" })
-      const found = employees.find((e) => e.id === id)
+      const found = await getOrganizationEmployee(organizationId, id)
       if (found) {
         setEmployee(found)
       } else {
@@ -438,8 +459,7 @@ export function EmployeeDetailPage() {
       setLoading(true)
       setError("")
       try {
-      const employees = await listOrganizationEmployees(organizationId, undefined, { membership: "all" })
-        const found = employees.find((e) => e.id === id)
+        const found = await getOrganizationEmployee(organizationId, id)
         if (active) {
           if (found) {
             setEmployee(found)
@@ -855,6 +875,22 @@ export function EmployeeDetailPage() {
                     </span>
                   )}
                 </span>
+                {employee.phone_number && (
+                  <span className="flex items-center gap-1.5">
+                    <Phone className="size-4 text-muted-foreground/70" />
+                    <span className="font-medium text-foreground">
+                      {employee.phone_number}
+                    </span>
+                  </span>
+                )}
+                {employee.date_of_birth && (
+                  <span className="flex items-center gap-1.5">
+                    <Cake className="size-4 text-muted-foreground/70" />
+                    <span className="font-medium text-foreground">
+                      {formatDateOfBirth(employee.date_of_birth)}
+                    </span>
+                  </span>
+                )}
               </div>
             </div>
           </div>
