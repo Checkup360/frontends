@@ -43,7 +43,7 @@ export function ManageRolesDialog({
     OrganizationEmployeeRole[]
   >([])
   const [actionLoading, setActionLoading] = useState(false)
-  const { user } = useCurrentUser()
+  const { user, refresh: refreshCurrentUser } = useCurrentUser()
   const isSelf = Boolean(user?.email && employee?.email === user.email)
   const isEmployeeSuperadmin = employee?.roles?.includes("superadmin") ?? false
 
@@ -67,6 +67,9 @@ export function ManageRolesDialog({
         toast.error(describeRoleChangeError(res.error.message))
       } else {
         toast.success("Employee roles updated successfully.")
+        // Our own roles drive the sidebar pages and the app switcher, so
+        // reload them instead of waiting for a full page refresh.
+        if (isSelf) await refreshCurrentUser()
         onOpenChange(false)
         onSuccess?.()
       }
