@@ -41,28 +41,25 @@ import {
 
 const scoreStatusConfig = {
   high: {
-    label: heroLevelConfig.high.label,
-    badgeClass:
-      "bg-destructive/10 text-destructive border-destructive/20 font-medium",
-    iconBg: heroLevelConfig.high.bg,
-    barColor: "bg-destructive",
-    textColor: heroLevelConfig.high.color,
+    label: "Needs Attention",
+    variant: "risk-high" as const,
+    iconBg: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
+    barColor: "bg-rose-500/85",
+    textColor: "text-rose-600 dark:text-rose-400",
   },
   moderate: {
-    label: heroLevelConfig.moderate.label,
-    badgeClass:
-      "bg-[color:var(--warning)]/10 text-[color:var(--warning)] border-[color:var(--warning)]/20 font-medium",
-    iconBg: heroLevelConfig.moderate.bg,
-    barColor: "bg-[color:var(--warning)]",
-    textColor: heroLevelConfig.moderate.color,
+    label: "Moderate Risk",
+    variant: "risk-moderate" as const,
+    iconBg: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+    barColor: "bg-amber-400/90",
+    textColor: "text-amber-600 dark:text-amber-400",
   },
   low: {
-    label: heroLevelConfig.low.label,
-    badgeClass:
-      "bg-[color:var(--success)]/10 text-[color:var(--success)] border-[color:var(--success)]/20 font-medium",
-    iconBg: heroLevelConfig.low.bg,
-    barColor: "bg-[color:var(--success)]",
-    textColor: heroLevelConfig.low.color,
+    label: "Low Risk",
+    variant: "risk-low" as const,
+    iconBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+    barColor: "bg-emerald-500/85",
+    textColor: "text-emerald-600 dark:text-emerald-400",
   },
 } as const
 
@@ -403,11 +400,8 @@ export function MemberOverview({
                             <Icon className="size-5" />
                           </div>
                           <Badge
-                            variant="outline"
-                            className={cn(
-                              "shrink-0 text-[11px] px-2 py-0.5 rounded-md",
-                              status.badgeClass
-                            )}
+                            variant={status.variant}
+                            size="xs"
                           >
                             {status.label}
                           </Badge>

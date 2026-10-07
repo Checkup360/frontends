@@ -35,14 +35,13 @@ export interface OverviewStatCardProps {
 }
 
 const toneMap: Record<string, string> = {
-  primary:
-    "border-transparent bg-primary/15 text-primary dark:bg-primary/20",
+  primary: "border-border/60 bg-muted/30 text-foreground",
   success:
-    "border-transparent bg-[color:var(--success)]/15 text-[color:var(--success)] dark:bg-[color:var(--success)]/20",
+    "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   warning:
-    "border-transparent bg-[color:var(--warning)]/15 text-[color:var(--warning)] dark:bg-[color:var(--warning)]/20",
+    "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
   destructive:
-    "border-transparent bg-destructive/15 text-destructive dark:bg-destructive/20",
+    "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400",
 }
 
 export function OverviewStatCard({
@@ -60,7 +59,7 @@ export function OverviewStatCard({
   const TrendIcon = positive ? TrendingUp : TrendingDown
 
   return (
-    <Card className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs dark:bg-card">
+    <Card className="@container/card rounded-xl border border-border/60 bg-card shadow-xs">
       <CardHeader>
         <CardDescription>{label}</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">

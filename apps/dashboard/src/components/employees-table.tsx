@@ -51,26 +51,14 @@ import { useNavigate } from "react-router-dom"
 import { X, MoreVertical, UserCog, UserMinus } from "lucide-react"
 
 
-const statusClasses: Record<string, string> = {
-  up_to_date:
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 capitalize",
-  pending_assessments:
-    "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 capitalize",
-  onboarding:
-    "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 capitalize",
-  inactive:
-    "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border-zinc-500/20 capitalize",
-}
-
-const membershipBadge = {
-  active: {
-    label: "Active",
-    className: statusClasses.up_to_date,
-  },
-  inactive: {
-    label: "Inactive",
-    className: statusClasses.inactive,
-  },
+const statusVariants: Record<
+  string,
+  "success-light" | "warning-light" | "info-light" | "secondary"
+> = {
+  up_to_date: "success-light",
+  pending_assessments: "warning-light",
+  onboarding: "info-light",
+  inactive: "secondary",
 }
 
 const MEMBER_ROLES: OrganizationEmployeeRole[] = ["member"]
@@ -600,13 +588,10 @@ export function EmployeesTable({
                     {showMembership && (
                       <TableCell>
                         <Badge
-                          variant="outline"
-                          className={
-                            membershipBadge[hasRoles ? "active" : "inactive"]
-                              .className
-                          }
+                          variant={hasRoles ? "success-light" : "secondary"}
+                          size="xs"
                         >
-                          {membershipBadge[hasRoles ? "active" : "inactive"].label}
+                          {hasRoles ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                     )}
@@ -624,10 +609,9 @@ export function EmployeesTable({
                       <TableCell>
                         {w.status ? (
                           <Badge
-                            variant="outline"
-                            className={
-                              statusClasses[w.status] || statusClasses.onboarding
-                            }
+                            variant={statusVariants[w.status] ?? "info-light"}
+                            size="xs"
+                            className="capitalize"
                           >
                             {w.status.replace(/_/g, " ")}
                           </Badge>

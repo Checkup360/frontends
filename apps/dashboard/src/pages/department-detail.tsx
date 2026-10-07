@@ -16,9 +16,6 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -78,21 +75,22 @@ import {
   ScoreEvolutionChart,
   type ChartSeries,
 } from "@workspace/components/components/score-evolution-chart"
+import { OverviewStatCard } from "@workspace/components/components/card"
 import { getRoleBadgeProps, formatRoleName, normalizeRoles } from "@/lib/role-utils"
 import { isScoreDeactivated } from "@/lib/score-topics"
 import { cn } from "@workspace/ui/lib/utils"
 
 // ─── Helpers & Configurations ──────────────────────────────────────────────────
 
-const statusClasses: Record<string, string> = {
-  active:
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 capitalize",
-  onboarding:
-    "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 capitalize",
-  inactive:
-    "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border-zinc-500/20 capitalize",
-  pending:
-    "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border-zinc-500/20 capitalize",
+const statusVariants: Record<
+  string,
+  "success-light" | "warning-light" | "info-light" | "secondary"
+> = {
+  active: "success-light",
+  onboarding: "info-light",
+  pending_assessments: "warning-light",
+  inactive: "secondary",
+  pending: "secondary",
 }
 
 function formatLastAssessment(value?: string | null): string {
@@ -151,44 +149,6 @@ function DepartmentDetailSkeleton() {
   )
 }
 
-// ─── Stat mini-card ───────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  tone,
-}: {
-  label: string
-  value: string
-  hint?: string
-  icon: React.ElementType
-  tone: "primary" | "warning" | "success"
-}) {
-  const iconClass = {
-    primary: "bg-primary/15 text-primary",
-    warning: "bg-[color:var(--warning)]/15 text-[color:var(--warning)]",
-    success: "bg-[color:var(--success)]/15 text-[color:var(--success)]",
-  }[tone]
-
-  return (
-    <Card className="bg-gradient-to-t from-primary/5 to-card shadow-xs">
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums">
-          {value}
-        </CardTitle>
-        {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
-        <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
-          <Badge variant="outline" className={iconClass}>
-            <Icon className="size-4" />
-          </Badge>
-        </div>
-      </CardHeader>
-    </Card>
-  )
-}
 
 // ─── Assign Member Modal (Isolated State & Search) ───────────────────────────
 
@@ -791,16 +751,18 @@ export function DepartmentDetailPage() {
       </div>
 
       {/* KPI summary cards */}
-      <section className="grid gap-3 md:grid-cols-3">
-        <StatCard
+      <section className="grid gap-4 md:grid-cols-3">
+        <OverviewStatCard
           icon={Users}
+          iconVariant="icon"
           tone="primary"
           label="Total members"
           value={loadingTable ? "..." : totalMembers.toString()}
           hint={loadingTable ? undefined : `${activeCount} active`}
         />
-        <StatCard
+        <OverviewStatCard
           icon={ShieldCheck}
+          iconVariant="icon"
           tone={
             healthScore === null
               ? "primary"
@@ -818,8 +780,9 @@ export function DepartmentDetailPage() {
               : "No evaluations recorded"
           }
         />
-        <StatCard
+        <OverviewStatCard
           icon={AlertTriangle}
+          iconVariant="icon"
           tone={highRiskWorkers > 0 ? "warning" : "success"}
           label="High risk cases"
           value={loadingDept ? "..." : highRiskWorkers.toString()}
@@ -1037,11 +1000,12 @@ export function DepartmentDetailPage() {
                       <TableCell>
                         {emp.status ? (
                           <Badge
-                            variant="outline"
-                            className={
-                              statusClasses[emp.status.toLowerCase()] ??
-                              "capitalize"
+                            variant={
+                              statusVariants[emp.status.toLowerCase()] ??
+                              "secondary"
                             }
+                            size="xs"
+                            className="capitalize"
                           >
                             {emp.status}
                           </Badge>

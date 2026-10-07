@@ -25,6 +25,12 @@ const badgeVariants = cva(
           "bg-amber-500/10 text-amber-600 focus-visible:ring-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:focus-visible:ring-amber-500/40",
         "success-light":
           "bg-emerald-500/10 text-emerald-600 focus-visible:ring-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:focus-visible:ring-emerald-500/40",
+        "risk-low":
+          "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 focus-visible:ring-emerald-500/20 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30",
+        "risk-moderate":
+          "bg-amber-500/10 text-amber-600 border-amber-500/20 focus-visible:ring-amber-500/20 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30",
+        "risk-high":
+          "bg-rose-500/10 text-rose-600 border-rose-500/20 focus-visible:ring-rose-500/20 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30",
       },
       size: {
         default: "h-5 px-2 py-0.5 text-xs",

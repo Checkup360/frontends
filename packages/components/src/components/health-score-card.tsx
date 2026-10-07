@@ -28,28 +28,28 @@ interface HealthScoreCardProps {
 
 const toneClasses = {
   blue: {
-    icon: "bg-blue-500/15 text-blue-500",
-    bar: "bg-blue-500",
-    text: "text-blue-500",
+    icon: "bg-muted text-foreground/80 border border-border/60",
+    bar: "bg-primary/80",
+    text: "text-foreground",
   },
   green: {
-    icon: "bg-emerald-500/15 text-emerald-500",
-    bar: "bg-emerald-500",
-    text: "text-emerald-500",
+    icon: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+    bar: "bg-emerald-500/85",
+    text: "text-emerald-600 dark:text-emerald-400",
   },
   amber: {
-    icon: "bg-amber-500/15 text-amber-500",
-    bar: "bg-amber-500",
-    text: "text-amber-500",
+    icon: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+    bar: "bg-amber-400/90",
+    text: "text-amber-600 dark:text-amber-400",
   },
   red: {
-    icon: "bg-rose-500/15 text-rose-500",
-    bar: "bg-rose-500",
-    text: "text-rose-500",
+    icon: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
+    bar: "bg-rose-500/85",
+    text: "text-rose-600 dark:text-rose-400",
   },
   muted: {
-    icon: "bg-muted text-muted-foreground/50",
-    bar: "bg-muted/40",
+    icon: "bg-muted text-muted-foreground border border-border/40",
+    bar: "bg-muted/60",
     text: "text-muted-foreground",
   },
 }
@@ -76,34 +76,36 @@ export function HealthScoreCard({
   const gaugeColor = !hasScore
     ? "var(--muted)"
     : computedRisk === "high"
-    ? "#ef4444"
+    ? "var(--risk-high)"
     : computedRisk === "moderate"
-    ? "#f59e0b"
-    : "#10b981"
+    ? "var(--risk-moderate)"
+    : "var(--risk-low)"
 
   const scoreTextColor = !hasScore
     ? "text-muted-foreground"
     : computedRisk === "high"
-    ? "text-rose-500"
+    ? "text-rose-600 dark:text-rose-400"
     : computedRisk === "moderate"
-    ? "text-amber-500"
-    : "text-emerald-500"
+    ? "text-amber-600 dark:text-amber-400"
+    : "text-emerald-600 dark:text-emerald-400"
 
   return (
     <Card
       className={cn(
-        "relative overflow-visible rounded-3xl border-border/80 bg-card/85 p-6 shadow-sm flex flex-col justify-between",
-        compact && "p-5",
+        "relative overflow-visible rounded-xl border border-border/60 bg-card p-5 shadow-xs flex flex-col justify-between",
+        compact && "p-4",
         className
       )}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Activity className="size-4 text-primary" />
-          <h3 className="text-lg font-semibold tracking-tight text-foreground">{title}</h3>
+          <div className="flex size-7 items-center justify-center rounded-lg border border-border/60 bg-muted/30 text-foreground">
+            <Activity className="size-3.5" />
+          </div>
+          <h3 className="text-base font-semibold tracking-tight text-foreground">{title}</h3>
         </div>
         {deltaLabel && (
-          <Badge className="rounded-full bg-emerald-500/15 text-emerald-400">
+          <Badge variant="risk-low" size="xs">
             {deltaLabel}
           </Badge>
         )}

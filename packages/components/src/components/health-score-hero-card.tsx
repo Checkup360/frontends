@@ -11,22 +11,25 @@ import { Sparkles } from "lucide-react"
 
 export const heroLevelConfig = {
   low: {
-    color: "text-[color:var(--success)]",
-    bg: "bg-[color:var(--success)]/10",
+    color: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-500/10",
     label: "Low risk",
-    ringColor: "stroke-[color:var(--success)]",
+    ringColor: "stroke-emerald-500",
+    variant: "risk-low" as const,
   },
   moderate: {
-    color: "text-[color:var(--warning)]",
-    bg: "bg-[color:var(--warning)]/10",
+    color: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-500/10",
     label: "Moderate risk",
-    ringColor: "stroke-[color:var(--warning)]",
+    ringColor: "stroke-amber-400",
+    variant: "risk-moderate" as const,
   },
   high: {
-    color: "text-destructive",
-    bg: "bg-destructive/10",
-    label: "High risk",
-    ringColor: "stroke-destructive",
+    color: "text-rose-600 dark:text-rose-400",
+    bg: "bg-rose-500/10",
+    label: "Needs Attention",
+    ringColor: "stroke-rose-500",
+    variant: "risk-high" as const,
   },
 } as const
 
@@ -105,8 +108,9 @@ export function HealthScoreHeroCard({
     : {
         bg: "bg-muted/50",
         color: "text-muted-foreground",
-        ringColor: "text-muted",
+        ringColor: "stroke-muted",
         label: "Incomplete",
+        variant: "secondary" as const,
       }
 
   const radius = 70
@@ -115,16 +119,16 @@ export function HealthScoreHeroCard({
   const offset = hasScore ? circumference - (safeScore / 100) * circumference : circumference
 
   return (
-    <Card className={cn("border-2", className)}>
+    <Card className={cn("border border-border/60 rounded-xl shadow-xs", className)}>
       <CardHeader className="pb-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle className="text-xl">{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
+            <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+            <CardDescription className="text-xs">{description}</CardDescription>
           </div>
           <Badge
-            variant="outline"
-            className={`${config.bg} ${config.color} border-transparent`}
+            variant={config.variant}
+            className="font-medium"
           >
             {config.label}
           </Badge>

@@ -16,7 +16,8 @@ import {
   OverviewStatCard,
   OverviewStatCardSkeleton,
 } from "@workspace/components/components/card"
-import { AlertTriangle, TrendingUp, Users } from "lucide-react"
+import { PageHeader } from "@workspace/components/components/page-header"
+import { AlertTriangle, LayoutDashboard, TrendingUp, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 export function DashboardPage() {
@@ -113,7 +114,13 @@ export function DashboardPage() {
     .length.toString()
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8">
+    <div className="mx-auto w-full max-w-7xl space-y-6">
+      <PageHeader
+        title="Organization Overview"
+        description="Key health metrics, risk trends, and member evaluations for your organization."
+        icon={LayoutDashboard}
+      />
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {loading ? (
           <OverviewStatCardSkeleton />
