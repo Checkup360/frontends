@@ -21,7 +21,6 @@ import { cn } from "@workspace/ui/lib/utils"
 import {
   Activity,
   AlertCircle,
-  AlertTriangle,
   CheckCircle2,
   HeartPulse,
   Loader2,
@@ -600,7 +599,8 @@ export function ScoreWeightsPage() {
             <CardHeader className="pb-3">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-0.5">
-                  <CardTitle className="text-base font-semibold text-foreground">
+                  <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+                    <SlidersHorizontal className="size-4 text-primary" />
                     Score Weights
                   </CardTitle>
                   <CardDescription className="text-xs text-muted-foreground">
@@ -1022,16 +1022,16 @@ export function ScoreWeightsPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-5 pt-0">
-              {/* Dynamic Segmented Color Bar Visualizer */}
+              {/* Dynamic Segmented Color Bar Visualizer with Clean Dividers */}
               <div className="space-y-2">
-                <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-muted shadow-inner">
+                <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted shadow-inner">
                   <div
-                    className="h-full bg-rose-500 transition-all duration-200"
+                    className="h-full bg-rose-500/80 border-r-2 border-background transition-all duration-200"
                     style={{ width: `${riskThresholds.moderate}%` }}
                     title={`Needs attention: 0 - ${riskThresholds.moderate - 1}`}
                   />
                   <div
-                    className="h-full bg-amber-500 transition-all duration-200"
+                    className="h-full bg-amber-400/85 border-r-2 border-background transition-all duration-200"
                     style={{
                       width: `${Math.max(
                         0,
@@ -1041,26 +1041,20 @@ export function ScoreWeightsPage() {
                     title={`Moderate risk: ${riskThresholds.moderate} - ${riskThresholds.low - 1}`}
                   />
                   <div
-                    className="h-full bg-emerald-500 transition-all duration-200"
+                    className="h-full bg-emerald-500/80 transition-all duration-200"
                     style={{
                       width: `${Math.max(0, 100 - riskThresholds.low)}%`,
                     }}
                     title={`Low risk: ${riskThresholds.low} - 100`}
                   />
                 </div>
-                <div className="flex justify-between px-0.5 text-[11px] font-medium text-muted-foreground">
+                <div className="flex justify-between px-0.5 text-xs text-muted-foreground">
                   <span>0 pts (High Risk)</span>
                   <span>
-                    Moderate:{" "}
-                    <strong className="text-foreground">
-                      &ge; {riskThresholds.moderate} pts
-                    </strong>
+                    Moderate: <span className="font-medium text-foreground">&ge; {riskThresholds.moderate} pts</span>
                   </span>
                   <span>
-                    Low Risk:{" "}
-                    <strong className="text-foreground">
-                      &ge; {riskThresholds.low} pts
-                    </strong>
+                    Low Risk: <span className="font-medium text-foreground">&ge; {riskThresholds.low} pts</span>
                   </span>
                   <span>100 pts (Optimal)</span>
                 </div>
@@ -1078,7 +1072,7 @@ export function ScoreWeightsPage() {
                       Low Risk Minimum Cutoff (Optimal)
                     </Label>
                     <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                      <span className="text-sm font-bold text-foreground tabular-nums">
                         &ge; {riskThresholds.low}
                       </span>
                       <span className="text-[11px] text-muted-foreground">
@@ -1116,7 +1110,7 @@ export function ScoreWeightsPage() {
                       Moderate Risk Minimum Cutoff
                     </Label>
                     <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                      <span className="text-sm font-bold text-foreground tabular-nums">
                         &ge; {riskThresholds.moderate}
                       </span>
                       <span className="text-[11px] text-muted-foreground">
@@ -1148,58 +1142,58 @@ export function ScoreWeightsPage() {
               {/* 3 Tier Classification Breakdown Cards */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {/* Needs Attention Tier */}
-                <div className="flex flex-col justify-between rounded-xl border border-rose-500/20 bg-rose-500/5 p-3.5 space-y-2">
+                <div className="flex flex-col justify-between rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400">
-                      <AlertCircle className="size-3.5" />
+                    <span className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                      <span className="size-2 rounded-full bg-rose-500" />
                       Needs Attention
                     </span>
                     <Badge
                       variant="outline"
-                      className="border-rose-500/30 bg-rose-500/10 text-[10px] font-semibold text-rose-600 dark:text-rose-400"
+                      className="border-rose-500/30 bg-rose-500/10 text-[11px] font-medium text-rose-600 dark:text-rose-400"
                     >
                       &lt; {riskThresholds.moderate} pts
                     </Badge>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     High risk indicators requiring clinical intervention or follow-up.
                   </p>
                 </div>
 
                 {/* Moderate Risk Tier */}
-                <div className="flex flex-col justify-between rounded-xl border border-amber-500/20 bg-amber-500/5 p-3.5 space-y-2">
+                <div className="flex flex-col justify-between rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
-                      <AlertTriangle className="size-3.5" />
+                    <span className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                      <span className="size-2 rounded-full bg-amber-400" />
                       Moderate Risk
                     </span>
                     <Badge
                       variant="outline"
-                      className="border-amber-500/30 bg-amber-500/10 text-[10px] font-semibold text-amber-600 dark:text-amber-400"
+                      className="border-amber-500/30 bg-amber-500/10 text-[11px] font-medium text-amber-600 dark:text-amber-400"
                     >
                       {riskThresholds.moderate} – {riskThresholds.low - 1} pts
                     </Badge>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     Moderate risk factors recommending lifestyle adjustments or preventive monitoring.
                   </p>
                 </div>
 
                 {/* Low Risk Tier */}
-                <div className="flex flex-col justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 space-y-2">
+                <div className="flex flex-col justify-between rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 className="size-3.5" />
+                    <span className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                      <span className="size-2 rounded-full bg-emerald-500" />
                       Low Risk (Optimal)
                     </span>
                     <Badge
                       variant="outline"
-                      className="border-emerald-500/30 bg-emerald-500/10 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400"
+                      className="border-emerald-500/30 bg-emerald-500/10 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"
                     >
                       {riskThresholds.low} – 100 pts
                     </Badge>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     Optimal health parameters aligned with low cardiometabolic risk guidelines.
                   </p>
                 </div>
@@ -1211,14 +1205,14 @@ export function ScoreWeightsPage() {
           <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 text-xs">
               {isRiskThresholdsValid ? (
-                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="size-4" />
+                <div className="flex items-center gap-1.5 text-foreground">
+                  <CheckCircle2 className="size-4 text-muted-foreground" />
                   <span>
                     Valid thresholds: Moderate ({riskThresholds.moderate}) &lt; Low Risk ({riskThresholds.low})
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                <div className="flex items-center gap-1.5 text-destructive">
                   <AlertCircle className="size-4" />
                   <span>
                     Moderate threshold must be strictly lower than Low risk threshold
