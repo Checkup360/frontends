@@ -123,7 +123,7 @@ export function OrganizationPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       {/* ── Organization Information Header Card ── */}
-      <Card className="rounded-3xl border-border/70 bg-card/80 p-6 shadow-sm">
+      <Card className="rounded-xl border border-border/60 bg-card p-6 shadow-xs">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/20 bg-primary/10 text-primary">
@@ -154,6 +154,7 @@ export function OrganizationPage() {
               type="button"
               variant="outline"
               onClick={() => setIsEditDialogOpen(true)}
+              className="rounded-lg"
             >
               <Pencil className="mr-1.5 size-4" />
               Edit Organization
@@ -163,6 +164,7 @@ export function OrganizationPage() {
               variant="default"
               icon={MailPlus}
               onClick={() => navigate("/invitations")}
+              className="rounded-lg"
             >
               Invite People
             </ActionButton>

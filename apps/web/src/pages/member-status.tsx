@@ -12,6 +12,7 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
 import { Badge } from "@workspace/ui/components/badge"
+import { PageHeader } from "@workspace/components/components/page-header"
 import {
   groupResultsIntoSessions,
   computeOverallHealthScore,
@@ -93,24 +94,23 @@ function getRiskLevelConfig(
   const label = formatRiskLevelLabel(riskLevel, riskScore, riskThresholds)
   const lower = label.toLowerCase()
 
-  // 1. Very high / High risk / Needs attention (destructive token)
+  // 1. Very high / High risk / Needs attention (destructive/risk-high token)
   if (lower.includes("high") || lower.includes("attention") || lower.includes("severe")) {
     return {
       label,
-      color: "text-destructive",
-      iconBg: "bg-destructive/10",
-      badgeVariant: "outline" as const,
-      badgeClass:
-        "bg-destructive/10 text-destructive border-destructive/20 font-medium",
-      ringColor: "stroke-destructive text-destructive",
-      barColor: "bg-destructive",
+      color: "text-rose-600 dark:text-rose-400",
+      iconBg: "bg-rose-500/10",
+      badgeVariant: "risk-high" as const,
+      badgeClass: "font-semibold",
+      ringColor: "stroke-rose-500 text-rose-500",
+      barColor: "bg-rose-500",
       description: lower.includes("very high")
         ? "Severe risk indicators detected. Needs attention and proactive medical follow-up."
         : "High risk indicators detected. Needs attention and proactive medical follow-up.",
     }
   }
 
-  // 2. Moderate risk / Slightly elevated (warning token)
+  // 2. Moderate risk / Slightly elevated (risk-moderate token)
   if (
     lower.includes("moderate") ||
     lower.includes("elevated") ||
@@ -118,13 +118,12 @@ function getRiskLevelConfig(
   ) {
     return {
       label,
-      color: "text-[color:var(--warning)]",
-      iconBg: "bg-[color:var(--warning)]/10",
-      badgeVariant: "outline" as const,
-      badgeClass:
-        "bg-[color:var(--warning)]/10 text-[color:var(--warning)] border-[color:var(--warning)]/20 font-medium",
-      ringColor: "stroke-[color:var(--warning)] text-[color:var(--warning)]",
-      barColor: "bg-[color:var(--warning)]",
+      color: "text-amber-600 dark:text-amber-400",
+      iconBg: "bg-amber-500/10",
+      badgeVariant: "risk-moderate" as const,
+      badgeClass: "font-semibold",
+      ringColor: "stroke-amber-500 text-amber-500",
+      barColor: "bg-amber-500",
       description:
         lower.includes("elevated") || lower.includes("mild")
           ? "Slightly elevated indicators. Minor lifestyle adjustments recommended."
@@ -132,16 +131,15 @@ function getRiskLevelConfig(
     }
   }
 
-  // 3. Low risk / Optimal (success token)
+  // 3. Low risk / Optimal (risk-low token)
   return {
     label,
-    color: "text-[color:var(--success)]",
-    iconBg: "bg-[color:var(--success)]/10",
-    badgeVariant: "outline" as const,
-    badgeClass:
-      "bg-[color:var(--success)]/10 text-[color:var(--success)] border-[color:var(--success)]/20 font-medium",
-    ringColor: "stroke-[color:var(--success)] text-[color:var(--success)]",
-    barColor: "bg-[color:var(--success)]",
+    color: "text-emerald-600 dark:text-emerald-400",
+    iconBg: "bg-emerald-500/10",
+    badgeVariant: "risk-low" as const,
+    badgeClass: "font-semibold",
+    ringColor: "stroke-emerald-500 text-emerald-500",
+    barColor: "bg-emerald-500",
     description: "Evaluations within optimal and healthy parameters.",
   }
 }
@@ -342,45 +340,41 @@ export function MemberStatusPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pb-12">
       {/* Header & Session Controls */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Assessment Results
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {memberName} ·{" "}
-            {activeSession
-              ? `Evaluated on ${activeSession.formattedDate}`
-              : "Health status profile"}
-          </p>
-        </div>
+      <PageHeader
+        title="Assessment Results"
+        description={`${memberName} · ${
+          activeSession
+            ? `Evaluated on ${activeSession.formattedDate}`
+            : "Health status profile"
+        }`}
+        actions={
+          sessions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              {!isViewingLatest && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedSessionId(sessions[0]?.id || null)}
+                  className="h-8 gap-1.5 rounded-lg text-xs"
+                >
+                  <RotateCcw className="size-3.5" />
+                  View latest
+                </Button>
+              )}
 
-        {sessions.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {!isViewingLatest && (
               <Button
-                variant="outline"
+                variant={isViewingLatest ? "outline" : "default"}
                 size="sm"
-                onClick={() => setSelectedSessionId(sessions[0]?.id || null)}
-                className="h-8 gap-1.5 border-border/60 text-xs"
+                onClick={() => setIsHistoryOpen(true)}
+                className="h-8 gap-1.5 rounded-lg text-xs"
               >
-                <RotateCcw className="size-3.5" />
-                View latest
+                <History className="size-3.5" />
+                Assessment history
               </Button>
-            )}
-
-            <Button
-              variant={isViewingLatest ? "outline" : "default"}
-              size="sm"
-              onClick={() => setIsHistoryOpen(true)}
-              className="h-8 gap-1.5 border-border/60 text-xs"
-            >
-              <History className="size-3.5" />
-              Assessment history
-            </Button>
-          </div>
-        )}
-      </div>
+            </div>
+          )
+        }
+      />
 
       {isLoading ? (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -391,7 +385,7 @@ export function MemberStatusPage() {
         </div>
       ) : !sessions.length ? (
         /* Empty State */
-        <Card className="border-dashed border-border/80 bg-muted/10">
+        <Card className="rounded-xl border border-dashed border-border/60 bg-muted/15">
           <CardContent className="flex flex-col items-center justify-center p-10 text-center">
             <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <ClipboardList className="size-6" />
@@ -403,7 +397,7 @@ export function MemberStatusPage() {
               You haven't completed any clinical or health forms yet. Fill out
               your health studies to generate your risk evaluations.
             </p>
-            <Button asChild size="sm" className="mt-5 gap-2 rounded-full px-5">
+            <Button asChild size="sm" className="mt-5 gap-2 rounded-lg px-5">
               <Link to="/forms">
                 <Sparkles className="size-3.5" />
                 Go to Health Forms
@@ -432,14 +426,14 @@ export function MemberStatusPage() {
                   Health scores evaluated per domain category
                 </p>
               </div>
-                            <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-xs font-medium text-muted-foreground">
                 {activeSession?.results.length} category evaluation(s)
               </span>
             </div>
 
             {/* Horizontal Layout Cards */}
             <div className="space-y-3">
-                            {activeSession?.results
+              {activeSession?.results
                 .map((result) => {
                 const normScore = getNormalizedScore(result)
                 const config = getRiskLevelConfig(
@@ -453,7 +447,7 @@ export function MemberStatusPage() {
                 return (
                   <Card
                     key={result.score_id}
-                    className="overflow-hidden rounded-xl border border-border/60 bg-gradient-to-r from-muted/20 via-card to-card p-4 shadow-xs transition-all hover:border-border/90 hover:shadow-sm sm:p-5"
+                    className="overflow-hidden rounded-xl border border-border/60 bg-card p-4 shadow-xs transition-all hover:border-border/90 hover:shadow-sm sm:p-5"
                   >
                     <div className="flex items-center justify-between gap-4">
                       {/* Left: Icon, Topic Name, Badge, Description & View details */}

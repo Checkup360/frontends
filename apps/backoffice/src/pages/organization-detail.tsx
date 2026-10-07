@@ -10,6 +10,10 @@ import {
   type ChartSeries,
 } from "@workspace/components/components/score-evolution-chart"
 import {
+  OverviewStatCard,
+  OverviewStatCardSkeleton,
+} from "@workspace/components/components/card"
+import {
   Avatar,
   AvatarGroup,
   AvatarImage,
@@ -30,7 +34,6 @@ import {
   ShieldCheck,
   Users,
   UsersRound,
-  type LucideIcon,
 } from "lucide-react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { cn } from "@workspace/ui/lib/utils"
@@ -52,11 +55,11 @@ function InviteMemberCard({
   return (
     <div className={cn("w-full", className)}>
       <Card
-        className="flex h-full cursor-pointer flex-col justify-center transition-colors hover:ring-primary/40"
+        className="flex h-full cursor-pointer flex-col justify-center rounded-xl border border-border/60 bg-card shadow-xs transition-colors hover:border-primary/40"
         onClick={() => navigate(inviteUrl)}
       >
         <CardContent className="flex h-full flex-col justify-center p-6">
-          <Empty className="flex h-full min-h-[260px] flex-col justify-center border border-dashed">
+          <Empty className="flex h-full min-h-[260px] flex-col justify-center rounded-xl border border-dashed border-border/60 bg-muted/15">
             <EmptyHeader>
               <EmptyMedia>
                 <AvatarGroup>
@@ -89,7 +92,7 @@ function InviteMemberCard({
               <Button
                 asChild
                 size="sm"
-                className="cursor-pointer hover:bg-primary/80"
+                className="cursor-pointer rounded-lg hover:bg-primary/80"
                 onClick={(event) => event.stopPropagation()}
               >
                 <Link to={inviteUrl}>Invite to Organization</Link>
@@ -99,34 +102,6 @@ function InviteMemberCard({
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-function MetricCard({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string
-  value: number
-  icon: LucideIcon
-}) {
-  return (
-    <Card className="border-border/60 shadow-[var(--shadow-card)]">
-      <CardContent>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-              {value}
-            </p>
-          </div>
-          <span className="inline-flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Icon className="size-5" />
-          </span>
-        </div>
-      </CardContent>
-    </Card>
   )
 }
 
@@ -209,11 +184,7 @@ export function OrganizationDetailPage() {
         <div className="h-8 w-40 animate-pulse rounded bg-muted" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index}>
-              <CardContent>
-                <div className="h-20 animate-pulse rounded bg-muted" />
-              </CardContent>
-            </Card>
+            <OverviewStatCardSkeleton key={index} />
           ))}
         </div>
       </div>
@@ -256,25 +227,33 @@ export function OrganizationDetailPage() {
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
+        <OverviewStatCard
           label="Total users"
-          value={summary.total_members}
+          value={summary.total_members.toString()}
           icon={Users}
+          iconVariant="icon"
+          tone="primary"
         />
-        <MetricCard
+        <OverviewStatCard
           label="Employees"
-          value={summary.total_employees}
+          value={summary.total_employees.toString()}
           icon={UsersRound}
+          iconVariant="icon"
+          tone="primary"
         />
-        <MetricCard
+        <OverviewStatCard
           label="Admins"
-          value={summary.total_admins}
+          value={summary.total_admins.toString()}
           icon={ShieldCheck}
+          iconVariant="icon"
+          tone="success"
         />
-        <MetricCard
+        <OverviewStatCard
           label="Content managers"
-          value={summary.total_content_managers}
+          value={summary.total_content_managers.toString()}
           icon={FileText}
+          iconVariant="icon"
+          tone="warning"
         />
       </section>
 

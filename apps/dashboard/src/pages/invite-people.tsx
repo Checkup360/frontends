@@ -291,7 +291,7 @@ export function InvitePeoplePage() {
             Back to Invites
           </Button>
         </div>
-        <Card className="border-border/60 shadow-[var(--shadow-card)]">
+        <Card className="rounded-xl border border-border/60 bg-card shadow-xs">
           <CardContent className="py-6 md:px-8">
             <OrgInvitationForm
               fixedOrganization={organization}
@@ -313,7 +313,7 @@ export function InvitePeoplePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl animate-in space-y-6 duration-300 fade-in">
+    <div className="mx-auto w-full max-w-7xl space-y-6">
       {/* KPI Cards on Top */}
       <section className="grid gap-4 md:grid-cols-4">
         {loading ? (
@@ -352,14 +352,14 @@ export function InvitePeoplePage() {
               hint="expired/outdated invites"
               icon={X}
               iconVariant="icon"
-              tone="destructive"
+              tone="warning"
             />
           </>
         )}
       </section>
 
       {/* Main Table Card */}
-      <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
+      <Card className="rounded-xl border border-border/60 bg-card p-6 shadow-xs">
         {/* Header section with Create Invitation button */}
         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div className="flex flex-col gap-1">

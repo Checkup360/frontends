@@ -189,7 +189,7 @@ export function SysadminsPage() {
       </section>
 
       {/* Main Table Card */}
-      <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
+      <Card className="rounded-xl border border-border/60 bg-card p-6 shadow-xs">
         {/* Title / Action Header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
@@ -204,7 +204,7 @@ export function SysadminsPage() {
           <Button
             size="sm"
             onClick={() => setInviteDialogOpen(true)}
-            className="cursor-pointer gap-2 self-start shadow-xs sm:self-auto"
+            className="gap-2 rounded-lg self-start sm:self-auto"
           >
             <Plus className="size-4" />
             Invite Sysadmin
@@ -371,7 +371,7 @@ export function SysadminsPage() {
 
       {/* Invite Sysadmin Dialog */}
       <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="rounded-xl sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Invite System Administrator</DialogTitle>
             <DialogDescription>

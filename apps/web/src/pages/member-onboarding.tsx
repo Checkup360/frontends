@@ -492,14 +492,14 @@ export function MemberOnboardingPage() {
             </p>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-background/40 shadow-xl backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-xl border border-border/60 bg-card shadow-lg">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent" />
 
             <form
               onSubmit={(event) => void handleSubmit(event)}
               className="relative grid lg:grid-cols-[320px_1fr]"
             >
-              <div className="border-b border-border/40 bg-background/30 p-6 lg:border-r lg:border-b-0 lg:p-8">
+              <div className="border-b border-border/60 bg-muted/20 p-6 lg:border-r lg:border-b-0 lg:p-8">
                 <div className="flex flex-row items-center justify-center gap-8 lg:flex-col lg:items-stretch lg:gap-0 lg:space-y-1">
                   {steps.map((step) => (
                     <SidebarStep
@@ -1023,7 +1023,7 @@ export function MemberOnboardingPage() {
                       type="button"
                       onClick={nextStep}
                       disabled={isSubmitting}
-                      className="gap-2 rounded-full px-8"
+                      className="gap-2 rounded-lg px-6"
                     >
                       {currentStep === 0 ? "Start onboarding" : "Next step"}
                       <ArrowRight className="size-4" />
@@ -1034,7 +1034,7 @@ export function MemberOnboardingPage() {
                       type="button"
                       onClick={() => void handleSubmit()}
                       disabled={isSubmitting}
-                      className="gap-2 rounded-full px-8"
+                      className="gap-2 rounded-lg px-6"
                     >
                       {isSubmitting ? "Saving..." : "Complete"}
                       <Check className="size-4" />

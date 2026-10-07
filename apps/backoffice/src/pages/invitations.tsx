@@ -93,10 +93,10 @@ function formatRemainingTime(
 // Badge classes for time remaining
 const remainingBadgeClass: Record<"expired" | "active" | "used", string> = {
   expired:
-    "bg-destructive/10 text-destructive border-destructive/20 capitalize",
-  used: "bg-muted/80 text-muted-foreground border-border capitalize",
+    "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 capitalize font-medium",
+  used: "border-border bg-muted/80 text-muted-foreground capitalize font-medium",
   active:
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 capitalize",
+    "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 capitalize font-medium",
 }
 
 interface CombinedInvite {
@@ -448,7 +448,7 @@ export function InvitationsPage() {
           </Button>
         </div>
 
-        <Card className="mx-auto w-full max-w-4xl border-border/60 shadow-[var(--shadow-card)]">
+        <Card className="mx-auto w-full max-w-4xl rounded-xl border border-border/60 bg-card shadow-xs">
           <CardHeader className="px-6 pt-6 pb-3 md:px-8">
             <Stepper steps={steps} currentStep={currentStep} />
           </CardHeader>
@@ -500,7 +500,7 @@ export function InvitationsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl animate-in space-y-6 duration-300 fade-in">
+    <div className="mx-auto w-full max-w-7xl space-y-6">
       {/* Title section */}
       <div>
         <h2 className="text-base font-semibold text-foreground">Overview</h2>
@@ -528,7 +528,7 @@ export function InvitationsPage() {
               hint="active system administrator invitations"
               icon={Shield}
               iconVariant="icon"
-              tone="destructive"
+              tone="warning"
             />
             <OverviewStatCard
               label="Active Organization"
@@ -543,7 +543,7 @@ export function InvitationsPage() {
       </section>
 
       {/* Main Table Card */}
-      <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
+      <Card className="rounded-xl border border-border/60 bg-card p-6 shadow-xs">
         {/* Title / Header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">

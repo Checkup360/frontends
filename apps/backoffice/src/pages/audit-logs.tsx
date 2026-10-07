@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@workspace/ui/components/dialog"
+import { PageHeader } from "@workspace/components/components/page-header"
 import {
   CheckCircle2,
   AlertTriangle,
@@ -34,6 +35,8 @@ import {
   Globe,
   Info,
   Shield,
+  Copy,
+  Check,
 } from "lucide-react"
 
 export function AuditLogsPage() {
@@ -46,6 +49,14 @@ export function AuditLogsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyPayload = (details: Record<string, unknown> | undefined) => {
+    if (!details) return
+    void navigator.clipboard.writeText(JSON.stringify(details, null, 2))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const loadData = useCallback(async (targetPage = page, filter = actionFilter) => {
     setIsLoading(true)
@@ -116,21 +127,21 @@ export function AuditLogsPage() {
     switch (action) {
       case "CONSENT_ACCEPTED":
         return (
-          <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1 font-medium">
+          <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 gap-1 font-medium">
             <CheckCircle2 className="size-3" />
             Consent Accepted
           </Badge>
         )
       case "CONSENT_REVOKED":
         return (
-          <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1 font-medium">
+          <Badge variant="outline" className="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 font-medium">
             <AlertTriangle className="size-3" />
             Consent Revoked
           </Badge>
         )
       case "DATA_EXPORTED":
         return (
-          <Badge className="bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30 gap-1 font-medium">
+          <Badge variant="outline" className="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 gap-1 font-medium">
             <Download className="size-3" />
             Data Exported
           </Badge>
@@ -148,35 +159,30 @@ export function AuditLogsPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              System Audit Trail
-            </h1>
-            <Badge variant="outline" className="h-6 border-primary/30 text-primary text-[11px]">
-              Global Compliance
-            </Badge>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Platform-wide immutable trace of consent agreements, data exports, and administrative events.
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isLoading || isRefreshing}
-          className="h-9 gap-1.5 self-start sm:self-auto text-xs"
-        >
-          <RotateCw className={`size-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="System Audit Trail"
+        badge={
+          <Badge variant="outline" className="h-6 border-primary/30 text-primary text-[11px]">
+            Global Compliance
+          </Badge>
+        }
+        description="Platform-wide immutable trace of consent agreements, data exports, and administrative events."
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading || isRefreshing}
+            className="h-9 gap-1.5 rounded-lg text-xs"
+          >
+            <RotateCw className={`size-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        }
+      />
 
       {/* Main Table Card */}
-      <Card className="border border-border/70 shadow-xs">
+      <Card className="rounded-xl border border-border/60 bg-card shadow-xs">
         <CardHeader className="border-b border-border/50 pb-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -340,54 +346,180 @@ export function AuditLogsPage() {
       </Card>
 
       {/* Inspect Log Dialog */}
-      <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Shield className="size-5 text-primary" />
-              Audit Record Payload
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Full cryptographic metadata and audit trail parameters.
-            </DialogDescription>
+      <Dialog
+        open={Boolean(selectedLog)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedLog(null)
+            setCopied(false)
+          }
+        }}
+      >
+        <DialogContent className="rounded-xl max-h-[90vh] max-w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-2xl md:max-w-3xl">
+          <DialogHeader className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <div className="flex size-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                <Shield className="size-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-semibold tracking-tight">
+                  Audit Record Payload
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Full cryptographic metadata, consent trace, and audit trail parameters.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
 
           {selectedLog && (
-            <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
-                <div>
-                  <span className="font-semibold text-foreground">Event ID:</span>
-                  <p className="font-mono text-[11px] text-muted-foreground truncate">{selectedLog.id}</p>
+            <div className="space-y-4 py-2 text-xs">
+              {/* Event & Actor Metadata */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {/* Event Details */}
+                <div className="space-y-2.5 rounded-lg border border-border/60 bg-muted/20 p-3.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                      Action
+                    </span>
+                    <div>{getActionBadge(selectedLog.action)}</div>
+                  </div>
+
+                  <div>
+                    <span className="mb-0.5 block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                      Event ID
+                    </span>
+                    <p className="font-mono text-[11px] font-medium text-foreground break-all select-all">
+                      {selectedLog.id}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="mb-0.5 block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                      Timestamp
+                    </span>
+                    <div className="flex items-center gap-1.5 text-foreground">
+                      <Clock className="size-3.5 shrink-0 text-muted-foreground" />
+                      <span>{formatDateTime(selectedLog.created_at)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold text-foreground">Action:</span>
-                  <p className="text-muted-foreground">{selectedLog.action}</p>
-                </div>
-                <div>
-                  <span className="font-semibold text-foreground">User ID:</span>
-                  <p className="font-mono text-[11px] text-muted-foreground truncate">{selectedLog.user_id || "N/A"}</p>
-                </div>
-                <div>
-                  <span className="font-semibold text-foreground">Timestamp:</span>
-                  <p className="text-muted-foreground">{formatDateTime(selectedLog.created_at)}</p>
+
+                {/* Actor & Scope */}
+                <div className="space-y-2.5 rounded-lg border border-border/60 bg-muted/20 p-3.5">
+                  <div>
+                    <span className="mb-0.5 block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                      User / Actor
+                    </span>
+                    <p className="font-medium text-foreground">
+                      {selectedLog.user_name || selectedLog.user_email || "System / Anonymous"}
+                    </p>
+                    {selectedLog.user_name && selectedLog.user_email && (
+                      <p className="text-[11px] text-muted-foreground break-all">{selectedLog.user_email}</p>
+                    )}
+                  </div>
+
+                  {selectedLog.user_id && (
+                    <div>
+                      <span className="mb-0.5 block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                        User ID (UID)
+                      </span>
+                      <p className="font-mono text-[11px] text-muted-foreground break-all select-all">
+                        {selectedLog.user_id}
+                      </p>
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="mb-0.5 block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                      Organization
+                    </span>
+                    <p className="font-mono text-[11px] text-muted-foreground break-all select-all">
+                      {selectedLog.organization_id || "Platform Global"}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {selectedLog.details && Object.keys(selectedLog.details).length > 0 && (
-                <div className="space-y-1.5">
-                  <span className="font-semibold text-foreground">Raw Details:</span>
-                  <pre className="max-h-60 overflow-y-auto rounded-lg border border-border/70 bg-muted/40 p-3 font-mono text-[11px] leading-relaxed text-foreground">
-                    {JSON.stringify(selectedLog.details, null, 2)}
-                  </pre>
+              {/* Client & Network Origin */}
+              {(Boolean(selectedLog.details?.ip_address) ||
+                Boolean(selectedLog.details?.user_agent)) && (
+                <div className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                    <Globe className="size-3.5 text-primary" />
+                    <span>Client & Network Origin</span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {Boolean(selectedLog.details?.ip_address) && (
+                      <div>
+                        <span className="block text-[11px] text-muted-foreground">
+                          IP Address
+                        </span>
+                        <span className="font-mono font-medium text-foreground">
+                          {String(selectedLog.details.ip_address)}
+                        </span>
+                      </div>
+                    )}
+                    {Boolean(selectedLog.details?.user_agent) && (
+                      <div className="sm:col-span-2">
+                        <span className="block text-[11px] text-muted-foreground">
+                          User Agent
+                        </span>
+                        <span className="break-all font-mono text-[11px] text-muted-foreground">
+                          {String(selectedLog.details.user_agent)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
-              {Boolean(selectedLog.details?.ip_address) && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Globe className="size-3.5" />
-                  <span>IP Address: {String(selectedLog.details.ip_address)}</span>
+              {/* Raw JSON Payload */}
+              {selectedLog.details && Object.keys(selectedLog.details).length > 0 && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-foreground">
+                      Cryptographic & Legal Payload
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopyPayload(selectedLog.details)}
+                      className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="size-3 text-emerald-500" />
+                          <span className="text-emerald-500">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="size-3" />
+                          <span>Copy JSON</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <div className="relative rounded-lg border border-border/70 bg-zinc-950 p-3 text-zinc-100 dark:bg-zinc-900/90">
+                    <pre className="max-h-60 overflow-auto font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-all">
+                      {JSON.stringify(selectedLog.details, null, 2)}
+                    </pre>
+                  </div>
                 </div>
               )}
+
+              {/* Close Button Footer */}
+              <div className="flex justify-end pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedLog(null)}
+                  className="h-8 px-4 text-xs"
+                >
+                  Close
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

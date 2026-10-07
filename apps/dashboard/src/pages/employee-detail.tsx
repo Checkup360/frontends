@@ -206,8 +206,7 @@ function getRiskTone(
         tone: "green" as const,
         riskLevel: "low" as const,
         label: "Low risk",
-        badgeClass:
-          "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+        variant: "risk-low" as const,
       }
     }
     if (value >= mod) {
@@ -215,16 +214,14 @@ function getRiskTone(
         tone: "amber" as const,
         riskLevel: "moderate" as const,
         label: "Moderate risk",
-        badgeClass:
-          "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+        variant: "risk-moderate" as const,
       }
     }
     return {
       tone: "red" as const,
       riskLevel: "high" as const,
-      label: "High risk",
-      badgeClass:
-        "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+      label: "Needs Attention",
+      variant: "risk-high" as const,
     }
   }
 
@@ -238,9 +235,8 @@ function getRiskTone(
     return {
       tone: "red" as const,
       riskLevel: "high" as const,
-      label: "High risk",
-      badgeClass:
-        "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+      label: "Needs Attention",
+      variant: "risk-high" as const,
     }
   }
 
@@ -254,8 +250,7 @@ function getRiskTone(
       tone: "amber" as const,
       riskLevel: "moderate" as const,
       label: "Moderate risk",
-      badgeClass:
-        "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      variant: "risk-moderate" as const,
     }
   }
 
@@ -268,8 +263,7 @@ function getRiskTone(
       tone: "green" as const,
       riskLevel: "low" as const,
       label: "Low risk",
-      badgeClass:
-        "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      variant: "risk-low" as const,
     }
   }
 
@@ -277,7 +271,7 @@ function getRiskTone(
     tone: "muted" as const,
     riskLevel: null,
     label: "Pending",
-    badgeClass: "border-border/60 bg-muted/40 text-muted-foreground",
+    variant: "secondary" as const,
   }
 }
 
@@ -795,7 +789,7 @@ export function EmployeeDetailPage() {
       </div>
 
       {/* Prominent Employee Hero Header */}
-      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-r from-card via-card to-muted/20 p-6 shadow-sm md:p-8">
+      <Card className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-6 shadow-xs md:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           {/* Left: Large Avatar + Full Info */}
           <div className="flex items-start gap-4 md:gap-6">
@@ -814,18 +808,15 @@ export function EmployeeDetailPage() {
             </Avatar>
 
             <div className="min-w-0 space-y-2">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                   {fullName}
                 </h1>
                 {employee.status && (
                   <Badge
-                    variant="outline"
-                    className={
-                      employee.status === "active"
-                        ? "border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-emerald-600 capitalize dark:text-emerald-400"
-                        : "border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-amber-600 capitalize dark:text-amber-400"
-                    }
+                    variant={employee.status === "active" ? "success-light" : "warning-light"}
+                    size="sm"
+                    className="capitalize"
                   >
                     {employee.status}
                   </Badge>
@@ -836,10 +827,8 @@ export function EmployeeDetailPage() {
                     <Badge
                       key={r}
                       variant={badgeProps.variant}
-                      className={cn(
-                        "px-2.5 py-0.5 text-xs font-normal",
-                        badgeProps.className
-                      )}
+                      size="xs"
+                      className={badgeProps.className}
                     >
                       {formatRoleName(r)}
                     </Badge>
@@ -871,13 +860,13 @@ export function EmployeeDetailPage() {
           </div>
 
           {/* Right: Actions */}
-          <div className="flex flex-wrap items-center gap-3 pl-14 lg:pl-0">
+          <div className="flex flex-wrap items-center gap-2.5 pl-14 lg:pl-0">
             {organizationId && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsDialogOpen(true)}
-                className="h-9 cursor-pointer gap-2 rounded-xl px-3.5 text-xs shadow-2xs"
+                className="h-8 cursor-pointer gap-1.5 rounded-lg px-3 text-xs"
               >
                 <Edit3 className="size-3.5" />
                 {employee.department
@@ -891,7 +880,7 @@ export function EmployeeDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setManageRolesOpen(true)}
-                className="h-9 cursor-pointer gap-2 rounded-xl px-3.5 text-xs shadow-2xs"
+                className="h-8 cursor-pointer gap-1.5 rounded-lg px-3 text-xs"
               >
                 <UserCog className="size-3.5" />
                 Manage roles
@@ -903,7 +892,7 @@ export function EmployeeDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsHistoryOpen(true)}
-                className="h-9 cursor-pointer gap-2 rounded-xl px-3.5 text-xs shadow-2xs"
+                className="h-8 cursor-pointer gap-1.5 rounded-lg px-3 text-xs"
               >
                 <History className="size-3.5" />
                 Assessment history ({sessions.length})
@@ -911,11 +900,11 @@ export function EmployeeDetailPage() {
             )}
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Main Health Section */}
       {employee.status === "onboarding" ? (
-        <Empty className="flex min-h-[300px] flex-col items-center justify-center rounded-3xl border border-dashed border-border/60 bg-card/60 p-8 text-center shadow-xs">
+        <Empty className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/15 p-8 text-center shadow-xs">
           <EmptyHeader className="flex flex-col items-center justify-center text-center">
             <EmptyMedia className="mb-4 rounded-full bg-foreground/10 p-4 text-foreground">
               <Clock className="size-8 animate-pulse" />
@@ -961,7 +950,7 @@ export function EmployeeDetailPage() {
 
       {/* Clinical Study Assessments - Only shown if not in onboarding */}
       {employee.status !== "onboarding" && (
-        <Card className="rounded-3xl border-border/80 bg-card/85 shadow-sm">
+        <Card className="rounded-xl border border-border/60 bg-card shadow-xs">
           <CardHeader className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -982,7 +971,7 @@ export function EmployeeDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedSessionId(sessions[0]?.id || null)}
-                className="cursor-pointer gap-1 text-xs"
+                className="h-8 cursor-pointer gap-1.5 rounded-lg px-3 text-xs"
               >
                 <RotateCcw className="size-3.5" />
                 View latest
@@ -996,7 +985,7 @@ export function EmployeeDetailPage() {
                 <div className="h-7 w-7 animate-spin rounded-full border-3 border-primary border-t-transparent"></div>
               </div>
             ) : !sessions.length ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed p-8 text-center">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/15 p-8 text-center">
                 <ClipboardList className="mb-3 size-8 text-muted-foreground/40" />
                 <h4 className="text-sm font-semibold">
                   No Clinical Assessments Submitted
@@ -1009,7 +998,7 @@ export function EmployeeDetailPage() {
             ) : (
               <div className="space-y-4">
                 {/* Active Session Info Banner */}
-                <div className="flex items-center justify-between rounded-xl border bg-muted/30 p-3 px-4 text-xs">
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 p-3 px-4 text-xs">
                   <div className="flex items-center gap-2">
                     <Calendar className="size-3.5 text-primary" />
                     <span className="font-medium text-foreground">
@@ -1018,16 +1007,14 @@ export function EmployeeDetailPage() {
                     {isViewingLatest ? (
                       <Badge
                         variant="success-light"
-                        size="sm"
-                        className="text-[10px]"
+                        size="xs"
                       >
                         Latest
                       </Badge>
                     ) : (
                       <Badge
                         variant="warning-light"
-                        size="sm"
-                        className="text-[10px]"
+                        size="xs"
                       >
                         History
                       </Badge>
@@ -1067,7 +1054,7 @@ export function EmployeeDetailPage() {
                       return (
                         <div
                           key={result.score_id || `pending-${idx}`}
-                          className="flex flex-col justify-between rounded-2xl border border-dashed border-border/60 bg-muted/15 p-5 opacity-60"
+                          className="flex flex-col justify-between rounded-xl border border-dashed border-border/60 bg-muted/15 p-5 opacity-60"
                         >
                           <div className="space-y-2">
                             <div className="flex items-center justify-between gap-2">
@@ -1089,7 +1076,8 @@ export function EmployeeDetailPage() {
                               </div>
                               <Badge
                                 variant="outline"
-                                className="border-border/60 text-[10px] text-muted-foreground"
+                                size="xs"
+                                className="border-border/60 text-muted-foreground"
                               >
                                 {isDeactivated
                                   ? "Disabled form"
@@ -1116,7 +1104,7 @@ export function EmployeeDetailPage() {
                       <div
                         key={result.score_id || `eval-${idx}`}
                         className={cn(
-                          "flex flex-col justify-between rounded-2xl border border-border/60 bg-card p-5 transition-all hover:shadow-xs",
+                          "flex flex-col justify-between rounded-xl border border-border/60 bg-card p-5 transition-all hover:shadow-xs",
                           isDeactivated && "opacity-60"
                         )}
                       >
@@ -1154,8 +1142,12 @@ export function EmployeeDetailPage() {
                             </div>
                             <div className="flex flex-col items-end gap-1">
                               <Badge
-                                variant="outline"
-                                className={`text-xs font-semibold ${isDeactivated ? "border-border/60 bg-muted/40 text-muted-foreground" : riskMeta.badgeClass}`}
+                                variant={isDeactivated ? "outline" : (riskMeta.variant || "outline")}
+                                size="xs"
+                                className={cn(
+                                  "font-semibold",
+                                  isDeactivated && "border-border/60 bg-muted/40 text-muted-foreground"
+                                )}
                               >
                                 {val}%
                               </Badge>
@@ -1220,7 +1212,7 @@ export function EmployeeDetailPage() {
 
       {/* Dialog for assigning department */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="rounded-2xl">
+        <DialogContent className="rounded-xl">
           <DialogHeader>
             <DialogTitle>
               {employee.department ? "Change" : "Assign"} Department

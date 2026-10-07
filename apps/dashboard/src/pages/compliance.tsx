@@ -25,6 +25,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@workspace/ui/components/dialog"
+import { PageHeader } from "@workspace/components/components/page-header"
 import {
   OverviewStatCard,
   OverviewStatCardSkeleton,
@@ -154,21 +155,21 @@ export function CompliancePage() {
     switch (action) {
       case "CONSENT_ACCEPTED":
         return (
-          <Badge className="gap-1 border-emerald-500/30 bg-emerald-500/15 font-medium text-emerald-700 dark:text-emerald-400">
+          <Badge variant="outline" className="gap-1 border-emerald-500/20 bg-emerald-500/10 font-medium text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="size-3" />
             Consent Accepted
           </Badge>
         )
       case "CONSENT_REVOKED":
         return (
-          <Badge className="gap-1 border-amber-500/30 bg-amber-500/15 font-medium text-amber-700 dark:text-amber-400">
+          <Badge variant="outline" className="gap-1 border-amber-500/20 bg-amber-500/10 font-medium text-amber-600 dark:text-amber-400">
             <AlertTriangle className="size-3" />
             Consent Revoked
           </Badge>
         )
       case "DATA_EXPORTED":
         return (
-          <Badge className="gap-1 border-blue-500/30 bg-blue-500/15 font-medium text-blue-700 dark:text-blue-400">
+          <Badge variant="outline" className="gap-1 border-blue-500/20 bg-blue-500/10 font-medium text-blue-600 dark:text-blue-400">
             <Download className="size-3" />
             Data Exported
           </Badge>
@@ -186,30 +187,24 @@ export function CompliancePage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Compliance & Legal Audit
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Immutable log of user consents, data processing authorizations, and
-            access events.
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isLoading || isRefreshing}
-          className="h-9 shrink-0 gap-1.5 self-start text-xs sm:self-auto"
-        >
-          <RotateCw
-            className={`size-3.5 ${isRefreshing ? "animate-spin" : ""}`}
-          />
-          Refresh Audit Trail
-        </Button>
-      </div>
+      <PageHeader
+        title="Compliance & Legal Audit"
+        description="Immutable log of user consents, data processing authorizations, and access events."
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading || isRefreshing}
+            className="h-9 shrink-0 gap-1.5 rounded-lg text-xs"
+          >
+            <RotateCw
+              className={`size-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            Refresh Audit Trail
+          </Button>
+        }
+      />
 
       {/* KPI Cards */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -260,7 +255,7 @@ export function CompliancePage() {
       </section>
 
       {/* Audit Log Table Card */}
-      <Card className="animate-in border-border/60 p-6 shadow-[var(--shadow-card)] duration-300 fade-in">
+      <Card className="rounded-xl border border-border/60 bg-card p-6 shadow-xs">
         {/* Card Header */}
         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
@@ -479,7 +474,7 @@ export function CompliancePage() {
           }
         }}
       >
-        <DialogContent className="max-h-[90vh] max-w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-xl md:max-w-2xl">
+        <DialogContent className="rounded-xl max-h-[90vh] max-w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-xl md:max-w-2xl">
           <DialogHeader className="space-y-1">
             <div className="flex items-center gap-2.5">
               <div className="flex size-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
@@ -508,45 +503,50 @@ export function CompliancePage() {
                   <div>{getActionBadge(selectedLog.action)}</div>
                 </div>
 
-                <div className="overflow-hidden rounded-lg border border-border/60 bg-muted/20 p-3">
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
                   <span className="mb-1 block text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
                     Resource Type
                   </span>
-                  <p className="truncate font-mono font-medium text-foreground">
+                  <p className="font-mono font-medium text-foreground break-all">
                     {selectedLog.resource_type}
                   </p>
                   {selectedLog.resource_id && (
-                    <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">
+                    <p className="mt-0.5 font-mono text-[10px] text-muted-foreground break-all select-all">
                       ID: {selectedLog.resource_id}
                     </p>
                   )}
                 </div>
 
-                <div className="overflow-hidden rounded-lg border border-border/60 bg-muted/20 p-3">
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
                   <span className="mb-1 block text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
                     User / Actor
                   </span>
                   <div className="space-y-0.5">
-                    <p className="truncate font-medium text-foreground">
+                    <p className="font-medium text-foreground">
                       {selectedLog.user_name ||
                         selectedLog.user_email ||
                         "System / Automated"}
                     </p>
                     {selectedLog.user_name && selectedLog.user_email && (
-                      <p className="truncate text-[11px] text-muted-foreground">
+                      <p className="text-[11px] text-muted-foreground break-all">
                         {selectedLog.user_email}
+                      </p>
+                    )}
+                    {selectedLog.user_id && (
+                      <p className="mt-0.5 font-mono text-[10px] text-muted-foreground break-all select-all">
+                        UID: {selectedLog.user_id}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-lg border border-border/60 bg-muted/20 p-3">
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
                   <span className="mb-1 block text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
                     Timestamp
                   </span>
                   <div className="flex items-center gap-1.5 text-foreground">
                     <Clock className="size-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate">
+                    <span>
                       {formatDateTime(selectedLog.created_at)}
                     </span>
                   </div>

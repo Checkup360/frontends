@@ -218,7 +218,7 @@ export function OrganizationsPage() {
       </section>
 
       {/* Main organizations Radix-style table card */}
-      <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
+      <Card className="rounded-xl border border-border/60 bg-card p-6 shadow-xs">
         {/* Title */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
@@ -233,6 +233,7 @@ export function OrganizationsPage() {
             size="sm"
             icon={Plus}
             onClick={() => setDialogOpen(true)}
+            className="rounded-lg"
           >
             New organization
           </ActionButton>
@@ -485,7 +486,7 @@ export function OrganizationsPage() {
         open={!!deleteConfirmOrg}
         onOpenChange={(open) => !open && setDeleteConfirmOrg(null)}
       >
-        <DialogContent>
+        <DialogContent className="rounded-xl">
           <DialogHeader>
             <DialogTitle>Are you absolutely sure?</DialogTitle>
             <DialogDescription>

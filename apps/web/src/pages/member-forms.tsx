@@ -22,6 +22,7 @@ import {
   Sparkles,
 } from "lucide-react"
 import { fetchActiveMemberForms } from "@workspace/api"
+import { PageHeader } from "@workspace/components/components/page-header"
 import { MedicalNonDiagnosticDisclaimer } from "../components/legal/medical-disclaimer"
 
 interface FormCardDef {
@@ -175,17 +176,13 @@ export function MemberFormsPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pb-12">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          Health Forms
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Keep your physical, sleep, and lifestyle information up to date.
-        </p>
-      </div>
+      <PageHeader
+        title="Health Forms"
+        description="Keep your physical, sleep, and lifestyle information up to date."
+      />
 
       {/* Overall Progress Card */}
-      <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 shadow-sm">
+      <Card className="relative overflow-hidden rounded-xl border border-border/60 bg-card shadow-xs">
         <CardHeader className="pb-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
@@ -205,8 +202,8 @@ export function MemberFormsPage() {
               <Skeleton className="h-6 w-32 rounded-full" />
             ) : allCompleted ? (
               <Badge
-                variant="default"
-                className="bg-emerald-600 hover:bg-emerald-700"
+                variant="outline"
+                className="border-emerald-500/20 bg-emerald-500/10 font-medium text-emerald-600 dark:text-emerald-400"
               >
                 <CheckCircle2 className="mr-1 size-3.5" /> {completedCount} of{" "}
                 {totalCount} Completed
@@ -255,7 +252,7 @@ export function MemberFormsPage() {
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="flex flex-col justify-between p-5">
+              <Card key={i} className="flex flex-col justify-between rounded-xl border border-border/60 bg-card p-5 shadow-xs">
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <Skeleton className="size-10 rounded-xl" />
@@ -268,13 +265,13 @@ export function MemberFormsPage() {
                   </div>
                 </div>
                 <div className="mt-6 pt-2">
-                  <Skeleton className="h-9 w-full rounded-md" />
+                  <Skeleton className="h-9 w-full rounded-lg" />
                 </div>
               </Card>
             ))}
           </div>
         ) : visibleForms.length === 0 ? (
-          <Card className="border-dashed border-border/80 bg-muted/10">
+          <Card className="rounded-xl border border-dashed border-border/60 bg-muted/15">
             <CardContent className="flex flex-col items-center justify-center p-10 text-center">
               <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                 <FileText className="size-6" />
@@ -297,7 +294,7 @@ export function MemberFormsPage() {
               return (
                 <Card
                   key={form.type}
-                  className="flex flex-col justify-between p-5 transition-all hover:border-primary/40 hover:shadow-xs"
+                  className="flex flex-col justify-between rounded-xl border border-border/60 bg-card p-5 shadow-xs transition-all hover:border-primary/40 hover:shadow-sm"
                 >
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -307,7 +304,7 @@ export function MemberFormsPage() {
                       {isFilled ? (
                         <Badge
                           variant="outline"
-                          className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                          className="border-emerald-500/20 bg-emerald-500/10 font-medium text-emerald-600 dark:text-emerald-400"
                         >
                           <CheckCircle2 className="mr-1 size-3" /> Completed
                         </Badge>
@@ -329,7 +326,7 @@ export function MemberFormsPage() {
                       variant="outline"
                       size="sm"
                       asChild
-                      className="w-full justify-between gap-1"
+                      className="w-full justify-between gap-1 rounded-lg"
                     >
                       <Link to={`/forms/studies?form=${form.type}`}>
                         {isFilled ? form.editLabel : form.completeLabel}

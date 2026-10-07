@@ -1333,21 +1333,21 @@ export function MemberFormsStudiesPage() {
         <>
           {/* FORM 1: BIOMETRICS */}
       {formType === "biometrics" && (
-        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
-          <CardHeader>
+        <Card className="rounded-xl border border-border/60 bg-card p-0 gap-0 shadow-xs overflow-hidden">
+          <CardHeader className="px-6 pt-6 pb-4">
             <CardTitle className="text-lg">Physical Biometrics</CardTitle>
             <CardDescription>
               Physical parameters and baseline measurements for health score calculations.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveBiometrics(e)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 px-6 pt-2 pb-8">
 
               {/* Biological Sex */}
               <div
                 id="field-group-biological_sex"
                 className={cn(
-                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                   fieldErrors.biological_sex &&
                     "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
@@ -1401,7 +1401,7 @@ export function MemberFormsStudiesPage() {
                 <div
                   id="field-group-height"
                   className={cn(
-                    "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    "space-y-2 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                     fieldErrors.height &&
                       "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
@@ -1419,7 +1419,7 @@ export function MemberFormsStudiesPage() {
                       onChange={(e) => updateField("height", e.target.value)}
                       disabled={isSubmitting || isLoadingData}
                       className={cn(
-                        "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
+                        "rounded-lg border-border/60 bg-background pl-10 transition-all focus:border-primary/50",
                         fieldErrors.height &&
                           "border-destructive focus-visible:ring-destructive"
                       )}
@@ -1436,7 +1436,7 @@ export function MemberFormsStudiesPage() {
                 <div
                   id="field-group-weight"
                   className={cn(
-                    "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    "space-y-2 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                     fieldErrors.weight &&
                       "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
@@ -1454,7 +1454,7 @@ export function MemberFormsStudiesPage() {
                       onChange={(e) => updateField("weight", e.target.value)}
                       disabled={isSubmitting || isLoadingData}
                       className={cn(
-                        "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
+                        "rounded-lg border-border/60 bg-background pl-10 transition-all focus:border-primary/50",
                         fieldErrors.weight &&
                           "border-destructive focus-visible:ring-destructive"
                       )}
@@ -1472,7 +1472,7 @@ export function MemberFormsStudiesPage() {
                   <div
                     id="field-group-neck_circumference"
                     className={cn(
-                      "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                      "space-y-2 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                       fieldErrors.neck_circumference &&
                         "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                     )}
@@ -1492,7 +1492,7 @@ export function MemberFormsStudiesPage() {
                         }
                         disabled={isSubmitting || isLoadingData}
                         className={cn(
-                          "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
+                          "rounded-lg border-border/60 bg-background pl-10 transition-all focus:border-primary/50",
                           fieldErrors.neck_circumference &&
                             "border-destructive focus-visible:ring-destructive"
                         )}
@@ -1510,7 +1510,7 @@ export function MemberFormsStudiesPage() {
                 <div
                   id="field-group-waist_circumference"
                   className={cn(
-                    "space-y-2 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    "space-y-2 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                     fieldErrors.waist_circumference &&
                       "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
@@ -1530,7 +1530,7 @@ export function MemberFormsStudiesPage() {
                       }
                       disabled={isSubmitting || isLoadingData}
                       className={cn(
-                        "rounded-lg border-border/40 bg-background/40 pl-10 backdrop-blur transition-all focus:border-primary/50 focus:bg-background/60",
+                        "rounded-lg border-border/60 bg-background pl-10 transition-all focus:border-primary/50",
                         fieldErrors.waist_circumference &&
                           "border-destructive focus-visible:ring-destructive"
                       )}
@@ -1545,11 +1545,11 @@ export function MemberFormsStudiesPage() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
+              <Button variant="ghost" className="rounded-lg" asChild>
                 <Link to="/forms">Cancel</Link>
               </Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+              <Button type="submit" className="rounded-lg" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Biometrics"}
               </Button>
             </CardFooter>
@@ -1559,20 +1559,20 @@ export function MemberFormsStudiesPage() {
 
       {/* FORM 2: SLEEP */}
       {formType === "sleep" && (
-        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
-          <CardHeader>
+        <Card className="rounded-xl border border-border/60 bg-card p-0 gap-0 shadow-xs overflow-hidden">
+          <CardHeader className="px-6 pt-6 pb-4">
             <CardTitle className="text-lg">Sleep Quality & Rest</CardTitle>
             <CardDescription>
               Answer questions regarding your daily sleep habits.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveSleep(e)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 px-6 pt-2 pb-8">
               {/* Question 1 */}
               <div
                 id="field-group-snoring"
                 className={cn(
-                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                   fieldErrors.snoring &&
                     "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
@@ -1618,7 +1618,7 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-tired"
                 className={cn(
-                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                   fieldErrors.tired &&
                     "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
@@ -1664,7 +1664,7 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-observed_apnea"
                 className={cn(
-                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                   fieldErrors.observed_apnea &&
                     "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
@@ -1706,11 +1706,11 @@ export function MemberFormsStudiesPage() {
                 )}
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
+              <Button variant="ghost" className="rounded-lg" asChild>
                 <Link to="/forms">Cancel</Link>
               </Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+              <Button type="submit" className="rounded-lg" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Sleep Data"}
               </Button>
             </CardFooter>
@@ -1720,8 +1720,8 @@ export function MemberFormsStudiesPage() {
 
       {/* FORM 3: HABITS */}
       {formType === "habits" && (
-        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
-          <CardHeader>
+        <Card className="rounded-xl border border-border/60 bg-card p-0 gap-0 shadow-xs overflow-hidden">
+          <CardHeader className="px-6 pt-6 pb-4">
             <CardTitle className="text-lg">Lifestyle & Daily Habits</CardTitle>
             <CardDescription>
               Information regarding physical activity, diet, and family health
@@ -1729,12 +1729,12 @@ export function MemberFormsStudiesPage() {
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveHabits(e)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 px-6 pt-2 pb-8">
               {/* Question 1 */}
               <div
                 id="field-group-hypertension_medication"
                 className={cn(
-                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                   fieldErrors.hypertension_medication &&
                     "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
@@ -1781,7 +1781,7 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-daily_physical_activity"
                 className={cn(
-                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                   fieldErrors.daily_physical_activity &&
                     "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
@@ -1829,7 +1829,7 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-fruits_vegetables"
                 className={cn(
-                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                   fieldErrors.fruits_vegetables &&
                     "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
@@ -1874,7 +1874,7 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-previous_high_glucose"
                 className={cn(
-                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                   fieldErrors.previous_high_glucose &&
                     "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
@@ -1922,7 +1922,7 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-smoker"
                 className={cn(
-                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                   fieldErrors.smoker &&
                     "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
@@ -1967,7 +1967,7 @@ export function MemberFormsStudiesPage() {
               <div
                 id="field-group-family_diabetes"
                 className={cn(
-                  "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                  "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                   fieldErrors.family_diabetes &&
                     "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                 )}
@@ -2018,11 +2018,11 @@ export function MemberFormsStudiesPage() {
                 )}
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
+              <Button variant="ghost" className="rounded-lg" asChild>
                 <Link to="/forms">Cancel</Link>
               </Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+              <Button type="submit" className="rounded-lg" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Habits"}
               </Button>
             </CardFooter>
@@ -2031,8 +2031,8 @@ export function MemberFormsStudiesPage() {
       )}
 
       {formType === "mood" && (
-        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
-          <CardHeader>
+        <Card className="rounded-xl border border-border/60 bg-card p-0 gap-0 shadow-xs overflow-hidden">
+          <CardHeader className="px-6 pt-6 pb-4">
             <CardTitle className="text-lg">Mood & Well-being</CardTitle>
             <CardDescription>
               Over the last two weeks, how often have you been bothered by any
@@ -2040,13 +2040,13 @@ export function MemberFormsStudiesPage() {
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveMood(e)}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-6 pt-2 pb-8">
               {PHQ9_QUESTIONS.map(({ field, prompt }, index) => (
                 <div
                   key={field}
                   id={`field-group-${field}`}
                   className={cn(
-                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                     fieldErrors[field] &&
                       "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
@@ -2093,11 +2093,11 @@ export function MemberFormsStudiesPage() {
                 <Phq9CrisisSupportAlert className="mt-4" />
               ) : null}
             </CardContent>
-            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
+              <Button variant="ghost" className="rounded-lg" asChild>
                 <Link to="/forms">Cancel</Link>
               </Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+              <Button type="submit" className="rounded-lg" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Mood Assessment"}
               </Button>
             </CardFooter>
@@ -2106,15 +2106,15 @@ export function MemberFormsStudiesPage() {
       )}
 
       {formType === "metabolic" && (
-        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
-          <CardHeader>
+        <Card className="rounded-xl border border-border/60 bg-card p-0 gap-0 shadow-xs overflow-hidden">
+          <CardHeader className="px-6 pt-6 pb-4">
             <CardTitle className="text-lg">Metabolic Health</CardTitle>
             <CardDescription>
               Enter your latest measurements and treatment information.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveMetabolic(e)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 px-6 pt-2 pb-8">
               <div className="grid gap-6 md:grid-cols-2">
                 {(
                   [
@@ -2135,7 +2135,7 @@ export function MemberFormsStudiesPage() {
                   <div
                     key={field}
                     id={`field-group-${field}`}
-                    className="space-y-2 rounded-xl border border-border/30 bg-background/40 p-4"
+                    className="space-y-2 rounded-xl border border-border/60 bg-muted/15 p-4"
                   >
                     <Label htmlFor={field}>{label}</Label>
                     <Input
@@ -2145,6 +2145,7 @@ export function MemberFormsStudiesPage() {
                       value={data[field]}
                       onChange={(e) => updateField(field, e.target.value)}
                       disabled={isSubmitting || isLoadingData}
+                      className="rounded-lg border-border/60 bg-background transition-all focus:border-primary/50"
                     />
                     {fieldErrors[field] && (
                       <p className="text-xs font-medium text-destructive">
@@ -2157,7 +2158,7 @@ export function MemberFormsStudiesPage() {
               {/* Laboratory Study Date & Obsolescence Control */}
               <div
                 id="field-group-lab_study_date"
-                className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4"
+                className="space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4"
               >
                 <div className="flex items-center justify-between">
                   <Label htmlFor="lab_study_date" className="font-medium">
@@ -2180,6 +2181,7 @@ export function MemberFormsStudiesPage() {
                   }
                   disabled={isSubmitting || isLoadingData}
                   className={cn(
+                    "rounded-lg border-border/60 bg-background transition-all focus:border-primary/50",
                     fieldErrors.lab_study_date && "border-destructive"
                   )}
                 />
@@ -2201,7 +2203,7 @@ export function MemberFormsStudiesPage() {
               {/* Glucose-lowering medication */}
               <div
                 id="field-group-glucose_lowering_medication"
-                className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4"
+                className="space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4"
               >
                 <Label>Are you taking glucose-lowering medication?</Label>
                 <RadioGroup
@@ -2231,7 +2233,7 @@ export function MemberFormsStudiesPage() {
               {/* Statins (Cholesterol Medication) */}
               <div
                 id="field-group-statins"
-                className="space-y-3 rounded-xl border border-border/30 bg-background/40 p-4"
+                className="space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4"
               >
                 <Label>
                   Are you currently taking statins (medication for cholesterol)?
@@ -2258,11 +2260,11 @@ export function MemberFormsStudiesPage() {
                 )}
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
+              <Button variant="ghost" className="rounded-lg" asChild>
                 <Link to="/forms">Cancel</Link>
               </Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+              <Button type="submit" className="rounded-lg" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Metabolic Data"}
               </Button>
             </CardFooter>
@@ -2271,8 +2273,8 @@ export function MemberFormsStudiesPage() {
       )}
 
       {formType === "eoss" && (
-        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
-          <CardHeader>
+        <Card className="rounded-xl border border-border/60 bg-card p-0 gap-0 shadow-xs overflow-hidden">
+          <CardHeader className="px-6 pt-6 pb-4">
             <CardTitle className="text-lg">
               Obesity Impact
             </CardTitle>
@@ -2283,13 +2285,13 @@ export function MemberFormsStudiesPage() {
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveEoss(e)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 px-6 pt-2 pb-8">
               {EOSS_SECTIONS.map((section) => (
                 <div
                   key={section.field}
                   id={`field-group-${section.field}`}
                   className={cn(
-                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                     fieldErrors[section.field] &&
                       "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
@@ -2312,7 +2314,7 @@ export function MemberFormsStudiesPage() {
                       <div
                         key={option.value}
                         className={cn(
-                          "flex items-start gap-3 rounded-lg border border-border/30 bg-background/30 p-3 transition-all hover:bg-background/60 min-w-0",
+                          "flex items-start gap-3 rounded-lg border border-border/60 bg-background/50 p-3 transition-all hover:bg-background/80 min-w-0",
                           data[section.field] === option.value &&
                             "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
                         )}
@@ -2340,11 +2342,11 @@ export function MemberFormsStudiesPage() {
                 </div>
               ))}
             </CardContent>
-            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
+              <Button variant="ghost" className="rounded-lg" asChild>
                 <Link to="/forms">Cancel</Link>
               </Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+              <Button type="submit" className="rounded-lg" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Health Impact"}
               </Button>
             </CardFooter>
@@ -2353,8 +2355,8 @@ export function MemberFormsStudiesPage() {
       )}
 
       {formType === "nordic_nmq" && (
-        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
-          <CardHeader>
+        <Card className="rounded-xl border border-border/60 bg-card p-0 gap-0 shadow-xs overflow-hidden">
+          <CardHeader className="px-6 pt-6 pb-4">
             <CardTitle className="text-lg">
               Musculoskeletal Assessment
             </CardTitle>
@@ -2364,8 +2366,8 @@ export function MemberFormsStudiesPage() {
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveNordicNmq(e)}>
-            <CardContent className="space-y-6">
-              <div className="overflow-x-auto rounded-xl border border-border/30 bg-background/40 p-4">
+            <CardContent className="space-y-6 px-6 pt-2 pb-8">
+              <div className="overflow-x-auto rounded-xl border border-border/60 bg-muted/15 p-4">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-border/40 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
@@ -2510,11 +2512,11 @@ export function MemberFormsStudiesPage() {
                 </table>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
+              <Button variant="ghost" className="rounded-lg" asChild>
                 <Link to="/forms">Cancel</Link>
               </Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+              <Button type="submit" className="rounded-lg" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Ergonomics Assessment"}
               </Button>
             </CardFooter>
@@ -2523,8 +2525,8 @@ export function MemberFormsStudiesPage() {
       )}
 
       {formType === "audit_c" && (
-        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
-          <CardHeader>
+        <Card className="rounded-xl border border-border/60 bg-card p-0 gap-0 shadow-xs overflow-hidden">
+          <CardHeader className="px-6 pt-6 pb-4">
             <CardTitle className="text-lg">Alcohol Habits</CardTitle>
             <CardDescription>
               Standardized 3-question survey evaluating alcohol consumption
@@ -2532,13 +2534,13 @@ export function MemberFormsStudiesPage() {
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSaveAuditC(e)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 px-6 pt-2 pb-8">
               {AUDIT_C_QUESTIONS.map((q) => (
                 <div
                   key={q.field}
                   id={`field-group-${q.field}`}
                   className={cn(
-                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                     fieldErrors[q.field] &&
                       "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
@@ -2554,7 +2556,7 @@ export function MemberFormsStudiesPage() {
                       <div
                         key={opt.value}
                         className={cn(
-                          "flex items-center space-x-2.5 rounded-lg border border-border/30 bg-background/30 p-3 transition-all hover:bg-background/60",
+                          "flex items-center space-x-2.5 rounded-lg border border-border/60 bg-background/50 p-3 transition-all hover:bg-background/80",
                           data[q.field] === opt.value &&
                             "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
                         )}
@@ -2581,11 +2583,11 @@ export function MemberFormsStudiesPage() {
                 </div>
               ))}
             </CardContent>
-            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
+              <Button variant="ghost" className="rounded-lg" asChild>
                 <Link to="/forms">Cancel</Link>
               </Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+              <Button type="submit" className="rounded-lg" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Alcohol Assessment"}
               </Button>
             </CardFooter>
@@ -2594,8 +2596,8 @@ export function MemberFormsStudiesPage() {
       )}
 
       {formType === "pss10" && (
-        <Card className="rounded-2xl border border-border/40 bg-background/50 shadow-md backdrop-blur-xl">
-          <CardHeader>
+        <Card className="rounded-xl border border-border/60 bg-card p-0 gap-0 shadow-xs overflow-hidden">
+          <CardHeader className="px-6 pt-6 pb-4">
             <CardTitle className="text-lg">
               Stress & Burnout
             </CardTitle>
@@ -2605,13 +2607,13 @@ export function MemberFormsStudiesPage() {
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void handleSavePss10(e)}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-6 pt-2 pb-8">
               {PSS10_QUESTIONS.map(({ field, prompt, isReversed }) => (
                 <div
                   key={field}
                   id={`field-group-${field}`}
                   className={cn(
-                    "space-y-3 rounded-xl border border-border/30 bg-background/40 p-4 transition-all",
+                    "space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-all",
                     fieldErrors[field] &&
                       "border-2 border-destructive bg-destructive/10 ring-1 ring-destructive/30"
                   )}
@@ -2634,7 +2636,7 @@ export function MemberFormsStudiesPage() {
                       <div
                         key={opt.value}
                         className={cn(
-                          "flex flex-col items-center justify-center rounded-lg border border-border/30 bg-background/30 p-2 text-center transition-all hover:bg-background/60",
+                          "flex flex-col items-center justify-center rounded-lg border border-border/60 bg-background/50 p-2 text-center transition-all hover:bg-background/80",
                           data[field] === opt.value &&
                             "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
                         )}
@@ -2662,11 +2664,11 @@ export function MemberFormsStudiesPage() {
                 </div>
               ))}
             </CardContent>
-            <CardFooter className="flex justify-between border-t bg-muted/20 px-6 py-4">
-              <Button variant="ghost" asChild>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
+              <Button variant="ghost" className="rounded-lg" asChild>
                 <Link to="/forms">Cancel</Link>
               </Button>
-              <Button type="submit" disabled={isSubmitting || isLoadingData}>
+              <Button type="submit" className="rounded-lg" disabled={isSubmitting || isLoadingData}>
                 {isSubmitting ? "Saving..." : "Save Perceived Stress Scale"}
               </Button>
             </CardFooter>

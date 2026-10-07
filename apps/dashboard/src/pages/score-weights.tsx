@@ -18,6 +18,7 @@ import {
 } from "@workspace/ui/components/tabs"
 import { toast } from "@workspace/ui/components/sonner"
 import { cn } from "@workspace/ui/lib/utils"
+import { PageHeader } from "@workspace/components/components/page-header"
 import {
   Activity,
   AlertCircle,
@@ -548,15 +549,10 @@ export function ScoreWeightsPage() {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
       {/* ── Page Header ── */}
-      <div>
-        <h2 className="text-xl font-bold tracking-tight text-foreground">
-          Score Configuration
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Configure health module weight formulas and risk cutoff thresholds for
-          employee evaluations.
-        </p>
-      </div>
+      <PageHeader
+        title="Score Configuration"
+        description="Configure health module weight formulas and risk cutoff thresholds for employee evaluations."
+      />
 
       {/* ── Tabs Navigation ── */}
       <Tabs

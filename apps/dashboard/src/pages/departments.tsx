@@ -97,20 +97,20 @@ function scoreTone(score: number | null) {
   if (score >= 80) {
     return {
       label: "Healthy",
-      variant: "success-light" as const,
+      variant: "risk-low" as const,
       icon: ShieldCheck,
     }
   }
   if (score >= 60) {
     return {
       label: "Monitor",
-      variant: "warning-light" as const,
+      variant: "risk-moderate" as const,
       icon: AlertCircle,
     }
   }
   return {
     label: "High risk",
-    variant: "destructive" as const,
+    variant: "risk-high" as const,
     icon: AlertTriangle,
   }
 }
@@ -412,7 +412,7 @@ export function DepartmentsPage() {
 
       {/* ── Grid card ── */}
       <div className="w-full">
-        <Card className="flex flex-col rounded-3xl border-border/70 bg-card/80 p-5 shadow-sm">
+        <Card className="flex flex-col rounded-xl border border-border/60 bg-card p-6 shadow-xs">
           {/* Header */}
           <div className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -495,7 +495,7 @@ export function DepartmentsPage() {
                   <div
                     key={dept.id}
                     data-slot="item"
-                    className="group relative flex cursor-pointer flex-col justify-between rounded-xl border border-border/70 bg-card/60 p-3.5 shadow-xs transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/95 hover:shadow-md"
+                    className="group relative flex cursor-pointer flex-col justify-between rounded-xl border border-border/60 bg-card p-4 shadow-xs transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
                     onClick={() => navigate(`/departments/${dept.slug}`)}
                   >
                     {/* Header: Name + slug on left, risk/score badge + 3 dots on right */}
@@ -542,7 +542,7 @@ export function DepartmentsPage() {
                                 <span className="sr-only">Open menu</span>
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-36">
+                            <DropdownMenuContent align="end" className="w-36 rounded-lg">
                               <DropdownMenuItem
                                 onClick={(event) => {
                                   event.stopPropagation()
@@ -678,7 +678,7 @@ export function DepartmentsPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="rounded-xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create department</DialogTitle>
             <DialogDescription>
@@ -732,7 +732,7 @@ export function DepartmentsPage() {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete department</AlertDialogTitle>
             <AlertDialogDescription>
