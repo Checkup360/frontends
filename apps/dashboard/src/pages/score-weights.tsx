@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card"
 import { Label } from "@workspace/ui/components/label"
-import { Progress } from "@workspace/ui/components/progress"
 import { Slider } from "@workspace/ui/components/slider"
 import { Switch } from "@workspace/ui/components/switch"
 import {
@@ -47,6 +46,10 @@ interface ScoreTopic {
   subtitle: string
   description: string
   icon: typeof Activity
+  color: string
+  dotColor: string
+  accentText: string
+  sliderClass: string
 }
 
 const SCORE_TOPICS: ScoreTopic[] = [
@@ -57,6 +60,11 @@ const SCORE_TOPICS: ScoreTopic[] = [
     description:
       "Evaluates metabolic risk indicators, nutritional habits, physical activity, and glycemic predisposition.",
     icon: Activity,
+    color: "bg-teal-600 dark:bg-teal-500",
+    dotColor: "bg-teal-500",
+    accentText: "text-teal-600 dark:text-teal-400",
+    sliderClass:
+      "[&_[data-slot=slider-range]]:bg-teal-600 dark:[&_[data-slot=slider-range]]:bg-teal-500 [&_[data-slot=slider-thumb]]:border-teal-600 dark:[&_[data-slot=slider-thumb]]:border-teal-500",
   },
   {
     id: "sleep_apnea",
@@ -65,6 +73,11 @@ const SCORE_TOPICS: ScoreTopic[] = [
     description:
       "Evaluates sleep patterns, daytime fatigue, respiratory risk indicators, and airway biometric factors.",
     icon: Moon,
+    color: "bg-sky-600 dark:bg-sky-500",
+    dotColor: "bg-sky-500",
+    accentText: "text-sky-600 dark:text-sky-400",
+    sliderClass:
+      "[&_[data-slot=slider-range]]:bg-sky-600 dark:[&_[data-slot=slider-range]]:bg-sky-500 [&_[data-slot=slider-thumb]]:border-sky-600 dark:[&_[data-slot=slider-thumb]]:border-sky-500",
   },
   {
     id: "depression",
@@ -72,6 +85,11 @@ const SCORE_TOPICS: ScoreTopic[] = [
     subtitle: "Emotional well-being & mood",
     description: "Evaluates mood and emotional well-being indicators.",
     icon: HeartPulse,
+    color: "bg-indigo-600 dark:bg-indigo-500",
+    dotColor: "bg-indigo-500",
+    accentText: "text-indigo-600 dark:text-indigo-400",
+    sliderClass:
+      "[&_[data-slot=slider-range]]:bg-indigo-600 dark:[&_[data-slot=slider-range]]:bg-indigo-500 [&_[data-slot=slider-thumb]]:border-indigo-600 dark:[&_[data-slot=slider-thumb]]:border-indigo-500",
   },
   {
     id: "metabolic_syndrome",
@@ -80,6 +98,11 @@ const SCORE_TOPICS: ScoreTopic[] = [
     description:
       "Evaluates metabolic syndrome criteria and cardiometabolic risk.",
     icon: Activity,
+    color: "bg-emerald-600 dark:bg-emerald-500",
+    dotColor: "bg-emerald-500",
+    accentText: "text-emerald-600 dark:text-emerald-400",
+    sliderClass:
+      "[&_[data-slot=slider-range]]:bg-emerald-600 dark:[&_[data-slot=slider-range]]:bg-emerald-500 [&_[data-slot=slider-thumb]]:border-emerald-600 dark:[&_[data-slot=slider-thumb]]:border-emerald-500",
   },
   {
     id: "eoss",
@@ -88,6 +111,11 @@ const SCORE_TOPICS: ScoreTopic[] = [
     description:
       "Evaluates the self-reported impact on health, mood, and daily function.",
     icon: HeartPulse,
+    color: "bg-cyan-600 dark:bg-cyan-500",
+    dotColor: "bg-cyan-500",
+    accentText: "text-cyan-600 dark:text-cyan-400",
+    sliderClass:
+      "[&_[data-slot=slider-range]]:bg-cyan-600 dark:[&_[data-slot=slider-range]]:bg-cyan-500 [&_[data-slot=slider-thumb]]:border-cyan-600 dark:[&_[data-slot=slider-thumb]]:border-cyan-500",
   },
   {
     id: "cardiovascular",
@@ -96,6 +124,11 @@ const SCORE_TOPICS: ScoreTopic[] = [
     description:
       "Evaluates 10-year fatal and non-fatal cardiovascular risk based on clinical guidelines.",
     icon: HeartPulse,
+    color: "bg-blue-600 dark:bg-blue-500",
+    dotColor: "bg-blue-500",
+    accentText: "text-blue-600 dark:text-blue-400",
+    sliderClass:
+      "[&_[data-slot=slider-range]]:bg-blue-600 dark:[&_[data-slot=slider-range]]:bg-blue-500 [&_[data-slot=slider-thumb]]:border-blue-600 dark:[&_[data-slot=slider-thumb]]:border-blue-500",
   },
   {
     id: "nordic_nmq",
@@ -104,6 +137,11 @@ const SCORE_TOPICS: ScoreTopic[] = [
     description:
       "Evaluates trouble and work impairment across 9 anatomical body regions.",
     icon: Activity,
+    color: "bg-teal-700 dark:bg-teal-600",
+    dotColor: "bg-teal-600",
+    accentText: "text-teal-700 dark:text-teal-300",
+    sliderClass:
+      "[&_[data-slot=slider-range]]:bg-teal-700 dark:[&_[data-slot=slider-range]]:bg-teal-600 [&_[data-slot=slider-thumb]]:border-teal-700 dark:[&_[data-slot=slider-thumb]]:border-teal-600",
   },
   {
     id: "audit_c",
@@ -112,6 +150,11 @@ const SCORE_TOPICS: ScoreTopic[] = [
     description:
       "Evaluates alcohol consumption frequency, daily quantity, and binge drinking patterns.",
     icon: HeartPulse,
+    color: "bg-slate-600 dark:bg-slate-500",
+    dotColor: "bg-slate-500",
+    accentText: "text-slate-600 dark:text-slate-400",
+    sliderClass:
+      "[&_[data-slot=slider-range]]:bg-slate-600 dark:[&_[data-slot=slider-range]]:bg-slate-500 [&_[data-slot=slider-thumb]]:border-slate-600 dark:[&_[data-slot=slider-thumb]]:border-slate-500",
   },
   {
     id: "pss10",
@@ -120,6 +163,11 @@ const SCORE_TOPICS: ScoreTopic[] = [
     description:
       "Evaluates perceived stress levels, control over life events, and coping capacity.",
     icon: HeartPulse,
+    color: "bg-violet-600 dark:bg-violet-500",
+    dotColor: "bg-violet-500",
+    accentText: "text-violet-600 dark:text-violet-400",
+    sliderClass:
+      "[&_[data-slot=slider-range]]:bg-violet-600 dark:[&_[data-slot=slider-range]]:bg-violet-500 [&_[data-slot=slider-thumb]]:border-violet-600 dark:[&_[data-slot=slider-thumb]]:border-violet-500",
   },
 ]
 
@@ -200,6 +248,7 @@ export function ScoreWeightsPage() {
   const [filterMode, setFilterMode] = useState<"all" | "active" | "disabled">(
     "all"
   )
+  const [hoveredTopicId, setHoveredTopicId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -583,20 +632,92 @@ export function ScoreWeightsPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3 pt-0">
-              {/* Clean Single Theme Progress Bar */}
+            <CardContent className="space-y-4 pt-0">
+              {/* Harmonious Segmented Progress Bar with Clean Dividers */}
               <div className="space-y-1.5">
-                <Progress
-                  value={Math.min(100, totalWeight)}
-                  className={cn(
-                    "h-2.5 w-full bg-muted",
-                    totalWeight > 100 && "[&>div]:bg-destructive"
+                <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-muted shadow-inner">
+                  {totalWeight === 0 ? (
+                    <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                      No active modules allocated
+                    </div>
+                  ) : (
+                    <div className="flex h-full w-full">
+                      {SCORE_TOPICS.map((topic) => {
+                        const weight = weights[topic.id] || 0
+                        if (weight <= 0) return null
+                        const isHovered = hoveredTopicId === topic.id
+                        return (
+                          <div
+                            key={topic.id}
+                            onMouseEnter={() => setHoveredTopicId(topic.id)}
+                            onMouseLeave={() => setHoveredTopicId(null)}
+                            className={cn(
+                              "h-full border-r-2 border-background transition-all duration-200 cursor-pointer last:border-r-0",
+                              topic.color,
+                              isHovered && "brightness-125 scale-y-110 shadow-xs z-10"
+                            )}
+                            style={{ width: `${weight}%` }}
+                            title={`${topic.name}: ${weight}%`}
+                          />
+                        )
+                      })}
+                    </div>
                   )}
-                />
+                </div>
+              </div>
+
+              {/* Interactive Legend with Harmonious Swatches */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-xs">
+                {SCORE_TOPICS.map((topic) => {
+                  const weight = weights[topic.id] || 0
+                  const isEnabled = weight > 0
+                  const isHovered = hoveredTopicId === topic.id
+
+                  return (
+                    <button
+                      key={topic.id}
+                      type="button"
+                      onMouseEnter={() => isEnabled && setHoveredTopicId(topic.id)}
+                      onMouseLeave={() => isEnabled && setHoveredTopicId(null)}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-md px-1.5 py-0.5 transition-all text-left",
+                        isHovered && "bg-muted shadow-2xs",
+                        !isEnabled && "opacity-50 line-through cursor-default"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "size-2 rounded-full transition-transform",
+                          isEnabled ? topic.dotColor : "bg-muted-foreground/40",
+                          isHovered && "scale-125"
+                        )}
+                        aria-hidden="true"
+                      />
+                      <span
+                        className={cn(
+                          "text-xs font-medium",
+                          isEnabled ? "text-muted-foreground" : "text-muted-foreground/60",
+                          isHovered && "text-foreground font-semibold"
+                        )}
+                      >
+                        {topic.name}:
+                      </span>
+                      <span
+                        className={cn(
+                          "font-semibold tabular-nums text-xs",
+                          isEnabled ? "text-foreground" : "text-muted-foreground/50",
+                          isHovered && "text-primary"
+                        )}
+                      >
+                        {weight}%
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
 
               {/* Module Active Breakdown Summary */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2.5 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <span>
                     <strong>{activeCount}</strong> active{" "}
@@ -698,11 +819,14 @@ export function ScoreWeightsPage() {
               return (
                 <Card
                   key={topic.id}
+                  onMouseEnter={() => isEnabled && setHoveredTopicId(topic.id)}
+                  onMouseLeave={() => isEnabled && setHoveredTopicId(null)}
                   className={cn(
                     "border-border/60 shadow-xs transition-all",
                     isEnabled
                       ? "bg-card hover:border-border"
-                      : "border-dashed border-border/50 bg-muted/20 opacity-80"
+                      : "border-dashed border-border/50 bg-muted/20 opacity-80",
+                    hoveredTopicId === topic.id && isEnabled && "ring-1 ring-primary/40 border-primary/40"
                   )}
                 >
                   <CardContent className="space-y-3 p-4">
@@ -712,8 +836,8 @@ export function ScoreWeightsPage() {
                           className={cn(
                             "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
                             isEnabled
-                              ? "bg-primary/10 text-primary"
-                              : "bg-muted text-muted-foreground"
+                              ? "bg-muted text-foreground"
+                              : "bg-muted/50 text-muted-foreground"
                           )}
                         >
                           <Icon className="size-4" />
@@ -735,7 +859,7 @@ export function ScoreWeightsPage() {
                               className={cn(
                                 "px-1.5 py-0 text-[10px] font-medium",
                                 isEnabled
-                                  ? "border-primary/30 bg-primary/10 text-primary"
+                                  ? "border-border/80 bg-muted/40 text-foreground"
                                   : "border-muted-foreground/30 bg-muted/30 text-muted-foreground"
                               )}
                             >
@@ -750,7 +874,12 @@ export function ScoreWeightsPage() {
 
                       <div className="flex items-center gap-2.5">
                         {isEnabled && (
-                          <span className="text-base font-bold text-foreground tabular-nums">
+                          <span
+                            className={cn(
+                              "text-base font-bold tabular-nums",
+                              topic.accentText
+                            )}
+                          >
                             {value}%
                           </span>
                         )}
@@ -778,7 +907,7 @@ export function ScoreWeightsPage() {
                           onValueChange={(val) =>
                             handleSliderChange(topic.id, val)
                           }
-                          className="py-1"
+                          className={cn("py-1", topic.sliderClass)}
                         />
                         <div className="flex justify-between text-[10px] text-muted-foreground">
                           <span>0%</span>
