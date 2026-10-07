@@ -859,6 +859,13 @@ export interface OrganizationEmployee {
   overall_health_index?: number | null
 }
 
+/** Single employee for admins, with the non-medical onboarding contact data. */
+export interface EmployeeDetail extends OrganizationEmployee {
+  phone_number?: string | null
+  /** ISO date (YYYY-MM-DD). */
+  date_of_birth?: string | null
+}
+
 export interface PaginatedResponse<T> {
   items: T[]
   total: number
@@ -1408,6 +1415,23 @@ export async function listOrganizationEmployees(
     console.error("Error listing organization employees:", error)
     return []
   }
+}
+
+/** Returns null when the employee does not exist or is not visible to the caller. */
+export async function getOrganizationEmployee(
+  organizationId: string,
+  userId: string
+): Promise<EmployeeDetail | null> {
+  const response = await fetchWithAuth(
+    `${resolveApiBaseUrl()}${apiRoutes.organizationEmployee(organizationId, userId)}`,
+    { credentials: "include" }
+  )
+  if (response.status === 403 || response.status === 404) return null
+  if (!response.ok) {
+    throw new Error(`Failed to load employee (${response.status})`)
+  }
+  const employee = (await response.json()) as EmployeeDetail
+  return { ...employee, avatar_url: resolveMediaUrl(employee.avatar_url) }
 }
 
 export async function listOrganizationEmployeesPage(
