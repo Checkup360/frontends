@@ -2,13 +2,13 @@ import { useEffect, useState, useMemo } from "react"
 import { cn } from "@workspace/ui/lib/utils"
 import { useParams, useNavigate } from "react-router-dom"
 import {
-  listOrganizationEmployees,
+  getOrganizationEmployee,
   listEmployeeAssessments,
   getEmployeeAssessmentSubmission,
   listEmployeeAssessmentSubmissions,
   type AssessmentSubmissionDetail,
   type AssessmentSubmissionSummary,
-  type OrganizationEmployee,
+  type EmployeeDetail,
   type AssessmentsResponse,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
@@ -38,6 +38,11 @@ import {
 import { Badge } from "@workspace/ui/components/badge"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@workspace/ui/components/alert"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -66,6 +71,10 @@ import {
   Building2,
   Edit3,
   UserCog,
+  Phone,
+  Cake,
+  UserRoundX,
+  Archive,
 } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { ManageRolesDialog } from "@/components/manage-roles-dialog"
@@ -309,6 +318,41 @@ function formatFullName(
   return prefix
 }
 
+const EMPLOYEE_STATUS_VARIANTS: Record<
+  string,
+  "success-light" | "warning-light" | "info-light" | "secondary"
+> = {
+  up_to_date: "success-light",
+  pending_assessments: "warning-light",
+  onboarding: "info-light",
+  inactive: "secondary",
+}
+
+function formatEmployeeStatus(status: string) {
+  const label = status.replace(/_/g, " ")
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
+function calculateAge(dateOfBirth: Date) {
+  const today = new Date()
+  const age = today.getFullYear() - dateOfBirth.getFullYear()
+  const hadBirthdayThisYear =
+    today.getMonth() > dateOfBirth.getMonth() ||
+    (today.getMonth() === dateOfBirth.getMonth() &&
+      today.getDate() >= dateOfBirth.getDate())
+  return hadBirthdayThisYear ? age : age - 1
+}
+
+function formatDateOfBirth(value: string) {
+  // Parse as a local date: "YYYY-MM-DD" alone would be read as UTC midnight.
+  const [year, month, day] = value.split("-").map(Number)
+  const dateOfBirth = new Date(year, month - 1, day)
+  const formatted = new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+  }).format(dateOfBirth)
+  return `${formatted} (${calculateAge(dateOfBirth)} years)`
+}
+
 function getInitials(fullName: string, email: string) {
   const parts = fullName.split(" ").filter(Boolean)
   if (parts.length >= 2) {
@@ -339,7 +383,7 @@ export function EmployeeDetailPage() {
   const { user } = useCurrentUser()
   const organizationId = user?.membership?.organization_id
 
-  const [employee, setEmployee] = useState<OrganizationEmployee | null>(null)
+  const [employee, setEmployee] = useState<EmployeeDetail | null>(null)
   const [scoreWeights, setScoreWeights] = useState<Record<
     string,
     number
@@ -417,8 +461,7 @@ export function EmployeeDetailPage() {
     setLoading(true)
     setError("")
     try {
-      const employees = await listOrganizationEmployees(organizationId, undefined, { membership: "all" })
-      const found = employees.find((e) => e.id === id)
+      const found = await getOrganizationEmployee(organizationId, id)
       if (found) {
         setEmployee(found)
       } else {
@@ -438,8 +481,7 @@ export function EmployeeDetailPage() {
       setLoading(true)
       setError("")
       try {
-      const employees = await listOrganizationEmployees(organizationId, undefined, { membership: "all" })
-        const found = employees.find((e) => e.id === id)
+        const found = await getOrganizationEmployee(organizationId, id)
         if (active) {
           if (found) {
             setEmployee(found)
@@ -764,6 +806,18 @@ export function EmployeeDetailPage() {
   const fullName = formatFullName(employee)
   const initials = getInitials(fullName, employee.email)
 
+  // Only members are asked for clinical data. Non-members keep the clinical
+  // sections only when they still hold assessments from a past membership;
+  // role history is not stored, so that is the only way to infer one.
+  const isMember = employee.roles.includes("member")
+  const isDeactivated = employee.roles.length === 0
+  const isLoadingClinicalData = loadingAssessments || submissionsLoading
+  const hasClinicalData = sessions.length > 0 || submissions.length > 0
+  const showClinicalSections = isMember || hasClinicalData
+  const showNonMemberNotice =
+    !isMember && !isLoadingClinicalData && !hasClinicalData
+  const showHistoricalDataBanner = !isMember && hasClinicalData
+
   const handleRefresh = () => {
     void loadEmployee()
   }
@@ -814,11 +868,12 @@ export function EmployeeDetailPage() {
                 </h1>
                 {employee.status && (
                   <Badge
-                    variant={employee.status === "active" ? "success-light" : "warning-light"}
+                    variant={
+                      EMPLOYEE_STATUS_VARIANTS[employee.status] ?? "info-light"
+                    }
                     size="sm"
-                    className="capitalize"
                   >
-                    {employee.status}
+                    {formatEmployeeStatus(employee.status)}
                   </Badge>
                 )}
                 {normalizeRoles(employee.roles || []).map((r) => {
@@ -855,6 +910,22 @@ export function EmployeeDetailPage() {
                     </span>
                   )}
                 </span>
+                {employee.phone_number && (
+                  <span className="flex items-center gap-1.5">
+                    <Phone className="size-4 text-muted-foreground/70" />
+                    <span className="font-medium text-foreground">
+                      {employee.phone_number}
+                    </span>
+                  </span>
+                )}
+                {employee.date_of_birth && (
+                  <span className="flex items-center gap-1.5">
+                    <Cake className="size-4 text-muted-foreground/70" />
+                    <span className="font-medium text-foreground">
+                      {formatDateOfBirth(employee.date_of_birth)}
+                    </span>
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -902,8 +973,43 @@ export function EmployeeDetailPage() {
         </div>
       </Card>
 
+      {showNonMemberNotice && (
+        <Empty className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/15 p-8 text-center shadow-xs">
+          <EmptyHeader className="flex flex-col items-center justify-center text-center">
+            <EmptyMedia className="mb-4 rounded-full bg-foreground/10 p-4 text-foreground">
+              <UserRoundX className="size-8" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base font-semibold text-foreground">
+              {isDeactivated
+                ? "This user has been deactivated"
+                : "No health data requested"}
+            </EmptyTitle>
+            <EmptyDescription className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+              {isDeactivated
+                ? "This user no longer has any role in the organization, so no health data or clinical assessments are requested from them."
+                : "This user doesn't have the member role, so no health data or clinical assessments are requested from them."}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      )}
+
+      {showHistoricalDataBanner && (
+        <Alert>
+          <Archive />
+          <AlertTitle>
+            {isDeactivated
+              ? "This user has been deactivated"
+              : "This user is no longer a member"}
+          </AlertTitle>
+          <AlertDescription>
+            The data below is historical: no new health assessments are
+            requested from them.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Main Health Section */}
-      {employee.status === "onboarding" ? (
+      {!showClinicalSections ? null : employee.status === "onboarding" ? (
         <Empty className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/15 p-8 text-center shadow-xs">
           <EmptyHeader className="flex flex-col items-center justify-center text-center">
             <EmptyMedia className="mb-4 rounded-full bg-foreground/10 p-4 text-foreground">
@@ -949,7 +1055,7 @@ export function EmployeeDetailPage() {
       )}
 
       {/* Clinical Study Assessments - Only shown if not in onboarding */}
-      {employee.status !== "onboarding" && (
+      {showClinicalSections && employee.status !== "onboarding" && (
         <Card className="rounded-xl border border-border/60 bg-card shadow-xs">
           <CardHeader className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -1200,15 +1306,17 @@ export function EmployeeDetailPage() {
         onSelectSession={setSelectedSessionId}
         userDescription={`Select an assessment date and time for ${fullName} (${employee.email}) to inspect past evaluation results.`}
       />
-      <AssessmentSubmissionHistory
-        submissions={submissions}
-        loading={submissionsLoading}
-        hasNext={submissionHasNext}
-        onLoadMore={loadMoreSubmissions}
-        onSelect={selectSubmission}
-        selected={selectedSubmission}
-        detailLoading={submissionDetailLoading}
-      />
+      {showClinicalSections && (
+        <AssessmentSubmissionHistory
+          submissions={submissions}
+          loading={submissionsLoading}
+          hasNext={submissionHasNext}
+          onLoadMore={loadMoreSubmissions}
+          onSelect={selectSubmission}
+          selected={selectedSubmission}
+          detailLoading={submissionDetailLoading}
+        />
+      )}
 
       {/* Dialog for assigning department */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
