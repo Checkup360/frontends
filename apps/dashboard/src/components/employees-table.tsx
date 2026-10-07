@@ -4,6 +4,7 @@ import {
   removeEmployee,
   type OrganizationEmployee,
   type OrganizationEmployeeRole,
+  type MembershipFilter,
   type DepartmentResponse,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
@@ -11,7 +12,6 @@ import { Card } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { Input } from "@workspace/ui/components/input"
 import { Button } from "@workspace/ui/components/button"
-import { Label } from "@workspace/ui/components/label"
 import {
   Dialog,
   DialogContent,
@@ -50,7 +50,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { X, MoreVertical, UserCog, UserMinus } from "lucide-react"
 
-import { Switch } from "@workspace/ui/components/switch"
 
 const statusClasses: Record<string, string> = {
   up_to_date:
@@ -61,6 +60,17 @@ const statusClasses: Record<string, string> = {
     "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 capitalize",
   inactive:
     "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border-zinc-500/20 capitalize",
+}
+
+const membershipBadge = {
+  active: {
+    label: "Active",
+    className: statusClasses.up_to_date,
+  },
+  inactive: {
+    label: "Inactive",
+    className: statusClasses.inactive,
+  },
 }
 
 const MEMBER_ROLES: OrganizationEmployeeRole[] = ["member"]
@@ -90,8 +100,8 @@ interface EmployeesTableProps {
   title?: string
   description?: string
   showScoreColumn?: boolean
-  showInactiveToggle?: boolean
-  defaultShowInactive?: boolean
+  /** Shows the Active / Inactive status column and filter (inactive = no roles). */
+  showMembership?: boolean
   showStatusColumn?: boolean
   showAssessmentColumn?: boolean
 }
@@ -106,8 +116,7 @@ export function EmployeesTable({
   title = "Members",
   description = "Individual assessment data and health status level",
   showScoreColumn = true,
-  showInactiveToggle = true,
-  defaultShowInactive = false,
+  showMembership = false,
   showStatusColumn = true,
   showAssessmentColumn = true,
 }: EmployeesTableProps) {
@@ -141,7 +150,8 @@ export function EmployeesTable({
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [selectedRole, setSelectedRole] = useState("all")
   const [selectedScore, setSelectedScore] = useState("all")
-  const [showInactive, setShowInactive] = useState(defaultShowInactive)
+  const [selectedMembership, setSelectedMembership] =
+    useState<MembershipFilter>("all")
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
@@ -192,8 +202,11 @@ export function EmployeesTable({
           search?: string
           page: number
           pageSize: number
-          includeInactive?: boolean
-        } = { page: currentPage, pageSize, includeInactive: showInactive }
+          membership?: MembershipFilter
+        } = { page: currentPage, pageSize }
+        // Member lists only show active members; the organization view can
+        // filter by membership (inactive = deactivated users without roles)
+        apiFilters.membership = showMembership ? selectedMembership : "active"
         if (selectedDept !== "all") apiFilters.departmentId = selectedDept
         if (selectedStatus !== "all") apiFilters.status = selectedStatus
         if (selectedScore !== "all") apiFilters.score = selectedScore
@@ -240,7 +253,8 @@ export function EmployeesTable({
     search,
     currentPage,
     pageSize,
-    showInactive,
+    showMembership,
+    selectedMembership,
     refreshKey,
   ])
 
@@ -251,7 +265,8 @@ export function EmployeesTable({
     selectedDept !== "all" ||
     selectedStatus !== "all" ||
     selectedRole !== "all" ||
-    selectedScore !== "all"
+    selectedScore !== "all" ||
+    selectedMembership !== "all"
 
   const handleResetFilters = () => {
     setSearch("")
@@ -259,7 +274,7 @@ export function EmployeesTable({
     setSelectedStatus("all")
     setSelectedRole("all")
     setSelectedScore("all")
-    setShowInactive(defaultShowInactive)
+    setSelectedMembership("all")
     setCurrentPage(1)
   }
 
@@ -299,6 +314,7 @@ export function EmployeesTable({
   const renderSkeletonColumns = [
     { skeletonClassName: "h-4 w-48" },
     ...(showRolesColumn ? [{ skeletonClassName: "h-4 w-12" }] : []),
+    ...(showMembership ? [{ skeletonClassName: "h-5 w-16 rounded-full" }] : []),
     { skeletonClassName: "h-4 w-28" },
     ...(showScoreColumn ? [{ skeletonClassName: "h-4 w-10" }] : []),
     { skeletonClassName: "h-5 w-20 rounded-full" },
@@ -311,6 +327,7 @@ export function EmployeesTable({
   const totalColSpan =
     4 +
     (showRolesColumn ? 1 : 0) +
+    (showMembership ? 1 : 0) +
     (showScoreColumn ? 1 : 0) +
     (showRolesColumn && allowRoleManagement ? 1 : 0)
 
@@ -365,6 +382,30 @@ export function EmployeesTable({
             </div>
           )}
 
+          {showMembership && (
+            <div className="w-[160px]">
+              <Select
+                value={selectedMembership}
+                onValueChange={(val) => {
+                  setSelectedMembership(val as MembershipFilter)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger
+                  className="h-9 bg-background"
+                  aria-label="Filter by membership"
+                >
+                  <SelectValue placeholder="All Users" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="w-[180px]">
             <Select
               value={selectedDept}
@@ -404,7 +445,6 @@ export function EmployeesTable({
                   <SelectItem value="up_to_date">Up to date</SelectItem>
                   <SelectItem value="pending_assessments">Pending assessments</SelectItem>
                   <SelectItem value="onboarding">Onboarding</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -442,21 +482,6 @@ export function EmployeesTable({
             </Button>
           )}
 
-          {showInactiveToggle && (
-            <div className={`flex items-center gap-2 ${hasActiveFilters ? '' : 'ml-auto'}`}>
-              <Switch
-                id="show-inactive"
-                checked={showInactive}
-                onCheckedChange={(checked) => {
-                  setShowInactive(checked)
-                  setCurrentPage(1)
-                }}
-              />
-              <Label htmlFor="show-inactive" className="text-sm text-muted-foreground cursor-pointer">
-                Show inactive
-              </Label>
-            </div>
-          )}
         </div>
       </div>
 
@@ -471,6 +496,11 @@ export function EmployeesTable({
               {showRolesColumn && (
                 <TableHead className="font-semibold text-foreground">
                   Roles
+                </TableHead>
+              )}
+              {showMembership && (
+                <TableHead className="font-semibold text-foreground">
+                  Status
                 </TableHead>
               )}
               <TableHead className="font-semibold text-foreground">
@@ -531,7 +561,12 @@ export function EmployeesTable({
                     className="group cursor-pointer transition-colors hover:bg-muted/40"
                     onClick={() => navigate(`/employees/${w.id}`)}
                   >
-                    <TableCell className="font-medium text-foreground transition-colors group-hover:text-primary">
+                    <TableCell
+                      // Inactive users are faded; the Status badge carries the meaning
+                      className={`font-medium transition-colors group-hover:text-primary ${
+                        hasRoles ? "text-foreground" : "text-muted-foreground"
+                      }`}
+                    >
                       <span className="block font-medium">
                         {formatEmployeeName(w)}
                       </span>
@@ -557,11 +592,22 @@ export function EmployeesTable({
                               )
                             })
                           ) : (
-                            <Badge variant="outline" size="xs">
-                              No roles
-                            </Badge>
+                            <span className="text-muted-foreground">—</span>
                           )}
                         </div>
+                      </TableCell>
+                    )}
+                    {showMembership && (
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            membershipBadge[hasRoles ? "active" : "inactive"]
+                              .className
+                          }
+                        >
+                          {membershipBadge[hasRoles ? "active" : "inactive"].label}
+                        </Badge>
                       </TableCell>
                     )}
                     <TableCell className="text-muted-foreground">

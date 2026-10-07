@@ -84,7 +84,7 @@ export function OrganizationPage() {
         const memRes = await listOrganizationEmployees(
           organizationId,
           undefined,
-          { includeInactive: true }
+          { membership: "all" }
         )
         if (!active) return
         setAllMembers(memRes)
@@ -239,8 +239,7 @@ export function OrganizationPage() {
         showRolesColumn={true}
         showScoreColumn={false}
         allowRoleManagement={true}
-        showInactiveToggle={false}
-        defaultShowInactive={true}
+        showMembership={true}
         showStatusColumn={false}
         showAssessmentColumn={false}
         onDataChanged={() => {

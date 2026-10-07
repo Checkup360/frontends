@@ -1363,13 +1363,16 @@ export async function updateOrganizationScoreWeights(
 }
 
 
+export type MembershipFilter = "active" | "inactive" | "all"
+
 export async function listOrganizationEmployees(
   organizationId: string,
   roles?: OrganizationEmployeeRole[],
   filters?: {
     departmentId?: string
     status?: string
-    includeInactive?: boolean
+    /** active: has roles, inactive: deactivated (no roles), all: both (default). */
+    membership?: MembershipFilter
   }
 ): Promise<OrganizationEmployee[]> {
   try {
@@ -1381,8 +1384,8 @@ export async function listOrganizationEmployees(
     if (filters?.status) {
       queryParams.append("status", filters.status)
     }
-    if (filters?.includeInactive) {
-      queryParams.append("include_inactive", "true")
+    if (filters?.membership) {
+      queryParams.append("membership", filters.membership)
     }
     const queryString = queryParams.toString()
     const url = `${resolveApiBaseUrl()}${apiRoutes.organizationEmployees(organizationId)}${queryString ? `?${queryString}` : ""}`
@@ -1417,7 +1420,8 @@ export async function listOrganizationEmployeesPage(
     search?: string
     page: number
     pageSize: number
-    includeInactive?: boolean
+    /** active: has roles, inactive: deactivated (no roles), all: both (default). */
+    membership?: MembershipFilter
   }
 ): Promise<PaginatedResponse<OrganizationEmployee>> {
   try {
@@ -1435,8 +1439,8 @@ export async function listOrganizationEmployeesPage(
     if (filters.search?.trim()) {
       queryParams.append("search", filters.search.trim())
     }
-    if (filters.includeInactive) {
-      queryParams.append("include_inactive", "true")
+    if (filters.membership) {
+      queryParams.append("membership", filters.membership)
     }
     queryParams.append("page", filters.page.toString())
     queryParams.append("page_size", filters.pageSize.toString())
