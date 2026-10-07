@@ -38,6 +38,11 @@ import {
 import { Badge } from "@workspace/ui/components/badge"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@workspace/ui/components/alert"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -68,6 +73,8 @@ import {
   UserCog,
   Phone,
   Cake,
+  UserRoundX,
+  Archive,
 } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { ManageRolesDialog } from "@/components/manage-roles-dialog"
@@ -799,6 +806,18 @@ export function EmployeeDetailPage() {
   const fullName = formatFullName(employee)
   const initials = getInitials(fullName, employee.email)
 
+  // Only members are asked for clinical data. Non-members keep the clinical
+  // sections only when they still hold assessments from a past membership;
+  // role history is not stored, so that is the only way to infer one.
+  const isMember = employee.roles.includes("member")
+  const isDeactivated = employee.roles.length === 0
+  const isLoadingClinicalData = loadingAssessments || submissionsLoading
+  const hasClinicalData = sessions.length > 0 || submissions.length > 0
+  const showClinicalSections = isMember || hasClinicalData
+  const showNonMemberNotice =
+    !isMember && !isLoadingClinicalData && !hasClinicalData
+  const showHistoricalDataBanner = !isMember && hasClinicalData
+
   const handleRefresh = () => {
     void loadEmployee()
   }
@@ -954,8 +973,43 @@ export function EmployeeDetailPage() {
         </div>
       </Card>
 
+      {showNonMemberNotice && (
+        <Empty className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/15 p-8 text-center shadow-xs">
+          <EmptyHeader className="flex flex-col items-center justify-center text-center">
+            <EmptyMedia className="mb-4 rounded-full bg-foreground/10 p-4 text-foreground">
+              <UserRoundX className="size-8" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base font-semibold text-foreground">
+              {isDeactivated
+                ? "This user has been deactivated"
+                : "No health data requested"}
+            </EmptyTitle>
+            <EmptyDescription className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+              {isDeactivated
+                ? "This user no longer has any role in the organization, so no health data or clinical assessments are requested from them."
+                : "This user doesn't have the member role, so no health data or clinical assessments are requested from them."}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      )}
+
+      {showHistoricalDataBanner && (
+        <Alert>
+          <Archive />
+          <AlertTitle>
+            {isDeactivated
+              ? "This user has been deactivated"
+              : "This user is no longer a member"}
+          </AlertTitle>
+          <AlertDescription>
+            The data below is historical: no new health assessments are
+            requested from them.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Main Health Section */}
-      {employee.status === "onboarding" ? (
+      {!showClinicalSections ? null : employee.status === "onboarding" ? (
         <Empty className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/15 p-8 text-center shadow-xs">
           <EmptyHeader className="flex flex-col items-center justify-center text-center">
             <EmptyMedia className="mb-4 rounded-full bg-foreground/10 p-4 text-foreground">
@@ -1001,7 +1055,7 @@ export function EmployeeDetailPage() {
       )}
 
       {/* Clinical Study Assessments - Only shown if not in onboarding */}
-      {employee.status !== "onboarding" && (
+      {showClinicalSections && employee.status !== "onboarding" && (
         <Card className="rounded-xl border border-border/60 bg-card shadow-xs">
           <CardHeader className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -1252,15 +1306,17 @@ export function EmployeeDetailPage() {
         onSelectSession={setSelectedSessionId}
         userDescription={`Select an assessment date and time for ${fullName} (${employee.email}) to inspect past evaluation results.`}
       />
-      <AssessmentSubmissionHistory
-        submissions={submissions}
-        loading={submissionsLoading}
-        hasNext={submissionHasNext}
-        onLoadMore={loadMoreSubmissions}
-        onSelect={selectSubmission}
-        selected={selectedSubmission}
-        detailLoading={submissionDetailLoading}
-      />
+      {showClinicalSections && (
+        <AssessmentSubmissionHistory
+          submissions={submissions}
+          loading={submissionsLoading}
+          hasNext={submissionHasNext}
+          onLoadMore={loadMoreSubmissions}
+          onSelect={selectSubmission}
+          selected={selectedSubmission}
+          detailLoading={submissionDetailLoading}
+        />
+      )}
 
       {/* Dialog for assigning department */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
