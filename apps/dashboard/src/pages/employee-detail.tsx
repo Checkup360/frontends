@@ -311,6 +311,21 @@ function formatFullName(
   return prefix
 }
 
+const EMPLOYEE_STATUS_VARIANTS: Record<
+  string,
+  "success-light" | "warning-light" | "info-light" | "secondary"
+> = {
+  up_to_date: "success-light",
+  pending_assessments: "warning-light",
+  onboarding: "info-light",
+  inactive: "secondary",
+}
+
+function formatEmployeeStatus(status: string) {
+  const label = status.replace(/_/g, " ")
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
 function calculateAge(dateOfBirth: Date) {
   const today = new Date()
   const age = today.getFullYear() - dateOfBirth.getFullYear()
@@ -834,11 +849,12 @@ export function EmployeeDetailPage() {
                 </h1>
                 {employee.status && (
                   <Badge
-                    variant={employee.status === "active" ? "success-light" : "warning-light"}
+                    variant={
+                      EMPLOYEE_STATUS_VARIANTS[employee.status] ?? "info-light"
+                    }
                     size="sm"
-                    className="capitalize"
                   >
-                    {employee.status}
+                    {formatEmployeeStatus(employee.status)}
                   </Badge>
                 )}
                 {normalizeRoles(employee.roles || []).map((r) => {
