@@ -24,6 +24,7 @@ interface HealthScoreCardProps {
   loading?: boolean
   className?: string
   compact?: boolean
+  riskThresholds?: { low?: number; moderate?: number } | null
 }
 
 const toneClasses = {
@@ -64,14 +65,25 @@ export function HealthScoreCard({
   loading = false,
   className,
   compact = false,
+  riskThresholds,
 }: HealthScoreCardProps) {
   const hasScore = typeof score === "number"
   const safeScore = hasScore ? Math.min(Math.max(score, 0), 100) : 0
   const gaugeDegrees = Math.round((safeScore / 100) * 180)
 
+  const lowCutoff = riskThresholds?.low ?? 80
+  const moderateCutoff = riskThresholds?.moderate ?? 50
+
   // Determine dynamic risk color for gauge and score
   const computedRisk =
-    riskLevel ?? (hasScore ? (safeScore >= 80 ? "low" : safeScore >= 60 ? "moderate" : "high") : null)
+    riskLevel ??
+    (hasScore
+      ? safeScore >= lowCutoff
+        ? "low"
+        : safeScore >= moderateCutoff
+        ? "moderate"
+        : "high"
+      : null)
 
   const gaugeColor = !hasScore
     ? "var(--muted)"

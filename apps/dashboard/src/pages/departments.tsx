@@ -4,6 +4,7 @@ import {
   createDepartment,
   deleteDepartment,
   getOrganizationDepartmentAnalytics,
+  getOrganizationScoreWeights,
   listDepartments,
   listDepartmentsPage,
   listOrganizationEmployees,
@@ -86,7 +87,10 @@ interface DepartmentHealthInsight {
   risk: number | null
 }
 
-function scoreTone(score: number | null) {
+function scoreTone(
+  score: number | null,
+  thresholds?: { low?: number; moderate?: number } | null
+) {
   if (score === null) {
     return {
       label: "Pending",
@@ -94,14 +98,16 @@ function scoreTone(score: number | null) {
       icon: null,
     }
   }
-  if (score >= 80) {
+  const low = thresholds?.low ?? 80
+  const moderate = thresholds?.moderate ?? 50
+  if (score >= low) {
     return {
       label: "Healthy",
       variant: "risk-low" as const,
       icon: ShieldCheck,
     }
   }
-  if (score >= 60) {
+  if (score >= moderate) {
     return {
       label: "Monitor",
       variant: "risk-moderate" as const,
@@ -131,6 +137,13 @@ export function DepartmentsPage() {
   const [deptAnalytics, setDeptAnalytics] = useState<
     DepartmentAnalyticsSummary[]
   >([])
+  const [riskThresholds, setRiskThresholds] = useState<{
+    low: number
+    moderate: number
+  }>({
+    low: 80,
+    moderate: 50,
+  })
   const [loadingMeta, setLoadingMeta] = useState(true)
 
   // ── Paginated grid ──
@@ -167,15 +180,28 @@ export function DepartmentsPage() {
         return
       }
       setLoadingMeta(true)
-      const [depts, emps, analytics] = await Promise.all([
+      const [depts, emps, analytics, weights] = await Promise.all([
         listDepartments(organizationId),
         listOrganizationEmployees(organizationId, ["member"]),
         getOrganizationDepartmentAnalytics(organizationId),
+        getOrganizationScoreWeights(organizationId).catch(() => null),
       ])
       if (!active) return
       setAllDepartments(depts)
       setEmployees(emps)
       setDeptAnalytics(analytics || [])
+      if (weights?.risk_thresholds) {
+        setRiskThresholds({
+          low:
+            typeof weights.risk_thresholds.low === "number"
+              ? weights.risk_thresholds.low
+              : 80,
+          moderate:
+            typeof weights.risk_thresholds.moderate === "number"
+              ? weights.risk_thresholds.moderate
+              : 50,
+        })
+      }
       setLoadingMeta(false)
     }
     void load()
@@ -267,14 +293,27 @@ export function DepartmentsPage() {
   // ── Refresh helpers ──
   const refreshAll = async () => {
     if (!organizationId) return
-    const [depts, emps, analytics] = await Promise.all([
+    const [depts, emps, analytics, weights] = await Promise.all([
       listDepartments(organizationId),
       listOrganizationEmployees(organizationId, ["member"]),
       getOrganizationDepartmentAnalytics(organizationId),
+      getOrganizationScoreWeights(organizationId).catch(() => null),
     ])
     setAllDepartments(depts)
     setEmployees(emps)
     setDeptAnalytics(analytics || [])
+    if (weights?.risk_thresholds) {
+      setRiskThresholds({
+        low:
+          typeof weights.risk_thresholds.low === "number"
+            ? weights.risk_thresholds.low
+            : 80,
+        moderate:
+          typeof weights.risk_thresholds.moderate === "number"
+            ? weights.risk_thresholds.moderate
+            : 50,
+      })
+    }
   }
 
   const refreshGrid = async () => {
@@ -486,7 +525,10 @@ export function DepartmentsPage() {
             <div className="grid grid-cols-1 content-start items-start gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {departments.map((dept) => {
                 const insight = insights.find((d) => d.id === dept.id)
-                const tone = scoreTone(insight ? insight.score : null)
+                const tone = scoreTone(
+                  insight ? insight.score : null,
+                  riskThresholds
+                )
                 const deptMembers = employees.filter(
                   (employee) => employee.department?.id === dept.id
                 )

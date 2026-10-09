@@ -14,9 +14,13 @@ interface AreaScoresProps {
   loading?: boolean
   /** Max items to display. Defaults to 5. */
   limit?: number
+  riskThresholds?: { low?: number; moderate?: number } | null
 }
 
-const toneFor = (score: number | null) => {
+const toneFor = (
+  score: number | null,
+  thresholds?: { low?: number; moderate?: number } | null
+) => {
   if (score === null) {
     return {
       label: "Pending",
@@ -24,14 +28,16 @@ const toneFor = (score: number | null) => {
       barClass: "bg-muted",
     }
   }
-  if (score >= 80)
+  const low = thresholds?.low ?? 80
+  const moderate = thresholds?.moderate ?? 50
+  if (score >= low)
     return {
       label: "Healthy",
       className:
         "bg-[color:var(--success)]/15 text-[color:var(--success)] border-transparent",
       barClass: "bg-[color:var(--success)]",
     }
-  if (score >= 60)
+  if (score >= moderate)
     return {
       label: "Monitor",
       className:
@@ -49,6 +55,7 @@ export function AreaScores({
   areas,
   loading = false,
   limit = 5,
+  riskThresholds,
 }: AreaScoresProps) {
   // Sort: evaluated departments with lowest score first, then pending, break ties by most workers
   const sorted = [...areas]
@@ -98,7 +105,7 @@ export function AreaScores({
           </p>
         ) : (
           sorted.map((a) => {
-            const tone = toneFor(a.score)
+            const tone = toneFor(a.score, riskThresholds)
             return (
               <div key={a.name}>
                 <div className="flex items-center justify-between text-sm">

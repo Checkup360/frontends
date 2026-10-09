@@ -4,6 +4,7 @@ import { RiskTrend } from "@/components/risk-trend"
 import {
   getOrganizationDepartmentAnalytics,
   getOrganizationRiskTrends,
+  getOrganizationScoreWeights,
   listDepartments,
   listOrganizationEmployees,
   type DepartmentAnalyticsSummary,
@@ -30,6 +31,13 @@ export function DashboardPage() {
   const [deptAnalytics, setDeptAnalytics] = useState<
     DepartmentAnalyticsSummary[]
   >([])
+  const [riskThresholds, setRiskThresholds] = useState<{
+    low: number
+    moderate: number
+  }>({
+    low: 80,
+    moderate: 50,
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -46,17 +54,31 @@ export function DashboardPage() {
       }
 
       setLoading(true)
-      const [depts, emps, trendData, deptAnalyticsData] = await Promise.all([
-        listDepartments(organizationId),
-        listOrganizationEmployees(organizationId, ["member"]),
-        getOrganizationRiskTrends(organizationId, 12),
-        getOrganizationDepartmentAnalytics(organizationId),
-      ])
+      const [depts, emps, trendData, deptAnalyticsData, weightsData] =
+        await Promise.all([
+          listDepartments(organizationId),
+          listOrganizationEmployees(organizationId, ["member"]),
+          getOrganizationRiskTrends(organizationId, 12),
+          getOrganizationDepartmentAnalytics(organizationId),
+          getOrganizationScoreWeights(organizationId).catch(() => null),
+        ])
       if (!active) return
       setDepartments(depts)
       setEmployees(emps)
       setTrends(trendData || [])
       setDeptAnalytics(deptAnalyticsData || [])
+      if (weightsData?.risk_thresholds) {
+        setRiskThresholds({
+          low:
+            typeof weightsData.risk_thresholds.low === "number"
+              ? weightsData.risk_thresholds.low
+              : 80,
+          moderate:
+            typeof weightsData.risk_thresholds.moderate === "number"
+              ? weightsData.risk_thresholds.moderate
+              : 50,
+        })
+      }
       setLoading(false)
     }
 
@@ -110,7 +132,7 @@ export function DashboardPage() {
         : "—"
 
   const highRiskCount = areas
-    .filter((a) => a.score !== null && a.score < 60)
+    .filter((a) => a.score !== null && a.score < riskThresholds.moderate)
     .length.toString()
 
   return (
@@ -152,7 +174,7 @@ export function DashboardPage() {
           <OverviewStatCard
             label="High risk departments"
             value={highRiskCount}
-            hint="Score below 60%"
+            hint={`Score below ${riskThresholds.moderate}%`}
             icon={AlertTriangle}
             iconVariant="icon"
             tone="warning"
@@ -165,7 +187,11 @@ export function DashboardPage() {
           <RiskTrend trends={trends} loading={loading} />
         </div>
         <div className="h-full">
-          <AreaScores areas={areas} loading={loading} />
+          <AreaScores
+            areas={areas}
+            loading={loading}
+            riskThresholds={riskThresholds}
+          />
         </div>
       </div>
 

@@ -1,4 +1,8 @@
-import { listOrganizationEmployees, listDepartments } from "@workspace/api"
+import {
+  listOrganizationEmployees,
+  listDepartments,
+  getOrganizationScoreWeights,
+} from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { AlertTriangle, Building2, ShieldCheck, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
@@ -15,6 +19,7 @@ interface EmployeesSummary {
   evaluatedPct: number
   departments: number
   atRisk: number
+  moderateThreshold: number
 }
 
 export function EmployeesPage() {
@@ -33,16 +38,23 @@ export function EmployeesPage() {
           evaluatedPct: 0,
           departments: 0,
           atRisk: 0,
+          moderateThreshold: 50,
         })
         return
       }
 
       try {
-        const [members, departments] = await Promise.all([
+        const [members, departments, weights] = await Promise.all([
           listOrganizationEmployees(organizationId, ["member"]),
           listDepartments(organizationId),
+          getOrganizationScoreWeights(organizationId).catch(() => null),
         ])
         if (!active) return
+
+        const moderateThreshold =
+          typeof weights?.risk_thresholds?.moderate === "number"
+            ? weights.risk_thresholds.moderate
+            : 50
 
         const total = members.length
         const evaluated = members.filter(
@@ -51,7 +63,9 @@ export function EmployeesPage() {
         const evaluatedPct =
           total > 0 ? Math.round((evaluated / total) * 100) : 0
         const atRisk = members.filter(
-          (m) => typeof m.overall_health_index === "number" && m.overall_health_index < 60
+          (m) =>
+            typeof m.overall_health_index === "number" &&
+            m.overall_health_index < moderateThreshold
         ).length
 
         setSummary({
@@ -60,6 +74,7 @@ export function EmployeesPage() {
           evaluatedPct,
           departments: departments.length,
           atRisk,
+          moderateThreshold,
         })
       } catch (error) {
         console.error("Failed to load employees summary:", error)
@@ -70,6 +85,7 @@ export function EmployeesPage() {
           evaluatedPct: 0,
           departments: 0,
           atRisk: 0,
+          moderateThreshold: 50,
         })
       }
     }
@@ -112,7 +128,7 @@ export function EmployeesPage() {
       {
         label: "At risk",
         value: summary.atRisk.toString(),
-        hint: "Health index below 60%",
+        hint: `Health index below ${summary.moderateThreshold}%`,
         icon: AlertTriangle,
         tone: summary.atRisk > 0 ? ("warning" as const) : ("primary" as const),
       },
