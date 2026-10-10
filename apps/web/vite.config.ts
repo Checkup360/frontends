@@ -15,7 +15,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg"],
       workbox: {
-        navigateFallbackDenylist: [/^\/config\.js/],
+        navigateFallbackDenylist: [/^\/config\.js/, /^\/api\//, /^\/auth\//],
         globIgnores: ["**/config.js*"],
       },
       manifest: {
