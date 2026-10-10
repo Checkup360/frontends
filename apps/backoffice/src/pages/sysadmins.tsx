@@ -328,16 +328,16 @@ export function SysadminsPage() {
                       <TableCell>
                         {admin.is_active ? (
                           <Badge
-                            variant="outline"
-                            className="gap-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            variant="success-light"
+                            className="gap-1"
                           >
                             <UserCheck className="size-3" />
                             Active
                           </Badge>
                         ) : (
                           <Badge
-                            variant="outline"
-                            className="gap-1 border-destructive/20 bg-destructive/10 text-destructive"
+                            variant="destructive"
+                            className="gap-1"
                           >
                             <ShieldAlert className="size-3" />
                             Inactive

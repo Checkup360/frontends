@@ -246,14 +246,14 @@ export function OrganizationDetailPage() {
           value={summary.total_admins.toString()}
           icon={ShieldCheck}
           iconVariant="icon"
-          tone="success"
+          tone="primary"
         />
         <OverviewStatCard
           label="Content managers"
           value={summary.total_content_managers.toString()}
           icon={FileText}
           iconVariant="icon"
-          tone="warning"
+          tone="primary"
         />
       </section>
 

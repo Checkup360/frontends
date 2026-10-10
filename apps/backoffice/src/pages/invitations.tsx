@@ -90,13 +90,20 @@ function formatRemainingTime(
   }
 }
 
-// Badge classes for time remaining
-const remainingBadgeClass: Record<"expired" | "active" | "used", string> = {
-  expired:
-    "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 capitalize font-medium",
-  used: "border-border bg-muted/80 text-muted-foreground capitalize font-medium",
-  active:
-    "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 capitalize font-medium",
+// Badge variants and styles for time remaining
+const remainingBadgeProps: Record<
+  "expired" | "active" | "used",
+  {
+    variant: "destructive" | "secondary" | "success-light"
+    className?: string
+  }
+> = {
+  expired: { variant: "destructive", className: "capitalize font-medium" },
+  used: {
+    variant: "secondary",
+    className: "capitalize font-medium text-muted-foreground",
+  },
+  active: { variant: "success-light", className: "capitalize font-medium" },
 }
 
 interface CombinedInvite {
@@ -528,7 +535,7 @@ export function InvitationsPage() {
               hint="active system administrator invitations"
               icon={Shield}
               iconVariant="icon"
-              tone="warning"
+              tone="primary"
             />
             <OverviewStatCard
               label="Active Organization"
@@ -807,15 +814,15 @@ export function InvitationsPage() {
                       <TableCell>
                         {invite.isSysadmin ? (
                           <Badge
-                            variant="outline"
-                            className="border-rose-500/20 bg-rose-500/10 font-semibold text-rose-600 dark:text-rose-400"
+                            variant="secondary"
+                            className="border-purple-500/25 bg-purple-500/10 font-semibold text-purple-700 dark:text-purple-300 dark:border-purple-500/30"
                           >
                             Sysadmin
                           </Badge>
                         ) : (
                           <Badge
-                            variant="outline"
-                            className="border-blue-500/20 bg-blue-500/10 font-semibold text-blue-600 dark:text-blue-400"
+                            variant="info-light"
+                            className="font-semibold"
                           >
                             Organization
                           </Badge>
@@ -858,8 +865,8 @@ export function InvitationsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant="outline"
-                          className={remainingBadgeClass[rem.status]}
+                          variant={remainingBadgeProps[rem.status].variant}
+                          className={remainingBadgeProps[rem.status].className}
                         >
                           {rem.text}
                         </Badge>

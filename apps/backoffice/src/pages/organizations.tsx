@@ -52,11 +52,9 @@ interface Organization extends OrganizationResponse {
   collaborators: number
 }
 
-const statusClass: Record<OrganizationStatus, string> = {
-  Active:
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 capitalize",
-  Pending:
-    "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 capitalize",
+const statusVariant: Record<OrganizationStatus, "success-light" | "warning-light"> = {
+  Active: "success-light",
+  Pending: "warning-light",
 }
 
 const organizationTableSkeletonColumns = [
@@ -349,8 +347,8 @@ export function OrganizationsPage() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant="outline"
-                        className={statusClass[org.status]}
+                        variant={statusVariant[org.status]}
+                        className="capitalize"
                       >
                         {org.status}
                       </Badge>

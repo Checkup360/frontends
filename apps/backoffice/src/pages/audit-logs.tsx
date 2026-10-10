@@ -127,21 +127,21 @@ export function AuditLogsPage() {
     switch (action) {
       case "CONSENT_ACCEPTED":
         return (
-          <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 gap-1 font-medium">
+          <Badge variant="success-light" className="gap-1 font-medium">
             <CheckCircle2 className="size-3" />
             Consent Accepted
           </Badge>
         )
       case "CONSENT_REVOKED":
         return (
-          <Badge variant="outline" className="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 font-medium">
+          <Badge variant="warning-light" className="gap-1 font-medium">
             <AlertTriangle className="size-3" />
             Consent Revoked
           </Badge>
         )
       case "DATA_EXPORTED":
         return (
-          <Badge variant="outline" className="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 gap-1 font-medium">
+          <Badge variant="info-light" className="gap-1 font-medium">
             <Download className="size-3" />
             Data Exported
           </Badge>
