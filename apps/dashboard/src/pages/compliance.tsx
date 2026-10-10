@@ -155,21 +155,21 @@ export function CompliancePage() {
     switch (action) {
       case "CONSENT_ACCEPTED":
         return (
-          <Badge variant="outline" className="gap-1 border-emerald-500/20 bg-emerald-500/10 font-medium text-emerald-600 dark:text-emerald-400">
+          <Badge variant="success-light" className="gap-1 font-medium">
             <CheckCircle2 className="size-3" />
             Consent Accepted
           </Badge>
         )
       case "CONSENT_REVOKED":
         return (
-          <Badge variant="outline" className="gap-1 border-amber-500/20 bg-amber-500/10 font-medium text-amber-600 dark:text-amber-400">
+          <Badge variant="warning-light" className="gap-1 font-medium">
             <AlertTriangle className="size-3" />
             Consent Revoked
           </Badge>
         )
       case "DATA_EXPORTED":
         return (
-          <Badge variant="outline" className="gap-1 border-blue-500/20 bg-blue-500/10 font-medium text-blue-600 dark:text-blue-400">
+          <Badge variant="info-light" className="gap-1 font-medium">
             <Download className="size-3" />
             Data Exported
           </Badge>

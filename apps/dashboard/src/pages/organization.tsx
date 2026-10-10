@@ -207,7 +207,7 @@ export function OrganizationPage() {
             <OverviewStatCard
               icon={ShieldCheck}
               iconVariant="icon"
-              tone="success"
+              tone="primary"
               label="Admins & Superadmins"
               value={(roleCounts.admins + roleCounts.superadmins).toString()}
               hint={`${roleCounts.superadmins} superadmin${roleCounts.superadmins === 1 ? "" : "s"}, ${roleCounts.admins} admin${roleCounts.admins === 1 ? "" : "s"}`}
@@ -215,7 +215,7 @@ export function OrganizationPage() {
             <OverviewStatCard
               icon={FileText}
               iconVariant="icon"
-              tone="warning"
+              tone="primary"
               label="Content Managers"
               value={roleCounts.contentManagers.toString()}
               hint="CMS article editors"

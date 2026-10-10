@@ -67,7 +67,8 @@ export function RiskTrend({ trends, loading }: RiskTrendProps) {
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="oklch(0.92 0.015 210)"
+                stroke="var(--border)"
+                strokeOpacity={0.55}
                 vertical={false}
               />
               <XAxis

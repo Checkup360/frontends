@@ -549,12 +549,12 @@ export function InvitePeoplePage() {
                     inv.uses,
                     inv.max_uses
                   )
-                  const statusClass =
+                  const statusVariant =
                     rem.status === "active"
-                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold"
+                      ? "success-light"
                       : rem.status === "expired"
-                        ? "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold"
-                        : "border-muted-foreground/20 bg-muted text-muted-foreground font-semibold"
+                        ? "destructive"
+                        : "secondary"
 
                   return (
                     <TableRow
@@ -593,7 +593,7 @@ export function InvitePeoplePage() {
                         {inv.uses} / {inv.max_uses}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={statusClass}>
+                        <Badge variant={statusVariant}>
                           {rem.text}
                         </Badge>
                       </TableCell>

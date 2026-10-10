@@ -608,13 +608,12 @@ export function ScoreWeightsPage() {
                     {totalWeight}%
                   </span>
                   <Badge
-                    variant="outline"
-                    className={
+                    variant={
                       totalWeight === 100
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-xs font-semibold text-emerald-600 dark:text-emerald-400"
+                        ? "success-light"
                         : totalWeight === 0
-                          ? "border-muted-foreground/30 bg-muted/40 text-xs font-semibold text-muted-foreground"
-                          : "border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-600 dark:text-amber-400"
+                          ? "secondary"
+                          : "warning-light"
                     }
                   >
                     {totalWeight === 100
@@ -991,11 +990,8 @@ export function ScoreWeightsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge
-                    variant="outline"
-                    className={
-                      isStandardThresholds
-                        ? "border-primary/30 bg-primary/10 text-xs font-semibold text-primary"
-                        : "border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-600 dark:text-amber-400"
+                    variant={
+                      isStandardThresholds ? "secondary" : "warning-light"
                     }
                   >
                     {isStandardThresholds
@@ -1144,10 +1140,7 @@ export function ScoreWeightsPage() {
                       <span className="size-2 rounded-full bg-rose-500" />
                       Needs Attention
                     </span>
-                    <Badge
-                      variant="outline"
-                      className="border-rose-500/30 bg-rose-500/10 text-[11px] font-medium text-rose-600 dark:text-rose-400"
-                    >
+                    <Badge variant="risk-high" size="sm">
                       &lt; {riskThresholds.moderate} pts
                     </Badge>
                   </div>
@@ -1163,10 +1156,7 @@ export function ScoreWeightsPage() {
                       <span className="size-2 rounded-full bg-amber-400" />
                       Moderate Risk
                     </span>
-                    <Badge
-                      variant="outline"
-                      className="border-amber-500/30 bg-amber-500/10 text-[11px] font-medium text-amber-600 dark:text-amber-400"
-                    >
+                    <Badge variant="risk-moderate" size="sm">
                       {riskThresholds.moderate} – {riskThresholds.low - 1} pts
                     </Badge>
                   </div>
@@ -1182,10 +1172,7 @@ export function ScoreWeightsPage() {
                       <span className="size-2 rounded-full bg-emerald-500" />
                       Low Risk (Optimal)
                     </span>
-                    <Badge
-                      variant="outline"
-                      className="border-emerald-500/30 bg-emerald-500/10 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"
-                    >
+                    <Badge variant="risk-low" size="sm">
                       {riskThresholds.low} – 100 pts
                     </Badge>
                   </div>

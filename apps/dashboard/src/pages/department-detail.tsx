@@ -126,6 +126,11 @@ const PALETTE = [
   "oklch(0.58 0.20 10)", // Rose
 ]
 
+const DEFAULT_RISK_THRESHOLDS = {
+  low: 80,
+  moderate: 50,
+} as const
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function DepartmentDetailSkeleton() {
@@ -387,8 +392,8 @@ function AssignMemberDialog({
                           </Badge>
                         ) : emp.department ? (
                           <Badge
-                            variant="outline"
-                            className="border-amber-500/30 bg-amber-500/10 text-[10px] font-medium text-amber-600 dark:text-amber-400"
+                            variant="warning-light"
+                            size="xs"
                           >
                             {emp.department.name}
                           </Badge>
@@ -508,6 +513,10 @@ export function DepartmentDetailPage() {
   const [scoreWeights, setScoreWeights] = useState<Record<string, number> | null>(
     null
   )
+  const [riskThresholds, setRiskThresholds] = useState<{
+    low: number
+    moderate: number
+  }>(DEFAULT_RISK_THRESHOLDS)
   const [loadingDept, setLoadingDept] = useState(true)
   const [loadingTrends, setLoadingTrends] = useState(true)
   const [error, setError] = useState("")
@@ -543,6 +552,18 @@ export function DepartmentDetailPage() {
         if (!active) return
         if (weights?.score_weights) {
           setScoreWeights(weights.score_weights)
+        }
+        if (weights?.risk_thresholds) {
+          setRiskThresholds({
+            low:
+              typeof weights.risk_thresholds.low === "number"
+                ? weights.risk_thresholds.low
+                : DEFAULT_RISK_THRESHOLDS.low,
+            moderate:
+              typeof weights.risk_thresholds.moderate === "number"
+                ? weights.risk_thresholds.moderate
+                : DEFAULT_RISK_THRESHOLDS.moderate,
+          })
         }
         const found = depts.find((d) => d.slug === slug)
         if (found) {
@@ -766,7 +787,7 @@ export function DepartmentDetailPage() {
           tone={
             healthScore === null
               ? "primary"
-              : healthScore >= 80
+              : healthScore >= riskThresholds.low
                 ? "success"
                 : "warning"
           }
