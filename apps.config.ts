@@ -36,6 +36,10 @@ export const apiProxyConfig = {
       "X-Forwarded-Prefix": "/api",
     },
   },
+  "/media": {
+    target: `http://localhost:${API_DEV_PORT}`,
+    changeOrigin: true,
+  },
 }
 
 export const publicDevDefaults = {

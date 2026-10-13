@@ -373,11 +373,17 @@ export async function uploadMemberAvatar(file: Blob | File): Promise<
   | { success?: never; error: AvatarUploadError }
 > {
   try {
+    const defaultName =
+      file.type === "image/webp"
+        ? "avatar.webp"
+        : file.type === "image/jpeg"
+          ? "avatar.jpg"
+          : "avatar.png"
     const formData = new FormData()
     formData.append(
       "file",
       file,
-      file instanceof File ? file.name : "avatar.png"
+      file instanceof File ? file.name : defaultName
     )
 
     const response = await fetchWithAuth(
@@ -1187,11 +1193,17 @@ export async function uploadOrganizationLogo(
   | { success?: never; error: OrganizationError }
 > {
   try {
+    const defaultName =
+      file.type === "image/webp"
+        ? "logo.webp"
+        : file.type === "image/jpeg"
+          ? "logo.jpg"
+          : "logo.png"
     const formData = new FormData()
     formData.append(
       "file",
       file,
-      file instanceof File ? file.name : "logo.png"
+      file instanceof File ? file.name : defaultName
     )
 
     const response = await fetchWithAuth(
