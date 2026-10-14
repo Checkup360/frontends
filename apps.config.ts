@@ -30,7 +30,7 @@ const CMS_DEV_PORT = 3000
 export const apiProxyConfig = {
   "/api": {
     target: `http://localhost:${API_DEV_PORT}`,
-    changeOrigin: true,
+    changeOrigin: false,
     rewrite: (path: string) => path.replace(/^\/api/, ""),
     headers: {
       "X-Forwarded-Prefix": "/api",
