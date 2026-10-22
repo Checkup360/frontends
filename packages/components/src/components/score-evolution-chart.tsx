@@ -92,17 +92,22 @@ export function ScoreEvolutionChart({
     }))
   }, [series])
 
-  // Active series toggle state
+  // Only the first series (the general one) is active by default
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
-    () => new Set(series.map((s) => s.key))
+    () => new Set(series.slice(0, 1).map((s) => s.key))
   )
 
-  // Sync selected keys when series list changes
+  // Drop selections for series that disappeared; fall back to the first one
   useEffect(() => {
     setSelectedKeys((prev) => {
-      const next = new Set(prev)
-      enrichedSeries.forEach((s) => next.add(s.key))
-      return next
+      const availableKeys = new Set(enrichedSeries.map((s) => s.key))
+      const next = new Set([...prev].filter((key) => availableKeys.has(key)))
+      if (next.size === 0 && enrichedSeries.length > 0) {
+        next.add(enrichedSeries[0]!.key)
+      }
+      return next.size === prev.size && [...next].every((key) => prev.has(key))
+        ? prev
+        : next
     })
   }, [enrichedSeries])
 
