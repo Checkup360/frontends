@@ -74,6 +74,8 @@ import {
   TrendingUp,
 } from "lucide-react"
 import { DepartmentTrendsChart } from "@workspace/components/components/department-trends-chart"
+import { DepartmentDistributionChart } from "@workspace/components/components/department-distribution-chart"
+import { CHART_PALETTE } from "@workspace/components/components/score-evolution-chart"
 import { useIsMobile } from "@workspace/ui/hooks/use-mobile"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -83,6 +85,7 @@ interface DepartmentHealthInsight {
   name: string
   slug: string
   total: number
+  members: number
   score: number | null
   risk: number | null
 }
@@ -182,7 +185,7 @@ export function DepartmentsPage() {
       setLoadingMeta(true)
       const [depts, emps, analytics, weights] = await Promise.all([
         listDepartments(organizationId),
-        listOrganizationEmployees(organizationId, ["member"]),
+        listOrganizationEmployees(organizationId, undefined),
         getOrganizationDepartmentAnalytics(organizationId),
         getOrganizationScoreWeights(organizationId).catch(() => null),
       ])
@@ -252,9 +255,12 @@ export function DepartmentsPage() {
       const summary = deptAnalytics.find(
         (a) => a.department_id === department.id
       )
-      const members = employees.filter(
+      const assigned = employees.filter(
         (employee) => employee.department?.id === department.id
       )
+      const memberCount = assigned.filter((employee) =>
+        employee.roles.includes("member")
+      ).length
       const score =
         typeof summary?.average_score === "number"
           ? Math.round(summary.average_score)
@@ -263,7 +269,8 @@ export function DepartmentsPage() {
         id: department.id,
         name: department.name,
         slug: department.slug,
-        total: summary?.total_workers ?? members.length,
+        total: assigned.length,
+        members: memberCount,
         score,
         risk: score !== null ? 100 - score : null,
       }
@@ -290,12 +297,50 @@ export function DepartmentsPage() {
     )
   }, [insights])
 
+  const departmentDistribution = useMemo(() => {
+    const colorById = new Map(
+      allDepartments.map((department, index) => [
+        department.id,
+        CHART_PALETTE[index % CHART_PALETTE.length],
+      ])
+    )
+    const items = insights
+      .map((department) => ({
+        name: department.name,
+        value: department.total,
+        members: department.members,
+        color: colorById.get(department.id),
+      }))
+      .filter((item) => item.value > 0)
+      .sort((a, b) => b.value - a.value)
+
+    const assignedIds = new Set(allDepartments.map((d) => d.id))
+    const unassignedEmployees = employees.filter(
+      (employee) =>
+        !employee.department?.id ||
+        !assignedIds.has(employee.department.id)
+    )
+
+    if (unassignedEmployees.length > 0) {
+      items.push({
+        name: "Unassigned",
+        value: unassignedEmployees.length,
+        members: unassignedEmployees.filter((employee) =>
+          employee.roles.includes("member")
+        ).length,
+        color: "oklch(0.7 0.015 220)",
+      })
+    }
+
+    return items
+  }, [insights, allDepartments, employees])
+
   // ── Refresh helpers ──
   const refreshAll = async () => {
     if (!organizationId) return
     const [depts, emps, analytics, weights] = await Promise.all([
       listDepartments(organizationId),
-      listOrganizationEmployees(organizationId, ["member"]),
+      listOrganizationEmployees(organizationId, undefined),
       getOrganizationDepartmentAnalytics(organizationId),
       getOrganizationScoreWeights(organizationId).catch(() => null),
     ])
@@ -450,8 +495,8 @@ export function DepartmentsPage() {
       </section>
 
       {/* ── Grid card ── */}
-      <div className="w-full">
-        <Card className="flex flex-col rounded-xl border border-border/60 bg-card p-6 shadow-xs">
+      <div className="grid w-full items-stretch gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <Card className="flex h-full flex-col rounded-xl border border-border/60 bg-card p-6 shadow-xs">
           {/* Header */}
           <div className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -492,9 +537,9 @@ export function DepartmentsPage() {
 
           {/* Grid content */}
           {loadingGrid ? (
-            <div className="grid grid-cols-1 content-start items-start gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 content-start items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full rounded-xl" />
+                <Skeleton key={i} className="h-28 w-full rounded-xl" />
               ))}
             </div>
           ) : error ? (
@@ -522,36 +567,36 @@ export function DepartmentsPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 content-start items-start gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 content-start items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {departments.map((dept) => {
                 const insight = insights.find((d) => d.id === dept.id)
                 const tone = scoreTone(
                   insight ? insight.score : null,
                   riskThresholds
                 )
-                const deptMembers = employees.filter(
+                const deptAssigned = employees.filter(
                   (employee) => employee.department?.id === dept.id
                 )
+                const deptMemberCount = deptAssigned.filter((employee) =>
+                  employee.roles.includes("member")
+                ).length
 
                 return (
                   <div
                     key={dept.id}
                     data-slot="item"
-                    className="group relative flex cursor-pointer flex-col justify-between rounded-xl border border-border/60 bg-card p-4 shadow-xs transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
+                    className="group relative flex cursor-pointer flex-col justify-between rounded-xl border border-border/60 bg-card p-5 shadow-xs transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
                     onClick={() => navigate(`/departments/${dept.slug}`)}
                   >
-                    {/* Header: Name + slug on left, risk/score badge + 3 dots on right */}
+                    {/* Header: Name on left, risk/score badge + 3 dots on right */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <h4
                           data-slot="item-title"
-                          className="line-clamp-1 text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary"
+                          className="line-clamp-1 text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary"
                         >
                           {dept.name}
                         </h4>
-                        <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">
-                          /{dept.slug}
-                        </p>
                       </div>
 
                       <div className="flex shrink-0 items-center gap-1.5">
@@ -615,7 +660,7 @@ export function DepartmentsPage() {
                     <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5">
                       <div className="flex min-w-0 items-center gap-2">
                         <AvatarGroup>
-                          {deptMembers.slice(0, 3).map((member) => {
+                          {deptAssigned.slice(0, 3).map((member) => {
                             const initials = getInitials(member)
                             return (
                               <Avatar
@@ -636,18 +681,18 @@ export function DepartmentsPage() {
                               </Avatar>
                             )
                           })}
-                          {deptMembers.length > 3 && (
+                          {deptAssigned.length > 3 && (
                             <AvatarGroupCount className="size-6 text-[9px]">
-                              +{deptMembers.length - 3}
+                              +{deptAssigned.length - 3}
                             </AvatarGroupCount>
                           )}
                         </AvatarGroup>
                         <span className="truncate text-xs font-medium text-muted-foreground">
-                          {deptMembers.length === 0
+                          {deptAssigned.length === 0
                             ? "No members"
-                            : `${deptMembers.length} ${
-                                deptMembers.length === 1 ? "member" : "members"
-                              }`}
+                            : `${deptMemberCount} ${
+                                deptMemberCount === 1 ? "member" : "members"
+                              } · ${deptAssigned.length} total`}
                         </span>
                       </div>
 
@@ -699,6 +744,11 @@ export function DepartmentsPage() {
             </div>
           )}
         </Card>
+
+        <DepartmentDistributionChart
+          data={departmentDistribution}
+          loading={loadingMeta}
+        />
       </div>
 
       {/* ── Trends chart ── */}

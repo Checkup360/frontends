@@ -16,6 +16,7 @@ import {
   type DepartmentResponse,
   type RiskTrendPoint,
 } from "@workspace/api"
+import { CHART_PALETTE } from "./score-evolution-chart"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -23,19 +24,6 @@ export interface DepartmentTrendsChartProps {
   organizationId?: string
   departments: DepartmentResponse[]
 }
-
-// ─── Colour palette ───────────────────────────────────────────────────────────
-
-const PALETTE = [
-  "oklch(0.65 0.18 250)",
-  "oklch(0.62 0.20 145)",
-  "oklch(0.68 0.20 55)",
-  "oklch(0.60 0.22 320)",
-  "oklch(0.60 0.20 30)",
-  "oklch(0.55 0.18 280)",
-  "oklch(0.62 0.18 195)",
-  "oklch(0.58 0.20 10)",
-]
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -109,7 +97,7 @@ export function DepartmentTrendsChart({
             ? Math.round(latest.average_score)
             : null,
         points: pts,
-        color: PALETTE[idx % PALETTE.length] as string,
+        color: CHART_PALETTE[idx % CHART_PALETTE.length] as string,
       }
     })
   }, [departments, trendsMap])

@@ -11,6 +11,7 @@ import {
   type DepartmentAnalyticsSummary,
   type DepartmentResponse,
   type OrganizationEmployee,
+  type OrganizationEmployeeRole,
   type RiskTrendPoint,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
@@ -269,10 +270,10 @@ function AssignMemberDialog({
         <DialogHeader className="shrink-0 space-y-1">
           <DialogTitle className="flex items-center gap-2 text-lg font-bold">
             <UserPlus className="size-5 text-primary" />
-            Assign Member to {department.name}
+            Assign user to {department.name}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Search by name, surname, or email to assign or switch a member to{" "}
+            Search by name, surname, or email to assign or switch a user to{" "}
             <strong className="text-foreground">{department.name}</strong>.
           </DialogDescription>
         </DialogHeader>
@@ -288,7 +289,7 @@ function AssignMemberDialog({
           {/* Search Input */}
           <div className="shrink-0 space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">
-              Search member
+              Search user
             </Label>
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -343,8 +344,8 @@ function AssignMemberDialog({
               ) : employees.length === 0 ? (
                 <div className="flex h-full min-h-[140px] items-center justify-center p-4 text-center text-xs text-muted-foreground">
                   {searchQuery
-                    ? "No members match your search query."
-                    : "No members found."}
+                    ? "No users match your search query."
+                    : "No users found."}
                 </div>
               ) : (
                 employees.map((emp) => {
@@ -529,6 +530,7 @@ export function DepartmentDetailPage() {
   const [totalItems, setTotalItems] = useState(0)
   const [loadingTable, setLoadingTable] = useState(true)
   const [search, setSearch] = useState("")
+  const [selectedRole, setSelectedRole] = useState("all")
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [selectedScore, setSelectedScore] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
@@ -608,9 +610,13 @@ export function DepartmentDetailPage() {
     async function load() {
       if (!organizationId || !department) return
       setLoadingTable(true)
+      const roles =
+        selectedRole === "all"
+          ? undefined
+          : [selectedRole as OrganizationEmployeeRole]
       const data = await listOrganizationEmployeesPage(
         organizationId,
-        ["member"],
+        roles,
         {
           departmentId: department.id,
           status: selectedStatus !== "all" ? selectedStatus : undefined,
@@ -632,6 +638,7 @@ export function DepartmentDetailPage() {
   }, [
     organizationId,
     department,
+    selectedRole,
     selectedStatus,
     selectedScore,
     search,
@@ -642,10 +649,6 @@ export function DepartmentDetailPage() {
 
   // ── Derived stats from real analytics ──
   const totalMembers = totalItems
-  const activeCount = employees.filter(
-    (e) => e.status?.toLowerCase() === "active"
-  ).length
-
   const healthScore =
     typeof deptAnalytics?.average_score === "number"
       ? Math.round(deptAnalytics.average_score)
@@ -712,7 +715,10 @@ export function DepartmentDetailPage() {
 
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const hasFilters =
-    search !== "" || selectedStatus !== "all" || selectedScore !== "all"
+    search !== "" ||
+    selectedRole !== "all" ||
+    selectedStatus !== "all" ||
+    selectedScore !== "all"
 
   // ── States ──
   if (loadingDept) return <DepartmentDetailSkeleton />
@@ -782,9 +788,9 @@ export function DepartmentDetailPage() {
           icon={Users}
           iconVariant="icon"
           tone="primary"
-          label="Total members"
+          label="Total assigned"
           value={loadingTable ? "..." : totalMembers.toString()}
-          hint={loadingTable ? undefined : `${activeCount} active`}
+          hint="Across all roles"
         />
         <OverviewStatCard
           icon={ShieldCheck}
@@ -814,8 +820,8 @@ export function DepartmentDetailPage() {
           value={loadingDept ? "..." : highRiskWorkers.toString()}
           hint={
             highRiskWorkers === 1
-              ? "1 member at risk"
-              : `${highRiskWorkers} members at risk`
+              ? "1 person at risk"
+              : `${highRiskWorkers} people at risk`
           }
         />
       </section>
@@ -829,7 +835,7 @@ export function DepartmentDetailPage() {
         showPercentages={true}
         loading={loadingTrends}
         emptyTitle="No evaluation trends yet"
-        emptyMessage={`Historical scores for each clinical study will appear here as members of ${department.name} complete health assessments.`}
+        emptyMessage={`Historical scores for each clinical study will appear here as people assigned to ${department.name} complete health assessments.`}
         height={280}
       />
 
@@ -838,10 +844,10 @@ export function DepartmentDetailPage() {
         <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-lg font-semibold tracking-tight text-foreground">
-              Members
+              Assigned people
             </h3>
             <p className="text-sm text-muted-foreground">
-              All members assigned to {department.name}
+              Everyone assigned to {department.name}, across all roles
             </p>
           </div>
           <Button
@@ -851,7 +857,7 @@ export function DepartmentDetailPage() {
             className="mt-2 cursor-pointer gap-1.5 self-start text-xs sm:mt-0 sm:self-auto"
           >
             <UserPlus className="size-3.5" />
-            Assign member
+            Assign user
           </Button>
         </div>
 
@@ -878,6 +884,32 @@ export function DepartmentDetailPage() {
                 <X className="size-4" />
               </button>
             )}
+          </div>
+
+          <div className="w-[150px]">
+            <Select
+              value={selectedRole}
+              onValueChange={(val) => {
+                setSelectedRole(val)
+                setCurrentPage(1)
+              }}
+            >
+              <SelectTrigger
+                className="h-9 bg-background"
+                aria-label="Filter by role"
+              >
+                <SelectValue placeholder="All roles" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All roles</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="superadmin">Superadmin</SelectItem>
+                <SelectItem value="content_manager">
+                  Content Manager
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="w-[150px]">
@@ -925,6 +957,7 @@ export function DepartmentDetailPage() {
               size="sm"
               onClick={() => {
                 setSearch("")
+                setSelectedRole("all")
                 setSelectedStatus("all")
                 setSelectedScore("all")
                 setCurrentPage(1)
@@ -974,8 +1007,8 @@ export function DepartmentDetailPage() {
                     className="py-12 text-center text-muted-foreground"
                   >
                     {hasFilters
-                      ? "No members match the current filters."
-                      : "No members assigned to this department yet."}
+                      ? "No one matches the current filters."
+                      : "No one is assigned to this department yet."}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -1075,7 +1108,7 @@ export function DepartmentDetailPage() {
             setPageSize(newSize)
             setCurrentPage(1)
           }}
-          itemLabel="members"
+          itemLabel="assigned"
           loading={loadingTable}
           className="border-t border-border/40 pt-4"
         />
