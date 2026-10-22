@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
-import { Label } from "@workspace/ui/components/label"
 import { Slider } from "@workspace/ui/components/slider"
 import { Switch } from "@workspace/ui/components/switch"
 import {
@@ -30,7 +29,6 @@ import {
   Save,
   ShieldCheck,
   SlidersHorizontal,
-  Sparkles,
   Undo2,
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
@@ -603,27 +601,21 @@ export function ScoreWeightsPage() {
                     Combined distribution across enabled health modules (must equal exactly 100%)
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-end gap-1 self-end sm:self-auto">
                   <span className="text-2xl font-bold text-foreground tabular-nums">
                     {totalWeight}%
                   </span>
-                  <Badge
-                    variant={
-                      totalWeight === 100
-                        ? "success-light"
-                        : totalWeight === 0
-                          ? "secondary"
-                          : "warning-light"
-                    }
-                  >
-                    {totalWeight === 100
-                      ? "100% Allocated (Balanced)"
-                      : totalWeight === 0
+                  {totalWeight !== 100 && (
+                    <Badge
+                      variant={totalWeight === 0 ? "secondary" : "warning-light"}
+                    >
+                      {totalWeight === 0
                         ? "All Modules Disabled"
                         : totalWeight < 100
                           ? `${100 - totalWeight}% Remaining`
                           : `${totalWeight - 100}% Excess`}
-                  </Badge>
+                    </Badge>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -723,12 +715,6 @@ export function ScoreWeightsPage() {
                     <strong>{disabledCount}</strong> disabled
                   </span>
                 </div>
-                {totalWeight === 100 && (
-                  <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="size-3.5" />
-                    Formula distribution ready
-                  </span>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -757,7 +743,6 @@ export function ScoreWeightsPage() {
                   disabled={loading || saving}
                   className="gap-1.5 font-medium whitespace-nowrap hover:bg-muted"
                 >
-                  <Sparkles className="size-3.5 text-primary" />
                   Enable all
                 </Button>
               )}
@@ -869,12 +854,7 @@ export function ScoreWeightsPage() {
 
                       <div className="flex items-center gap-2.5">
                         {isEnabled && (
-                          <span
-                            className={cn(
-                              "text-base font-bold tabular-nums",
-                              topic.accentText
-                            )}
-                          >
+                          <span className="text-base font-bold tabular-nums text-foreground">
                             {value}%
                           </span>
                         )}
@@ -1014,32 +994,33 @@ export function ScoreWeightsPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-5 pt-0">
-              {/* Dynamic Segmented Color Bar Visualizer with Clean Dividers */}
+              {/* Segmented Color Bar with Draggable Cutoff Handles */}
               <div className="space-y-2">
-                <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted shadow-inner">
-                  <div
-                    className="h-full bg-rose-500/80 border-r-2 border-background transition-all duration-200"
-                    style={{ width: `${riskThresholds.moderate}%` }}
-                    title={`Needs attention: 0 - ${riskThresholds.moderate - 1}`}
-                  />
-                  <div
-                    className="h-full bg-amber-400/85 border-r-2 border-background transition-all duration-200"
-                    style={{
-                      width: `${Math.max(
-                        0,
-                        riskThresholds.low - riskThresholds.moderate
-                      )}%`,
-                    }}
-                    title={`Moderate risk: ${riskThresholds.moderate} - ${riskThresholds.low - 1}`}
-                  />
-                  <div
-                    className="h-full bg-emerald-500/80 transition-all duration-200"
-                    style={{
-                      width: `${Math.max(0, 100 - riskThresholds.low)}%`,
-                    }}
-                    title={`Low risk: ${riskThresholds.low} - 100`}
-                  />
-                </div>
+                <Slider
+                  value={[riskThresholds.moderate, riskThresholds.low]}
+                  min={0}
+                  max={100}
+                  step={1}
+                  minStepsBetweenThumbs={1}
+                  aria-label="Risk cutoff thresholds"
+                  onValueChange={(val) => {
+                    const [rawModerate, rawLow] = val
+                    const moderate = Math.max(
+                      1,
+                      Math.min(98, rawModerate ?? riskThresholds.moderate)
+                    )
+                    const low = Math.max(
+                      moderate + 1,
+                      Math.min(99, rawLow ?? riskThresholds.low)
+                    )
+                    setRiskThresholds({ moderate, low })
+                  }}
+                  trackClassName="h-3"
+                  trackStyle={{
+                    background: `linear-gradient(to right, var(--color-rose-500) 0%, var(--color-rose-500) ${riskThresholds.moderate}%, var(--color-amber-400) ${riskThresholds.moderate}%, var(--color-amber-400) ${riskThresholds.low}%, var(--color-emerald-500) ${riskThresholds.low}%, var(--color-emerald-500) 100%)`,
+                  }}
+                  className="[&_[data-slot=slider-range]]:bg-transparent [&_[data-slot=slider-thumb]]:size-5 [&_[data-slot=slider-thumb]]:shadow-md"
+                />
                 <div className="flex justify-between px-0.5 text-xs text-muted-foreground">
                   <span>0 pts (High Risk)</span>
                   <span>
@@ -1050,85 +1031,9 @@ export function ScoreWeightsPage() {
                   </span>
                   <span>100 pts (Optimal)</span>
                 </div>
-              </div>
-
-              {/* Sliders & Threshold Controls */}
-              <div className="grid grid-cols-1 gap-4 rounded-xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2">
-                {/* Low Risk Slider */}
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      htmlFor="low-threshold"
-                      className="text-xs font-semibold text-foreground"
-                    >
-                      Low Risk Minimum Cutoff (Optimal)
-                    </Label>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-foreground tabular-nums">
-                        &ge; {riskThresholds.low}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        pts
-                      </span>
-                    </div>
-                  </div>
-                  <Slider
-                    id="low-threshold"
-                    value={[riskThresholds.low]}
-                    min={Math.max(1, riskThresholds.moderate + 1)}
-                    max={99}
-                    step={1}
-                    onValueChange={(val) => {
-                      const raw = val[0] ?? 80
-                      setRiskThresholds((prev) => ({
-                        ...prev,
-                        low: Math.max(prev.moderate + 1, Math.min(99, raw)),
-                      }))
-                    }}
-                    className="py-1"
-                  />
-                  <p className="text-[11px] text-muted-foreground">
-                    Employees scoring at or above {riskThresholds.low} are classified as low risk.
-                  </p>
-                </div>
-
-                {/* Moderate Risk Slider */}
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      htmlFor="moderate-threshold"
-                      className="text-xs font-semibold text-foreground"
-                    >
-                      Moderate Risk Minimum Cutoff
-                    </Label>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-foreground tabular-nums">
-                        &ge; {riskThresholds.moderate}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        pts
-                      </span>
-                    </div>
-                  </div>
-                  <Slider
-                    id="moderate-threshold"
-                    value={[riskThresholds.moderate]}
-                    min={1}
-                    max={Math.min(98, riskThresholds.low - 1)}
-                    step={1}
-                    onValueChange={(val) => {
-                      const raw = val[0] ?? 50
-                      setRiskThresholds((prev) => ({
-                        ...prev,
-                        moderate: Math.max(1, Math.min(prev.low - 1, raw)),
-                      }))
-                    }}
-                    className="py-1"
-                  />
-                  <p className="text-[11px] text-muted-foreground">
-                    Employees scoring from {riskThresholds.moderate} to {riskThresholds.low - 1} are classified as moderate risk.
-                  </p>
-                </div>
+                <p className="text-center text-[11px] text-muted-foreground">
+                  Drag the handles on the bar to adjust the risk cutoffs.
+                </p>
               </div>
 
               {/* 3 Tier Classification Breakdown Cards */}
@@ -1177,7 +1082,7 @@ export function ScoreWeightsPage() {
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Optimal health parameters aligned with low cardiometabolic risk guidelines.
+                    Optimal health parameters consistent with a low cardiometabolic risk profile.
                   </p>
                 </div>
               </div>
@@ -1185,54 +1090,34 @@ export function ScoreWeightsPage() {
           </Card>
 
           {/* Section 2 Footer Action Bar */}
-          <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2 text-xs">
-              {isRiskThresholdsValid ? (
-                <div className="flex items-center gap-1.5 text-foreground">
-                  <CheckCircle2 className="size-4 text-muted-foreground" />
-                  <span>
-                    Valid thresholds: Moderate ({riskThresholds.moderate}) &lt; Low Risk ({riskThresholds.low})
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 text-destructive">
-                  <AlertCircle className="size-4" />
-                  <span>
-                    Moderate threshold must be strictly lower than Low risk threshold
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              {isThresholdsDirty && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDiscardThresholds}
-                  disabled={loading || saving}
-                  className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  <Undo2 className="size-3.5" />
-                  Discard
-                </Button>
-              )}
+          <div className="flex items-center justify-end gap-2 rounded-xl border border-border/60 bg-card p-4">
+            {isThresholdsDirty && (
               <Button
                 type="button"
+                variant="ghost"
                 size="sm"
-                onClick={() => void executeSave("Risk thresholds")}
-                disabled={!isRiskThresholdsValid || loading || saving || !isThresholdsDirty}
-                className="gap-1.5 whitespace-nowrap"
+                onClick={handleDiscardThresholds}
+                disabled={loading || saving}
+                className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
               >
-                {saving ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <Save className="size-3.5" />
-                )}
-                {saving ? "Saving..." : "Save risk thresholds"}
+                <Undo2 className="size-3.5" />
+                Discard
               </Button>
-            </div>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => void executeSave("Risk thresholds")}
+              disabled={loading || saving || !isThresholdsDirty}
+              className="gap-1.5 whitespace-nowrap"
+            >
+              {saving ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Save className="size-3.5" />
+              )}
+              {saving ? "Saving..." : "Save risk thresholds"}
+            </Button>
           </div>
         </TabsContent>
       </Tabs>

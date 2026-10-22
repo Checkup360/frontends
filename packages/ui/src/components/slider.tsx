@@ -3,14 +3,22 @@ import { Slider as SliderPrimitive } from "radix-ui"
 
 import { cn } from "@workspace/ui/lib/utils"
 
+interface SliderProps
+  extends React.ComponentProps<typeof SliderPrimitive.Root> {
+  trackClassName?: string
+  trackStyle?: React.CSSProperties
+}
+
 function Slider({
   className,
   defaultValue,
   value,
   min = 0,
   max = 100,
+  trackClassName,
+  trackStyle,
   ...props
-}: React.ComponentProps<typeof SliderPrimitive.Root>) {
+}: SliderProps) {
   const _values = React.useMemo(
     () =>
       Array.isArray(value)
@@ -36,7 +44,11 @@ function Slider({
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
-        className="relative grow overflow-hidden rounded-full bg-muted data-horizontal:h-1.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-1.5"
+        style={trackStyle}
+        className={cn(
+          "relative grow overflow-hidden rounded-full bg-muted data-horizontal:h-1.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-1.5",
+          trackClassName
+        )}
       >
         <SliderPrimitive.Range
           data-slot="slider-range"
