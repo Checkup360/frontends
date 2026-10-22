@@ -3,7 +3,15 @@ import type {
   AssessmentSubmissionDetail,
   AssessmentSubmissionSummary,
 } from "@workspace/api"
-import { ChevronRight, ClipboardList, Loader2 } from "lucide-react"
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardList,
+  Clock,
+  Loader2,
+} from "lucide-react"
 import { Badge } from "@workspace/ui/components/badge"
 import { getAssessmentDisplayName } from "./assessment-utils"
 import { Button } from "@workspace/ui/components/button"
@@ -31,6 +39,144 @@ function formatDate(value: string): string {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value))
+}
+
+function SubmissionStatusBadge({ status }: { status: string }) {
+  const lower = (status || "").toLowerCase()
+  if (lower === "completed") {
+    return (
+      <Badge
+        variant="success-light"
+        size="sm"
+        className="gap-1 border-emerald-500/20 font-medium"
+      >
+        <CheckCircle2 className="size-3" />
+        Completed
+      </Badge>
+    )
+  }
+  if (lower === "submitted") {
+    return (
+      <Badge
+        variant="info-light"
+        size="sm"
+        className="gap-1 border-blue-500/20 font-medium"
+      >
+        <CheckCircle2 className="size-3" />
+        Submitted
+      </Badge>
+    )
+  }
+  if (lower === "pending" || lower === "in_progress") {
+    return (
+      <Badge
+        variant="warning-light"
+        size="sm"
+        className="gap-1 border-amber-500/20 font-medium"
+      >
+        <Clock className="size-3" />
+        Pending
+      </Badge>
+    )
+  }
+  return (
+    <Badge variant="outline" size="sm" className="capitalize font-medium">
+      {status.replace(/_/g, " ")}
+    </Badge>
+  )
+}
+
+function ScoreRiskBadge({
+  riskLevel,
+  healthIndex,
+}: {
+  riskLevel: string | null | undefined
+  healthIndex?: number | null
+}) {
+  const normalized = (riskLevel || "").toLowerCase().replace(/_/g, " ")
+  const score = typeof healthIndex === "number" ? Math.round(healthIndex) : null
+
+  if (
+    normalized.includes("high") ||
+    normalized.includes("attention") ||
+    normalized.includes("severe") ||
+    normalized.includes("critical")
+  ) {
+    return (
+      <Badge variant="risk-high" size="sm" className="gap-1 font-semibold">
+        <AlertCircle className="size-3" />
+        {normalized.includes("very high") ? "Very high risk" : "High risk"}
+      </Badge>
+    )
+  }
+
+  if (
+    normalized.includes("mod") ||
+    normalized.includes("elevated") ||
+    normalized.includes("mild") ||
+    normalized.includes("medium")
+  ) {
+    return (
+      <Badge variant="risk-moderate" size="sm" className="gap-1 font-semibold">
+        <AlertTriangle className="size-3" />
+        Moderate risk
+      </Badge>
+    )
+  }
+
+  if (
+    normalized.includes("low") ||
+    normalized.includes("optimal") ||
+    normalized.includes("good") ||
+    normalized.includes("normal")
+  ) {
+    return (
+      <Badge variant="risk-low" size="sm" className="gap-1 font-semibold">
+        <CheckCircle2 className="size-3" />
+        Low risk
+      </Badge>
+    )
+  }
+
+  if (normalized.includes("completed")) {
+    return (
+      <Badge variant="success-light" size="sm" className="gap-1 font-semibold">
+        <CheckCircle2 className="size-3" />
+        Completed
+      </Badge>
+    )
+  }
+
+  if (score !== null) {
+    if (score >= 80) {
+      return (
+        <Badge variant="risk-low" size="sm" className="gap-1 font-semibold">
+          <CheckCircle2 className="size-3" />
+          Low risk
+        </Badge>
+      )
+    }
+    if (score >= 50) {
+      return (
+        <Badge variant="risk-moderate" size="sm" className="gap-1 font-semibold">
+          <AlertTriangle className="size-3" />
+          Moderate risk
+        </Badge>
+      )
+    }
+    return (
+      <Badge variant="risk-high" size="sm" className="gap-1 font-semibold">
+        <AlertCircle className="size-3" />
+        High risk
+      </Badge>
+    )
+  }
+
+  return (
+    <Badge variant="info-light" size="sm" className="gap-1 font-medium capitalize">
+      {riskLevel ? riskLevel.replace(/_/g, " ") : "Calculated"}
+    </Badge>
+  )
 }
 
 const FORM_FIELDS: Record<string, string[]> = {
@@ -344,7 +490,7 @@ export function AssessmentSubmissionHistory({
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <Badge variant="outline">{submission.status}</Badge>
+                    <SubmissionStatusBadge status={submission.status} />
                     <ChevronRight className="size-4 text-muted-foreground" />
                   </span>
                 </button>
@@ -370,8 +516,13 @@ export function AssessmentSubmissionHistory({
             {selected && (
               <>
                 <DialogHeader>
-                  <DialogTitle>{getFormLabel(selected.form_type)}</DialogTitle>
-                  <DialogDescription>
+                  <div className="flex items-center justify-between gap-3 pr-6">
+                    <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
+                      {getFormLabel(selected.form_type)}
+                    </DialogTitle>
+                    <SubmissionStatusBadge status={selected.status} />
+                  </div>
+                  <DialogDescription className="text-xs">
                     {formatDate(selected.submitted_at)} · version {selected.form_version}
                   </DialogDescription>
                 </DialogHeader>
@@ -480,9 +631,10 @@ export function AssessmentSubmissionHistory({
                                   </span>
                                 )}
                               </div>
-                              <Badge variant="outline" className="shrink-0 capitalize text-xs">
-                                {score.risk_level || "Calculated"}
-                              </Badge>
+                              <ScoreRiskBadge
+                                riskLevel={score.risk_level}
+                                healthIndex={score.health_index}
+                              />
                             </div>
                           ))}
                         </div>
