@@ -17,20 +17,14 @@ import {
   Moon,
   Sparkles,
 } from "lucide-react"
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
+
 import {
   groupResultsIntoSessions,
   computeOverallHealthScore,
   getAssessmentDisplayName,
+  buildEmployeeEvolutionTimeline,
 } from "./assessment-utils"
+import { ScoreEvolutionChart } from "./score-evolution-chart"
 import { HealthScoreHeroCard, heroLevelConfig } from "./health-score-hero-card"
 
 import {
@@ -231,28 +225,13 @@ export function MemberOverview({
     [focusScores]
   )
 
-  // Dynamic evolution chart from session history
+  // Forward-fill monthly timeline from first evaluation to today
   const evolutionData = useMemo(() => {
-    if (!sessions.length) return []
-    return [...sessions]
-      .reverse()
-      .map((session, idx, arr) => {
-        // For latest session in array (which is the actual latest session), use overall_health_index from backend if present
-        const isLatestInArray = idx === arr.length - 1
-        const sessionScore = isLatestInArray && typeof assessmentsData?.overall_health_index === "number"
-          ? Math.round(assessmentsData.overall_health_index)
-          : computeOverallHealthScore(
-              session.results,
-              null,
-              null,
-              assessmentsData?.risk_thresholds
-            ).score
-
-        return {
-          month: session.formattedDate.split(" ")[0] || "Evaluation",
-          score: sessionScore,
-        }
-      })
+    return buildEmployeeEvolutionTimeline({
+      sessions,
+      overallHealthIndex: assessmentsData?.overall_health_index,
+      riskThresholds: assessmentsData?.risk_thresholds ?? null,
+    })
   }, [sessions, assessmentsData])
 
   return (
@@ -467,62 +446,19 @@ export function MemberOverview({
                 Health score progression over time (higher is healthier)
               </p>
             </div>
-            <Card className="p-6">
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={evolutionData}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient id="memberScoreGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted" />
-                    <XAxis
-                      dataKey="month"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      className="text-xs text-muted-foreground"
-                    />
-                    <YAxis
-                      domain={[0, 100]}
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      className="text-xs text-muted-foreground"
-                    />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const val = payload[0]?.value as number
-                          return (
-                            <div className="rounded-lg border bg-background p-2.5 shadow-md text-xs">
-                              <p className="font-semibold">{payload[0]?.payload.month}</p>
-                              <p className="text-muted-foreground">
-                                Score: <span className="font-bold text-foreground">{val}</span> / 100
-                              </p>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="score"
-                      stroke="var(--primary)"
-                      strokeWidth={2.5}
-                      fillOpacity={1}
-                      fill="url(#memberScoreGradient)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
+            <ScoreEvolutionChart
+              title="Health score evolution"
+              description="Monthly progression — dots mark actual evaluations; lines carry the score forward."
+              data={evolutionData}
+              series={[{ key: "overall", label: "Health score", color: "var(--primary)" }]}
+              yAxisDomain={[0, 100]}
+              yAxisTicks={[0, 25, 50, 75, 100]}
+              showDots={true}
+              showPercentages={false}
+              height={240}
+              emptyTitle="No evaluations yet"
+              emptyMessage="Your health score history will appear here as you complete assessments."
+            />
           </section>
         </>
       )}

@@ -1,14 +1,7 @@
-import { Card } from "@workspace/ui/components/card"
+import { useMemo } from "react"
 import type { RiskTrendPoint } from "@workspace/api"
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
+import { buildTrendsTimelineWithForwardFill } from "@workspace/components/components/assessment-utils"
+import { ScoreEvolutionChart } from "@workspace/components/components/score-evolution-chart"
 
 interface RiskTrendProps {
   trends?: RiskTrendPoint[]
@@ -16,106 +9,39 @@ interface RiskTrendProps {
 }
 
 export function RiskTrend({ trends, loading }: RiskTrendProps) {
-  const chartData =
-    trends && trends.length > 0
-      ? trends
-          .filter((t) => typeof t.average_score === "number")
-          .map((t) => ({
-            month: t.month_label,
-            score: Math.round(t.average_score as number),
-          }))
-      : []
+  const chartData = useMemo(() => {
+    if (!trends || trends.length === 0) return []
+    const filled = buildTrendsTimelineWithForwardFill(trends)
+    return filled.map((t) => ({
+      month: t.month,
+      period: t.period,
+      overall: typeof t.average_score === "number" ? Math.round(t.average_score) : null,
+      _isCarried: t._isCarried,
+    }))
+  }, [trends])
 
   return (
-    <Card className="border-border/60 p-6 shadow-[var(--shadow-card)]">
-      <div>
-        <h3 className="text-base font-semibold text-foreground">
-          Health score trends
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Monthly evolution of the aggregated health index (higher is healthier)
-        </p>
-      </div>
-      <div className="mt-4 h-64">
-        {loading ? (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            Loading trends...
-          </div>
-        ) : chartData.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            No health trend data available yet
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={chartData}
-              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor="oklch(0.65 0.18 250)"
-                    stopOpacity={0.35}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="oklch(0.65 0.18 250)"
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--border)"
-                strokeOpacity={0.55}
-                vertical={false}
-              />
-              <XAxis
-                dataKey="month"
-                stroke="oklch(0.5 0.03 220)"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="oklch(0.5 0.03 220)"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                domain={[0, 100]}
-                tickFormatter={(v: number) => `${v}%`}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 12,
-                  fontSize: 12,
-                }}
-                formatter={(value: number) => [`${value}%`, "Health index"]}
-              />
-              <Area
-                type="monotone"
-                dataKey="score"
-                name="Health index"
-                stroke="oklch(0.65 0.18 250)"
-                fill="url(#g1)"
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-      <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-2">
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: "oklch(0.65 0.18 250)" }}
-          />
-          Health index
-        </span>
-      </div>
-    </Card>
+    <ScoreEvolutionChart
+      title="Health score trends"
+      description="Monthly evolution of the aggregated health index (higher is healthier)"
+      data={chartData}
+      series={[
+        {
+          key: "overall",
+          label: "Health index",
+          color: "oklch(0.65 0.18 250)",
+          strokeWidth: 2,
+        },
+      ]}
+      yAxisDomain={[0, 100]}
+      yAxisTicks={[0, 25, 50, 75, 100]}
+      showPercentages={true}
+      showDots={true}
+      loading={loading}
+      height={264}
+      emptyTitle="No trend data yet"
+      emptyMessage="Health score trends will appear here as members complete evaluations."
+      className="border-border/60 shadow-[var(--shadow-card)]"
+    />
   )
 }

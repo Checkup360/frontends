@@ -1,4 +1,8 @@
-import type { AssessmentResultResponse, AssessmentsResponse } from "@workspace/api"
+import type {
+  AssessmentResultResponse,
+  AssessmentsResponse,
+  RiskTrendPoint,
+} from "@workspace/api"
 import { Badge } from "@workspace/ui/components/badge"
 import {
   Dialog,
@@ -379,3 +383,255 @@ export function AssessmentHistoryDialog({
     </Dialog>
   )
 }
+
+export interface EmployeeEvolutionOptions {
+  sessions: AssessmentSession[]
+  overallHealthIndex?: number | null
+  riskThresholds?: Record<string, number> | null
+  scoreWeights?: Record<string, number> | null
+  filterScore?: (scoreId: string, scoreName: string) => boolean
+}
+
+export interface EvolutionDataPoint {
+  month: string
+  period: string
+  overall?: number | null
+  [key: string]: string | number | boolean | null | undefined
+  _isCarried?: boolean
+  _measuredDate?: string
+}
+
+/**
+ * Builds a chronological monthly timeline for an employee starting strictly at their
+ * first recorded evaluation and forward-filling (carrying forward) values into subsequent
+ * months up to the current date. Does not backfill before the first evaluation.
+ *
+ * Always produces EXACTLY ONE point per calendar month — multiple submissions
+ * in the same month are consolidated (latest value per study wins).
+ */
+export function buildEmployeeEvolutionTimeline({
+  sessions,
+  overallHealthIndex,
+  riskThresholds,
+  filterScore,
+}: EmployeeEvolutionOptions): EvolutionDataPoint[] {
+  if (!sessions || sessions.length === 0) return []
+
+  // Sort sessions chronologically: oldest to newest
+  const sortedSessions = [...sessions].sort((a, b) => {
+    const timeA = a.evaluatedAt ? a.evaluatedAt.getTime() : 0
+    const timeB = b.evaluatedAt ? b.evaluatedAt.getTime() : 0
+    return timeA - timeB
+  })
+
+  const earliestDate = sortedSessions[0]?.evaluatedAt || new Date()
+  const now = new Date()
+
+  const startYear = earliestDate.getFullYear()
+  const startMonth = earliestDate.getMonth()
+  const endYear = Math.max(startYear, now.getFullYear())
+  const endMonth =
+    endYear === startYear ? Math.max(startMonth, now.getMonth()) : now.getMonth()
+
+  const isMultiYear = endYear > startYear
+  const MONTH_NAMES = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ]
+
+  const formatPeriodLabel = (y: number, m: number) => {
+    const name = MONTH_NAMES[m]
+    return isMultiYear ? `${name} '${String(y).slice(-2)}` : name
+  }
+
+  // The globally-latest session id (to pick up backend-calculated overall_health_index).
+  // sortedSessions is ascending, so the last element is the most recent regardless of input order.
+  const latestSessionId = sortedSessions[sortedSessions.length - 1]?.id
+
+  // ── Step 1: Consolidate all sessions in the same calendar month into one snapshot.
+  // Sessions are sorted oldest→newest, so later sessions overwrite earlier ones per study key.
+  const monthSnapshots = new Map<string, {
+    overall: number | null
+    studies: Record<string, number>
+    date: string
+  }>()
+
+  for (const s of sortedSessions) {
+    const d = s.evaluatedAt || new Date()
+    const pKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+
+    if (!monthSnapshots.has(pKey)) {
+      monthSnapshots.set(pKey, { overall: null, studies: {}, date: "" })
+    }
+    const snap = monthSnapshots.get(pKey)!
+
+    const sessionOverall =
+      s.id === latestSessionId && typeof overallHealthIndex === "number"
+        ? Math.round(overallHealthIndex)
+        : typeof s.overallScore === "number"
+          ? Math.round(s.overallScore)
+          : computeOverallHealthScore(s.results, null, null, riskThresholds).score
+
+    if (typeof sessionOverall === "number") snap.overall = sessionOverall
+
+    for (const r of s.results) {
+      if (r.score_name && r.health_index !== null && r.health_index !== undefined) {
+        const trimmed = r.score_name.trim()
+        if (!filterScore || filterScore(r.score_id || "", trimmed)) {
+          snap.studies[trimmed] = Math.round(r.health_index)
+        }
+      }
+    }
+
+    const dateStr = s.formattedDate ? s.formattedDate.split(" ")[0] : ""
+    if (dateStr) snap.date = dateStr
+  }
+
+  // ── Step 2: Walk month-by-month, emit exactly ONE point per month.
+  const timeline: EvolutionDataPoint[] = []
+
+  let lastKnownOverall: number | null = null
+  const lastKnownStudies: Record<string, number> = {}
+  let lastMeasuredDate: string | undefined = undefined
+
+  let curY = startYear
+  let curM = startMonth
+
+  while (curY < endYear || (curY === endYear && curM <= endMonth)) {
+    const pKey = `${curY}-${String(curM + 1).padStart(2, "0")}`
+    const snap = monthSnapshots.get(pKey)
+
+    if (snap) {
+      if (typeof snap.overall === "number") lastKnownOverall = snap.overall
+      Object.assign(lastKnownStudies, snap.studies)
+      if (snap.date) lastMeasuredDate = snap.date
+
+      timeline.push({
+        month: formatPeriodLabel(curY, curM),
+        period: pKey,
+        overall: lastKnownOverall,
+        ...lastKnownStudies,
+        _isCarried: false,
+        _measuredDate: snap.date || lastMeasuredDate,
+      })
+    } else if (lastKnownOverall !== null || Object.keys(lastKnownStudies).length > 0) {
+      timeline.push({
+        month: formatPeriodLabel(curY, curM),
+        period: pKey,
+        overall: lastKnownOverall,
+        ...lastKnownStudies,
+        _isCarried: true,
+        _measuredDate: lastMeasuredDate,
+      })
+    }
+
+    curM++
+    if (curM > 11) { curM = 0; curY++ }
+  }
+
+  return timeline
+}
+
+/**
+ * Builds a chronological monthly timeline for organization and department trends,
+ * starting strictly at the first period with data and forward-filling values up to
+ * the current month.
+ */
+export function buildTrendsTimelineWithForwardFill(
+  trends: RiskTrendPoint[]
+): Array<RiskTrendPoint & { month: string; _isCarried?: boolean }> {
+  if (!trends || trends.length === 0) return []
+
+  const sortedTrends = [...trends].sort((a, b) => a.period.localeCompare(b.period))
+  const firstPoint = sortedTrends[0]
+  if (!firstPoint?.period) {
+    return trends.map((t) => ({ ...t, month: t.month_label }))
+  }
+
+  const [fYearStr, fMonthStr] = firstPoint.period.split("-")
+  const startYear = parseInt(fYearStr, 10)
+  const startMonth = parseInt(fMonthStr, 10) - 1
+
+  const now = new Date()
+  const endYear = Math.max(startYear, now.getFullYear())
+  const endMonth =
+    endYear === startYear ? Math.max(startMonth, now.getMonth()) : now.getMonth()
+
+  const isMultiYear = endYear > startYear
+  const MONTH_NAMES = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ]
+
+  const formatPeriodLabel = (y: number, m: number) => {
+    const name = MONTH_NAMES[m]
+    return isMultiYear ? `${name} '${String(y).slice(-2)}` : name
+  }
+
+  const trendsByPeriod = new Map<string, RiskTrendPoint>()
+  for (const t of sortedTrends) {
+    trendsByPeriod.set(t.period, t)
+  }
+
+  const result: Array<RiskTrendPoint & { month: string; _isCarried?: boolean }> = []
+
+  let lastAverageScore: number | null = null
+  let lastScoresByStudy: Record<string, number> = {}
+  let hasStarted = false
+
+  let curY = startYear
+  let curM = startMonth
+
+  while (curY < endYear || (curY === endYear && curM <= endMonth)) {
+    const pKey = `${curY}-${String(curM + 1).padStart(2, "0")}`
+    const t = trendsByPeriod.get(pKey)
+
+    if (t) {
+      hasStarted = true
+      if (typeof t.average_score === "number") {
+        lastAverageScore = t.average_score
+      }
+      if (t.scores_by_study) {
+        lastScoresByStudy = { ...lastScoresByStudy, ...t.scores_by_study }
+      }
+      result.push({
+        ...t,
+        month: t.month_label || formatPeriodLabel(curY, curM),
+        average_score: t.average_score ?? lastAverageScore,
+        scores_by_study: { ...lastScoresByStudy },
+        _isCarried: false,
+      })
+    } else if (hasStarted) {
+      // Forward fill every month after the timeline has started, even when no
+      // numeric score exists yet, so real periods never disappear from the axis.
+      result.push({
+        period: pKey,
+        month_label: formatPeriodLabel(curY, curM),
+        month: formatPeriodLabel(curY, curM),
+        average_score: lastAverageScore,
+        total_assessments: 0,
+        scores_by_study: { ...lastScoresByStudy },
+        _isCarried: true,
+      })
+    }
+
+    curM++
+    if (curM > 11) {
+      curM = 0
+      curY++
+    }
+  }
+
+  return result
+}
+

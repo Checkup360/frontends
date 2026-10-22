@@ -26,7 +26,7 @@ export interface ScoreEvolutionChartProps {
   badgeLabel?: string
   icon?: LucideIcon
   /** Chronological rows: e.g. [{ month: "Jan", overall: 82, Diabetes: 88 }, ...] */
-  data: Array<Record<string, string | number | null>>
+  data: Array<Record<string, any>>
   /** Available series definitions to plot and toggle */
   series: ChartSeries[]
   /** Data key used for the X-axis (default: "month") */
@@ -70,7 +70,7 @@ export function ScoreEvolutionChart({
   yAxisDomain,
   yAxisTicks,
   allowDecimals,
-  showDots = false,
+  showDots = true,
   showPercentages = false,
   loading = false,
   emptyTitle = "No evaluation trends yet",
@@ -248,21 +248,63 @@ export function ScoreEvolutionChart({
                 }
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "var(--card)",
-                  borderColor: "var(--border)",
-                  borderRadius: "0.75rem",
-                  boxShadow: "var(--shadow-card)",
-                  fontSize: "12px",
+                content={({ active, payload, label }) => {
+                  if (!active || !payload || !payload.length) return null
+                  const isCarried = payload[0]?.payload?._isCarried
+                  const measuredDate = payload[0]?.payload?._measuredDate
+                  return (
+                    <div className="rounded-xl border border-border bg-card p-3 shadow-lg text-xs space-y-2 min-w-[180px]">
+                      <div className="flex items-center justify-between gap-3 border-b border-border/50 pb-1.5">
+                        <span className="font-semibold text-foreground">{label}</span>
+                        {isCarried ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] py-0 px-1.5 font-normal text-muted-foreground border-muted-foreground/30"
+                          >
+                            Active score
+                          </Badge>
+                        ) : (
+                          <Badge variant="success-light" className="text-[10px] py-0 px-1.5 font-normal">
+                            Evaluation
+                          </Badge>
+                        )}
+                      </div>
+                      {isCarried && measuredDate && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Latest eval: {measuredDate}
+                        </p>
+                      )}
+                      <div className="space-y-1">
+                        {payload.map((item: any) => {
+                          const val = item.value
+                          return (
+                            <div
+                              key={item.dataKey}
+                              className="flex items-center justify-between gap-4"
+                            >
+                              <span className="flex items-center gap-1.5 text-muted-foreground">
+                                <span
+                                  className="size-2 rounded-full shrink-0"
+                                  style={{ backgroundColor: item.color }}
+                                />
+                                <span className="truncate max-w-[130px]">
+                                  {item.name}
+                                </span>
+                              </span>
+                              <span className="font-bold tabular-nums text-foreground">
+                                {typeof val === "number"
+                                  ? showPercentages
+                                    ? `${val}%`
+                                    : val
+                                  : "—"}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
                 }}
-                formatter={(val: any, name: any) => [
-                  typeof val === "number"
-                    ? showPercentages
-                      ? `${val}%`
-                      : `${val}`
-                    : "—",
-                  name,
-                ]}
               />
               {enrichedSeries.map((s) => {
                 if (!selectedKeys.has(s.key)) return null
@@ -276,16 +318,27 @@ export function ScoreEvolutionChart({
                     strokeWidth={s.strokeWidth || 2}
                     fill={`url(#${s.gradientId})`}
                     connectNulls={true}
-                    dot={
-                      showDots
-                        ? {
-                            r: 4,
-                            stroke: s.color,
-                            strokeWidth: 2,
-                            fill: "var(--card)",
-                          }
-                        : false
-                    }
+                    dot={(dotProps: any) => {
+                      const { cx, cy, payload, index } = dotProps
+                      if (!showDots || typeof cx !== "number" || typeof cy !== "number") {
+                        return <g key={`dot-${s.key}-${index}`} />
+                      }
+                      // Hide dot on carried points so only real evaluations are marked
+                      if (payload?._isCarried) {
+                        return <g key={`dot-${s.key}-${index}`} />
+                      }
+                      return (
+                        <circle
+                          key={`dot-${s.key}-${index}`}
+                          cx={cx}
+                          cy={cy}
+                          r={4}
+                          stroke={s.color}
+                          strokeWidth={2}
+                          fill="var(--card)"
+                        />
+                      )
+                    }}
                     activeDot={{
                       r: 6,
                       stroke: s.color,

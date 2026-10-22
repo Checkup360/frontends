@@ -76,6 +76,7 @@ import {
   ScoreEvolutionChart,
   type ChartSeries,
 } from "@workspace/components/components/score-evolution-chart"
+import { buildTrendsTimelineWithForwardFill } from "@workspace/components/components/assessment-utils"
 import { OverviewStatCard } from "@workspace/components/components/card"
 import { getRoleBadgeProps, formatRoleName, normalizeRoles } from "@/lib/role-utils"
 import { isScoreDeactivated } from "@/lib/score-topics"
@@ -651,8 +652,9 @@ export function DepartmentDetailPage() {
       : null
   const highRiskWorkers = deptAnalytics ? deptAnalytics.high_risk_count : 0
 
-  const sortedTrends = useMemo(() => {
-    return [...trends].sort((a, b) => a.period.localeCompare(b.period))
+  // Forward-fill monthly timeline from first evaluation to today
+  const filledTrends = useMemo(() => {
+    return buildTrendsTimelineWithForwardFill(trends)
   }, [trends])
 
   // Discover all available studies from backend trends that are enabled for the organization
@@ -685,15 +687,17 @@ export function DepartmentDetailPage() {
     return list
   }, [trends, scoreWeights])
 
-  // Chart data formatted for multi-study curves (only enabled studies)
+  // Chart data: forward-filled rows, only including enabled studies
   const chartData = useMemo(() => {
-    return sortedTrends.map((t) => {
-      const row: Record<string, string | number | null> = {
-        month: t.month_label,
+    return filledTrends.map((t) => {
+      const row: Record<string, string | number | boolean | null | undefined> = {
+        month: t.month,
+        period: t.period,
         overall:
           typeof t.average_score === "number"
             ? Math.round(t.average_score)
             : null,
+        _isCarried: t._isCarried,
       }
       if (t.scores_by_study) {
         Object.entries(t.scores_by_study).forEach(([k, v]) => {
@@ -704,7 +708,7 @@ export function DepartmentDetailPage() {
       }
       return row
     })
-  }, [sortedTrends, scoreWeights])
+  }, [filledTrends, scoreWeights])
 
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const hasFilters =

@@ -22,6 +22,7 @@ import {
   groupResultsIntoSessions,
   AssessmentHistoryDialog,
   getAssessmentDisplayName,
+  buildEmployeeEvolutionTimeline,
 } from "@workspace/components/components/assessment-utils"
 import { AssessmentSubmissionHistory } from "@workspace/components/components/assessment-submission-history"
 import {
@@ -703,40 +704,17 @@ export function EmployeeDetailPage() {
     return list
   }, [sessions, scoreWeights])
 
-  // Multi-curve evolution data from session history
+  // Multi-curve forward-fill evolution timeline
   const evolutionData = useMemo(() => {
-    if (!sessions.length) return []
-    return [...sessions].reverse().map((session, idx, arr) => {
-      const isLatestInArray = idx === arr.length - 1
-      const overallScore =
-        isLatestInArray && typeof assessments?.overall_health_index === "number"
-          ? Math.round(assessments.overall_health_index)
-          : typeof session.overallScore === "number"
-            ? Math.round(session.overallScore)
-            : null
-
-      const row: Record<string, string | number> = {
-        month: session.formattedDate.split(" ")[0] || `Eval #${idx + 1}`,
-      }
-      if (typeof overallScore === "number") {
-        row.overall = overallScore
-      }
-
-      session.results.forEach((r) => {
-        if (
-          r.score_name &&
-          r.health_index !== null &&
-          r.health_index !== undefined
-        ) {
-          const topic = getTopicMeta(r.score_id || "", r.score_name)
-          const isDeactivated = scoreWeights !== null && (scoreWeights[topic.id] ?? 0) <= 0
-          if (!isDeactivated) {
-            row[r.score_name.trim()] = Math.round(r.health_index)
-          }
-        }
-      })
-
-      return row
+    return buildEmployeeEvolutionTimeline({
+      sessions,
+      overallHealthIndex: assessments?.overall_health_index,
+      riskThresholds: assessments?.risk_thresholds ?? null,
+      filterScore: (scoreId, scoreName) => {
+        if (scoreWeights === null) return true
+        const topic = getTopicMeta(scoreId, scoreName)
+        return (scoreWeights[topic.id] ?? 0) > 0
+      },
     })
   }, [sessions, assessments, scoreWeights])
 
