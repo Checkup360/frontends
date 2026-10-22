@@ -41,6 +41,10 @@ import {
   type UserConsent,
 } from "@workspace/api"
 import {
+  hasNumericLimit,
+  validateNumericField,
+} from "./member-form-field-limits"
+import {
   ConsentGateModal,
   FormConsentHeroCard,
 } from "../components/legal/consent-gate-modal"
@@ -751,6 +755,10 @@ export function MemberFormsStudiesPage() {
             auditData.audit_c_quantity !== undefined
               ? String(auditData.audit_c_quantity)
               : "",
+          audit_c_heavy_drinking:
+            auditData.audit_c_heavy_drinking !== undefined
+              ? String(auditData.audit_c_heavy_drinking)
+              : "",
           ...extractedNmq,
           ...extractedPss,
         } as StudiesData)
@@ -766,13 +774,17 @@ export function MemberFormsStudiesPage() {
 
   const updateField = (field: keyof StudiesData, value: string) => {
     setData((current) => ({ ...current, [field]: value }))
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => {
-        const copy = { ...prev }
-        delete copy[field]
-        return copy
-      })
-    }
+    const liveError =
+      hasNumericLimit(field) && value !== ""
+        ? validateNumericField(field, value)
+        : null
+    setFieldErrors((prev) => {
+      if (!liveError && !prev[field]) return prev
+      const next = { ...prev }
+      if (liveError) next[field] = liveError
+      else delete next[field]
+      return next
+    })
     setGlobalError(null)
   }
 
@@ -786,6 +798,19 @@ export function MemberFormsStudiesPage() {
     }
   }
 
+  const showSubmitError = (
+    error: { message: string; fieldErrors?: Record<string, string> },
+    fallbackMessage: string
+  ) => {
+    const fieldErrorsFromServer = error.fieldErrors ?? {}
+    if (Object.keys(fieldErrorsFromServer).length > 0) {
+      setFieldErrors(fieldErrorsFromServer)
+      scrollToFirstError(fieldErrorsFromServer)
+      return
+    }
+    setGlobalError(error.message || fallbackMessage)
+  }
+
   const handleSaveBiometrics = async (e: React.FormEvent) => {
     e.preventDefault()
     const errors: Record<string, string> = {}
@@ -793,38 +818,17 @@ export function MemberFormsStudiesPage() {
     if (!data.biological_sex) {
       errors.biological_sex = "Please select biological sex."
     }
-    if (
-      !data.height ||
-      isNaN(Number(data.height)) ||
-      Number(data.height) <= 0 ||
-      Number(data.height) >= 300
-    ) {
-      errors.height = "Please enter a valid height in centimeters (cm)."
-    }
-    if (
-      !data.weight ||
-      isNaN(Number(data.weight)) ||
-      Number(data.weight) <= 0 ||
-      Number(data.weight) >= 500
-    ) {
-      errors.weight = "Please enter a valid weight in kilograms (kg)."
-    }
-    if (
-      isFieldActive("biometrics", "neck_circumference") &&
-      (!data.neck_circumference ||
-        isNaN(Number(data.neck_circumference)) ||
-        Number(data.neck_circumference) <= 0)
-    ) {
-      errors.neck_circumference =
-        "Please enter a valid neck circumference (cm)."
-    }
-    if (
-      !data.waist_circumference ||
-      isNaN(Number(data.waist_circumference)) ||
-      Number(data.waist_circumference) <= 0
-    ) {
-      errors.waist_circumference =
-        "Please enter a valid waist circumference (cm)."
+    const biometricFields: Array<keyof StudiesData> = [
+      "height",
+      "weight",
+      ...(isFieldActive("biometrics", "neck_circumference")
+        ? (["neck_circumference"] as const)
+        : []),
+      "waist_circumference",
+    ]
+    for (const field of biometricFields) {
+      const message = validateNumericField(field, data[field])
+      if (message) errors[field] = message
     }
 
     if (Object.keys(errors).length > 0) {
@@ -851,7 +855,7 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(res.error.message || "Failed to save physical biometrics.")
+      showSubmitError(res.error, "Failed to save physical biometrics.")
     } else {
       toast.success("Physical biometrics saved successfully.")
       navigate("/forms")
@@ -884,7 +888,7 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(res.error.message || "Failed to save sleep quality data.")
+      showSubmitError(res.error, "Failed to save sleep quality data.")
     } else {
       toast.success("Sleep quality data saved successfully.")
       navigate("/forms")
@@ -930,7 +934,7 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(res.error.message || "Failed to save lifestyle habits.")
+      showSubmitError(res.error, "Failed to save lifestyle habits.")
     } else {
       toast.success("Lifestyle & habits saved successfully.")
       navigate("/forms")
@@ -972,7 +976,7 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(res.error.message || "Failed to save mood assessment.")
+      showSubmitError(res.error, "Failed to save mood assessment.")
     } else {
       toast.success("Mood assessment saved successfully.")
       navigate("/forms")
@@ -991,13 +995,8 @@ export function MemberFormsStudiesPage() {
       "fasting_glucose",
     ]
     for (const field of numericFields) {
-      if (
-        !data[field] ||
-        Number(data[field]) <= 0 ||
-        Number.isNaN(Number(data[field]))
-      ) {
-        errors[field] = "Please enter a valid value."
-      }
+      const message = validateNumericField(field, data[field])
+      if (message) errors[field] = message
     }
     // Validation: Systolic blood pressure strictly greater than diastolic
     if (
@@ -1043,9 +1042,7 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(
-        res.error.message || "Failed to save metabolic health data."
-      )
+      showSubmitError(res.error, "Failed to save metabolic health data.")
     } else {
       toast.success("Metabolic health data saved successfully.")
       navigate("/forms")
@@ -1078,9 +1075,7 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(
-        res.error.message || "Failed to save obesity-related health impact."
-      )
+      showSubmitError(res.error, "Failed to save obesity-related health impact.")
     } else {
       toast.success("Obesity-related health impact saved successfully.")
       navigate("/forms")
@@ -1147,9 +1142,7 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(
-        res.error.message || "Failed to save Nordic ergonomics questionnaire."
-      )
+      showSubmitError(res.error, "Failed to save Nordic ergonomics questionnaire.")
     } else {
       toast.success("Nordic ergonomics questionnaire saved successfully.")
       navigate("/forms")
@@ -1181,7 +1174,7 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(res.error.message || "Failed to save AUDIT-C assessment.")
+      showSubmitError(res.error, "Failed to save AUDIT-C assessment.")
     } else {
       toast.success("AUDIT-C alcohol risk assessment saved successfully.")
       navigate("/forms")
@@ -1216,9 +1209,7 @@ export function MemberFormsStudiesPage() {
     setIsSubmitting(false)
 
     if (res.error) {
-      setGlobalError(
-        res.error.message || "Failed to save Perceived Stress & Burnout assessment."
-      )
+      showSubmitError(res.error, "Failed to save Perceived Stress & Burnout assessment.")
     } else {
       toast.success("Perceived Stress & Burnout saved successfully.")
       navigate("/forms")

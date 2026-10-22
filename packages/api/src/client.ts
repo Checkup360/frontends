@@ -536,6 +536,48 @@ export async function fetchMemberForm(
 export interface SubmitMemberFormError {
   code: string
   message: string
+  /** Backend validation messages keyed by request field name (422 only). */
+  fieldErrors?: Record<string, string>
+}
+
+interface ApiValidationIssue {
+  loc?: Array<string | number>
+  msg?: string
+}
+
+function toValidationIssues(detail: unknown): ApiValidationIssue[] {
+  if (!Array.isArray(detail)) return []
+  return (detail as ApiValidationIssue[]).filter(
+    (issue) => typeof issue?.msg === "string"
+  )
+}
+
+function requestFieldName(issue: ApiValidationIssue): string | null {
+  const fieldName = issue.loc?.find((part) => part !== "body")
+  return fieldName === undefined ? null : String(fieldName)
+}
+
+/** Turns a FastAPI `detail` (string or 422 validation issue list) into display text. */
+function formatApiErrorDetail(detail: unknown): string | null {
+  if (typeof detail === "string") return detail
+
+  const messages = toValidationIssues(detail).map((issue) => {
+    const fieldName = requestFieldName(issue)
+    const label = fieldName?.replaceAll("_", " ")
+    return label ? `${label}: ${issue.msg}` : (issue.msg as string)
+  })
+  return messages.length > 0 ? messages.join(". ") : null
+}
+
+function extractFieldErrors(detail: unknown): Record<string, string> {
+  const fieldErrors: Record<string, string> = {}
+  for (const issue of toValidationIssues(detail)) {
+    const fieldName = requestFieldName(issue)
+    if (fieldName && !(fieldName in fieldErrors)) {
+      fieldErrors[fieldName] = issue.msg as string
+    }
+  }
+  return fieldErrors
 }
 
 export async function submitMemberForm(
@@ -565,11 +607,15 @@ export async function submitMemberForm(
       }
     }
     if (!response.ok) {
-      const errData = (await response.json().catch(() => ({}))) as { detail?: string }
+      const errData = (await response.json().catch(() => ({}))) as {
+        detail?: unknown
+      }
+      const message = formatApiErrorDetail(errData.detail)
       return {
         error: {
-          code: errData.detail || "unknown_error",
-          message: errData.detail || "Failed to submit form data. Please try again.",
+          code: typeof errData.detail === "string" ? errData.detail : "unknown_error",
+          message: message || "Failed to submit form data. Please try again.",
+          fieldErrors: extractFieldErrors(errData.detail),
         },
       }
     }
