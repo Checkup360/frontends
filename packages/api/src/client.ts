@@ -1683,7 +1683,7 @@ export async function updateEmployeeRoles(
       return {
         error: {
           code: String(response.status),
-          message: errorData.detail || "Error al actualizar roles del empleado",
+          message: errorData.detail || "Error updating employee roles",
         },
       }
     }
@@ -1694,7 +1694,7 @@ export async function updateEmployeeRoles(
     return {
       error: {
         code: "NETWORK_ERROR",
-        message: "Error de conexión al actualizar roles",
+        message: "Connection error while updating roles",
       },
     }
   }
@@ -1721,7 +1721,7 @@ export async function removeEmployee(
       return {
         error: {
           code: String(response.status),
-          message: errorData.detail || "Error al desvincular al empleado",
+          message: errorData.detail || "Error removing employee",
         },
       }
     }
@@ -1732,7 +1732,7 @@ export async function removeEmployee(
     return {
       error: {
         code: "NETWORK_ERROR",
-        message: "Error de conexión al desvincular al empleado",
+        message: "Connection error while removing employee",
       },
     }
   }

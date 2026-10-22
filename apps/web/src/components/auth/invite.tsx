@@ -138,7 +138,7 @@ export default function Invite() {
         return
       }
     } catch (err) {
-      setFormError("Error al conectar con el servidor")
+      setFormError("Error connecting to the server")
       console.error(err)
     } finally {
       setFormLoading(false)
@@ -161,7 +161,7 @@ export default function Invite() {
 
       await redirectAfterAccept()
     } catch (err) {
-      setFormError("Error al conectar con el servidor")
+      setFormError("Error connecting to the server")
       console.error(err)
     } finally {
       setFormLoading(false)

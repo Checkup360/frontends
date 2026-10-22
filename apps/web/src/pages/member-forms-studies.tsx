@@ -2162,13 +2162,13 @@ export function MemberFormsStudiesPage() {
               >
                 <div className="flex items-center justify-between">
                   <Label htmlFor="lab_study_date" className="font-medium">
-                    Date of Laboratory Study (Fecha del estudio) *
+                    Date of Laboratory Study *
                   </Label>
                   {data.lab_study_date &&
                     isLabStudyObsolete(data.lab_study_date) && (
                       <span className="flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
-                        <AlertCircle className="size-3.5" /> Dato obsoleto (&gt;
-                        12 meses)
+                        <AlertCircle className="size-3.5" /> Outdated data (&gt;
+                        12 months)
                       </span>
                     )}
                 </div>
@@ -2189,8 +2189,8 @@ export function MemberFormsStudiesPage() {
                   isLabStudyObsolete(data.lab_study_date) && (
                     <p className="flex items-center gap-1 text-xs font-medium text-destructive">
                       <AlertCircle className="size-3.5 shrink-0" />
-                      El estudio supera los 12 meses de antigüedad. Por favor,
-                      actualizá los datos con un estudio reciente.
+                      This study is more than 12 months old. Please update
+                      your data with a recent study.
                     </p>
                   )}
                 {fieldErrors.lab_study_date && (
