@@ -2536,33 +2536,6 @@ export async function getOrganizationComplianceSummary(
   }
 }
 
-export async function listSystemAuditLogs(params?: {
-  action?: string
-  organizationId?: string
-  userId?: string
-  page?: number
-  pageSize?: number
-}): Promise<AuditLogListResponse | null> {
-  try {
-    let url = `${resolveApiBaseUrl()}${apiRoutes.admin.auditLogs}?page=${params?.page || 1}&page_size=${params?.pageSize || 50}`
-    if (params?.action) {
-      url += `&action=${encodeURIComponent(params.action)}`
-    }
-    if (params?.organizationId) {
-      url += `&organization_id=${encodeURIComponent(params.organizationId)}`
-    }
-    if (params?.userId) {
-      url += `&user_id=${encodeURIComponent(params.userId)}`
-    }
-    const response = await fetchWithAuth(url, { credentials: "include" })
-    if (!response.ok) return null
-    return (await response.json()) as AuditLogListResponse
-  } catch (error) {
-    console.error("Error fetching system audit logs:", error)
-    return null
-  }
-}
-
 export type {
   RiskTrendPoint,
   DepartmentAnalyticsSummary,

@@ -11,7 +11,6 @@ export const apiRoutes = {
   admin: {
     sysadmins: "/admin/sysadmins",
     sysadminStats: "/admin/sysadmins/stats",
-    auditLogs: "/admin/audit-logs",
   },
   invites: {
     admin: "/admin/invites",
