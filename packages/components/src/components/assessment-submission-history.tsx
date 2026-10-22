@@ -1,5 +1,5 @@
 import { formatEnumLabel } from "@workspace/ui/lib/format-enum-label"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import type {
   AssessmentSubmissionDetail,
   AssessmentSubmissionSummary,
@@ -15,8 +15,14 @@ import {
 } from "lucide-react"
 import { Badge } from "@workspace/ui/components/badge"
 import { getAssessmentDisplayName } from "./assessment-utils"
-import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import {
   Dialog,
   DialogContent,
@@ -24,12 +30,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog"
+import { TablePagination } from "./table-pagination"
 
 interface AssessmentSubmissionHistoryProps {
   submissions: AssessmentSubmissionSummary[]
   loading: boolean
-  hasNext: boolean
-  onLoadMore: () => void
   onSelect: (submission: AssessmentSubmissionSummary) => void
   selected: AssessmentSubmissionDetail | null
   detailLoading: boolean
@@ -45,16 +50,7 @@ function formatDate(value: string): string {
 function SubmissionStatusBadge({ status }: { status: string }) {
   const lower = (status || "").toLowerCase()
   if (lower === "completed") {
-    return (
-      <Badge
-        variant="success-light"
-        size="sm"
-        className="gap-1 border-emerald-500/20 font-medium"
-      >
-        <CheckCircle2 className="size-3" />
-        Completed
-      </Badge>
-    )
+    return null
   }
   if (lower === "submitted") {
     return (
@@ -440,13 +436,41 @@ function getVisibleAnswers(detail: AssessmentSubmissionDetail) {
 export function AssessmentSubmissionHistory({
   submissions,
   loading,
-  hasNext,
-  onLoadMore,
   onSelect,
   selected,
   detailLoading,
 }: AssessmentSubmissionHistoryProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [formTypeFilter, setFormTypeFilter] = useState("all")
+  const [page, setPage] = useState(1)
+
+  const formTypeOptions = useMemo(() => {
+    const types = Array.from(
+      new Set(submissions.map((submission) => submission.form_type))
+    )
+    return types.sort((a, b) => getFormLabel(a).localeCompare(getFormLabel(b)))
+  }, [submissions])
+
+  const filteredSubmissions = useMemo(
+    () =>
+      formTypeFilter === "all"
+        ? submissions
+        : submissions.filter(
+            (submission) => submission.form_type === formTypeFilter
+          ),
+    [submissions, formTypeFilter]
+  )
+
+  const pageSize = 10
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredSubmissions.length / pageSize)
+  )
+  const currentPage = Math.min(page, totalPages)
+  const visibleSubmissions = filteredSubmissions.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
 
   const handleSelect = (submission: AssessmentSubmissionSummary) => {
     setIsDetailOpen(true)
@@ -459,11 +483,32 @@ export function AssessmentSubmissionHistory({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
         <CardTitle className="flex items-center gap-2 text-base">
           <ClipboardList className="size-4 text-primary" />
           Submitted forms
         </CardTitle>
+        {!loading && submissions.length > 0 && (
+          <Select
+            value={formTypeFilter}
+            onValueChange={(value) => {
+              setFormTypeFilter(value)
+              setPage(1)
+            }}
+          >
+            <SelectTrigger className="h-8 w-[190px] bg-background">
+              <SelectValue placeholder="All form types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All form types</SelectItem>
+              {formTypeOptions.map((formType) => (
+                <SelectItem key={formType} value={formType}>
+                  {getFormLabel(formType)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
         {loading && submissions.length === 0 ? (
@@ -472,10 +517,14 @@ export function AssessmentSubmissionHistory({
           </div>
         ) : submissions.length === 0 ? (
           <p className="py-4 text-sm text-muted-foreground">No submitted forms yet.</p>
+        ) : filteredSubmissions.length === 0 ? (
+          <p className="py-4 text-sm text-muted-foreground">
+            No submitted forms of this type.
+          </p>
         ) : (
           <>
             <div className="space-y-2">
-              {submissions.map((submission) => (
+              {visibleSubmissions.map((submission) => (
                 <button
                   key={submission.id}
                   type="button"
@@ -497,19 +546,16 @@ export function AssessmentSubmissionHistory({
                 </button>
               ))}
             </div>
-            {hasNext && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onLoadMore}
-                disabled={loading}
-                className="w-full"
-              >
-                {loading && <Loader2 className="size-4 animate-spin" />}
-                Load more
-              </Button>
-            )}
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredSubmissions.length}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              itemLabel="submitted forms"
+              loading={loading}
+              className="mt-1"
+            />
           </>
         )}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>

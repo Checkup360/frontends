@@ -414,8 +414,6 @@ export function EmployeeDetailPage() {
   const [submissions, setSubmissions] = useState<AssessmentSubmissionSummary[]>(
     []
   )
-  const [submissionPage, setSubmissionPage] = useState(1)
-  const [submissionHasNext, setSubmissionHasNext] = useState(false)
   const [submissionsLoading, setSubmissionsLoading] = useState(true)
   const [selectedSubmission, setSelectedSubmission] =
     useState<AssessmentSubmissionDetail | null>(null)
@@ -503,10 +501,25 @@ export function EmployeeDetailPage() {
     const loadSubmissions = async () => {
       if (!organizationId || !id) return
       setSubmissionsLoading(true)
-      const data = await listEmployeeAssessmentSubmissions(organizationId, id)
+      const allSubmissions: AssessmentSubmissionSummary[] = []
+      let page = 1
+      let hasNext = true
+
+      while (hasNext && page <= 50) {
+        const data = await listEmployeeAssessmentSubmissions(
+          organizationId,
+          id,
+          page,
+          100
+        )
+        if (!data) break
+        allSubmissions.push(...data.items)
+        hasNext = data.has_next
+        page += 1
+      }
+
       if (active) {
-        setSubmissions(data?.items || [])
-        setSubmissionHasNext(data?.has_next || false)
+        setSubmissions(allSubmissions)
         setSubmissionsLoading(false)
       }
     }
@@ -515,23 +528,6 @@ export function EmployeeDetailPage() {
       active = false
     }
   }, [organizationId, id])
-
-  const loadMoreSubmissions = async () => {
-    if (!organizationId || !id) return
-    const nextPage = submissionPage + 1
-    setSubmissionsLoading(true)
-    const data = await listEmployeeAssessmentSubmissions(
-      organizationId,
-      id,
-      nextPage
-    )
-    if (data) {
-      setSubmissions((current) => [...current, ...data.items])
-      setSubmissionPage(nextPage)
-      setSubmissionHasNext(data.has_next)
-    }
-    setSubmissionsLoading(false)
-  }
 
   const selectSubmission = async (submission: AssessmentSubmissionSummary) => {
     if (!organizationId || !id) return
@@ -1248,8 +1244,6 @@ export function EmployeeDetailPage() {
         <AssessmentSubmissionHistory
           submissions={submissions}
           loading={submissionsLoading}
-          hasNext={submissionHasNext}
-          onLoadMore={loadMoreSubmissions}
           onSelect={selectSubmission}
           selected={selectedSubmission}
           detailLoading={submissionDetailLoading}

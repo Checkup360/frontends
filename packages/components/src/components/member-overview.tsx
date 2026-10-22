@@ -407,10 +407,7 @@ export function MemberOverview({
                         {/* Top: Icon on left, Badge on right */}
                         <div className="flex items-center justify-between gap-3">
                           <div
-                            className={cn(
-                              "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                              status.iconBg
-                            )}
+                            className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/80"
                           >
                             <Icon className="size-5" />
                           </div>
@@ -484,7 +481,7 @@ export function MemberOverview({
             </div>
             <ScoreEvolutionChart
               title="Health score evolution"
-              description="Monthly progression — dots mark actual evaluations; lines carry the score forward."
+              description=""
               data={evolutionData}
               series={[{ key: "overall", label: "Health score", color: "var(--primary)" }]}
               yAxisDomain={[0, 100]}

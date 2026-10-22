@@ -1082,7 +1082,7 @@ export function ScoreWeightsPage() {
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Optimal health parameters consistent with a low cardiometabolic risk profile.
+                    Optimal health parameters indicating a low overall risk profile.
                   </p>
                 </div>
               </div>

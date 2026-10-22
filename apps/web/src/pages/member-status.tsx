@@ -265,8 +265,6 @@ export function MemberStatusPage() {
   const [submissions, setSubmissions] = useState<AssessmentSubmissionSummary[]>(
     []
   )
-  const [submissionPage, setSubmissionPage] = useState(1)
-  const [submissionHasNext, setSubmissionHasNext] = useState(false)
   const [submissionsLoading, setSubmissionsLoading] = useState(true)
   const [selectedSubmission, setSelectedSubmission] =
     useState<AssessmentSubmissionDetail | null>(null)
@@ -285,27 +283,23 @@ export function MemberStatusPage() {
   useEffect(() => {
     async function loadSubmissions() {
       setSubmissionsLoading(true)
-      const data = await listMyAssessmentSubmissions()
-      if (data) {
-        setSubmissions(data.items)
-        setSubmissionHasNext(data.has_next)
+      const allSubmissions: AssessmentSubmissionSummary[] = []
+      let page = 1
+      let hasNext = true
+
+      while (hasNext && page <= 50) {
+        const data = await listMyAssessmentSubmissions(page, 100)
+        if (!data) break
+        allSubmissions.push(...data.items)
+        hasNext = data.has_next
+        page += 1
       }
+
+      setSubmissions(allSubmissions)
       setSubmissionsLoading(false)
     }
     void loadSubmissions()
   }, [])
-
-  const loadMoreSubmissions = async () => {
-    const nextPage = submissionPage + 1
-    setSubmissionsLoading(true)
-    const data = await listMyAssessmentSubmissions(nextPage)
-    if (data) {
-      setSubmissions((current) => [...current, ...data.items])
-      setSubmissionPage(nextPage)
-      setSubmissionHasNext(data.has_next)
-    }
-    setSubmissionsLoading(false)
-  }
 
   const selectSubmission = async (submission: AssessmentSubmissionSummary) => {
     setSubmissionDetailLoading(true)
@@ -453,11 +447,7 @@ export function MemberStatusPage() {
                       {/* Left: Icon, Topic Name, Badge, Description & View details */}
                       <div className="flex items-start gap-3.5">
                         <div
-                          className={cn(
-                            "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                            config.iconBg,
-                            config.color
-                          )}
+                          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/80"
                         >
                           <Icon className="size-5" />
                         </div>
@@ -505,8 +495,6 @@ export function MemberStatusPage() {
       <AssessmentSubmissionHistory
         submissions={submissions}
         loading={submissionsLoading}
-        hasNext={submissionHasNext}
-        onLoadMore={loadMoreSubmissions}
         onSelect={selectSubmission}
         selected={selectedSubmission}
         detailLoading={submissionDetailLoading}
