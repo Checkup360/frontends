@@ -570,70 +570,32 @@ export function EmployeeDetailPage() {
 
   const isViewingLatest = activeSession?.isLatest ?? true
 
-  // Indicators: sort all results by severity and get top 3
+  // Indicators: the backend returns the 3 active scores with the lowest health index
   const dynamicIndicators: HealthScoreRow[] = useMemo(() => {
-    const results = activeSession?.results || []
+    const results = activeSession?.lowestHealthIndexResults ?? []
 
-    const allIndicators = results.map((res) => {
+    return results.map((res) => {
       const topicMeta = getTopicMeta(res.score_id || "", res.score_name || "")
-      const isDeactivated =
-        scoreWeights !== null && (scoreWeights[topicMeta.id] ?? 0) <= 0
-      const isEvaluated =
-        res.health_index !== null && res.health_index !== undefined
-      const val = isEvaluated
-        ? Math.round(res.health_index as number)
-        : null
+      const value = Math.round(res.health_index as number)
       const riskMeta = getRiskTone(
         res.risk_level,
-        val ?? undefined,
+        value,
         assessments?.risk_thresholds
       )
-
-      let severityScore = 0
-      if (riskMeta.riskLevel === "high") severityScore = 3
-      else if (riskMeta.riskLevel === "moderate") severityScore = 2
-      else if (riskMeta.riskLevel === "low") severityScore = 1
 
       return {
         label: getAssessmentDisplayName(
           res.score_id || "",
           res.score_name || topicMeta.name
         ),
-        value: val,
+        value,
         icon: topicMeta.icon,
-        tone: isDeactivated ? "muted" : riskMeta.tone,
-        isPending: !isEvaluated,
-        isDeactivated: isDeactivated,
-        _severityScore: severityScore,
-        _val: val ?? 100, // lower is worse, 100 is best
-        _weight: scoreWeights ? (scoreWeights[topicMeta.id] ?? 0) : 1,
+        tone: riskMeta.tone,
+        isPending: false,
+        isDeactivated: false,
       }
     })
-
-    allIndicators.sort((a, b) => {
-      const aActive = !a.isDeactivated
-      const bActive = !b.isDeactivated
-      if (aActive !== bActive) return aActive ? -1 : 1
-
-      if (aActive) {
-        if (a._weight !== b._weight) return b._weight - a._weight
-      }
-
-      if (a._severityScore !== b._severityScore) {
-        return b._severityScore - a._severityScore
-      }
-      return a._val - b._val
-    })
-
-    return allIndicators.slice(0, 3).map((indicator) => ({
-      label: indicator.label,
-      value: indicator.value,
-      icon: indicator.icon,
-      tone: indicator.tone,
-      isPending: indicator.isPending,
-      isDeactivated: indicator.isDeactivated,
-    }))
-  }, [activeSession, scoreWeights, assessments?.risk_thresholds])
+  }, [activeSession, assessments?.risk_thresholds])
 
   const hasAnyEvaluated = dynamicIndicators.some(
     (i) => !i.isPending && i.value !== null
@@ -730,7 +692,9 @@ export function EmployeeDetailPage() {
     }
 
     for (const topic of SCORE_TOPICS) {
-      if (!seenTopicIds.has(topic.id)) {
+      const isDeactivated =
+        scoreWeights !== null && (scoreWeights[topic.id] ?? 0) <= 0
+      if (!isDeactivated && !seenTopicIds.has(topic.id)) {
         results.push({
           score_id: topic.matchKey,
           score_name: topic.name,

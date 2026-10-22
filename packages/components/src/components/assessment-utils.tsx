@@ -105,6 +105,7 @@ export function groupResultsIntoSessions(
         overallScore: s.overall_health_index,
         overallRiskLevel: s.overall_risk_level,
         results: uniqueResults,
+        lowestHealthIndexResults: s.lowest_health_index_results,
       }
     })
   }
@@ -277,6 +278,8 @@ export interface AssessmentSession {
   overallScore?: number | null
   overallRiskLevel?: string | null
   results: AssessmentResultResponse[]
+  /** Backend-selected active scores with the lowest health index, worst first. */
+  lowestHealthIndexResults?: AssessmentResultResponse[]
 }
 
 export function formatSessionDate(dateString?: string | null): string {

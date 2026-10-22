@@ -217,6 +217,7 @@ export type AssessmentSessionResponse = {
   overall_health_index?: number | null
   overall_risk_level?: string | null
   results: AssessmentResultResponse[]
+  lowest_health_index_results?: AssessmentResultResponse[]
 }
 
 export type AssessmentsResponse = {
@@ -228,6 +229,7 @@ export type AssessmentsResponse = {
   limit?: number
   sessions?: AssessmentSessionResponse[]
   results: AssessmentResultResponse[]
+  lowest_health_index_results?: AssessmentResultResponse[]
 }
 
 export type AssessmentSubmissionSummary = {
