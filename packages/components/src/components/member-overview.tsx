@@ -28,7 +28,7 @@ import {
   getAssessmentDisplayName,
   buildEmployeeEvolutionTimeline,
 } from "./assessment-utils"
-import { ScoreEvolutionChart } from "./score-evolution-chart"
+import { CHART_PALETTE, ScoreEvolutionChart } from "./score-evolution-chart"
 import { HealthScoreHeroCard, heroLevelConfig } from "./health-score-hero-card"
 
 import {
@@ -480,7 +480,13 @@ export function MemberOverview({
               title="Health score evolution"
               description=""
               data={evolutionData}
-              series={[{ key: "overall", label: "Health score", color: "var(--primary)" }]}
+              series={[
+                {
+                  key: "overall",
+                  label: "Health score",
+                  color: CHART_PALETTE[0],
+                },
+              ]}
               yAxisDomain={[0, 100]}
               yAxisTicks={[0, 25, 50, 75, 100]}
               showDots={true}
