@@ -336,7 +336,7 @@ export function EmployeesTable({
           <div className="w-full sm:max-w-xs">
             <Input
               type="text"
-              placeholder="Filter by email or area..."
+              placeholder="Filter by name, email or area..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
