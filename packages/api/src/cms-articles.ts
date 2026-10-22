@@ -51,6 +51,8 @@ export type PayloadPagesResponse = {
 export type RecommendedCmsPagesResponse = PayloadPagesResponse & {
   /** Raw category keys of every article in the organization. */
   categories?: string[]
+  categoryLabels?: Record<string, string>
+  personalized?: boolean
 }
 
 export type HealthContentAuthor = {
@@ -249,37 +251,6 @@ export function mapPayloadPageToArticle(
 }
 
 /**
- * Consulta la API REST de Payload CMS para obtener las páginas/artículos disponibles
- */
-export async function fetchCmsPages(options?: {
-  cmsOrigin?: string
-  limit?: number
-}): Promise<PayloadPageDoc[]> {
-  const cmsOrigin = (
-    options?.cmsOrigin ||
-    resolveCmsUrl()
-  ).replace(/\/$/, "")
-
-  const limit = options?.limit ?? 50
-  const url = `${cmsOrigin}/api/pages?depth=2&limit=${limit}`
-
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  })
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch CMS pages: HTTP ${response.status}`)
-  }
-
-  const data = (await response.json()) as PayloadPagesResponse
-  return data.docs || []
-}
-
-/**
  * Consulta un artículo/página individual por su ID desde Payload CMS
  */
 export async function fetchCmsPageById(
@@ -318,10 +289,8 @@ export async function fetchCmsPageById(
  */
 export async function fetchRecommendedCmsPages(options?: {
   cmsOrigin?: string
-  riskWeights?: Record<string, number>
   page?: number
   limit?: number
-  organizationId?: string
   category?: string | null
   search?: string
 }): Promise<RecommendedCmsPagesResponse> {
@@ -336,14 +305,6 @@ export async function fetchRecommendedCmsPages(options?: {
   params.append("page", page.toString())
   params.append("limit", limit.toString())
 
-  // Weights hold only the risks the organization has enabled. An empty object
-  // is meaningful (no active risks); omitting it disables category filtering.
-  if (options?.riskWeights) {
-    params.append("weights", JSON.stringify(options.riskWeights))
-  }
-  if (options?.organizationId) {
-    params.append("organization", options.organizationId)
-  }
   if (options?.category) {
     params.append("category", options.category)
   }

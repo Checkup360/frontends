@@ -1,10 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import {
-  fetchMemberRiskPriorities,
   fetchRecommendedCmsPages,
   mapPayloadPageToArticle,
   resolveCmsUrl,
-  toCategoryLabels,
   type CategoryLabels,
   type HealthContentArticle,
 } from "@workspace/api"
@@ -23,11 +21,6 @@ export interface PaginationInfo {
   limit: number
   hasNextPage: boolean
   hasPrevPage: boolean
-}
-
-type MemberTopics = {
-  riskWeights: Record<string, number> | undefined
-  categoryLabels: CategoryLabels
 }
 
 export function useMemberArticles(options?: UseMemberArticlesOptions) {
@@ -52,19 +45,7 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isFetching, setIsFetching] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
-  const memberTopicsRequest = useRef<Promise<MemberTopics> | null>(null)
   const latestRequestId = useRef(0)
-
-  // Weights and topic names come from the backend; fetched once per page view
-  const loadMemberTopics = useCallback((): Promise<MemberTopics> => {
-    memberTopicsRequest.current ??= fetchMemberRiskPriorities().then(
-      (priorities) => ({
-        riskWeights: priorities?.risk_weights,
-        categoryLabels: toCategoryLabels(priorities?.categories),
-      })
-    )
-    return memberTopicsRequest.current
-  }, [])
 
   const loadArticles = useCallback(async () => {
     const requestId = ++latestRequestId.current
@@ -73,12 +54,8 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
 
     try {
       const cmsOrigin = resolveCmsUrl()
-      // 1. Clinical risk priorities and topic names from the backend
-      const { riskWeights, categoryLabels: labels } = await loadMemberTopics()
-      // 2. Weighted, filtered and paginated recommendations from the CMS
       const response = await fetchRecommendedCmsPages({
         cmsOrigin,
-        riskWeights,
         page,
         limit,
         category,
@@ -86,6 +63,7 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
       })
       if (requestId !== latestRequestId.current) return
 
+      const labels = response.categoryLabels ?? {}
       const mapped = (response.docs || []).map((doc) =>
         mapPayloadPageToArticle(doc, cmsOrigin, labels)
       )
@@ -115,7 +93,7 @@ export function useMemberArticles(options?: UseMemberArticlesOptions) {
         setIsFetching(false)
       }
     }
-  }, [page, limit, category, search, loadMemberTopics])
+  }, [page, limit, category, search])
 
   useEffect(() => {
     // eslint-disable-next-line
