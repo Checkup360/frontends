@@ -1,3 +1,4 @@
+import { formatEnumLabel } from "@workspace/ui/lib/format-enum-label"
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import {
@@ -1026,9 +1027,8 @@ export function DepartmentDetailPage() {
                               "secondary"
                             }
                             size="xs"
-                            className="capitalize"
                           >
-                            {emp.status}
+                            {formatEnumLabel(emp.status)}
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground">—</span>

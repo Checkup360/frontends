@@ -1,3 +1,4 @@
+import { formatEnumLabel } from "@workspace/ui/lib/format-enum-label"
 import {
   listOrganizationEmployeesPage,
   listDepartments,
@@ -611,9 +612,8 @@ export function EmployeesTable({
                           <Badge
                             variant={statusVariants[w.status] ?? "info-light"}
                             size="xs"
-                            className="capitalize"
                           >
-                            {w.status.replace(/_/g, " ")}
+                            {formatEnumLabel(w.status)}
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground">—</span>

@@ -1,3 +1,4 @@
+import { formatEnumLabel } from "@workspace/ui/lib/format-enum-label"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { CreateInvitationButton } from "@workspace/components/components/create-invitation-button"
@@ -579,8 +580,8 @@ export function InvitePeoplePage() {
                       </TableCell>
                       <TableCell className="font-medium text-muted-foreground">
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-foreground capitalize">
-                            {inv.role ? inv.role.replace(/_/g, " ") : "Member"}
+                          <span className="font-semibold text-foreground">
+                            {inv.role ? formatEnumLabel(inv.role) : "Member"}
                           </span>
                           {inv.department_name && (
                             <span className="text-xs text-muted-foreground">

@@ -1,3 +1,4 @@
+import { formatEnumLabel } from "@workspace/ui/lib/format-enum-label"
 import {
   Avatar,
   AvatarFallback,
@@ -197,9 +198,9 @@ export function EmployeeProfileCard({
             value={
               <Badge
                 variant="outline"
-                className={cn("capitalize", statusClasses[normalizedStatus])}
+                className={cn(statusClasses[normalizedStatus])}
               >
-                {status}
+                {formatEnumLabel(status)}
               </Badge>
             }
           />

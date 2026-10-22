@@ -1,3 +1,4 @@
+import { formatEnumLabel } from "@workspace/ui/lib/format-enum-label"
 import { useCallback, useEffect, useState, useMemo } from "react"
 import {
   listOrganizationAuditLogs,
@@ -176,9 +177,9 @@ export function CompliancePage() {
         )
       default:
         return (
-          <Badge variant="outline" className="gap-1 font-medium capitalize">
+          <Badge variant="outline" className="gap-1 font-medium">
             <FileText className="size-3" />
-            {action.replace(/_/g, " ")}
+            {formatEnumLabel(action)}
           </Badge>
         )
     }
@@ -396,13 +397,13 @@ export function CompliancePage() {
                         </TableCell>
                         <TableCell className="py-3 text-xs text-muted-foreground">
                           {formType && (
-                            <span className="font-medium capitalize text-foreground">
-                              Form: {formType.replace(/_/g, " ")}
+                            <span className="font-medium text-foreground">
+                              Form: {formatEnumLabel(formType)}
                             </span>
                           )}
                           {!formType && consentType && (
                             <span className="font-medium text-foreground">
-                              {consentType.replace(/_/g, " ")}
+                              {formatEnumLabel(consentType)}
                             </span>
                           )}
                           {version && (

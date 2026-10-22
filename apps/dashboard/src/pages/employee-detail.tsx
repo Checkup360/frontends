@@ -1,3 +1,4 @@
+import { formatEnumLabel } from "@workspace/ui/lib/format-enum-label"
 import { useEffect, useState, useMemo } from "react"
 import { cn } from "@workspace/ui/lib/utils"
 import { useParams, useNavigate } from "react-router-dom"
@@ -326,11 +327,6 @@ const EMPLOYEE_STATUS_VARIANTS: Record<
   pending_assessments: "warning-light",
   onboarding: "info-light",
   inactive: "secondary",
-}
-
-function formatEmployeeStatus(status: string) {
-  const label = status.replace(/_/g, " ")
-  return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
 function calculateAge(dateOfBirth: Date) {
@@ -873,7 +869,7 @@ export function EmployeeDetailPage() {
                     }
                     size="sm"
                   >
-                    {formatEmployeeStatus(employee.status)}
+                    {formatEnumLabel(employee.status)}
                   </Badge>
                 )}
                 {normalizeRoles(employee.roles || []).map((r) => {

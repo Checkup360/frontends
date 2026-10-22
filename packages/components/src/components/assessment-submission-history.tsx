@@ -1,3 +1,4 @@
+import { formatEnumLabel } from "@workspace/ui/lib/format-enum-label"
 import { useState } from "react"
 import type {
   AssessmentSubmissionDetail,
@@ -80,8 +81,8 @@ function SubmissionStatusBadge({ status }: { status: string }) {
     )
   }
   return (
-    <Badge variant="outline" size="sm" className="capitalize font-medium">
-      {status.replace(/_/g, " ")}
+    <Badge variant="outline" size="sm" className="font-medium">
+      {formatEnumLabel(status)}
     </Badge>
   )
 }
@@ -173,8 +174,8 @@ function ScoreRiskBadge({
   }
 
   return (
-    <Badge variant="info-light" size="sm" className="gap-1 font-medium capitalize">
-      {riskLevel ? riskLevel.replace(/_/g, " ") : "Calculated"}
+    <Badge variant="info-light" size="sm" className="gap-1 font-medium">
+      {riskLevel ? formatEnumLabel(riskLevel) : "Calculated"}
     </Badge>
   )
 }
@@ -313,7 +314,7 @@ const FORM_LABELS: Record<string, string> = {
 }
 
 function getFormLabel(value: string): string {
-  return FORM_LABELS[value] || value.replaceAll("_", " ")
+  return FORM_LABELS[value] || formatEnumLabel(value)
 }
 
 function formatAnswer(field: string, value: unknown): string {
