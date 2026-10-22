@@ -19,7 +19,6 @@ import {
   FileText,
   HeartPulse,
   Moon,
-  Sparkles,
 } from "lucide-react"
 import { fetchActiveMemberForms } from "@workspace/api"
 import { PageHeader } from "@workspace/components/components/page-header"
@@ -186,9 +185,6 @@ export function MemberFormsPage() {
         <CardHeader className="pb-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Sparkles className="size-5" />
-              </div>
               <div>
                 <CardTitle className="text-lg font-semibold">
                   Overall Completion Status

@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card"
 import { cn } from "@workspace/ui/lib/utils"
-import { Sparkles } from "lucide-react"
 
 export const heroLevelConfig = {
   low: {
@@ -175,8 +174,7 @@ export function HealthScoreHeroCard({
           </div>
 
           <div className="w-full max-w-md space-y-3 text-center md:text-left">
-            <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-4 text-left">
-              <Sparkles className="mt-0.5 size-5 shrink-0 text-primary" />
+            <div className="rounded-lg bg-muted/50 p-4 text-left">
               <div className="min-w-0 flex-1">
                 <p className="text-sm leading-relaxed font-medium">
                   Evaluated Status Summary

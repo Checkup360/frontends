@@ -1,5 +1,9 @@
 import { useEffect, useState, useMemo } from "react"
-import { listAssessments, type AssessmentsResponse } from "@workspace/api"
+import {
+  fetchActiveMemberForms,
+  listAssessments,
+  type AssessmentsResponse,
+} from "@workspace/api"
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -101,6 +105,24 @@ export function MemberOverview({
     initialAssessments || null
   )
   const [isLoading, setIsLoading] = useState(!initialAssessments)
+  const [pendingFormsCount, setPendingFormsCount] = useState(0)
+
+  useEffect(() => {
+    if (showBack) return
+
+    let active = true
+    async function loadPendingForms() {
+      const res = await fetchActiveMemberForms()
+      if (!active) return
+      const pending =
+        res?.active_forms.filter((form) => !form.is_completed).length ?? 0
+      setPendingFormsCount(pending)
+    }
+    void loadPendingForms()
+    return () => {
+      active = false
+    }
+  }, [showBack])
 
   useEffect(() => {
     if (initialAssessments !== undefined) {
@@ -338,13 +360,27 @@ export function MemberOverview({
                 </div>
                 {!showBack && (
                   <Button
-                    variant="outline"
+                    variant={pendingFormsCount > 0 ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleNavigate("/forms")}
-                    className="self-start sm:self-auto gap-2 rounded-xl border-border/80 text-xs font-semibold shadow-xs hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all"
+                    className={cn(
+                      "self-start sm:self-auto gap-2 rounded-xl text-xs font-semibold shadow-xs transition-all",
+                      pendingFormsCount > 0
+                        ? "border-transparent"
+                        : "border-border/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+                    )}
                   >
-                    <ClipboardList className="size-3.5 text-primary" />
-                    <span>Go to Forms</span>
+                    <ClipboardList
+                      className={cn(
+                        "size-3.5",
+                        pendingFormsCount === 0 && "text-primary"
+                      )}
+                    />
+                    <span>
+                      {pendingFormsCount > 0
+                        ? `Complete ${pendingFormsCount} Pending Form${pendingFormsCount === 1 ? "" : "s"}`
+                        : "Go to Forms"}
+                    </span>
                     <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
                   </Button>
                 )}
