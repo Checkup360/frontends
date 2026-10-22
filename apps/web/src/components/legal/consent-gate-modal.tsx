@@ -10,9 +10,8 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { Badge } from "@workspace/ui/components/badge"
 import { Checkbox } from "@workspace/ui/components/checkbox"
-import { Label } from "@workspace/ui/components/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@workspace/ui/components/card"
-import { ShieldCheck, Lock, FileText, CheckCircle2, ArrowRight, Sparkles } from "lucide-react"
+import { ShieldCheck, Lock, FileText, CheckCircle2, ArrowRight, Sparkles, X } from "lucide-react"
 import { getLegalDocForForm } from "./legal-content"
 import { acceptConsent } from "@workspace/api"
 import { toast } from "@workspace/ui/components/sonner"
@@ -98,111 +97,129 @@ export function ConsentGateModal({
         onOpenChange(val)
       }}
     >
-      <DialogContent className="max-h-[90vh] max-w-xl w-full min-w-0 overflow-y-auto overflow-x-hidden sm:rounded-2xl border border-primary/20 bg-card shadow-2xl p-6">
-        <DialogHeader className="space-y-2.5 text-left min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="gap-1.5 border-primary/40 bg-primary/10 text-primary py-0.5 px-2.5 text-xs font-medium">
-              <ShieldCheck className="size-3.5" />
-              Informed Consent
-            </Badge>
-            <span className="text-[11px] text-muted-foreground font-mono">v{doc.version}</span>
+      <DialogContent
+        showCloseButton={false}
+        className="flex max-h-[92dvh] w-full min-w-0 flex-col gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-2xl ring-1 ring-border/60 sm:max-w-2xl"
+      >
+        <DialogHeader className="relative gap-3 border-b border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-5 pb-4 pt-5 text-left sm:px-8">
+          <div className="flex items-start gap-4">
+            <div className="hidden size-12 shrink-0 sm:flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
+              <ShieldCheck className="size-6" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+                  Informed Consent
+                </span>
+                <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                  v{doc.version}
+                </span>
+              </div>
+              <DialogTitle className="break-words text-xl font-bold leading-tight tracking-tight text-foreground sm:text-2xl">
+                {doc.title}
+              </DialogTitle>
+              <DialogDescription className="break-words text-sm leading-relaxed text-muted-foreground">
+                {doc.subtitle}
+              </DialogDescription>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="-mr-2 -mt-1 shrink-0 rounded-full text-muted-foreground"
+            >
+              <X className="size-4" />
+              <span className="sr-only">Close</span>
+            </Button>
           </div>
-          <DialogTitle className="text-xl sm:text-2xl font-bold tracking-tight text-foreground break-words">
-            {doc.title}
-          </DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm leading-relaxed text-muted-foreground break-words">
-            {doc.subtitle}
-          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2 min-w-0">
-          {/* Purpose Card */}
-          <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-1.5 min-w-0 max-w-full overflow-hidden break-words">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <FileText className="size-3.5 text-primary shrink-0" />
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-5 py-5 [scrollbar-width:thin] sm:px-8">
+          <section className="space-y-2">
+            <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <FileText className="size-4 shrink-0 text-primary" />
               Purpose of Evaluation
-            </p>
-            <p className="text-xs sm:text-sm leading-relaxed text-foreground/90 break-words">
+            </h3>
+            <p className="break-words text-sm leading-relaxed text-foreground/90">
               {doc.purpose}
             </p>
-          </div>
+          </section>
 
-          {/* Indicators Collected */}
-          <div className="rounded-xl border border-border/60 bg-background/50 p-4 space-y-2.5 min-w-0 max-w-full overflow-hidden break-words">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Lock className="size-3.5 text-primary shrink-0" />
+          <section className="space-y-2.5">
+            <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Lock className="size-4 shrink-0 text-primary" />
               Collected Indicators
-            </p>
-            <ul className="grid gap-1.5 min-w-0">
+            </h3>
+            <ul className="grid gap-2">
               {doc.dataCollected.map((item, idx) => (
                 <li
                   key={idx}
-                  className="flex items-start gap-2.5 rounded-lg border border-border/30 bg-muted/20 px-3 py-2 text-foreground/90 transition-colors min-w-0"
+                  className="flex min-w-0 items-start gap-3 rounded-xl bg-muted/40 px-4 py-3 text-sm text-foreground/90"
                 >
-                  <span className="mt-1.5 size-1.5 rounded-full bg-primary shrink-0" />
-                  <span className="min-w-0 flex-1 break-words leading-relaxed text-xs sm:text-sm font-normal">
-                    {item}
-                  </span>
+                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+                  <span className="min-w-0 flex-1 break-words leading-relaxed">{item}</span>
                 </li>
               ))}
             </ul>
-          </div>
+          </section>
 
-          {/* Privacy & Safeguards */}
-          <div className="rounded-xl border border-success/20 bg-success/5 p-4 space-y-2 min-w-0 max-w-full overflow-hidden break-words">
-            <p className="text-xs font-semibold uppercase tracking-wider text-success flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-success shrink-0" />
+          <section className="space-y-3 rounded-2xl bg-success/10 p-5 ring-1 ring-success/20">
+            <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-success">
+              <CheckCircle2 className="size-4 shrink-0" />
               Privacy & Confidentiality Guarantees
-            </p>
-            <ul className="space-y-1.5 text-xs text-muted-foreground min-w-0">
+            </h3>
+            <ul className="space-y-2">
               {doc.rights.map((right, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-foreground/80 min-w-0">
-                  <span className="mt-1 size-1.5 rounded-full bg-success shrink-0" />
+                <li key={idx} className="flex min-w-0 items-start gap-2.5 text-sm text-foreground/85">
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
                   <span className="min-w-0 flex-1 break-words leading-relaxed">{right}</span>
                 </li>
               ))}
             </ul>
-          </div>
+          </section>
 
-          {/* Checkbox */}
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 min-w-0 overflow-hidden">
-            <div className="flex items-start gap-3 min-w-0">
-              <Checkbox
-                id="consent-form-ack-modal"
-                checked={acknowledged}
-                onCheckedChange={(val) => setAcknowledged(Boolean(val))}
-                className="mt-0.5 shrink-0"
-              />
-              <Label
-                htmlFor="consent-form-ack-modal"
-                className="text-xs font-normal leading-relaxed text-foreground cursor-pointer min-w-0 flex-1 break-words"
-              >
-                I have read and voluntarily agree to the informed consent terms for this questionnaire. I understand my responses and health indicators will be processed and reviewed by authorized organization administrators and occupational health medical staff for preventative care and workplace health tracking.
-              </Label>
-            </div>
-          </div>
+          <label
+            htmlFor="consent-form-ack-modal"
+            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors ${
+              acknowledged ? "border-primary/50 bg-primary/5" : "border-border bg-background hover:border-primary/30"
+            }`}
+          >
+            <Checkbox
+              id="consent-form-ack-modal"
+              checked={acknowledged}
+              onCheckedChange={(val) => setAcknowledged(Boolean(val))}
+              className="mt-0.5 shrink-0"
+            />
+            <span className="min-w-0 flex-1 break-words text-xs leading-relaxed text-foreground/90 sm:text-[13px]">
+              I have read and voluntarily agree to the informed consent terms for this questionnaire. I understand my responses and health indicators will be processed and reviewed by authorized organization administrators and occupational health medical staff for preventative care and workplace health tracking.
+            </span>
+          </label>
         </div>
 
-        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end pt-2 min-w-0">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className="text-xs"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={() => void handleAccept()}
-            disabled={!canSubmit || isSubmitting}
-            className="gap-2 rounded-xl px-6 py-2 text-xs sm:text-sm font-medium shadow-md shadow-primary/20 shrink-0"
-          >
-            {isSubmitting ? "Recording..." : "Acknowledge & Start"}
-            <ArrowRight className="size-3.5" />
-          </Button>
-        </DialogFooter>
+        <div className="border-t border-border/50 bg-muted/30 px-6 py-4 sm:px-8">
+          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void handleAccept()}
+              disabled={!canSubmit || isSubmitting}
+              className="shrink-0 gap-2 rounded-xl px-6 shadow-md shadow-primary/20"
+            >
+              {isSubmitting ? "Recording..." : "Acknowledge & Start"}
+              <ArrowRight className="size-4" />
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

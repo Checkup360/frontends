@@ -1281,18 +1281,18 @@ export function MemberFormsStudiesPage() {
   return (
     <div className="mx-auto w-full max-w-7xl min-w-0 space-y-8 pb-12">
       {/* Top Header */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
         <Button variant="ghost" size="icon" asChild className="shrink-0">
-          <Link to="/forms">
+          <Link to="/forms" aria-label="Back to forms">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/80">
             <TitleIcon className="size-5" />
           </div>
-          <div className="min-w-0">
-            <h2 className="text-2xl font-bold tracking-tight break-words">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-bold tracking-tight break-words sm:text-2xl">
               {currentTitle.title}
             </h2>
             <p className="text-sm text-muted-foreground break-words">
@@ -2358,152 +2358,58 @@ export function MemberFormsStudiesPage() {
           </CardHeader>
           <form onSubmit={(e) => void handleSaveNordicNmq(e)}>
             <CardContent className="space-y-6 px-6 pt-2 pb-8">
-              <div className="overflow-x-auto rounded-xl border border-border/60 bg-muted/15 p-4">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border/40 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                      <th className="px-2 py-3">Body Region</th>
-                      <th className="px-2 py-3 text-center">
-                        Trouble in last 12m?
-                      </th>
-                      <th className="px-2 py-3 text-center">
-                        Prevented work in last 12m?
-                      </th>
-                      <th className="px-2 py-3 text-center">
-                        Trouble in last 7 days?
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/20">
-                    {NMQ_ANATOMICAL_ZONES.map((zone) => {
-                      const f12m = `nmq_${zone.id}_12m` as keyof StudiesData
-                      const fPrev =
-                        `nmq_${zone.id}_prevent_12m` as keyof StudiesData
-                      const f7d = `nmq_${zone.id}_7d` as keyof StudiesData
-                      const hasErr =
-                        fieldErrors[f12m] ||
-                        fieldErrors[fPrev] ||
-                        fieldErrors[f7d]
+              <div className="rounded-xl border border-border/60 bg-muted/15 md:p-4">
+                <div
+                  aria-hidden
+                  className="hidden grid-cols-[1.2fr_1fr_1fr_1fr] gap-4 border-b border-border/40 px-2 pb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase md:grid"
+                >
+                  <span>Body Region</span>
+                  <span className="text-center">Trouble in last 12m?</span>
+                  <span className="text-center">Prevented work in last 12m?</span>
+                  <span className="text-center">Trouble in last 7 days?</span>
+                </div>
+                <div className="divide-y divide-border/30">
+                  {NMQ_ANATOMICAL_ZONES.map((zone) => {
+                    const f12m = `nmq_${zone.id}_12m` as keyof StudiesData
+                    const fPrev = `nmq_${zone.id}_prevent_12m` as keyof StudiesData
+                    const f7d = `nmq_${zone.id}_7d` as keyof StudiesData
+                    const hasErr =
+                      fieldErrors[f12m] || fieldErrors[fPrev] || fieldErrors[f7d]
+                    const questions = [
+                      { field: f12m, label: "Trouble in last 12 months?" },
+                      { field: fPrev, label: "Prevented work in last 12 months?" },
+                      { field: f7d, label: "Trouble in last 7 days?" },
+                    ]
 
-                      return (
-                        <tr
-                          key={zone.id}
-                          id={`field-group-${f12m}`}
-                          className={cn(
-                            "transition-colors hover:bg-muted/20",
-                            hasErr && "bg-destructive/10"
-                          )}
-                        >
-                          <td className="px-2 py-3 font-medium text-foreground">
-                            {zone.name}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            <RadioGroup
-                              value={data[f12m]}
-                              onValueChange={(val) => updateField(f12m, val)}
-                              disabled={isSubmitting || isLoadingData}
-                              className="inline-flex justify-center gap-4"
-                            >
-                              <div className="flex items-center space-x-1">
-                                <RadioGroupItem
-                                  value="true"
-                                  id={`${f12m}-yes`}
-                                />
-                                <Label
-                                  htmlFor={`${f12m}-yes`}
-                                  className="cursor-pointer text-xs"
-                                >
-                                  Yes
-                                </Label>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <RadioGroupItem
-                                  value="false"
-                                  id={`${f12m}-no`}
-                                />
-                                <Label
-                                  htmlFor={`${f12m}-no`}
-                                  className="cursor-pointer text-xs"
-                                >
-                                  No
-                                </Label>
-                              </div>
-                            </RadioGroup>
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            <RadioGroup
-                              value={data[fPrev]}
-                              onValueChange={(val) => updateField(fPrev, val)}
-                              disabled={isSubmitting || isLoadingData}
-                              className="inline-flex justify-center gap-4"
-                            >
-                              <div className="flex items-center space-x-1">
-                                <RadioGroupItem
-                                  value="true"
-                                  id={`${fPrev}-yes`}
-                                />
-                                <Label
-                                  htmlFor={`${fPrev}-yes`}
-                                  className="cursor-pointer text-xs"
-                                >
-                                  Yes
-                                </Label>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <RadioGroupItem
-                                  value="false"
-                                  id={`${fPrev}-no`}
-                                />
-                                <Label
-                                  htmlFor={`${fPrev}-no`}
-                                  className="cursor-pointer text-xs"
-                                >
-                                  No
-                                </Label>
-                              </div>
-                            </RadioGroup>
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            <RadioGroup
-                              value={data[f7d]}
-                              onValueChange={(val) => updateField(f7d, val)}
-                              disabled={isSubmitting || isLoadingData}
-                              className="inline-flex justify-center gap-4"
-                            >
-                              <div className="flex items-center space-x-1">
-                                <RadioGroupItem
-                                  value="true"
-                                  id={`${f7d}-yes`}
-                                />
-                                <Label
-                                  htmlFor={`${f7d}-yes`}
-                                  className="cursor-pointer text-xs"
-                                >
-                                  Yes
-                                </Label>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <RadioGroupItem
-                                  value="false"
-                                  id={`${f7d}-no`}
-                                />
-                                <Label
-                                  htmlFor={`${f7d}-no`}
-                                  className="cursor-pointer text-xs"
-                                >
-                                  No
-                                </Label>
-                              </div>
-                            </RadioGroup>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                    return (
+                      <div
+                        key={zone.id}
+                        id={`field-group-${f12m}`}
+                        className={cn(
+                          "grid gap-3 p-4 transition-colors md:grid-cols-[1.2fr_1fr_1fr_1fr] md:items-center md:gap-4 md:px-2 md:py-3 md:hover:bg-muted/20",
+                          hasErr && "bg-destructive/10"
+                        )}
+                      >
+                        <p className="font-semibold text-foreground md:font-medium">
+                          {zone.name}
+                        </p>
+                        {questions.map((question) => (
+                          <NmqYesNoField
+                            key={question.field}
+                            id={question.field}
+                            label={question.label}
+                            value={data[question.field]}
+                            disabled={isSubmitting || isLoadingData}
+                            onChange={(val) => updateField(question.field, val)}
+                          />
+                        ))}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </CardContent>
-            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
+            <CardFooter className="flex flex-col-reverse gap-2 border-t border-border/60 bg-muted/20 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
               <Button variant="ghost" className="rounded-lg" asChild>
                 <Link to="/forms">Cancel</Link>
               </Button>
@@ -2624,10 +2530,11 @@ export function MemberFormsStudiesPage() {
                     className="grid gap-2 sm:grid-cols-5"
                   >
                     {PSS10_LIKERT_OPTIONS.map((opt) => (
-                      <div
+                      <Label
                         key={opt.value}
+                        htmlFor={`${field}-${opt.value}`}
                         className={cn(
-                          "flex flex-col items-center justify-center rounded-lg border border-border/60 bg-background/50 p-2 text-center transition-all hover:bg-background/80",
+                          "flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-border/60 bg-background/50 px-3 py-2 text-xs font-normal transition-all hover:bg-background/80 sm:min-h-0 sm:flex-col sm:justify-center sm:gap-0 sm:p-2 sm:text-center",
                           data[field] === opt.value &&
                             "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
                         )}
@@ -2635,15 +2542,10 @@ export function MemberFormsStudiesPage() {
                         <RadioGroupItem
                           value={opt.value}
                           id={`${field}-${opt.value}`}
-                          className="mb-1"
+                          className="sm:mb-1"
                         />
-                        <Label
-                          htmlFor={`${field}-${opt.value}`}
-                          className="cursor-pointer text-xs font-normal"
-                        >
-                          {opt.label}
-                        </Label>
-                      </div>
+                        {opt.label}
+                      </Label>
                     ))}
                   </RadioGroup>
                   {fieldErrors[field] && (
@@ -2680,6 +2582,48 @@ export function MemberFormsStudiesPage() {
           void reloadConsents()
         }}
       />
+    </div>
+  )
+}
+
+
+interface NmqYesNoFieldProps {
+  id: string
+  label: string
+  value: string | undefined
+  disabled: boolean
+  onChange: (value: string) => void
+}
+
+function NmqYesNoField({ id, label, value, disabled, onChange }: NmqYesNoFieldProps) {
+  const options = [
+    { value: "true", text: "Yes" },
+    { value: "false", text: "No" },
+  ]
+
+  return (
+    <div className="flex flex-col gap-2 md:items-center">
+      <span className="text-sm text-muted-foreground md:hidden">
+        {label}
+      </span>
+      <RadioGroup
+        value={value}
+        onValueChange={onChange}
+        disabled={disabled}
+        aria-label={label}
+        className="grid grid-cols-2 gap-2 md:flex md:w-auto md:gap-4"
+      >
+        {options.map((option) => (
+          <Label
+            key={option.value}
+            htmlFor={`${id}-${option.value}`}
+            className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-medium transition-colors has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:text-primary md:min-h-8 md:min-w-0 md:border-0 md:bg-transparent md:px-1 md:text-xs md:has-[[data-state=checked]]:bg-transparent"
+          >
+            <RadioGroupItem value={option.value} id={`${id}-${option.value}`} />
+            {option.text}
+          </Label>
+        ))}
+      </RadioGroup>
     </div>
   )
 }
