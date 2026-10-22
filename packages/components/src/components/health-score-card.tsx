@@ -34,19 +34,19 @@ const toneClasses = {
     text: "text-foreground",
   },
   green: {
-    icon: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
-    bar: "bg-emerald-500/85",
-    text: "text-emerald-600 dark:text-emerald-400",
+    icon: "bg-risk-low/10 text-risk-low border border-risk-low/20",
+    bar: "bg-risk-low/85",
+    text: "text-risk-low",
   },
   amber: {
-    icon: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
-    bar: "bg-amber-400/90",
-    text: "text-amber-600 dark:text-amber-400",
+    icon: "bg-risk-moderate/10 text-risk-moderate border border-risk-moderate/20",
+    bar: "bg-risk-moderate/90",
+    text: "text-risk-moderate",
   },
   red: {
-    icon: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
-    bar: "bg-rose-500/85",
-    text: "text-rose-600 dark:text-rose-400",
+    icon: "bg-risk-high/10 text-risk-high border border-risk-high/20",
+    bar: "bg-risk-high/85",
+    text: "text-risk-high",
   },
   muted: {
     icon: "bg-muted text-muted-foreground border border-border/40",
@@ -96,10 +96,10 @@ export function HealthScoreCard({
   const scoreTextColor = !hasScore
     ? "text-muted-foreground"
     : computedRisk === "high"
-    ? "text-rose-600 dark:text-rose-400"
+    ? "text-risk-high"
     : computedRisk === "moderate"
-    ? "text-amber-600 dark:text-amber-400"
-    : "text-emerald-600 dark:text-emerald-400"
+    ? "text-risk-moderate"
+    : "text-risk-low"
 
   return (
     <Card

@@ -10,24 +10,24 @@ import { cn } from "@workspace/ui/lib/utils"
 
 export const heroLevelConfig = {
   low: {
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-500/10",
+    color: "text-risk-low",
+    bg: "bg-risk-low/10",
     label: "Low risk",
-    ringColor: "stroke-emerald-500",
+    ringColor: "stroke-risk-low",
     variant: "risk-low" as const,
   },
   moderate: {
-    color: "text-amber-600 dark:text-amber-400",
-    bg: "bg-amber-500/10",
+    color: "text-risk-moderate",
+    bg: "bg-risk-moderate/10",
     label: "Moderate risk",
-    ringColor: "stroke-amber-400",
+    ringColor: "stroke-risk-moderate",
     variant: "risk-moderate" as const,
   },
   high: {
-    color: "text-rose-600 dark:text-rose-400",
-    bg: "bg-rose-500/10",
+    color: "text-risk-high",
+    bg: "bg-risk-high/10",
     label: "Needs Attention",
-    ringColor: "stroke-rose-500",
+    ringColor: "stroke-risk-high",
     variant: "risk-high" as const,
   },
 } as const
@@ -186,19 +186,19 @@ export function HealthScoreHeroCard({
             </div>
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-destructive">&lt;{moderateThreshold}</p>
+                <p className="font-medium text-risk-high">&lt;{moderateThreshold}</p>
                 <p className="text-xs text-muted-foreground">
                   Attention Needed
                 </p>
               </div>
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-[color:var(--warning)]">
+                <p className="font-medium text-risk-moderate">
                   {moderateThreshold}–{lowThreshold - 1}
                 </p>
                 <p className="text-xs text-muted-foreground">Moderate Risk</p>
               </div>
               <div className="rounded-lg bg-muted/30 p-3">
-                <p className="font-medium text-[color:var(--success)]">
+                <p className="font-medium text-risk-low">
                   {lowThreshold}–100
                 </p>
                 <p className="text-xs text-muted-foreground">Low Risk</p>

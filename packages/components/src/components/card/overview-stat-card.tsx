@@ -37,11 +37,11 @@ export interface OverviewStatCardProps {
 const toneMap: Record<string, string> = {
   primary: "border-border/60 bg-muted/30 text-foreground",
   success:
-    "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    "border-success/20 bg-success/10 text-success",
   warning:
-    "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    "border-warning/20 bg-warning/10 text-warning",
   destructive:
-    "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    "border-destructive/20 bg-destructive/10 text-destructive",
 }
 
 export function OverviewStatCard({

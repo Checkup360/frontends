@@ -564,7 +564,7 @@ export function ScoreWeightsPage() {
             <span>Score Weights</span>
             {isWeightsDirty && (
               <span
-                className="size-1.5 rounded-full bg-amber-500"
+                className="size-1.5 rounded-full bg-warning"
                 title="Unsaved changes in Score Weights"
               />
             )}
@@ -577,7 +577,7 @@ export function ScoreWeightsPage() {
             <span>Risk Thresholds</span>
             {isThresholdsDirty && (
               <span
-                className="size-1.5 rounded-full bg-amber-500"
+                className="size-1.5 rounded-full bg-warning"
                 title="Unsaved changes in Risk Thresholds"
               />
             )}
@@ -904,12 +904,12 @@ export function ScoreWeightsPage() {
           <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 text-xs">
               {totalWeight === 100 ? (
-                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <div className="flex items-center gap-1.5 text-success">
                   <CheckCircle2 className="size-4" />
                   <span>Valid weight total: 100% allocated</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                <div className="flex items-center gap-1.5 text-warning">
                   <AlertCircle className="size-4" />
                   <span>
                     Total weight must equal exactly 100% (currently{" "}
@@ -1017,7 +1017,7 @@ export function ScoreWeightsPage() {
                   }}
                   trackClassName="h-3"
                   trackStyle={{
-                    background: `linear-gradient(to right, var(--color-rose-500) 0%, var(--color-rose-500) ${riskThresholds.moderate}%, var(--color-amber-400) ${riskThresholds.moderate}%, var(--color-amber-400) ${riskThresholds.low}%, var(--color-emerald-500) ${riskThresholds.low}%, var(--color-emerald-500) 100%)`,
+                    background: `linear-gradient(to right, var(--risk-high) 0%, var(--risk-high) ${riskThresholds.moderate}%, var(--risk-moderate) ${riskThresholds.moderate}%, var(--risk-moderate) ${riskThresholds.low}%, var(--risk-low) ${riskThresholds.low}%, var(--risk-low) 100%)`,
                   }}
                   className="[&_[data-slot=slider-range]]:bg-transparent [&_[data-slot=slider-thumb]]:size-5 [&_[data-slot=slider-thumb]]:shadow-md"
                 />
@@ -1042,7 +1042,7 @@ export function ScoreWeightsPage() {
                 <div className="flex flex-col justify-between rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                      <span className="size-2 rounded-full bg-rose-500" />
+                      <span className="size-2 rounded-full bg-risk-high" />
                       Needs Attention
                     </span>
                     <Badge variant="risk-high" size="sm">
@@ -1058,7 +1058,7 @@ export function ScoreWeightsPage() {
                 <div className="flex flex-col justify-between rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                      <span className="size-2 rounded-full bg-amber-400" />
+                      <span className="size-2 rounded-full bg-risk-moderate" />
                       Moderate Risk
                     </span>
                     <Badge variant="risk-moderate" size="sm">
@@ -1074,7 +1074,7 @@ export function ScoreWeightsPage() {
                 <div className="flex flex-col justify-between rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                      <span className="size-2 rounded-full bg-emerald-500" />
+                      <span className="size-2 rounded-full bg-risk-low" />
                       Low Risk (Optimal)
                     </span>
                     <Badge variant="risk-low" size="sm">

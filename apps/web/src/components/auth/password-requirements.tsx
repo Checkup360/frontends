@@ -47,7 +47,7 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps) {
             className={cn(
               "flex items-center gap-2 text-xs transition-colors duration-200",
               isSuccess
-                ? "text-emerald-700 dark:text-emerald-500"
+                ? "text-success"
                 : isError
                   ? "text-destructive"
                   : "text-muted-foreground"

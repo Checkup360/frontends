@@ -34,20 +34,20 @@ const toneFor = (
     return {
       label: "Healthy",
       className:
-        "bg-[color:var(--success)]/15 text-[color:var(--success)] border-transparent",
-      barClass: "bg-[color:var(--success)]",
+        "bg-risk-low/15 text-risk-low border-transparent",
+      barClass: "bg-risk-low",
     }
   if (score >= moderate)
     return {
       label: "Monitor",
       className:
-        "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-transparent",
-      barClass: "bg-[color:var(--warning)]",
+        "bg-risk-moderate/15 text-risk-moderate border-transparent",
+      barClass: "bg-risk-moderate",
     }
   return {
     label: "Risk",
-    className: "bg-destructive/15 text-destructive border-transparent",
-    barClass: "bg-destructive",
+    className: "bg-risk-high/15 text-risk-high border-transparent",
+    barClass: "bg-risk-high",
   }
 }
 

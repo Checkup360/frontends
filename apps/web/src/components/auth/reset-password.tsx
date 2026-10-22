@@ -68,7 +68,7 @@ export default function ResetPassword() {
 
       {submitted ? (
         <div
-          className="rounded-md bg-emerald-500/10 p-4 text-sm text-emerald-700 dark:text-emerald-400"
+          className="rounded-md bg-success/10 p-4 text-sm text-success"
           role="status"
         >
           <div className="flex items-start gap-2">

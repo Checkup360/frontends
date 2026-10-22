@@ -41,23 +41,20 @@ const scoreStatusConfig = {
   high: {
     label: "Needs Attention",
     variant: "risk-high" as const,
-    iconBg: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
-    barColor: "bg-rose-500/85",
-    textColor: "text-rose-600 dark:text-rose-400",
+    barColor: "bg-risk-high/85",
+    textColor: "text-risk-high",
   },
   moderate: {
     label: "Moderate Risk",
     variant: "risk-moderate" as const,
-    iconBg: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
-    barColor: "bg-amber-400/90",
-    textColor: "text-amber-600 dark:text-amber-400",
+    barColor: "bg-risk-moderate/90",
+    textColor: "text-risk-moderate",
   },
   low: {
     label: "Low Risk",
     variant: "risk-low" as const,
-    iconBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
-    barColor: "bg-emerald-500/85",
-    textColor: "text-emerald-600 dark:text-emerald-400",
+    barColor: "bg-risk-low/85",
+    textColor: "text-risk-low",
   },
 } as const
 

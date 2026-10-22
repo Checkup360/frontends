@@ -432,8 +432,8 @@ function AssignMemberDialog({
                 )}
 
                 {isInAnotherDept && (
-                  <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300">
-                    <ArrowRightLeft className="size-4 shrink-0 text-amber-600" />
+                  <div className="flex items-center gap-2 text-warning">
+                    <ArrowRightLeft className="size-4 shrink-0 text-warning" />
                     <span>
                       Currently in{" "}
                       <strong>{selectedEmployee.department?.name}</strong>. Will{" "}

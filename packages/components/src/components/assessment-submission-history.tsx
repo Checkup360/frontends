@@ -69,7 +69,7 @@ function SubmissionStatusBadge({ status }: { status: string }) {
       <Badge
         variant="warning-light"
         size="sm"
-        className="gap-1 border-amber-500/20 font-medium"
+        className="gap-1 border-warning/20 font-medium"
       >
         <Clock className="size-3" />
         Pending

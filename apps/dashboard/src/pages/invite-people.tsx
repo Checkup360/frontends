@@ -608,7 +608,7 @@ export function InvitePeoplePage() {
                             onClick={() => handleCopy(inv.id, inv.invite_url)}
                           >
                             {copiedId === inv.id ? (
-                              <Check className="h-4 w-4 text-emerald-500" />
+                              <Check className="h-4 w-4 text-success" />
                             ) : (
                               <Clipboard className="h-4 w-4" />
                             )}

@@ -374,7 +374,7 @@ export function MemberSettingsPage() {
                               variant="outline"
                               className={
                                 !isRevoked
-                                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px]"
+                                  ? "border-success/40 bg-success/10 text-success text-[10px]"
                                   : "border-muted-foreground/30 bg-muted/20 text-muted-foreground text-[10px]"
                               }
                             >

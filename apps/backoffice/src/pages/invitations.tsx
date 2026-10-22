@@ -883,7 +883,7 @@ export function InvitationsPage() {
                             }
                           >
                             {copiedId === invite.id ? (
-                              <Check className="h-4 w-4 text-emerald-500" />
+                              <Check className="h-4 w-4 text-success" />
                             ) : (
                               <Clipboard className="h-4 w-4" />
                             )}

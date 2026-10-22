@@ -149,15 +149,15 @@ export function ConsentGateModal({
           </div>
 
           {/* Privacy & Safeguards */}
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-2 min-w-0 max-w-full overflow-hidden break-words">
-            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div className="rounded-xl border border-success/20 bg-success/5 p-4 space-y-2 min-w-0 max-w-full overflow-hidden break-words">
+            <p className="text-xs font-semibold uppercase tracking-wider text-success flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 text-success shrink-0" />
               Privacy & Confidentiality Guarantees
             </p>
             <ul className="space-y-1.5 text-xs text-muted-foreground min-w-0">
               {doc.rights.map((right, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-foreground/80 min-w-0">
-                  <span className="mt-1 size-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="mt-1 size-1.5 rounded-full bg-success shrink-0" />
                   <span className="min-w-0 flex-1 break-words leading-relaxed">{right}</span>
                 </li>
               ))}
@@ -249,9 +249,9 @@ export function FormConsentHeroCard({
             </p>
           </div>
 
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-2 min-w-0 max-w-full overflow-hidden break-words">
-            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div className="rounded-xl border border-success/20 bg-success/5 p-4 space-y-2 min-w-0 max-w-full overflow-hidden break-words">
+            <p className="text-xs font-semibold uppercase tracking-wider text-success flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 text-success shrink-0" />
               Occupational Health Access
             </p>
             <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground break-words">

@@ -604,8 +604,8 @@ export function CompliancePage() {
                       >
                         {copied ? (
                           <>
-                            <Check className="size-3 text-emerald-500" />
-                            <span className="text-emerald-500">Copied</span>
+                            <Check className="size-3 text-success" />
+                            <span className="text-success">Copied</span>
                           </>
                         ) : (
                           <>

@@ -96,7 +96,7 @@ export function LegalDocumentModal({
             <ul className="space-y-1.5 text-xs text-muted-foreground min-w-0">
               {doc.rights.map((right, idx) => (
                 <li key={idx} className="flex items-start gap-2 min-w-0">
-                  <CheckCircle2 className="mt-0.5 size-3.5 text-emerald-500 shrink-0" />
+                  <CheckCircle2 className="mt-0.5 size-3.5 text-success shrink-0" />
                   <span className="min-w-0 flex-1 break-words">{right}</span>
                 </li>
               ))}

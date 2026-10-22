@@ -98,12 +98,11 @@ function getRiskLevelConfig(
   if (lower.includes("high") || lower.includes("attention") || lower.includes("severe")) {
     return {
       label,
-      color: "text-rose-600 dark:text-rose-400",
-      iconBg: "bg-rose-500/10",
+      color: "text-risk-high",
       badgeVariant: "risk-high" as const,
       badgeClass: "font-semibold",
-      ringColor: "stroke-rose-500 text-rose-500",
-      barColor: "bg-rose-500",
+      ringColor: "stroke-risk-high text-risk-high",
+      barColor: "bg-risk-high",
       description: lower.includes("very high")
         ? "Severe risk indicators detected. Needs attention and proactive medical follow-up."
         : "High risk indicators detected. Needs attention and proactive medical follow-up.",
@@ -118,12 +117,11 @@ function getRiskLevelConfig(
   ) {
     return {
       label,
-      color: "text-amber-600 dark:text-amber-400",
-      iconBg: "bg-amber-500/10",
+      color: "text-risk-moderate",
       badgeVariant: "risk-moderate" as const,
       badgeClass: "font-semibold",
-      ringColor: "stroke-amber-500 text-amber-500",
-      barColor: "bg-amber-500",
+      ringColor: "stroke-risk-moderate text-risk-moderate",
+      barColor: "bg-risk-moderate",
       description:
         lower.includes("elevated") || lower.includes("mild")
           ? "Slightly elevated indicators. Minor lifestyle adjustments recommended."
@@ -134,12 +132,11 @@ function getRiskLevelConfig(
   // 3. Low risk / Optimal (risk-low token)
   return {
     label,
-    color: "text-emerald-600 dark:text-emerald-400",
-    iconBg: "bg-emerald-500/10",
+    color: "text-risk-low",
     badgeVariant: "risk-low" as const,
     badgeClass: "font-semibold",
-    ringColor: "stroke-emerald-500 text-emerald-500",
-    barColor: "bg-emerald-500",
+    ringColor: "stroke-risk-low text-risk-low",
+    barColor: "bg-risk-low",
     description: "Evaluations within optimal and healthy parameters.",
   }
 }

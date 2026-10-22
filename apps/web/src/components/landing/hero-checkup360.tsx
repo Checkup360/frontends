@@ -102,7 +102,7 @@ function OverallHealthRing({ value }: { value: number }) {
           strokeDashoffset={
             circumference * (1 - (isRevealed ? value : 0) / 100)
           }
-          className="stroke-emerald-500 transition-[stroke-dashoffset] duration-1000 ease-out"
+          className="stroke-risk-low transition-[stroke-dashoffset] duration-1000 ease-out"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">

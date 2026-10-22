@@ -22,15 +22,15 @@ const badgeVariants = cva(
         "info-light":
           "bg-blue-500/10 text-blue-500 focus-visible:ring-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400 dark:focus-visible:ring-blue-500/40",
         "warning-light":
-          "bg-amber-500/10 text-amber-600 focus-visible:ring-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:focus-visible:ring-amber-500/40",
+          "bg-warning/10 text-warning focus-visible:ring-warning/20 dark:bg-warning/20 dark:focus-visible:ring-warning/40",
         "success-light":
-          "bg-emerald-500/10 text-emerald-600 focus-visible:ring-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:focus-visible:ring-emerald-500/40",
+          "bg-success/10 text-success focus-visible:ring-success/20 dark:bg-success/20 dark:focus-visible:ring-success/40",
         "risk-low":
-          "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 focus-visible:ring-emerald-500/20 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30",
+          "bg-risk-low/10 text-risk-low border-risk-low/20 focus-visible:ring-risk-low/20 dark:bg-risk-low/15 dark:border-risk-low/30",
         "risk-moderate":
-          "bg-amber-500/10 text-amber-600 border-amber-500/20 focus-visible:ring-amber-500/20 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30",
+          "bg-risk-moderate/10 text-risk-moderate border-risk-moderate/20 focus-visible:ring-risk-moderate/20 dark:bg-risk-moderate/15 dark:border-risk-moderate/30",
         "risk-high":
-          "bg-rose-500/10 text-rose-600 border-rose-500/20 focus-visible:ring-rose-500/20 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30",
+          "bg-risk-high/10 text-risk-high border-risk-high/20 focus-visible:ring-risk-high/20 dark:bg-risk-high/15 dark:border-risk-high/30",
       },
       size: {
         default: "h-5 px-2 py-0.5 text-xs",

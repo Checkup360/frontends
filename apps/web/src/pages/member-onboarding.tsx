@@ -940,7 +940,7 @@ export function MemberOnboardingPage() {
                                       <Badge variant="secondary" className="text-[10px] font-mono py-0 px-1.5 h-4 text-muted-foreground">
                                         v1.0
                                       </Badge>
-                                      <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] py-0 px-1.5 h-4">
+                                      <Badge variant="success-light" className="text-[10px] py-0 px-1.5 h-4">
                                         Occupational Health
                                       </Badge>
                                     </div>

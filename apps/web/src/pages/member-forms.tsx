@@ -198,8 +198,8 @@ export function MemberFormsPage() {
               <Skeleton className="h-6 w-32 rounded-full" />
             ) : allCompleted ? (
               <Badge
-                variant="outline"
-                className="border-emerald-500/20 bg-emerald-500/10 font-medium text-emerald-600 dark:text-emerald-400"
+                variant="success-light"
+                className="font-medium"
               >
                 <CheckCircle2 className="mr-1 size-3.5" /> {completedCount} of{" "}
                 {totalCount} Completed
@@ -299,8 +299,8 @@ export function MemberFormsPage() {
                       </div>
                       {isFilled ? (
                         <Badge
-                          variant="outline"
-                          className="border-emerald-500/20 bg-emerald-500/10 font-medium text-emerald-600 dark:text-emerald-400"
+                          variant="success-light"
+                          className="font-medium"
                         >
                           <CheckCircle2 className="mr-1 size-3" /> Completed
                         </Badge>

@@ -128,7 +128,7 @@ export function ManageRolesDialog({
                 Full administrative power, including managing other
                 superadmins.
                 {isSelf && isEmployeeSuperadmin && (
-                  <span className="mt-0.5 block font-medium text-amber-600 dark:text-amber-400">
+                  <span className="mt-0.5 block font-medium text-warning">
                     * You can&apos;t remove your own superadmin role.
                   </span>
                 )}
@@ -164,7 +164,7 @@ export function ManageRolesDialog({
                 Organizational management, employee onboarding and dashboard
                 access.
                 {selectedRoles.includes("superadmin") ? (
-                  <span className="mt-0.5 block text-xs font-medium text-amber-600 dark:text-amber-400">
+                  <span className="mt-0.5 block text-xs font-medium text-warning">
                     * Required while Superadmin is active.
                   </span>
                 ) : (
