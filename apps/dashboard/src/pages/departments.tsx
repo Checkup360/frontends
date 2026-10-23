@@ -11,6 +11,7 @@ import {
   type DepartmentAnalyticsSummary,
   type DepartmentResponse,
   type OrganizationEmployee,
+  MAX_DEPARTMENT_NAME_LENGTH,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Card } from "@workspace/ui/components/card"
@@ -783,6 +784,7 @@ export function DepartmentsPage() {
               <Label htmlFor="create-dept-name">Department name</Label>
               <Input
                 id="create-dept-name"
+                maxLength={MAX_DEPARTMENT_NAME_LENGTH}
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="e.g. Engineering, Sales, HR"

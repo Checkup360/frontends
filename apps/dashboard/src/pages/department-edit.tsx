@@ -2,6 +2,7 @@ import {
   listDepartments,
   updateDepartment,
   type DepartmentResponse,
+  MAX_DEPARTMENT_NAME_LENGTH,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Button } from "@workspace/ui/components/button"
@@ -121,6 +122,7 @@ export function DepartmentEditPage() {
               <Label htmlFor="department-edit-name">Department name</Label>
               <Input
                 id="department-edit-name"
+                maxLength={MAX_DEPARTMENT_NAME_LENGTH}
                 value={name}
                 onChange={(event) => {
                   setName(event.target.value)

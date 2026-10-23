@@ -1,5 +1,6 @@
 export * from "./client"
 export * from "./config"
+export * from "./name-limits"
 export * from "./routes"
 export * from "./schemas"
 export * from "./cms-articles"

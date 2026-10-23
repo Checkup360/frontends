@@ -3,6 +3,7 @@ import {
   deleteOrganizationLogo,
   updateOrganization,
   uploadOrganizationLogo,
+  MAX_ORGANIZATION_NAME_LENGTH,
 } from "@workspace/api"
 import {
   Dialog,
@@ -139,6 +140,7 @@ export function EditOrganizationDialog({
                 id="edit-organization-name"
                 type="text"
                 placeholder="Company Name"
+                maxLength={MAX_ORGANIZATION_NAME_LENGTH}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isSavingName}

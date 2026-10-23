@@ -1,5 +1,9 @@
 import { useState } from "react"
-import { createOrganization, type CreateOrganizationError } from "@workspace/api"
+import {
+  createOrganization,
+  MAX_ORGANIZATION_NAME_LENGTH,
+  type CreateOrganizationError,
+} from "@workspace/api"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -142,6 +146,7 @@ export function CreateOrganizationDialog({
             <Input
               id="org-name"
               placeholder="Acme Inc"
+              maxLength={MAX_ORGANIZATION_NAME_LENGTH}
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
               onFocus={() => setTouched(true)}
