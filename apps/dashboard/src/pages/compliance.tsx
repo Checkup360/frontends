@@ -4,6 +4,7 @@ import {
   listOrganizationAuditLogs,
   getOrganizationComplianceSummary,
   type AuditLogItem,
+  type AuditLogSortField,
   type ConsentComplianceSummary,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
@@ -16,6 +17,7 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  SortableTableHead,
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table"
@@ -31,6 +33,7 @@ import {
   OverviewStatCard,
   OverviewStatCardSkeleton,
 } from "@workspace/components/components/card"
+import { useTableSort } from "@workspace/ui/hooks/use-table-sort"
 import { TablePagination } from "@workspace/components/components/table-pagination"
 import {
   ShieldCheck,
@@ -63,6 +66,9 @@ export function CompliancePage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null)
   const [copied, setCopied] = useState(false)
+  const { sort, toggleSort, directionOf } = useTableSort<AuditLogSortField>(() =>
+    setPage(1)
+  )
 
   const loadData = useCallback(
     async (
@@ -78,6 +84,8 @@ export function CompliancePage() {
           listOrganizationAuditLogs({
             organizationId: orgId,
             action: filter === "ALL" ? undefined : filter,
+            sortBy: sort?.field,
+            sortDirection: sort?.direction,
             page: targetPage,
             pageSize: targetPageSize,
           }),
@@ -95,7 +103,7 @@ export function CompliancePage() {
         setIsRefreshing(false)
       }
     },
-    [orgId, page, actionFilter, pageSize]
+    [orgId, page, actionFilter, pageSize, sort]
   )
 
   useEffect(() => {
@@ -347,18 +355,26 @@ export function CompliancePage() {
               <Table className="min-w-[720px]">
                 <TableHeader className="bg-muted/40">
                   <TableRow>
-                    <TableHead className="w-[190px] text-xs font-semibold">
+                    <SortableTableHead
+                      direction={directionOf("action")}
+                      onSort={() => toggleSort("action")}
+                      className="w-[190px] text-xs"
+                    >
                       Action
-                    </TableHead>
+                    </SortableTableHead>
                     <TableHead className="min-w-[190px] text-xs font-semibold">
                       Member
                     </TableHead>
                     <TableHead className="min-w-[200px] text-xs font-semibold">
                       Details / Context
                     </TableHead>
-                    <TableHead className="w-[190px] whitespace-nowrap text-xs font-semibold">
+                    <SortableTableHead
+                      direction={directionOf("created_at")}
+                      onSort={() => toggleSort("created_at")}
+                      className="w-[190px] whitespace-nowrap text-xs"
+                    >
                       Date & Time
-                    </TableHead>
+                    </SortableTableHead>
                     <TableHead className="w-[80px] text-right text-xs font-semibold">
                       Inspect
                     </TableHead>

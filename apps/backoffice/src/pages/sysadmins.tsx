@@ -3,6 +3,7 @@ import {
   getSysadminStats,
   listSysadminsPage,
   type SysadminStats,
+  type SysadminSortField,
   type SysadminUser,
 } from "@workspace/api"
 import { SysadminInvitationForm } from "@workspace/auth/components/sysadmin-invitation-form"
@@ -42,12 +43,13 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
+  SortableTableHead,
   TableHeader,
   TableRow,
   TableRowsSkeleton,
 } from "@workspace/ui/components/table"
 import { toast } from "@workspace/ui/components/sonner"
+import { useTableSort } from "@workspace/ui/hooks/use-table-sort"
 import {
   Mail,
   Plus,
@@ -80,6 +82,9 @@ export function SysadminsPage() {
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const { sort, toggleSort, directionOf } = useTableSort<SysadminSortField>(() =>
+    setCurrentPage(1)
+  )
 
   // Invite modal state
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
@@ -105,6 +110,8 @@ export function SysadminsPage() {
       const pageResult = await listSysadminsPage({
         search: search.trim() || undefined,
         isActive: isActiveFilter,
+        sortBy: sort?.field,
+        sortDirection: sort?.direction,
         page: currentPage,
         pageSize,
       })
@@ -116,7 +123,7 @@ export function SysadminsPage() {
     } finally {
       setLoading(false)
     }
-  }, [search, selectedStatus, currentPage, pageSize])
+  }, [search, selectedStatus, sort, currentPage, pageSize])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -268,12 +275,20 @@ export function SysadminsPage() {
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="font-semibold text-foreground">
+                <SortableTableHead
+                  direction={directionOf("name")}
+                  onSort={() => toggleSort("name")}
+                  className="text-foreground"
+                >
                   Administrator
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("status")}
+                  onSort={() => toggleSort("status")}
+                  className="text-foreground"
+                >
                   Status
-                </TableHead>
+                </SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

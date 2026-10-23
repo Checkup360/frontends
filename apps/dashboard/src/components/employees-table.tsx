@@ -7,6 +7,7 @@ import {
   type OrganizationEmployeeRole,
   type MembershipFilter,
   type DepartmentResponse,
+  type EmployeeSortField,
 } from "@workspace/api"
 import { useCurrentUser } from "@workspace/auth/hooks/use-current-user"
 import { Card } from "@workspace/ui/components/card"
@@ -40,6 +41,7 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  SortableTableHead,
   TableHeader,
   TableRowsSkeleton,
   TableRow,
@@ -47,6 +49,7 @@ import {
 import { TablePagination } from "@workspace/components/components/table-pagination"
 import { formatEmployeeName } from "@workspace/components/components/employee-profile-card"
 import { toast } from "@workspace/ui/components/sonner"
+import { useTableSort } from "@workspace/ui/hooks/use-table-sort"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { X, MoreVertical, UserCog, UserMinus } from "lucide-react"
@@ -144,6 +147,9 @@ export function EmployeesTable({
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
+  const { sort, toggleSort, directionOf } = useTableSort<EmployeeSortField>(
+    () => setCurrentPage(1)
+  )
   const [pageSize, setPageSize] = useState(10)
 
   // Action Modals State
@@ -189,6 +195,8 @@ export function EmployeesTable({
           status?: string
           score?: string
           search?: string
+          sortBy?: EmployeeSortField
+          sortDirection?: "asc" | "desc"
           page: number
           pageSize: number
           membership?: MembershipFilter
@@ -200,6 +208,10 @@ export function EmployeesTable({
         if (selectedStatus !== "all") apiFilters.status = selectedStatus
         if (selectedScore !== "all") apiFilters.score = selectedScore
         if (search.trim()) apiFilters.search = search.trim()
+        if (sort) {
+          apiFilters.sortBy = sort.field
+          apiFilters.sortDirection = sort.direction
+        }
 
         const effectiveRoles = showRoleFilter
           ? selectedRole !== "all"
@@ -240,6 +252,7 @@ export function EmployeesTable({
     selectedStatus,
     selectedScore,
     search,
+    sort,
     currentPage,
     pageSize,
     showMembership,
@@ -479,36 +492,60 @@ export function EmployeesTable({
         <Table>
           <TableHeader className="bg-muted/30">
             <TableRow>
-              <TableHead className="font-semibold text-foreground">
+              <SortableTableHead
+                direction={directionOf("name")}
+                onSort={() => toggleSort("name")}
+                className="text-foreground"
+              >
                 {showRolesColumn ? "User" : "Member"}
-              </TableHead>
+              </SortableTableHead>
               {showRolesColumn && (
-                <TableHead className="font-semibold text-foreground">
-                  Roles
-                </TableHead>
+                <SortableTableHead
+                direction={directionOf("roles")}
+                onSort={() => toggleSort("roles")}
+                className="text-foreground"
+              >
+                Roles
+              </SortableTableHead>
               )}
               {showMembership && (
                 <TableHead className="font-semibold text-foreground">
                   Status
                 </TableHead>
               )}
-              <TableHead className="font-semibold text-foreground">
+              <SortableTableHead
+                direction={directionOf("department")}
+                onSort={() => toggleSort("department")}
+                className="text-foreground"
+              >
                 Area
-              </TableHead>
+              </SortableTableHead>
               {showScoreColumn && (
-                <TableHead className="font-semibold text-foreground">
-                  Score
-                </TableHead>
+                <SortableTableHead
+                direction={directionOf("score")}
+                onSort={() => toggleSort("score")}
+                className="text-foreground"
+              >
+                Score
+              </SortableTableHead>
               )}
               {showStatusColumn && (
-                <TableHead className="font-semibold text-foreground">
-                  Status
-                </TableHead>
+                <SortableTableHead
+                direction={directionOf("status")}
+                onSort={() => toggleSort("status")}
+                className="text-foreground"
+              >
+                Status
+              </SortableTableHead>
               )}
               {showAssessmentColumn && (
-                <TableHead className="font-semibold text-foreground">
-                  Last assessment
-                </TableHead>
+                <SortableTableHead
+                direction={directionOf("last_assessment")}
+                onSort={() => toggleSort("last_assessment")}
+                className="text-foreground"
+              >
+                Last assessment
+              </SortableTableHead>
               )}
               {showRolesColumn && allowRoleManagement && (
                 <TableHead className="w-16 text-right font-semibold text-foreground">

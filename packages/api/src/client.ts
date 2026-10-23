@@ -1075,7 +1075,7 @@ export async function listOrganizations(filters?: {
   }
 }
 
-export async function listOrganizationsPage(filters: {
+export async function listOrganizationsPage(filters: SortParams<OrganizationSortField> & {
   status?: string
   search?: string
   page: number
@@ -1089,6 +1089,7 @@ export async function listOrganizationsPage(filters: {
     if (filters.search?.trim()) {
       queryParams.append("search", filters.search.trim())
     }
+    appendSortParams(queryParams, filters)
     queryParams.append("page", filters.page.toString())
     queryParams.append("page_size", filters.pageSize.toString())
 
@@ -1492,6 +1493,34 @@ export async function getOrganizationEmployee(
   return { ...employee, avatar_url: resolveMediaUrl(employee.avatar_url) }
 }
 
+export type SortDirection = "asc" | "desc"
+
+type SortParams<Field extends string> = {
+  sortBy?: Field
+  sortDirection?: SortDirection
+}
+
+function appendSortParams<Field extends string>(
+  queryParams: URLSearchParams,
+  { sortBy, sortDirection }: SortParams<Field>
+) {
+  if (!sortBy) return
+  queryParams.append("sort_by", sortBy)
+  queryParams.append("sort_direction", sortDirection ?? "asc")
+}
+
+export type OrganizationSortField = "name" | "collaborators" | "status"
+export type SysadminSortField = "name" | "status"
+export type AuditLogSortField = "action" | "created_at"
+
+export type EmployeeSortField =
+  | "name"
+  | "roles"
+  | "department"
+  | "score"
+  | "status"
+  | "last_assessment"
+
 export async function listOrganizationEmployeesPage(
   organizationId: string,
   roles: OrganizationEmployeeRole[] | undefined,
@@ -1500,6 +1529,8 @@ export async function listOrganizationEmployeesPage(
     status?: string
     score?: string
     search?: string
+    sortBy?: EmployeeSortField
+    sortDirection?: SortDirection
     page: number
     pageSize: number
     /** active: has roles, inactive: deactivated (no roles), all: both (default). */
@@ -1524,6 +1555,7 @@ export async function listOrganizationEmployeesPage(
     if (filters.membership) {
       queryParams.append("membership", filters.membership)
     }
+    appendSortParams(queryParams, filters)
     queryParams.append("page", filters.page.toString())
     queryParams.append("page_size", filters.pageSize.toString())
     const queryString = queryParams.toString()
@@ -2250,7 +2282,7 @@ export async function listSysadmins(filters?: {
   }
 }
 
-export async function listSysadminsPage(filters: {
+export async function listSysadminsPage(filters: SortParams<SysadminSortField> & {
   search?: string
   isActive?: boolean
   page: number
@@ -2264,6 +2296,7 @@ export async function listSysadminsPage(filters: {
     if (filters.isActive !== undefined) {
       queryParams.append("is_active", String(filters.isActive))
     }
+    appendSortParams(queryParams, filters)
     queryParams.append("page", filters.page.toString())
     queryParams.append("page_size", filters.pageSize.toString())
 
@@ -2544,7 +2577,7 @@ export async function exportMemberData(): Promise<
   }
 }
 
-export async function listOrganizationAuditLogs(params: {
+export async function listOrganizationAuditLogs(params: SortParams<AuditLogSortField> & {
   organizationId: string
   action?: string
   userId?: string
@@ -2558,6 +2591,9 @@ export async function listOrganizationAuditLogs(params: {
     }
     if (params.userId) {
       url += `&user_id=${encodeURIComponent(params.userId)}`
+    }
+    if (params.sortBy) {
+      url += `&sort_by=${params.sortBy}&sort_direction=${params.sortDirection ?? "desc"}`
     }
     const response = await fetchWithAuth(url, { credentials: "include" })
     if (!response.ok) return null

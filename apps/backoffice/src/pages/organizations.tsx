@@ -5,6 +5,7 @@ import {
   listOrganizationsPage,
   deleteOrganization,
   type OrganizationResponse,
+  type OrganizationSortField,
 } from "@workspace/api"
 
 import {
@@ -38,10 +39,12 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  SortableTableHead,
   TableHeader,
   TableRowsSkeleton,
   TableRow,
 } from "@workspace/ui/components/table"
+import { useTableSort } from "@workspace/ui/hooks/use-table-sort"
 import { Link, useNavigate } from "react-router-dom"
 import { Link2, Plus, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -89,6 +92,9 @@ export function OrganizationsPage() {
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const { sort, toggleSort, directionOf } = useTableSort<OrganizationSortField>(
+    () => setCurrentPage(1)
+  )
 
   // Load organizations ref
   const loadOrganizationsRef = useRef<() => Promise<void>>(() =>
@@ -103,6 +109,8 @@ export function OrganizationsPage() {
         listOrganizationsPage({
           status: selectedStatus,
           search,
+          sortBy: sort?.field,
+          sortDirection: sort?.direction,
           page: currentPage,
           pageSize,
         }),
@@ -140,7 +148,7 @@ export function OrganizationsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadOrganizations()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStatus, search, currentPage, pageSize])
+  }, [selectedStatus, search, sort, currentPage, pageSize])
 
   const handleDeleteConfirm = async () => {
     if (!deleteConfirmOrg) return
@@ -293,18 +301,30 @@ export function OrganizationsPage() {
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="font-semibold text-foreground">
+                <SortableTableHead
+                  direction={directionOf("name")}
+                  onSort={() => toggleSort("name")}
+                  className="text-foreground"
+                >
                   Organization
-                </TableHead>
+                </SortableTableHead>
                 <TableHead className="font-semibold text-foreground">
                   Plan
                 </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                <SortableTableHead
+                  direction={directionOf("collaborators")}
+                  onSort={() => toggleSort("collaborators")}
+                  className="text-foreground"
+                >
                   Collaborators
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("status")}
+                  onSort={() => toggleSort("status")}
+                  className="text-foreground"
+                >
                   Status
-                </TableHead>
+                </SortableTableHead>
                 <TableHead className="w-24 text-right font-semibold text-foreground">
                   Actions
                 </TableHead>

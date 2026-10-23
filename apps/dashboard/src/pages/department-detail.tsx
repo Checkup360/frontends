@@ -10,6 +10,7 @@ import {
   listOrganizationEmployeesPage,
   type DepartmentAnalyticsSummary,
   type DepartmentResponse,
+  type EmployeeSortField,
   type OrganizationEmployee,
   type OrganizationEmployeeRole,
   type RiskTrendPoint,
@@ -42,6 +43,7 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  SortableTableHead,
   TableHeader,
   TableRow,
   TableRowsSkeleton,
@@ -68,6 +70,7 @@ import {
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { toast } from "@workspace/ui/components/sonner"
+import { useTableSort } from "@workspace/ui/hooks/use-table-sort"
 import {
   getDisplayName,
   getInitials,
@@ -535,6 +538,9 @@ export function DepartmentDetailPage() {
   const [selectedScore, setSelectedScore] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const { sort, toggleSort, directionOf } = useTableSort<EmployeeSortField>(
+    () => setCurrentPage(1)
+  )
 
   // Add/Assign employee modal open state
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
@@ -622,6 +628,8 @@ export function DepartmentDetailPage() {
           status: selectedStatus !== "all" ? selectedStatus : undefined,
           score: selectedScore !== "all" ? selectedScore : undefined,
           search: search.trim() || undefined,
+          sortBy: sort?.field,
+          sortDirection: sort?.direction,
           page: currentPage,
           pageSize,
         }
@@ -642,6 +650,7 @@ export function DepartmentDetailPage() {
     selectedStatus,
     selectedScore,
     search,
+    sort,
     currentPage,
     pageSize,
     refreshKey,
@@ -974,21 +983,41 @@ export function DepartmentDetailPage() {
           <Table className="min-w-[700px]">
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="font-semibold text-foreground">
+                <SortableTableHead
+                  direction={directionOf("name")}
+                  onSort={() => toggleSort("name")}
+                  className="text-foreground"
+                >
                   Employee
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("roles")}
+                  onSort={() => toggleSort("roles")}
+                  className="text-foreground"
+                >
                   Roles
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("score")}
+                  onSort={() => toggleSort("score")}
+                  className="text-foreground"
+                >
                   Score
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("status")}
+                  onSort={() => toggleSort("status")}
+                  className="text-foreground"
+                >
                   Status
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("last_assessment")}
+                  onSort={() => toggleSort("last_assessment")}
+                  className="text-foreground"
+                >
                   Last assessment
-                </TableHead>
+                </SortableTableHead>
                 <TableHead className="w-16 text-right font-semibold text-foreground">
                   Actions
                 </TableHead>
