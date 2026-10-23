@@ -1,7 +1,10 @@
 import * as React from "react"
+import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react"
 
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { cn } from "@workspace/ui/lib/utils"
+
+type SortDirection = "asc" | "desc"
 
 type TableSkeletonColumn = {
   cellClassName?: string
@@ -83,6 +86,45 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   )
 }
 
+type SortableTableHeadProps = Omit<
+  React.ComponentProps<"th">,
+  "onClick" | "children"
+> & {
+  children: React.ReactNode
+  /** Direction currently applied to this column, or null when it is not the sorted one. */
+  direction: SortDirection | null
+  onSort: () => void
+}
+
+function SortableTableHead({
+  children,
+  direction,
+  onSort,
+  className,
+  ...props
+}: SortableTableHeadProps) {
+  const SortIcon =
+    direction === "asc" ? ArrowUp : direction === "desc" ? ArrowDown : ChevronsUpDown
+  const ariaSort =
+    direction === "asc" ? "ascending" : direction === "desc" ? "descending" : "none"
+
+  return (
+    <TableHead aria-sort={ariaSort} className={className} {...props}>
+      <button
+        type="button"
+        onClick={onSort}
+        className="-mx-2 inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 font-semibold transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {children}
+        <SortIcon
+          className={cn("size-3.5", direction ? "text-foreground" : "opacity-50")}
+          aria-hidden="true"
+        />
+      </button>
+    </TableHead>
+  )
+}
+
 function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
@@ -141,8 +183,10 @@ export {
   TableBody,
   TableFooter,
   TableHead,
+  SortableTableHead,
   TableRow,
   TableCell,
   TableCaption,
   TableRowsSkeleton,
 }
+export type { SortDirection }
