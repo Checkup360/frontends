@@ -2,6 +2,7 @@ import { useState } from "react"
 import {
   createOrganization,
   MAX_ORGANIZATION_NAME_LENGTH,
+  MAX_ORGANIZATION_SLUG_LENGTH,
   type CreateOrganizationError,
 } from "@workspace/api"
 import { Button } from "@workspace/ui/components/button"
@@ -29,6 +30,7 @@ function generateSlug(name: string): string {
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
+    .slice(0, MAX_ORGANIZATION_SLUG_LENGTH)
     .replace(/^-+|-+$/g, "")
 }
 
@@ -162,6 +164,7 @@ export function CreateOrganizationDialog({
             <Input
               id="org-slug"
               placeholder="acme-inc"
+              maxLength={MAX_ORGANIZATION_SLUG_LENGTH}
               value={slug}
               onChange={(e) => handleSlugChange(e.target.value)}
               disabled={loading}

@@ -792,7 +792,7 @@ export function DepartmentsPage() {
                 disabled={creating}
               />
               {newName.trim() && (
-                <p className="font-mono text-xs text-muted-foreground">
+                <p className="font-mono text-xs break-all text-muted-foreground">
                   Slug: /{makeSlugPreview(newName)}
                 </p>
               )}
