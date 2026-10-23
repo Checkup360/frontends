@@ -106,18 +106,31 @@ export function AreaScores({
         ) : (
           sorted.map((a) => {
             const tone = toneFor(a.score, riskThresholds)
+            const lastSpace = a.name.trimEnd().lastIndexOf(" ")
+            const leadingWords =
+              lastSpace === -1 ? "" : a.name.slice(0, lastSpace + 1)
+            const lastWord =
+              lastSpace === -1 ? a.name : a.name.slice(lastSpace + 1)
             return (
               <div key={a.name}>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium text-foreground">
-                      {a.name}
+                <div className="flex items-start justify-between gap-3 text-sm">
+                  <div
+                    className="min-w-0 font-medium break-words text-foreground"
+                    title={a.name}
+                  >
+                    {leadingWords}
+                    {/* The last word travels with the badge so it never wraps alone */}
+                    <span className="whitespace-nowrap">
+                      {lastWord}
+                      <Badge
+                        variant="outline"
+                        className={`ml-3 align-middle ${tone.className}`}
+                      >
+                        {tone.label}
+                      </Badge>
                     </span>
-                    <Badge variant="outline" className={tone.className}>
-                      {tone.label}
-                    </Badge>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-3 whitespace-nowrap">
                     <span className="text-xs text-muted-foreground">
                       {a.workers} employees
                     </span>

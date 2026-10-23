@@ -593,7 +593,8 @@ export function DepartmentsPage() {
                       <div className="min-w-0 flex-1">
                         <h4
                           data-slot="item-title"
-                          className="line-clamp-1 text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary"
+                          className="line-clamp-2 text-base font-semibold tracking-tight break-words text-foreground transition-colors group-hover:text-primary"
+                          title={dept.name}
                         >
                           {dept.name}
                         </h4>

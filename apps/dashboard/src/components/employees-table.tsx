@@ -423,7 +423,7 @@ export function EmployeesTable({
                 <SelectItem value="all">All Departments</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
-                    {dept.name}
+                    <span className="block max-w-64 truncate">{dept.name}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -633,7 +633,10 @@ export function EmployeesTable({
                         </Badge>
                       </TableCell>
                     )}
-                    <TableCell className="text-muted-foreground">
+                    <TableCell
+                      className="max-w-48 truncate text-muted-foreground"
+                      title={w.department?.name}
+                    >
                       {w.department?.name ?? "Unassigned"}
                     </TableCell>
                     {showScoreColumn && (

@@ -131,7 +131,7 @@ export function AssignDepartmentForm({
             <SelectContent>
               {departments.map((department) => (
                 <SelectItem key={department.id} value={department.id}>
-                  {department.name}
+                  <span className="block max-w-64 truncate">{department.name}</span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -198,7 +198,7 @@ export function AssignDepartmentForm({
             <SelectContent>
               {departments.map((department) => (
                 <SelectItem key={department.id} value={department.id}>
-                  {department.name}
+                  <span className="block max-w-64 truncate">{department.name}</span>
                 </SelectItem>
               ))}
             </SelectContent>

@@ -177,7 +177,7 @@ export function DepartmentTrendsChart({
               type="button"
               onClick={() => toggle(dept.id)}
               className={[
-                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-all duration-150",
+                "inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-all duration-150 sm:max-w-64",
                 isActive
                   ? "border-transparent bg-muted/80 text-foreground shadow-sm"
                   : "border-border/60 text-muted-foreground hover:border-border hover:text-foreground",
@@ -190,7 +190,9 @@ export function DepartmentTrendsChart({
                   opacity: isActive ? 1 : 0.35,
                 }}
               />
-              {dept.name}
+              <span className="truncate" title={dept.name}>
+                {dept.name}
+              </span>
               {isActive && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

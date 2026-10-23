@@ -111,7 +111,7 @@ export function OrganizationCombobox({
                       value === organization.id ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {organization.name}
+                  <span className="truncate">{organization.name}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

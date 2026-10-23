@@ -351,10 +351,13 @@ export function OrganizationsPage() {
                   >
                     <TableCell>
                       <div>
-                        <p className="font-medium text-foreground transition-colors group-hover:text-primary">
+                        <p
+                          className="max-w-72 truncate font-medium text-foreground transition-colors group-hover:text-primary"
+                          title={org.name}
+                        >
                           {org.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="max-w-72 truncate text-xs text-muted-foreground">
                           {org.slug}
                         </p>
                       </div>
