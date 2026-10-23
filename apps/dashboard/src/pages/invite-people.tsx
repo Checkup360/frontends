@@ -14,6 +14,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { toast } from "@workspace/ui/components/sonner"
+import { sortRows, useTableSort } from "@workspace/ui/hooks/use-table-sort"
 import { Input } from "@workspace/ui/components/input"
 import {
   Select,
@@ -32,6 +33,7 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  SortableTableHead,
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table"
@@ -78,6 +80,18 @@ function formatRemainingTime(
   }
 }
 
+type InviteSortField = "email" | "role" | "uses" | "expires_at"
+
+const inviteSortAccessors: Record<
+  InviteSortField,
+  (invite: OrganizationInvite) => string | number | null
+> = {
+  email: (invite) => invite.email ?? null,
+  role: (invite) => invite.role ?? "member",
+  uses: (invite) => invite.uses,
+  expires_at: (invite) => new Date(invite.expires_at).getTime(),
+}
+
 export function InvitePeoplePage() {
   const { user, isLoading: userLoading } = useCurrentUser()
   const [invites, setInvites] = useState<OrganizationInvite[]>([])
@@ -97,6 +111,9 @@ export function InvitePeoplePage() {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
+  const { sort, toggleSort, directionOf } = useTableSort<InviteSortField>(() =>
+    setCurrentPage(1)
+  )
   const [pageSize, setPageSize] = useState(10)
 
   const isSuperadmin = useMemo(
@@ -188,10 +205,14 @@ export function InvitePeoplePage() {
 
   // Pagination values
   const totalPages = Math.max(1, Math.ceil(filteredInvites.length / pageSize))
+  const sortedInvites = useMemo(
+    () => sortRows(filteredInvites, sort, inviteSortAccessors),
+    [filteredInvites, sort]
+  )
   const paginatedInvites = useMemo(() => {
     const start = (currentPage - 1) * pageSize
-    return filteredInvites.slice(start, start + pageSize)
-  }, [filteredInvites, currentPage, pageSize])
+    return sortedInvites.slice(start, start + pageSize)
+  }, [sortedInvites, currentPage, pageSize])
 
   const paginatedInviteIds = useMemo(
     () => paginatedInvites.map((invite) => invite.id),
@@ -482,18 +503,34 @@ export function InvitePeoplePage() {
                     }
                   />
                 </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                <SortableTableHead
+                  direction={directionOf("email")}
+                  onSort={() => toggleSort("email")}
+                  className="text-foreground"
+                >
                   Email
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("role")}
+                  onSort={() => toggleSort("role")}
+                  className="text-foreground"
+                >
                   Role / Dept
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("uses")}
+                  onSort={() => toggleSort("uses")}
+                  className="text-foreground"
+                >
                   Uses
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("expires_at")}
+                  onSort={() => toggleSort("expires_at")}
+                  className="text-foreground"
+                >
                   Status / Time Left
-                </TableHead>
+                </SortableTableHead>
                 <TableHead className="w-24 text-right font-semibold text-foreground">
                   Actions
                 </TableHead>

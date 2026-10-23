@@ -26,12 +26,14 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { toast } from "@workspace/ui/components/sonner"
+import { sortRows, useTableSort } from "@workspace/ui/hooks/use-table-sort"
 import { Input } from "@workspace/ui/components/input"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
+  SortableTableHead,
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table"
@@ -88,6 +90,27 @@ function formatRemainingTime(
     text: diffDays === 1 ? "1 day remaining" : `${diffDays} days remaining`,
     status: "active",
   }
+}
+
+type InviteSortField =
+  | "email"
+  | "type"
+  | "organization"
+  | "role"
+  | "uses"
+  | "expires_at"
+
+const inviteSortAccessors: Record<
+  InviteSortField,
+  (invite: CombinedInvite) => string | number | null
+> = {
+  email: (invite) => invite.email ?? null,
+  type: (invite) => (invite.isSysadmin ? "Sysadmin" : "Organization"),
+  organization: (invite) =>
+    invite.isSysadmin ? null : (invite.organization_name ?? "General Workspace"),
+  role: (invite) => (invite.isSysadmin ? null : (invite.role ?? "member")),
+  uses: (invite) => invite.uses,
+  expires_at: (invite) => new Date(invite.expires_at).getTime(),
 }
 
 // Badge variants and styles for time remaining
@@ -258,6 +281,9 @@ export function InvitationsPage() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
+  const { sort, toggleSort, directionOf } = useTableSort<InviteSortField>(() =>
+    setCurrentPage(1)
+  )
   const [pageSize, setPageSize] = useState(10)
 
   const navigate = useNavigate()
@@ -347,12 +373,16 @@ export function InvitationsPage() {
     void loadInvites()
   }, [isCreating, loadInvites])
 
-  // Pagination computations
+  // Pagination computations (sorting is applied before slicing the page)
+  const sortedInvites = useMemo(
+    () => sortRows(filteredInvites, sort, inviteSortAccessors),
+    [filteredInvites, sort]
+  )
   const totalPages = Math.max(1, Math.ceil(filteredInvites.length / pageSize))
   const paginatedInvites = useMemo(() => {
     const start = (currentPage - 1) * pageSize
-    return filteredInvites.slice(start, start + pageSize)
-  }, [filteredInvites, currentPage, pageSize])
+    return sortedInvites.slice(start, start + pageSize)
+  }, [sortedInvites, currentPage, pageSize])
 
   const paginatedInviteIds = useMemo(() => {
     return paginatedInvites.map((invite) => invite.id)
@@ -710,24 +740,48 @@ export function InvitationsPage() {
                     }
                   />
                 </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                <SortableTableHead
+                  direction={directionOf("email")}
+                  onSort={() => toggleSort("email")}
+                  className="text-foreground"
+                >
                   Email
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("type")}
+                  onSort={() => toggleSort("type")}
+                  className="text-foreground"
+                >
                   Type
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("organization")}
+                  onSort={() => toggleSort("organization")}
+                  className="text-foreground"
+                >
                   Organization
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("role")}
+                  onSort={() => toggleSort("role")}
+                  className="text-foreground"
+                >
                   Role / Dept
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("uses")}
+                  onSort={() => toggleSort("uses")}
+                  className="text-foreground"
+                >
                   Uses
-                </TableHead>
-                <TableHead className="font-semibold text-foreground">
+                </SortableTableHead>
+                <SortableTableHead
+                  direction={directionOf("expires_at")}
+                  onSort={() => toggleSort("expires_at")}
+                  className="text-foreground"
+                >
                   Status / Time Left
-                </TableHead>
+                </SortableTableHead>
                 <TableHead className="w-24 text-right font-semibold text-foreground">
                   Actions
                 </TableHead>
