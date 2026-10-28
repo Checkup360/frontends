@@ -39,9 +39,9 @@ export function Phq9CrisisSupportAlert({ className }: { className?: string }) {
           <div className="mt-2.5 rounded-lg border border-destructive/20 bg-background/80 p-3 text-xs text-foreground backdrop-blur">
             <p className="font-semibold text-destructive">Available Free & Confidential Helplines:</p>
             <ul className="mt-1 list-inside list-disc space-y-1">
-              <li><strong>Argentina:</strong> Centro de Asistencia al Suicida — Tel: <strong>135</strong> (CABA y GBA) o <strong>(011) 5275-1135</strong> (Nacional)</li>
-              <li><strong>Salud Mental Responde:</strong> Línea <strong>0800-999-0091</strong> (Atención 24/7)</li>
-              <li><strong>Emergencias Médicas:</strong> Línea <strong>107</strong> / <strong>911</strong></li>
+              <li><strong>Argentina:</strong> Suicide Assistance Center — Tel: <strong>135</strong> (Buenos Aires Metropolitan Area) or <strong>(011) 5275-1135</strong> (Nationwide)</li>
+              <li><strong>Mental Health Support Line:</strong> <strong>0800-999-0091</strong> (24/7 Toll-Free)</li>
+              <li><strong>Medical Emergencies:</strong> Dial <strong>107</strong> / <strong>911</strong></li>
             </ul>
           </div>
         </AlertDescription>
