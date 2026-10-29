@@ -62,6 +62,13 @@ type SelectedType = null | "sysadmin" | "organization"
 
 const steps = [{ label: "Type" }, { label: "Details" }, { label: "Complete" }]
 
+function formatRoleName(role: string): string {
+  return role
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
+
 // Formatting helper for remaining time
 function formatRemainingTime(
   expiresAtStr: string,
@@ -692,7 +699,11 @@ export function InvitationsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Roles</SelectItem>
+                      <SelectItem value="superadmin">Superadmin</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="content_manager">
+                        Content Manager
+                      </SelectItem>
                       <SelectItem value="member">Member</SelectItem>
                     </SelectContent>
                   </Select>
@@ -903,8 +914,8 @@ export function InvitationsPage() {
                           <span className="text-muted-foreground/60">—</span>
                         ) : (
                           <div className="flex flex-col gap-0.5">
-                            <span className="font-semibold text-foreground capitalize">
-                              {invite.role ?? "Member"}
+                            <span className="font-semibold text-foreground">
+                              {formatRoleName(invite.role ?? "member")}
                             </span>
                             {invite.department_name && (
                               <span className="text-xs text-muted-foreground">
